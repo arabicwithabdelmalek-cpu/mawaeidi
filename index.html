@@ -320,7 +320,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     </div>
     <button type="button" class="auth-forgot" id="authForgot" onclick="startPasswordRecovery()">نسيت كلمة المرور؟</button>
     <button type="button" class="auth-primary" id="authSubmit" onclick="submitAuth()">تسجيل الدخول</button>
-    <button type="button" class="auth-switch" id="authSwitch" onclick="handleAuthSwitch()">أول مرة؟ أنشئ حسابك</button>
+    <button type="button" class="auth-switch" id="authSwitch" onclick="handleAuthSwitch()" hidden>العودة إلى تسجيل الدخول</button>
     <div class="auth-message" id="authMessage" role="status" aria-live="polite">جارٍ الاتصال بالحساب…</div>
   </div>
 </div>
@@ -620,26 +620,26 @@ function showAuth(){
 }
 function hideAuth(){document.getElementById("authGate").classList.add("hidden")}
 function setAuthMode(mode){
-  authMode=mode;
-  const signin=mode==="signin",signup=mode==="signup",recover=mode==="recover",update=mode==="update";
-  const title=signin?"تسجيل الدخول":signup?"إنشاء حسابك":recover?"استعادة كلمة المرور":"تعيين كلمة مرور جديدة";
-  const intro=signin?"ادخل إلى جدولك المحفوظ وافتحه من أي جهاز.":signup?"أنشئ حسابًا واحدًا، وستظهر حصصك على كل أجهزتك.":recover?"اكتب بريد حسابك، وسنرسل إليك رابطًا آمنًا لتغيير كلمة المرور.":"اكتب كلمة مرور جديدة لحسابك، ثم أكّدها.";
+  authMode=["signin","recover","update"].includes(mode)?mode:"signin";
+  const signin=authMode==="signin",recover=authMode==="recover",update=authMode==="update";
+  const title=signin?"تسجيل الدخول":recover?"استعادة كلمة المرور":"تعيين كلمة مرور جديدة";
+  const intro=signin?"ادخل إلى جدولك المحفوظ وافتحه من أي جهاز.":recover?"اكتب بريد حسابك، وسنرسل إليك رابطًا آمنًا لتغيير كلمة المرور.":"اكتب كلمة مرور جديدة لحسابك، ثم أكّدها.";
   document.getElementById("authTitle").textContent=title;
   document.getElementById("authIntro").textContent=intro;
   document.getElementById("authEmailField").hidden=update;
   document.getElementById("authPasswordField").hidden=recover;
   document.getElementById("authConfirmField").hidden=!update;
   document.getElementById("authForgot").hidden=!signin;
-  document.getElementById("authSwitch").hidden=update;
+  document.getElementById("authSwitch").hidden=!recover;
   document.getElementById("authPasswordLabel").textContent=update?"كلمة المرور الجديدة":"كلمة المرور";
   document.getElementById("authPassword").autocomplete=signin?"current-password":"new-password";
-  document.getElementById("authSubmit").textContent=signin?"تسجيل الدخول":signup?"إنشاء الحساب":recover?"إرسال رابط الاستعادة":"حفظ كلمة المرور الجديدة";
-  document.getElementById("authSwitch").textContent=signin?"أول مرة؟ أنشئ حسابك":"العودة إلى تسجيل الدخول";
+  document.getElementById("authSubmit").textContent=signin?"تسجيل الدخول":recover?"إرسال رابط الاستعادة":"حفظ كلمة المرور الجديدة";
+  document.getElementById("authSwitch").textContent="العودة إلى تسجيل الدخول";
   document.getElementById("authPassword").value="";
   document.getElementById("authConfirm").value="";
   setAuthMessage("");
 }
-function handleAuthSwitch(){setAuthMode(authMode==="signin"?"signup":"signin");showAuth()}
+function handleAuthSwitch(){setAuthMode("signin");showAuth()}
 function startPasswordRecovery(){setAuthMode("recover");showAuth()}
 function enterPasswordUpdate(user){
   recoveryUser=user||null;
@@ -668,17 +668,9 @@ async function submitAuth(){
   if(mode!=="recover"&&password.length<6){setAuthMessage("يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",true);return}
   if(mode==="update"&&password!==confirmPassword){setAuthMessage("كلمتا المرور غير متطابقتين.",true);return}
   setAuthBusy(true);
-  setAuthMessage(mode==="signup"?"جارٍ إنشاء الحساب…":mode==="signin"?"جارٍ تسجيل الدخول…":mode==="recover"?"جارٍ إرسال رابط الاستعادة…":"جارٍ حفظ كلمة المرور الجديدة…");
+  setAuthMessage(mode==="signin"?"جارٍ تسجيل الدخول…":mode==="recover"?"جارٍ إرسال رابط الاستعادة…":"جارٍ حفظ كلمة المرور الجديدة…");
   try{
-    if(mode==="signup"){
-      const options={};
-      const redirect=authRedirectUrl();
-      if(redirect)options.emailRedirectTo=redirect;
-      const {data,error}=await cloud.auth.signUp({email,password,options});
-      if(error)throw error;
-      if(data.session)await activateSession(data.session.user);
-      else setAuthMessage("تم إنشاء الحساب. افتح رسالة التأكيد في بريدك، ثم ارجع وسجّل الدخول.");
-    }else if(mode==="signin"){
+    if(mode==="signin"){
       const {data,error}=await cloud.auth.signInWithPassword({email,password});
       if(error)throw error;
       await activateSession(data.user);
@@ -699,7 +691,7 @@ async function submitAuth(){
     }
   }catch(error){
     console.error("تعذّر إكمال عملية الحساب.",error);
-    const errorMessage=mode==="signup"?"تعذّر إنشاء الحساب. راجع البريد وكلمة المرور.":mode==="signin"?"البريد أو كلمة المرور غير صحيحين.":mode==="recover"?"تعذّر إرسال رابط الاستعادة الآن. انتظر قليلًا ثم حاول مرة أخرى.":"تعذّر تغيير كلمة المرور. اطلب رابط استعادة جديدًا ثم حاول مرة أخرى.";
+    const errorMessage=mode==="signin"?"البريد أو كلمة المرور غير صحيحين.":mode==="recover"?"تعذّر إرسال رابط الاستعادة الآن. انتظر قليلًا ثم حاول مرة أخرى.":"تعذّر تغيير كلمة المرور. اطلب رابط استعادة جديدًا ثم حاول مرة أخرى.";
     setAuthMessage(errorMessage,true);
   }finally{
     setAuthBusy(false);
@@ -1151,7 +1143,7 @@ async function initApp(){
     if(recoveryLinkDetected)enterPasswordUpdate(data.session.user);
     else await activateSession(data.session.user);
   }else if(authMode!=="update"){
-    showAuth();setAuthMessage("سجّل الدخول، أو أنشئ حسابك في المرة الأولى.");
+    showAuth();setAuthMessage("سجّل الدخول إلى حسابك.");
   }
 }
 initApp();

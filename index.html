@@ -65,6 +65,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .auth-fields{display:grid;gap:12px}
 .auth-field{display:grid;gap:6px}
 .auth-field input{direction:ltr;text-align:left;padding:12px 13px}
+.auth-card [hidden]{display:none!important}
+.auth-forgot{display:block;width:max-content;margin:8px 0 0;padding:3px 0;border:0;background:transparent;color:var(--primary);font-size:12px;font-weight:700}
+.auth-forgot:hover,.auth-switch:hover{text-decoration:underline}
 .auth-primary{width:100%;margin-top:17px;padding:12px;border:0;border-radius:9px;background:var(--primary);color:#fff;font-weight:800}
 .auth-primary:disabled{opacity:.6;cursor:wait}
 .auth-switch{width:100%;margin-top:9px;padding:8px;border:0;background:transparent;color:var(--primary);font-size:12px;font-weight:800}
@@ -302,17 +305,22 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     <h2 id="authTitle">تسجيل الدخول</h2>
     <p id="authIntro">ادخل إلى جدولك المحفوظ وافتحه من أي جهاز.</p>
     <div class="auth-fields">
-      <div class="auth-field">
+      <div class="auth-field" id="authEmailField">
         <label for="authEmail">البريد الإلكتروني</label>
         <input id="authEmail" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com">
       </div>
-      <div class="auth-field">
-        <label for="authPassword">كلمة المرور</label>
+      <div class="auth-field" id="authPasswordField">
+        <label for="authPassword" id="authPasswordLabel">كلمة المرور</label>
         <input id="authPassword" type="password" minlength="6" autocomplete="current-password" placeholder="6 أحرف على الأقل">
       </div>
+      <div class="auth-field" id="authConfirmField" hidden>
+        <label for="authConfirm">تأكيد كلمة المرور الجديدة</label>
+        <input id="authConfirm" type="password" minlength="6" autocomplete="new-password" placeholder="أعد كتابة كلمة المرور">
+      </div>
     </div>
+    <button type="button" class="auth-forgot" id="authForgot" onclick="startPasswordRecovery()">نسيت كلمة المرور؟</button>
     <button type="button" class="auth-primary" id="authSubmit" onclick="submitAuth()">تسجيل الدخول</button>
-    <button type="button" class="auth-switch" id="authSwitch" onclick="toggleAuthMode()">أول مرة؟ أنشئ حسابك</button>
+    <button type="button" class="auth-switch" id="authSwitch" onclick="handleAuthSwitch()">أول مرة؟ أنشئ حسابك</button>
     <div class="auth-message" id="authMessage" role="status" aria-live="polite">جارٍ الاتصال بالحساب…</div>
   </div>
 </div>
@@ -584,6 +592,16 @@ let cloudReady=false;
 let authMode="signin";
 let sessionSequence=0;
 let loadingUserId=null;
+let recoveryUser=null;
+
+function hasRecoveryMarker(){
+  try{
+    const query=new URLSearchParams(location.search);
+    const hash=new URLSearchParams(location.hash.replace(/^#/,""));
+    return query.get("type")==="recovery"||hash.get("type")==="recovery";
+  }catch{return /(?:^|[?#&])type=recovery(?:&|$)/.test(location.href)}
+}
+let recoveryLinkDetected=hasRecoveryMarker();
 
 function setAuthMessage(message,isError=false){
   const box=document.getElementById("authMessage");
@@ -597,18 +615,43 @@ function setSync(state,message){
 }
 function showAuth(){
   document.getElementById("authGate").classList.remove("hidden");
-  document.getElementById("authEmail").focus();
+  const target=authMode==="update"?document.getElementById("authPassword"):document.getElementById("authEmail");
+  target.focus();
 }
 function hideAuth(){document.getElementById("authGate").classList.add("hidden")}
-function toggleAuthMode(){
-  authMode=authMode==="signin"?"signup":"signin";
-  const signup=authMode==="signup";
-  document.getElementById("authTitle").textContent=signup?"إنشاء حسابك":"تسجيل الدخول";
-  document.getElementById("authIntro").textContent=signup?"أنشئ حسابًا واحدًا، وستظهر حصصك على كل أجهزتك.":"ادخل إلى جدولك المحفوظ وافتحه من أي جهاز.";
-  document.getElementById("authSubmit").textContent=signup?"إنشاء الحساب":"تسجيل الدخول";
-  document.getElementById("authSwitch").textContent=signup?"لديك حساب؟ سجّل الدخول":"أول مرة؟ أنشئ حسابك";
-  document.getElementById("authPassword").autocomplete=signup?"new-password":"current-password";
+function setAuthMode(mode){
+  authMode=mode;
+  const signin=mode==="signin",signup=mode==="signup",recover=mode==="recover",update=mode==="update";
+  const title=signin?"تسجيل الدخول":signup?"إنشاء حسابك":recover?"استعادة كلمة المرور":"تعيين كلمة مرور جديدة";
+  const intro=signin?"ادخل إلى جدولك المحفوظ وافتحه من أي جهاز.":signup?"أنشئ حسابًا واحدًا، وستظهر حصصك على كل أجهزتك.":recover?"اكتب بريد حسابك، وسنرسل إليك رابطًا آمنًا لتغيير كلمة المرور.":"اكتب كلمة مرور جديدة لحسابك، ثم أكّدها.";
+  document.getElementById("authTitle").textContent=title;
+  document.getElementById("authIntro").textContent=intro;
+  document.getElementById("authEmailField").hidden=update;
+  document.getElementById("authPasswordField").hidden=recover;
+  document.getElementById("authConfirmField").hidden=!update;
+  document.getElementById("authForgot").hidden=!signin;
+  document.getElementById("authSwitch").hidden=update;
+  document.getElementById("authPasswordLabel").textContent=update?"كلمة المرور الجديدة":"كلمة المرور";
+  document.getElementById("authPassword").autocomplete=signin?"current-password":"new-password";
+  document.getElementById("authSubmit").textContent=signin?"تسجيل الدخول":signup?"إنشاء الحساب":recover?"إرسال رابط الاستعادة":"حفظ كلمة المرور الجديدة";
+  document.getElementById("authSwitch").textContent=signin?"أول مرة؟ أنشئ حسابك":"العودة إلى تسجيل الدخول";
+  document.getElementById("authPassword").value="";
+  document.getElementById("authConfirm").value="";
   setAuthMessage("");
+}
+function handleAuthSwitch(){setAuthMode(authMode==="signin"?"signup":"signin");showAuth()}
+function startPasswordRecovery(){setAuthMode("recover");showAuth()}
+function enterPasswordUpdate(user){
+  recoveryUser=user||null;
+  recoveryLinkDetected=false;
+  setAuthMode("update");
+  showAuth();
+  setAuthMessage("تم التحقق من رابط الاستعادة. اختر كلمة مرور جديدة.");
+  const cleanUrl=authRedirectUrl();
+  if(cleanUrl&&history.replaceState)history.replaceState({},document.title,cleanUrl);
+}
+function setAuthBusy(busy){
+  ["authSubmit","authSwitch","authForgot"].forEach(id=>{document.getElementById(id).disabled=busy});
 }
 function authRedirectUrl(){
   return location.protocol==="http:"||location.protocol==="https:"
@@ -617,15 +660,17 @@ function authRedirectUrl(){
 }
 async function submitAuth(){
   if(!cloud){setAuthMessage("تعذّر تحميل خدمة الحساب. تحقق من اتصال الإنترنت ثم حدّث الصفحة.",true);return}
+  const mode=authMode;
   const email=document.getElementById("authEmail").value.trim();
   const password=document.getElementById("authPassword").value;
-  if(!email||!email.includes("@")){setAuthMessage("اكتب بريدًا إلكترونيًا صحيحًا.",true);return}
-  if(password.length<6){setAuthMessage("يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",true);return}
-  const button=document.getElementById("authSubmit");
-  button.disabled=true;
-  setAuthMessage(authMode==="signup"?"جارٍ إنشاء الحساب…":"جارٍ تسجيل الدخول…");
+  const confirmPassword=document.getElementById("authConfirm").value;
+  if(mode!=="update"&&(!email||!email.includes("@"))){setAuthMessage("اكتب بريدًا إلكترونيًا صحيحًا.",true);return}
+  if(mode!=="recover"&&password.length<6){setAuthMessage("يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",true);return}
+  if(mode==="update"&&password!==confirmPassword){setAuthMessage("كلمتا المرور غير متطابقتين.",true);return}
+  setAuthBusy(true);
+  setAuthMessage(mode==="signup"?"جارٍ إنشاء الحساب…":mode==="signin"?"جارٍ تسجيل الدخول…":mode==="recover"?"جارٍ إرسال رابط الاستعادة…":"جارٍ حفظ كلمة المرور الجديدة…");
   try{
-    if(authMode==="signup"){
+    if(mode==="signup"){
       const options={};
       const redirect=authRedirectUrl();
       if(redirect)options.emailRedirectTo=redirect;
@@ -633,16 +678,31 @@ async function submitAuth(){
       if(error)throw error;
       if(data.session)await activateSession(data.session.user);
       else setAuthMessage("تم إنشاء الحساب. افتح رسالة التأكيد في بريدك، ثم ارجع وسجّل الدخول.");
-    }else{
+    }else if(mode==="signin"){
       const {data,error}=await cloud.auth.signInWithPassword({email,password});
       if(error)throw error;
       await activateSession(data.user);
+    }else if(mode==="recover"){
+      const redirect=authRedirectUrl();
+      const options=redirect?{redirectTo:redirect}:undefined;
+      const {error}=await cloud.auth.resetPasswordForEmail(email,options);
+      if(error)throw error;
+      setAuthMessage("إن كان هذا البريد مسجّلًا، فستصلك رسالة الاستعادة خلال دقائق. افحص البريد غير المرغوب أيضًا.");
+    }else{
+      const {data,error}=await cloud.auth.updateUser({password});
+      if(error)throw error;
+      setAuthMessage("تم تغيير كلمة المرور بنجاح. جارٍ فتح جدولك…");
+      await new Promise(resolve=>setTimeout(resolve,650));
+      await activateSession(data.user||recoveryUser);
+      recoveryUser=null;
+      if(cloudReady)setSync("saved","تم تحديث كلمة المرور");
     }
   }catch(error){
-    console.error("تعذّر إكمال تسجيل الدخول.",error);
-    setAuthMessage(authMode==="signup"?"تعذّر إنشاء الحساب. راجع البريد وكلمة المرور.":"البريد أو كلمة المرور غير صحيحين.",true);
+    console.error("تعذّر إكمال عملية الحساب.",error);
+    const errorMessage=mode==="signup"?"تعذّر إنشاء الحساب. راجع البريد وكلمة المرور.":mode==="signin"?"البريد أو كلمة المرور غير صحيحين.":mode==="recover"?"تعذّر إرسال رابط الاستعادة الآن. انتظر قليلًا ثم حاول مرة أخرى.":"تعذّر تغيير كلمة المرور. اطلب رابط استعادة جديدًا ثم حاول مرة أخرى.";
+    setAuthMessage(errorMessage,true);
   }finally{
-    button.disabled=false;
+    setAuthBusy(false);
   }
 }
 async function activateSession(user){
@@ -1069,12 +1129,15 @@ async function initApp(){
     return;
   }
   cloud.auth.onAuthStateChange((event,session)=>{
-    if(event==="SIGNED_OUT"){
+    if(event==="PASSWORD_RECOVERY"&&session?.user){
+      enterPasswordUpdate(session.user);
+    }else if(event==="SIGNED_OUT"){
       setTimeout(()=>{
         sessionSequence++;loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;
-        closeDrawer();render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
+        recoveryUser=null;setAuthMode("signin");closeDrawer();render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
       },0);
-    }else if(event==="SIGNED_IN"&&session?.user){
+    }else if(event==="SIGNED_IN"&&session?.user&&authMode!=="update"){
+      if(recoveryLinkDetected){enterPasswordUpdate(session.user);return}
       setTimeout(()=>activateSession(session.user),0);
     }
   });
@@ -1083,8 +1146,13 @@ async function initApp(){
     console.error("تعذّر قراءة جلسة مواعيدي.",error);
     showAuth();setAuthMessage("تعذّر الاتصال بالحساب. حدّث الصفحة وحاول مرة أخرى.",true);return;
   }
-  if(data.session?.user)await activateSession(data.session.user);
-  else{showAuth();setAuthMessage("سجّل الدخول، أو أنشئ حسابك في المرة الأولى.")}
+  if(data.session?.user){
+    if(authMode==="update")return;
+    if(recoveryLinkDetected)enterPasswordUpdate(data.session.user);
+    else await activateSession(data.session.user);
+  }else if(authMode!=="update"){
+    showAuth();setAuthMessage("سجّل الدخول، أو أنشئ حسابك في المرة الأولى.");
+  }
 }
 initApp();
 </script>

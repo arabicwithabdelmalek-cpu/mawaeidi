@@ -185,14 +185,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .panel-head h2{margin:0;font-size:17px;font-weight:800}
 .panel-head span{color:var(--muted);font-size:13px}
 
-.timeline{position:relative;padding:12px 18px 18px 50px}
-.timeline::before{
-  content:"";position:absolute;top:22px;right:126px;bottom:22px;width:1px;
-  background:linear-gradient(180deg,transparent,var(--line) 12%,var(--line) 88%,transparent)
+.timeline{position:relative;padding:12px 18px 18px}
+.timeline-row{position:relative;display:grid;grid-template-columns:82px minmax(0,1fr);align-items:start;gap:12px;padding:7px 0;animation:card-in .35s ease both}
+.t-time{
+  display:flex;align-items:center;justify-content:center;min-height:42px;margin-top:7px;padding:7px 8px;
+  border:1px solid #C8D4DD;border-radius:8px;background:#F1F5F7;color:var(--primary);
+  font-size:12px;font-weight:800;line-height:1;white-space:nowrap
 }
-.timeline-row{position:relative;display:grid;grid-template-columns:92px minmax(0,1fr);gap:26px;padding:7px 0;animation:card-in .35s ease both}
-.timeline-row .marker{position:absolute;top:28px;right:100px;z-index:1;width:11px;height:11px;border:3px solid var(--accent);border-radius:50%;background:#fff}
-.t-time{padding-top:12px;color:var(--primary);font-size:13px;font-weight:800;white-space:nowrap}
 .lesson{
   display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:13px 14px;
   border:1px solid var(--line);border-inline-start-width:5px;border-radius:10px;background:#FCFCFA;cursor:pointer;
@@ -321,8 +320,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .app{padding:14px 12px 28px}.header{gap:10px}.brand h1{font-size:27px}.brand small{display:none}.header-actions{gap:6px}.sync-status{display:none}.logout-btn{padding:9px;font-size:11px}
   .add-btn{padding:10px 12px;font-size:13px}.hero{margin-top:14px}.hero-copy{padding:13px 15px}.kufi-quote{height:108px;background-size:150% auto}
   .controls{align-items:stretch}.tabs,.filters{flex:1}.tab,.filter{flex:1;min-width:0;padding:9px 8px}
-  .panel{border-radius:9px}.timeline{padding:10px 12px 16px 40px}.timeline::before{right:100px}
-  .timeline-row{grid-template-columns:76px minmax(0,1fr);gap:24px}.timeline-row .marker{right:80px}.lesson{padding:12px}.actions{flex-direction:column}
+  .panel{border-radius:9px}.timeline{padding:10px 12px 16px}
+  .timeline-row{grid-template-columns:70px minmax(0,1fr);gap:8px}.t-time{min-height:38px;padding:6px;font-size:11px}.lesson{padding:12px}.actions{flex-direction:column}
   .grid{grid-template-columns:1fr}.field.full{grid-column:auto}.row{grid-template-columns:1fr 1fr auto}
   .week-view .panel-head{align-items:flex-start}.week-view .panel-head span{max-width:190px;line-height:1.55;text-align:left}
   .week-legend{align-items:flex-start;padding:10px 11px}.source-legend{width:100%}
@@ -935,7 +934,6 @@ function renderTimeline(){
     row.className="timeline-row";
     row.style.animationDelay=`${i*.05}s`;
     row.innerHTML=`
-      <span class="marker" style="border-color:${srcColor}"></span>
       <div class="t-time">${fmt(o.time)}</div>
       <div class="lesson ${l.type}" style="--source-color:${srcColor}" onclick="openEdit('${l.id}')">
         <div>

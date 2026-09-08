@@ -103,13 +103,32 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   animation:page-in .55s ease both;
 }
 .identity{display:flex;align-items:center}
-.header-actions{display:flex;align-items:center;gap:9px}
-.sync-status{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap}
+.header-actions{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.sync-status{display:inline-flex;align-items:center;gap:6px;padding:7px 8px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap}
+.sync-status:hover{background:rgba(255,255,255,.68);color:var(--primary)}
+.sync-status:disabled{cursor:wait;opacity:.75}
 .sync-status::before{content:"";width:7px;height:7px;border-radius:50%;background:#8CA3B5;box-shadow:0 0 0 3px rgba(140,163,181,.14)}
 .sync-status.saved::before{background:#43816D;box-shadow:0 0 0 3px rgba(67,129,109,.14)}
 .sync-status.saving::before{background:#A78352;animation:pulse 1s ease infinite alternate}
 .sync-status.error{color:var(--danger)}.sync-status.error::before{background:var(--danger)}
-.logout-btn{padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.82);color:var(--muted);font-size:12px;font-weight:800}
+.sync-icon{display:none;font-size:17px;line-height:1}
+.data-menu{position:relative}
+.data-menu>summary{
+  list-style:none;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.82);
+  color:var(--muted);font-size:12px;font-weight:800;cursor:pointer;user-select:none
+}
+.data-menu>summary::-webkit-details-marker{display:none}
+.data-menu>summary:hover,.data-menu[open]>summary{border-color:#AFC0CC;background:#fff;color:var(--primary)}
+.data-popover{
+  position:absolute;top:calc(100% + 8px);left:0;z-index:60;width:250px;padding:8px;border:1px solid var(--line);
+  border-radius:11px;background:#fff;box-shadow:0 18px 42px rgba(17,42,64,.16)
+}
+.data-action{display:block;width:100%;padding:10px 11px;border:0;border-radius:8px;background:transparent;color:var(--ink);text-align:right}
+.data-action:hover{background:#F1F5F7}
+.data-action strong{display:block;font-size:12px;font-weight:800}
+.data-action small{display:block;margin-top:3px;color:var(--muted);font-size:10px;line-height:1.55}
+.data-separator{height:1px;margin:6px 4px;background:var(--line)}
+.data-action.logout{color:var(--danger)}
 .brand h1{
   position:relative;display:inline-block;margin:0;color:var(--primary);
   font-family:"Noto Kufi Arabic",var(--font);font-size:32px;font-weight:800;line-height:1.25;letter-spacing:-1px;
@@ -317,7 +336,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .hero,.content{grid-template-columns:1fr}.hero-copy,.next{min-height:auto}
 }
 @media(max-width:760px){
-  .app{padding:14px 12px 28px}.header{gap:10px}.brand h1{font-size:27px}.brand small{display:none}.header-actions{gap:6px}.sync-status{display:none}.logout-btn{padding:9px;font-size:11px}
+  .app{padding:14px 12px 28px}.header{gap:10px}.brand h1{font-size:27px}.brand small{display:none}.header-actions{gap:5px}
+  .sync-status{display:inline-flex;justify-content:center;width:36px;height:36px;padding:0;border:1px solid var(--line);background:rgba(255,255,255,.82)}
+  .sync-status::before,.sync-text{display:none}.sync-icon{display:block}.data-menu>summary{padding:9px;font-size:11px}.data-popover{width:min(250px,calc(100vw - 24px))}
   .add-btn{padding:10px 12px;font-size:13px}.hero{margin-top:14px}.hero-copy{padding:13px 15px}.kufi-quote{height:108px;background-size:150% auto}
   .controls{align-items:stretch}.tabs,.filters{flex:1}.tab,.filter{flex:1;min-width:0;padding:9px 8px}
   .panel{border-radius:9px}.timeline{padding:10px 12px 16px}
@@ -384,8 +405,26 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
         </div>
       </div>
       <div class="header-actions">
-        <span class="sync-status" id="syncStatus">جارٍ التحميل</span>
-        <button type="button" class="logout-btn" onclick="logout()">خروج</button>
+        <button type="button" class="sync-status" id="syncStatus" onclick="refreshFromCloud()" title="تحديث المواعيد من السحابة" aria-label="جارٍ تحميل المواعيد؛ اضغط للتحديث">
+          <span class="sync-icon" aria-hidden="true">↻</span>
+          <span class="sync-text" id="syncStatusText">جارٍ التحميل</span>
+        </button>
+        <details class="data-menu" id="dataMenu">
+          <summary aria-label="فتح أدوات البيانات">البيانات</summary>
+          <div class="data-popover">
+            <button type="button" class="data-action" onclick="exportBackup()">
+              <strong>تنزيل نسخة احتياطية</strong>
+              <small>حفظ كل المواعيد في ملف على جهازك</small>
+            </button>
+            <button type="button" class="data-action" onclick="chooseBackupFile()">
+              <strong>استعادة نسخة احتياطية</strong>
+              <small>فحص الملف ثم استبدال البيانات بعد موافقتك</small>
+            </button>
+            <div class="data-separator" aria-hidden="true"></div>
+            <button type="button" class="data-action logout" onclick="logout()"><strong>تسجيل الخروج</strong></button>
+          </div>
+        </details>
+        <input id="backupFile" type="file" accept="application/json,.json" onchange="importBackup(event)" hidden>
         <button type="button" class="add-btn" onclick="openNew()">＋ إضافة حصة</button>
       </div>
     </header>
@@ -576,6 +615,11 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_t0pqtkV0-3Wj0htl-eGR9w_BsifiUDE";
 const TIME_RE=/^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const SOURCE_COLORS=["#A7445A","#6555A4","#28769B","#B76D28","#3F7B4A","#8B4E87","#3E708D","#98623F"];
 const PRIVATE_SOURCE_COLOR="#9B7449";
+const BACKUP_FORMAT="mawaeidi-backup";
+const BACKUP_VERSION=1;
+const MAX_BACKUP_BYTES=5*1024*1024;
+const MAX_BACKUP_LESSONS=2000;
+const AUTO_REFRESH_THROTTLE_MS=15000;
 const cloud=window.supabase?.createClient
   ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
   :null;
@@ -637,6 +681,94 @@ let authMode="signin";
 let sessionSequence=0;
 let loadingUserId=null;
 let recoveryUser=null;
+let lastCloudUpdatedAt=null;
+let realtimeChannel=null;
+let refreshInFlight=false;
+let saveInFlight=false;
+let backupInFlight=false;
+let pendingRemoteRow=null;
+let lastAutoRefreshAt=0;
+
+function closeDataMenu(){document.getElementById("dataMenu")?.removeAttribute("open")}
+function createBackupPayload(){
+  return {
+    format:BACKUP_FORMAT,
+    version:BACKUP_VERSION,
+    exportedAt:new Date().toISOString(),
+    lessonCount:lessons.length,
+    lessons
+  };
+}
+function parseBackupText(rawText){
+  const cleanText=textValue(rawText).replace(/^\uFEFF/,"");
+  let parsed;
+  try{parsed=JSON.parse(cleanText)}catch{throw new Error("invalid_json")}
+  let source;
+  if(Array.isArray(parsed))source=parsed;
+  else if(parsed&&parsed.format===BACKUP_FORMAT&&parsed.version===BACKUP_VERSION&&Array.isArray(parsed.lessons))source=parsed.lessons;
+  else throw new Error("invalid_format");
+  if(source.length>MAX_BACKUP_LESSONS)throw new Error("too_many_lessons");
+  if(source.some(item=>!item||typeof item!=="object"||Array.isArray(item)))throw new Error("invalid_lesson");
+  const restored=normalizeLessons(source);
+  if(restored.some(lesson=>!lesson.schedules.length))throw new Error("invalid_schedule");
+  return restored;
+}
+function exportBackup(){
+  closeDataMenu();
+  if(!cloudReady||!currentUser){alert("انتظر حتى يكتمل تحميل حسابك ثم حاول مرة أخرى.");return}
+  try{
+    const payload=createBackupPayload();
+    const blob=new Blob(["\uFEFF",JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");
+    link.href=url;
+    link.download=`mawaeidi-backup-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    setSync("saved","تم تنزيل النسخة");
+  }catch(error){
+    console.error("تعذّر إنشاء النسخة الاحتياطية.",error);
+    alert("تعذّر تنزيل النسخة الاحتياطية. حاول مرة أخرى.");
+  }
+}
+function chooseBackupFile(){
+  closeDataMenu();
+  if(!cloudReady||!currentUser){alert("انتظر حتى يكتمل تحميل حسابك ثم حاول مرة أخرى.");return}
+  document.getElementById("backupFile").click();
+}
+async function importBackup(event){
+  const input=event.currentTarget;
+  const file=input.files?.[0];
+  if(!file)return;
+  if(file.size>MAX_BACKUP_BYTES){
+    input.value="";
+    alert("ملف النسخة الاحتياطية أكبر من الحد المسموح.");
+    return;
+  }
+  backupInFlight=true;
+  setSync("saving","جارٍ فحص النسخة");
+  try{
+    const restored=parseBackupText(await file.text());
+    const warning=restored.length
+      ?`سيتم استبدال ${lessons.length} حصة حاليًا بـ ${restored.length} حصة من النسخة الاحتياطية. هل تريد المتابعة؟`
+      :"هذه النسخة فارغة وستحذف كل المواعيد الحالية. هل تريد المتابعة؟";
+    if(!confirm(warning)){setSync("saved","لم تتغير البيانات");return}
+    const previous=lessons;
+    lessons=restored;
+    if(!await persist()){lessons=previous;return}
+    render();
+    alert(`تمت استعادة النسخة الاحتياطية بنجاح (${lessons.length} حصة).`);
+  }catch(error){
+    console.error("تعذّر استعادة النسخة الاحتياطية.",error);
+    setSync("error","النسخة غير صالحة");
+    alert("ملف النسخة الاحتياطية غير صالح أو تالف.");
+  }finally{
+    backupInFlight=false;
+    input.value="";
+  }
+}
 
 function hasRecoveryMarker(){
   try{
@@ -655,7 +787,107 @@ function setAuthMessage(message,isError=false){
 function setSync(state,message){
   const box=document.getElementById("syncStatus");
   box.className=`sync-status ${state||""}`.trim();
-  box.textContent=message;
+  document.getElementById("syncStatusText").textContent=message;
+  box.disabled=state==="saving";
+  box.setAttribute("aria-label",`${message}؛ اضغط لتحديث المواعيد من السحابة`);
+}
+function isDrawerVisible(){return document.getElementById("drawer").classList.contains("show")}
+function remoteRowIsNewer(row){
+  const remote=textValue(row?.updated_at);
+  if(!remote)return !lastCloudUpdatedAt;
+  if(!lastCloudUpdatedAt)return true;
+  const remoteTime=Date.parse(remote),localTime=Date.parse(lastCloudUpdatedAt);
+  if(Number.isFinite(remoteTime)&&Number.isFinite(localTime))return remoteTime>localTime;
+  return remote!==lastCloudUpdatedAt;
+}
+function applyRemoteRow(row,message="تم تحديث المواعيد"){
+  if(!row||!currentUser||row.user_id!==currentUser.id||!Array.isArray(row.lessons)||!remoteRowIsNewer(row))return false;
+  lessons=normalizeLessons(row.lessons);
+  lastCloudUpdatedAt=textValue(row.updated_at)||lastCloudUpdatedAt;
+  render();
+  setSync("saved",message);
+  return true;
+}
+function handleRemoteRow(row){
+  if(!row||!currentUser||row.user_id!==currentUser.id||saveInFlight||!remoteRowIsNewer(row))return;
+  if(isDrawerVisible()){
+    pendingRemoteRow=row;
+    setSync("saving","تحديث جديد ينتظر");
+    return;
+  }
+  applyRemoteRow(row,"تم التحديث من جهاز آخر");
+}
+function flushPendingRemote(){
+  if(!pendingRemoteRow||isDrawerVisible())return;
+  const row=pendingRemoteRow;
+  pendingRemoteRow=null;
+  if(!applyRemoteRow(row,"تم التحديث من جهاز آخر"))setSync("saved","البيانات محدّثة");
+}
+function stopRealtime(){
+  if(realtimeChannel&&cloud)cloud.removeChannel(realtimeChannel);
+  realtimeChannel=null;
+  pendingRemoteRow=null;
+}
+function startRealtime(user){
+  stopRealtime();
+  if(!cloud||!user)return;
+  realtimeChannel=cloud
+    .channel(`mawaeidi-sync-${user.id}`)
+    .on("postgres_changes",{
+      event:"*",schema:"public",table:"mawaeidi_data",filter:`user_id=eq.${user.id}`
+    },payload=>{
+      if(payload.eventType==="DELETE"){
+        refreshFromCloud(true);
+        return;
+      }
+      handleRemoteRow(payload.new);
+    })
+    .subscribe(status=>{
+      if(status==="SUBSCRIBED"&&cloudReady&&!saveInFlight&&!refreshInFlight&&!pendingRemoteRow)setSync("saved","متزامن سحابيًا");
+      if((status==="CHANNEL_ERROR"||status==="TIMED_OUT")&&currentUser?.id===user.id)setSync("error","اضغط للتحديث");
+    });
+}
+async function refreshFromCloud(silent=false){
+  if(!cloud||!currentUser||!cloudReady){
+    if(!silent)alert("لم يكتمل الاتصال بحسابك بعد.");
+    return false;
+  }
+  if(refreshInFlight||saveInFlight||backupInFlight)return false;
+  if(isDrawerVisible()){
+    if(!silent)alert("احفظ التعديل المفتوح أو أغلقه أولًا، ثم حدّث المواعيد.");
+    return false;
+  }
+  if(!navigator.onLine){
+    setSync("error","غير متصل بالإنترنت");
+    if(!silent)alert("لا يوجد اتصال بالإنترنت حاليًا.");
+    return false;
+  }
+  refreshInFlight=true;
+  setSync("saving","جارٍ التحديث");
+  try{
+    const {data,error}=await cloud.from("mawaeidi_data")
+      .select("user_id,lessons,updated_at")
+      .eq("user_id",currentUser.id)
+      .maybeSingle();
+    if(error)throw error;
+    if(data&&applyRemoteRow(data,"تم تحديث المواعيد"))return true;
+    setSync("saved","البيانات محدّثة");
+    return true;
+  }catch(error){
+    console.error("تعذّر تحديث مواعيدي من السحابة.",error);
+    setSync("error","تعذّر التحديث");
+    if(!silent)alert("تعذّر تحديث المواعيد. تحقق من الإنترنت وحاول مرة أخرى.");
+    return false;
+  }finally{
+    refreshInFlight=false;
+  }
+}
+function requestAutoRefresh(){
+  if(document.visibilityState!=="visible"||backupInFlight)return;
+  const now=Date.now();
+  if(now-lastAutoRefreshAt<AUTO_REFRESH_THROTTLE_MS)return;
+  lastAutoRefreshAt=now;
+  refreshFromCloud(true);
 }
 function showAuth(){
   document.getElementById("authGate").classList.remove("hidden");
@@ -744,7 +976,9 @@ async function submitAuth(){
 async function activateSession(user){
   if(!user||!cloud)return;
   if(loadingUserId===user.id)return;
-  if(currentUser?.id===user.id&&cloudReady){hideAuth();return}
+  if(currentUser?.id===user.id&&cloudReady){if(!realtimeChannel)startRealtime(user);hideAuth();return}
+  stopRealtime();
+  lastCloudUpdatedAt=null;
   loadingUserId=user.id;
   const sequence=++sessionSequence;
   currentUser=user;
@@ -759,6 +993,7 @@ async function activateSession(user){
     if(error)throw error;
     if(sequence!==sessionSequence)return;
     lessons=normalizeLessons(data?.lessons||[]);
+    lastCloudUpdatedAt=textValue(data?.updated_at)||null;
     let needsInitialSave=!data;
 
     const migrationKey=MIGRATION_KEY_PREFIX+user.id;
@@ -777,9 +1012,11 @@ async function activateSession(user){
     render();
     hideAuth();
     setSync("saved","محفوظ سحابيًا");
+    startRealtime(user);
   }catch(error){
     console.error("تعذّر تحميل جدول مواعيدي.",error);
     cloudReady=false;
+    stopRealtime();
     showAuth();
     setAuthMessage("تعذّر تحميل جدولك. تحقق من الإنترنت ثم أعد المحاولة.",true);
     setSync("error","تعذّر الاتصال");
@@ -789,10 +1026,12 @@ async function activateSession(user){
 }
 async function logout(){
   if(!cloud)return;
+  closeDataMenu();
   const {error}=await cloud.auth.signOut();
   if(error){alert("تعذّر تسجيل الخروج. حاول مرة أخرى.");return}
+  stopRealtime();
   sessionSequence++;
-  loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;
+  loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;lastCloudUpdatedAt=null;
   closeDrawer();render();showAuth();
   setAuthMessage("تم تسجيل الخروج.");
 }
@@ -801,14 +1040,17 @@ async function persist(silent=false){
     if(!silent)alert("لم يكتمل الاتصال بحسابك بعد.");
     return false;
   }
+  saveInFlight=true;
   setSync("saving","جارٍ الحفظ");
   try{
-    const {error}=await cloud.from("mawaeidi_data").upsert({
+    const updatedAt=new Date().toISOString();
+    const {data,error}=await cloud.from("mawaeidi_data").upsert({
       user_id:currentUser.id,
       lessons,
-      updated_at:new Date().toISOString()
-    },{onConflict:"user_id"});
+      updated_at:updatedAt
+    },{onConflict:"user_id"}).select("updated_at").single();
     if(error)throw error;
+    lastCloudUpdatedAt=textValue(data?.updated_at)||updatedAt;
     setSync("saved","تم الحفظ");
     return true;
   }catch(error){
@@ -816,6 +1058,8 @@ async function persist(silent=false){
     setSync("error","لم يُحفظ");
     if(!silent)alert("تعذّر حفظ البيانات سحابيًا. تحقق من اتصال الإنترنت وحاول مرة أخرى.");
     return false;
+  }finally{
+    saveInFlight=false;
   }
 }
 function getOccurrences(list=lessons){
@@ -1090,6 +1334,7 @@ function closeDrawer(){
   document.getElementById("drawer").classList.remove("show");
   document.getElementById("drawer").setAttribute("aria-hidden","true");
   document.body.classList.remove("drawer-open");
+  setTimeout(flushPendingRemote,0);
 }
 
 function openNew(){
@@ -1212,9 +1457,20 @@ async function deleteLesson(){
 }
 
 document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"&&document.getElementById("authGate").classList.contains("hidden"))closeDrawer();
+  if(e.key==="Escape"){
+    closeDataMenu();
+    if(document.getElementById("authGate").classList.contains("hidden"))closeDrawer();
+  }
   if(e.key==="Enter"&&!document.getElementById("authGate").classList.contains("hidden"))submitAuth();
 });
+document.addEventListener("click",e=>{
+  const menu=document.getElementById("dataMenu");
+  if(menu?.open&&!menu.contains(e.target))closeDataMenu();
+});
+document.addEventListener("visibilitychange",requestAutoRefresh);
+window.addEventListener("focus",requestAutoRefresh);
+window.addEventListener("online",requestAutoRefresh);
+window.addEventListener("offline",()=>{if(currentUser)setSync("error","غير متصل بالإنترنت")});
 
 async function initApp(){
   render();
@@ -1228,8 +1484,9 @@ async function initApp(){
       enterPasswordUpdate(session.user);
     }else if(event==="SIGNED_OUT"){
       setTimeout(()=>{
+        stopRealtime();
         sessionSequence++;loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;
-        recoveryUser=null;setAuthMode("signin");closeDrawer();render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
+        recoveryUser=null;lastCloudUpdatedAt=null;setAuthMode("signin");closeDrawer();render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
       },0);
     }else if(event==="SIGNED_IN"&&session?.user&&authMode!=="update"){
       if(recoveryLinkDetected){enterPasswordUpdate(session.user);return}

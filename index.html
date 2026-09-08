@@ -19,12 +19,12 @@
   --line:#D3DDE5;
   --today-bg:#E7EFF5;
   --today-border:#89A9C1;
-  --teach:#2E6C76;
-  --teach-bg:#E7F1F2;
-  --teach-border:#B7D1D5;
-  --learn:#586D91;
-  --learn-bg:#E9EEF6;
-  --learn-border:#C0CBE0;
+  --teach:#176C63;
+  --teach-bg:#E3F2EE;
+  --teach-border:#A9D4CA;
+  --learn:#8A5526;
+  --learn-bg:#F9EAD7;
+  --learn-border:#E5C096;
   --danger:#984545;
   --danger-bg:#FFF0F0;
   --shadow:0 18px 46px rgba(17,42,64,.10);
@@ -170,6 +170,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 }
 .tab:hover,.filter:hover{background:#EFF4F7;color:var(--primary)}
 .tab.active,.filter.active{background:var(--primary);color:#fff}
+.filter.teach-filter{color:var(--teach)}
+.filter.learn-filter{color:var(--learn)}
+.filter.teach-filter.active{background:var(--teach);color:#fff}
+.filter.learn-filter.active{background:var(--learn);color:#fff}
 
 .content{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:14px}
 .panel{
@@ -191,12 +195,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .t-time{padding-top:12px;color:var(--primary);font-size:13px;font-weight:800}
 .lesson{
   display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:13px 14px;
-  border:1px solid var(--line);border-radius:10px;background:#FCFCFA;cursor:pointer;
+  border:1px solid var(--line);border-inline-start-width:5px;border-radius:10px;background:#FCFCFA;cursor:pointer;
   transition:border-color .18s ease,box-shadow .18s ease
 }
 .lesson:hover{border-color:#A9B8C3;box-shadow:var(--shadow-soft)}
-.lesson.teach{border-right:4px solid var(--teach)}
-.lesson.learn{border-right:4px solid var(--learn)}
+.lesson.teach{border-color:var(--teach-border);background:var(--teach-bg)}
+.lesson.learn{border-color:var(--learn-border);background:var(--learn-bg)}
+.lesson.teach,.lesson.learn{border-inline-start-color:var(--source-color,var(--accent))}
 .lesson-name{font-size:15px;font-weight:800}
 .lesson-meta{margin-top:4px;color:var(--muted);font-size:13px;line-height:1.65}
 .pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
@@ -225,25 +230,56 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--primary),#6F93AE)}
 
 .week-view{display:none}
-.week-grid{display:grid;grid-template-columns:repeat(7,minmax(170px,1fr));gap:10px;padding:14px;overflow-x:auto;direction:rtl}
-.day{min-height:420px;padding:11px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(180deg,#FBFCFD,#F0F4F7);animation:card-in .35s ease both}
-.day.today{border-color:var(--today-border);background:linear-gradient(180deg,#F5F9FC,var(--today-bg));box-shadow:inset 0 4px 0 #47769A}
-.day-head{display:flex;align-items:center;gap:8px;padding:4px 2px 10px;margin-bottom:10px;border-bottom:1px solid var(--line)}
-.day-head h3{margin:0;color:var(--primary);font-size:14px;font-weight:800}
-.count{display:grid;place-items:center;flex:0 0 auto;width:28px;height:28px;border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--muted);font-size:11px}
-.week-card{
-  position:relative;margin-bottom:9px;padding:11px 13px 11px 11px;border:1px solid var(--line);border-radius:10px;
-  text-align:right;cursor:pointer;transition:box-shadow .16s ease,border-color .16s ease
+.week-legend{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px 18px;padding:11px 16px;border-bottom:1px solid var(--line);background:#F5F8FA}
+.legend-types,.source-legend{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.legend-title{margin-inline-end:2px;color:var(--muted);font-size:11px;font-weight:700}
+.legend-chip,.source-chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:11px;font-weight:800}
+.legend-chip{padding:4px 8px;border:1px solid;border-radius:999px}
+.legend-chip.teach{border-color:var(--teach-border);background:var(--teach-bg);color:var(--teach)}
+.legend-chip.learn{border-color:var(--learn-border);background:var(--learn-bg);color:var(--learn)}
+.source-chip{color:#586874}
+.source-line{display:inline-block;width:4px;height:17px;border-radius:999px;background:var(--source-color,var(--accent))}
+.week-table-wrap{max-width:100%;overflow:auto;padding:14px;direction:rtl;scrollbar-color:#AEBCC6 #E8EEF2;scrollbar-width:thin}
+.week-table-wrap:focus-visible{outline:3px solid rgba(35,75,110,.2);outline-offset:-4px}
+.week-grid{
+  display:grid;grid-template-columns:78px repeat(7,minmax(158px,1fr));min-width:1185px;
+  border:1px solid var(--line);border-radius:11px;background:#fff;direction:rtl
 }
-.week-card:hover{box-shadow:var(--shadow-soft)}
+.week-grid-row{display:contents}
+.week-corner,.week-day-head,.week-time-label,.week-slot{border-inline-end:1px solid var(--line);border-bottom:1px solid var(--line)}
+.week-corner,.week-day-head{
+  position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:center;gap:7px;min-height:58px;
+  background:#EAF0F4;color:var(--primary);font-size:13px;font-weight:800
+}
+.week-corner{right:0;z-index:5;background:#DDE7ED;color:#526674}
+.week-day-head.today{background:#DCEAF3;box-shadow:inset 0 4px 0 #47769A}
+.week-day-head .count{display:grid;place-items:center;min-width:25px;height:25px;padding:0 5px;border:1px solid #C9D6DE;border-radius:999px;background:#fff;color:var(--muted);font-size:10px}
+.week-time-label{
+  position:sticky;right:0;z-index:2;display:flex;align-items:flex-start;justify-content:center;min-height:108px;padding:13px 6px;
+  background:#F1F5F7;color:var(--primary);font-size:12px;font-weight:800;white-space:nowrap
+}
+.week-slot{display:flex;flex-direction:column;gap:7px;min-height:108px;padding:8px;background:#FBFCFD}
+.week-slot.today{background:#F0F6FA}
+.week-slot.is-empty{background-image:linear-gradient(135deg,rgba(211,221,229,.14) 25%,transparent 25%,transparent 50%,rgba(211,221,229,.14) 50%,rgba(211,221,229,.14) 75%,transparent 75%,transparent);background-size:16px 16px}
+.week-card{
+  position:relative;min-height:90px;padding:10px 11px;border:1px solid var(--line);border-inline-start-width:5px;border-radius:9px;
+  text-align:right;cursor:pointer;transition:box-shadow .16s ease,border-color .16s ease,transform .16s ease
+}
+.week-card:hover{box-shadow:var(--shadow-soft);transform:translateY(-1px)}
+.week-card:focus-visible{outline:3px solid rgba(35,75,110,.22);outline-offset:2px}
 .week-card.teach{border-color:var(--teach-border);background:var(--teach-bg)}
 .week-card.learn{border-color:var(--learn-border);background:var(--learn-bg)}
-.week-card::before{content:"";position:absolute;top:10px;right:7px;bottom:10px;width:4px;border-radius:999px}
-.week-card.teach::before{background:var(--teach)}.week-card.learn::before{background:var(--learn)}
-.week-time,.week-name,.week-meta{padding-right:11px;text-align:right}
-.week-time{color:var(--primary);font-size:12px;font-weight:800}
-.week-name{margin-top:7px;font-size:14px;font-weight:800}
-.week-meta{margin-top:4px;color:var(--muted);font-size:12px;line-height:1.55}
+.week-card.teach,.week-card.learn{border-inline-start-color:var(--source-color,var(--accent))}
+.week-card-top{display:flex;align-items:center;justify-content:space-between;gap:7px}
+.week-kind{display:inline-flex;padding:3px 7px;border:1px solid;border-radius:999px;font-size:10px;font-weight:800}
+.week-kind.teach{border-color:var(--teach-border);background:#F4FBF9;color:var(--teach)}
+.week-kind.learn{border-color:var(--learn-border);background:#FFF9F1;color:var(--learn)}
+.week-name{margin-top:7px;color:var(--ink);font-size:13px;font-weight:800;line-height:1.45}
+.week-meta{margin-top:3px;color:#64727C;font-size:11px;line-height:1.55}
+.week-source{display:flex;align-items:center;gap:5px;margin-top:7px;color:#52636F;font-size:10px;font-weight:800}
+.week-source .source-line{height:14px}
+.week-grid.is-empty{display:block;min-width:0}
+.week-empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px}
 
 .backdrop{position:fixed;inset:0;z-index:80;opacity:0;pointer-events:none;background:rgba(10,23,34,.42);backdrop-filter:blur(3px);transition:opacity .2s ease}
 .backdrop.show{opacity:1;pointer-events:auto}
@@ -288,6 +324,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .panel{border-radius:9px}.timeline{padding:10px 12px 16px 40px}.timeline::before{right:24px}
   .timeline-row{grid-template-columns:76px 1fr}.timeline-row .marker{right:7px}.lesson{padding:12px}.actions{flex-direction:column}
   .grid{grid-template-columns:1fr}.field.full{grid-column:auto}.row{grid-template-columns:1fr 1fr auto}
+  .week-view .panel-head{align-items:flex-start}.week-view .panel-head span{max-width:190px;line-height:1.55;text-align:left}
+  .week-legend{align-items:flex-start;padding:10px 11px}.source-legend{width:100%}
+  .week-table-wrap{padding:10px}.week-grid{grid-template-columns:66px repeat(7,minmax(145px,1fr));min-width:1080px}
+  .week-time-label,.week-slot{min-height:102px}.week-time-label{padding-inline:4px}.week-slot{padding:6px}
+  .week-card{min-height:88px;padding:9px}.week-name{font-size:12px}
   .hurufiyat span{width:410px;opacity:.07}.hurufiyat span:nth-child(1){top:-125px;right:-180px}
   .hurufiyat span:nth-child(4){bottom:-125px;left:-180px}
   .auth-card{padding:24px 20px}.auth-name{font-size:24px}.auth-card h2{font-size:21px}
@@ -367,8 +408,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     <div class="controls">
       <div class="filters">
         <button type="button" class="filter active" aria-pressed="true" onclick="setFilter('all',this)">الكل</button>
-        <button type="button" class="filter" aria-pressed="false" onclick="setFilter('teach',this)">أُدرِّس</button>
-        <button type="button" class="filter" aria-pressed="false" onclick="setFilter('learn',this)">أدرس</button>
+        <button type="button" class="filter teach-filter" aria-pressed="false" onclick="setFilter('teach',this)">أُدرِّس</button>
+        <button type="button" class="filter learn-filter" aria-pressed="false" onclick="setFilter('learn',this)">أدرس</button>
       </div>
       <div class="tabs">
         <button type="button" class="tab active" aria-pressed="true" aria-controls="todayView" onclick="setView('today',this)">اليوم</button>
@@ -404,9 +445,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     <section id="weekView" class="panel week-view">
       <div class="panel-head">
         <h2>الأسبوع</h2>
-        <span>رؤية كاملة لكل المواعيد</span>
+        <span>كل صف يجمع المواعيد التي تبدأ في الوقت نفسه</span>
       </div>
-      <div class="week-grid" id="weekGrid"></div>
+      <div class="week-legend" aria-label="دليل ألوان الجدول">
+        <div class="legend-types">
+          <span class="legend-title">نوع الدرس</span>
+          <span class="legend-chip teach">أُدرِّس</span>
+          <span class="legend-chip learn">أدرس</span>
+        </div>
+        <div class="source-legend" id="sourceLegend"></div>
+      </div>
+      <div class="week-table-wrap" tabindex="0" aria-label="الجدول الأسبوعي؛ يمكن تمريره أفقيًا على الشاشات الصغيرة">
+        <div class="week-grid" id="weekGrid" role="table" aria-label="مواعيد الأسبوع مرتبة حسب الوقت"></div>
+      </div>
     </section>
   </div>
 </div>
@@ -478,17 +529,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
           <label for="duration">المدة بالدقائق</label>
           <input id="duration" type="number" min="15" max="720" step="15" value="60">
         </div>
-        <div class="field">
+        <div class="field full">
           <label for="platform">المنصة / المكان</label>
           <input id="platform" placeholder="Zoom / Meet / حضوري">
-        </div>
-        <div class="field">
-          <label for="repeat">التكرار</label>
-          <select id="repeat">
-            <option>أسبوعيًا</option>
-            <option>مرة واحدة</option>
-            <option>كل أسبوعين</option>
-          </select>
         </div>
       </div>
     </section>
@@ -532,6 +575,8 @@ const MIGRATION_KEY_PREFIX="mawaeidi_cloud_migration_";
 const SUPABASE_URL="https://nvefdkkjkyalpsrgoffj.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_t0pqtkV0-3Wj0htl-eGR9w_BsifiUDE";
 const TIME_RE=/^(?:[01]\d|2[0-3]):[0-5]\d$/;
+const SOURCE_COLORS=["#A7445A","#6555A4","#28769B","#B76D28","#3F7B4A","#8B4E87","#3E708D","#98623F"];
+const PRIVATE_SOURCE_COLOR="#9B7449";
 const cloud=window.supabase?.createClient
   ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
   :null;
@@ -555,7 +600,7 @@ function normalizeLesson(item){
     subject:textValue(item.subject),
     duration:Number.isFinite(duration)&&duration>=15&&duration<=720?duration:60,
     platform:textValue(item.platform),
-    repeat:["أسبوعيًا","مرة واحدة","كل أسبوعين"].includes(item.repeat)?item.repeat:"أسبوعيًا",
+    repeat:"أسبوعيًا",
     notes:textValue(item.notes),
     schedules:Array.isArray(item.schedules)?item.schedules
       .filter(s=>s&&days.includes(s.day)&&TIME_RE.test(textValue(s.time)))
@@ -779,6 +824,16 @@ function getOccurrences(list=lessons){
     .filter(s=>s&&days.includes(s.day)&&TIME_RE.test(textValue(s.time)))
     .map(s=>({lesson:l,day:s.day,time:s.time})));
 }
+function sourceLabel(lesson){
+  return lesson.lessonSource==="center"?(lesson.centerName.trim()||"مركز"):"خاص";
+}
+function sourceColorFromLabel(label){
+  if(label==="خاص")return PRIVATE_SOURCE_COLOR;
+  let hash=0;
+  for(const char of label)hash=(hash*31+char.codePointAt(0))>>>0;
+  return SOURCE_COLORS[hash%SOURCE_COLORS.length];
+}
+function sourceColor(lesson){return sourceColorFromLabel(sourceLabel(lesson))}
 function esc(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]))}
 function fmt(t){
   const value=TIME_RE.test(String(t))?String(t):"00:00";
@@ -789,6 +844,13 @@ function fmt(t){
 function mins(t){const value=TIME_RE.test(String(t))?String(t):"00:00";const[h,m]=value.split(":").map(Number);return h*60+m}
 function todayName(){return["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"][new Date().getDay()]}
 function filtered(){return lessons.filter(l=>l&&(currentFilter==="all"||l.type===currentFilter))}
+function getWeekLayout(list=filtered()){
+  const occurrences=getOccurrences(list);
+  const times=[...new Set(occurrences.map(o=>o.time))].sort((a,b)=>mins(a)-mins(b));
+  const slots=new Map(times.flatMap(time=>days.map(day=>[`${time}|${day}`,[]])));
+  occurrences.forEach(item=>slots.get(`${item.time}|${item.day}`)?.push(item));
+  return {occurrences,times,slots};
+}
 
 function setFilter(f,btn){
   currentFilter=f;
@@ -867,14 +929,15 @@ function renderTimeline(){
   items.forEach((o,i)=>{
     const l=o.lesson;
     const src=l.lessonSource==="center"?(l.centerName?`مركز: ${esc(l.centerName)}`:"مركز"):"خاص";
+    const srcColor=sourceColor(l);
     const people=l.studentType==="group"?`مجموعة${l.groupStudents?.length?` · ${l.groupStudents.length} طلاب`:""}`:"فردي";
     const row=document.createElement("div");
     row.className="timeline-row";
     row.style.animationDelay=`${i*.05}s`;
     row.innerHTML=`
-      <span class="marker"></span>
+      <span class="marker" style="border-color:${srcColor}"></span>
       <div class="t-time">${fmt(o.time)}</div>
-      <div class="lesson ${l.type}" onclick="openEdit('${l.id}')">
+      <div class="lesson ${l.type}" style="--source-color:${srcColor}" onclick="openEdit('${l.id}')">
         <div>
           <div class="lesson-name">${esc(l.name||"بدون اسم")}</div>
           <div class="lesson-meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة</div>
@@ -914,29 +977,73 @@ function renderWeekBars(){
 }
 
 function renderWeek(){
-  const grid=document.getElementById("weekGrid"),occ=getOccurrences(filtered()),tn=todayName();
+  const list=filtered(),grid=document.getElementById("weekGrid"),legend=document.getElementById("sourceLegend"),layout=getWeekLayout(list),occ=layout.occurrences,tn=todayName();
   grid.innerHTML="";
-  days.forEach((day,di)=>{
-    const items=occ.filter(o=>o.day===day).sort((a,b)=>a.time.localeCompare(b.time));
-    const col=document.createElement("div");
-    col.className="day"+(day===tn?" today":"");
-    col.style.animationDelay=`${di*.035}s`;
-    col.innerHTML=`<div class="day-head"><span class="count">${items.length}</span><h3>${day}</h3></div>${items.length?"":'<div class="empty">لا توجد حصص</div>'}`;
-    items.forEach(o=>{
-      const l=o.lesson;
-      const c=document.createElement("div");
-      c.className=`week-card ${l.type}`;
-      c.onclick=()=>openEdit(l.id);
-      c.innerHTML=`
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:7px">
-          <div class="week-time">${fmt(o.time)} · ${l.duration} د</div>
-          <button type="button" class="icon-btn" title="نسخ" aria-label="نسخ الحصة" onclick="event.stopPropagation();copyLessonById('${l.id}')">⧉</button>
-        </div>
-        <div class="week-name">${esc(l.name||"بدون اسم")}</div>
-        <div class="week-meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""}</div>`;
-      col.appendChild(c);
+  const sourceNames=[...new Set(list.map(sourceLabel))].sort((a,b)=>a.localeCompare(b,"ar"));
+  legend.innerHTML=sourceNames.length
+    ?`<span class="legend-title">الجهة</span>${sourceNames.map(name=>`<span class="source-chip" style="--source-color:${sourceColorFromLabel(name)}"><i class="source-line" aria-hidden="true"></i>${esc(name)}</span>`).join("")}`
+    :"";
+
+  const times=layout.times;
+  grid.classList.toggle("is-empty",!times.length);
+  if(!times.length){
+    grid.removeAttribute("aria-rowcount");
+    grid.removeAttribute("aria-colcount");
+    grid.innerHTML='<div class="week-empty">لا توجد حصص في هذا التصنيف.</div>';
+    return;
+  }
+
+  grid.setAttribute("aria-rowcount",String(times.length+1));
+  grid.setAttribute("aria-colcount",String(days.length+1));
+  const head=document.createElement("div");
+  head.className="week-grid-row";head.setAttribute("role","row");
+  const corner=document.createElement("div");
+  corner.className="week-corner";corner.setAttribute("role","columnheader");corner.textContent="الوقت";
+  head.appendChild(corner);
+  days.forEach(day=>{
+    const count=occ.filter(o=>o.day===day).length;
+    const cell=document.createElement("div");
+    cell.className="week-day-head"+(day===tn?" today":"");cell.setAttribute("role","columnheader");
+    cell.innerHTML=`<span class="count">${count}</span><span>${day}</span>`;
+    head.appendChild(cell);
+  });
+  grid.appendChild(head);
+
+  times.forEach(time=>{
+    const row=document.createElement("div");
+    row.className="week-grid-row";row.setAttribute("role","row");
+    const timeCell=document.createElement("div");
+    timeCell.className="week-time-label";timeCell.setAttribute("role","rowheader");timeCell.textContent=fmt(time);
+    row.appendChild(timeCell);
+    days.forEach(day=>{
+      const items=layout.slots.get(`${time}|${day}`)||[];
+      const slot=document.createElement("div");
+      slot.className="week-slot"+(day===tn?" today":"")+(items.length?"":" is-empty");
+      slot.setAttribute("role","cell");
+      slot.setAttribute("aria-label",items.length?`${day}، ${fmt(time)}، ${items.length} حصة`:`${day}، ${fmt(time)}، فارغ`);
+      items.forEach(o=>{
+        const l=o.lesson,kind=l.type==="teach"?"أُدرِّس":"أدرس",src=sourceLabel(l),srcColor=sourceColor(l);
+        const details=[`${l.duration} دقيقة`,l.subject,l.platform].filter(Boolean).map(esc).join(" · ");
+        const card=document.createElement("article");
+        card.className=`week-card ${l.type}`;card.style.setProperty("--source-color",srcColor);
+        card.setAttribute("role","button");card.setAttribute("tabindex","0");
+        card.setAttribute("aria-label",`${kind}: ${l.name||"بدون اسم"}، ${day} ${fmt(time)}، ${src}`);
+        card.innerHTML=`
+          <div class="week-card-top">
+            <span class="week-kind ${l.type}">${kind}</span>
+            <button type="button" class="icon-btn" title="نسخ" aria-label="نسخ الحصة">⧉</button>
+          </div>
+          <div class="week-name">${esc(l.name||"بدون اسم")}</div>
+          <div class="week-meta">${details}</div>
+          <div class="week-source"><i class="source-line" aria-hidden="true"></i>${esc(src)}</div>`;
+        card.onclick=()=>openEdit(l.id);
+        card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit(l.id)}};
+        card.querySelector(".icon-btn").onclick=e=>{e.stopPropagation();copyLessonById(l.id)};
+        slot.appendChild(card);
+      });
+      row.appendChild(slot);
     });
-    grid.appendChild(col);
+    grid.appendChild(row);
   });
 }
 
@@ -998,7 +1105,6 @@ function openNew(){
   document.getElementById("studentType").value="individual";
   document.getElementById("lessonSource").value="private";
   document.getElementById("duration").value=60;
-  document.getElementById("repeat").value="أسبوعيًا";
   document.getElementById("conflictBox").style.display="none";
   setScheduleRows([{day:"الاثنين",time:"18:00"}]);
   toggleFields();openDrawer();
@@ -1019,7 +1125,6 @@ function openEdit(id){
   document.getElementById("subject").value=l.subject||"";
   document.getElementById("duration").value=l.duration||60;
   document.getElementById("platform").value=l.platform||"";
-  document.getElementById("repeat").value=l.repeat||"أسبوعيًا";
   document.getElementById("notes").value=l.notes||"";
   document.getElementById("conflictBox").style.display="none";
   setScheduleRows(l.schedules||[]);
@@ -1066,7 +1171,7 @@ async function saveLesson(){
     subject:document.getElementById("subject").value.trim(),
     duration,
     platform:document.getElementById("platform").value.trim(),
-    repeat:document.getElementById("repeat").value,
+    repeat:"أسبوعيًا",
     schedules:readSchedules(),
     notes:document.getElementById("notes").value.trim()
   };

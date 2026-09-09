@@ -1,4 +1,4 @@
-const CACHE_NAME="mawaeidi-shell-v3";
+const CACHE_NAME="mawaeidi-shell-v4";
 const APP_SHELL=[
   "./",
   "./index.html",
@@ -64,6 +64,10 @@ self.addEventListener("push",event=>{
     dir:"rtl",
     tag:data.tag||"mawaeidi-reminder",
     renotify:Boolean(data.tag),
+    silent:false,
+    vibrate:[220,120,220],
+    requireInteraction:true,
+    timestamp:Number(data.timestamp)||Date.now(),
     data:{url:data.url||"./"},
     actions:[{action:"open",title:"فتح الجدول"}]
   };

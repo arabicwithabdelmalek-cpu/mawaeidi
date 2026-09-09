@@ -351,6 +351,11 @@ body.auth-pending .app{visibility:hidden}
 .tool-card+.tool-card{margin-top:10px}
 .tool-card h3{margin:0 0 5px;color:var(--ink);font-size:14px}.tool-card p{margin:0;color:var(--muted);font-size:11px;line-height:1.75}
 .tool-field{display:grid;gap:6px;margin-top:12px}.tool-field select{background:#fff}
+.notification-leads{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.lead-option{position:relative;display:flex;align-items:center;justify-content:center;min-height:42px;padding:8px;border:1px solid #C8D4DD;border-radius:8px;background:#F8FAFB;color:#5D6F7C;font-size:11px;font-weight:800;text-align:center;cursor:pointer;transition:.16s ease}
+.lead-option:hover{border-color:#9EB4C4;background:#F1F6F8}.lead-option:has(input:checked){border-color:var(--primary);background:var(--accent-soft);color:var(--primary);box-shadow:inset 0 0 0 1px rgba(35,75,110,.08)}
+.lead-option input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.notification-features{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}.notification-feature{padding:5px 8px;border-radius:999px;background:#EEF3F6;color:#536977;font-size:10px;font-weight:800}
 .tool-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}
 .tool-actions button{padding:9px 12px;border-radius:8px;font-size:12px;font-weight:800}
 .tool-actions .tool-primary{border:0;background:var(--primary);color:#fff}.tool-actions .tool-secondary{border:1px solid var(--line);background:#fff;color:var(--primary)}
@@ -395,6 +400,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .small-btn{border:0;border-radius:7px;padding:7px 9px;font-size:11px;font-weight:800}
 .add-time{background:var(--accent-soft);color:var(--primary)}.remove{background:var(--danger-bg);color:var(--danger)}
 .hint{margin-top:3px;color:#7D8992;font-size:11px}
+.lesson-reminder-custom{display:none;margin-top:10px;padding:10px;border:1px dashed #C8D4DD;border-radius:9px;background:#F6F9FA}.lesson-reminder-custom.show{display:block}
 .conflict{display:none;margin-top:7px;padding:9px;border:1px solid #E7BDBD;border-radius:8px;background:var(--danger-bg);color:var(--danger);font-size:12px;line-height:1.65}
 .drawer-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-top:1px solid var(--line);background:#fff}
 .group{display:flex;flex-wrap:wrap;gap:7px}
@@ -419,6 +425,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .week-time-label,.week-slot{min-height:102px}.week-time-label{padding-inline:4px}.week-slot{padding:6px}
   .week-card{min-height:88px;padding:9px}.week-name{font-size:12px}
   .quick-add-slot{min-height:88px;opacity:.68}
+  .notification-leads{grid-template-columns:repeat(2,1fr)}
   .hurufiyat span{width:410px;opacity:.07}.hurufiyat span:nth-child(1){top:-125px;right:-180px}
   .hurufiyat span:nth-child(4){bottom:-125px;left:-180px}
   .auth-card{padding:24px 20px}.auth-name{font-size:24px}.auth-card h2{font-size:21px}
@@ -680,6 +687,29 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     </section>
 
     <section class="section">
+      <div class="section-title">تنبيه الحصة</div>
+      <div class="field full">
+        <label for="lessonReminderMode">إعداد التنبيه</label>
+        <select id="lessonReminderMode" onchange="toggleLessonReminderFields()">
+          <option value="default">استخدام الإعداد العام</option>
+          <option value="custom">مواعيد خاصة لهذه الحصة</option>
+          <option value="off">بدون تنبيه لهذه الحصة</option>
+        </select>
+      </div>
+      <div class="lesson-reminder-custom" id="lessonReminderCustom">
+        <div class="hint">اختر من تنبيه إلى ثلاثة تنبيهات لهذه الحصة.</div>
+        <div class="notification-leads" id="lessonReminderLeads">
+          <label class="lead-option"><input class="lesson-reminder-lead" type="checkbox" value="60" onchange="validateLessonReminderChoice(this)"><span>قبل ساعة</span></label>
+          <label class="lead-option"><input class="lesson-reminder-lead" type="checkbox" value="30" onchange="validateLessonReminderChoice(this)"><span>قبل 30 دقيقة</span></label>
+          <label class="lead-option"><input class="lesson-reminder-lead" type="checkbox" value="15" checked onchange="validateLessonReminderChoice(this)"><span>قبل 15 دقيقة</span></label>
+          <label class="lead-option"><input class="lesson-reminder-lead" type="checkbox" value="10" onchange="validateLessonReminderChoice(this)"><span>قبل 10 دقائق</span></label>
+          <label class="lead-option"><input class="lesson-reminder-lead" type="checkbox" value="5" onchange="validateLessonReminderChoice(this)"><span>قبل 5 دقائق</span></label>
+        </div>
+      </div>
+      <div class="hint" id="lessonReminderHint">سيُستخدم موعد التنبيه الافتراضي المحفوظ على كل جهاز.</div>
+    </section>
+
+    <section class="section">
       <div class="section-title">ملاحظات</div>
       <label class="sr-only" for="notes">الملاحظات</label>
       <textarea id="notes" placeholder="أي ملاحظات تحتاجها"></textarea>
@@ -729,7 +759,11 @@ const HISTORY_TABLE="mawaeidi_history";
 const PUSH_SUBSCRIPTIONS_TABLE="mawaeidi_push_subscriptions";
 const VAPID_PUBLIC_KEY="BCV1YqoeembJvO664BNkaJbrK_wMZGl5I1EQv1EgjeJO30kWIdEtQswrebKG7qt1jSKVQ0GtqLPipzHI1XGzFc8";
 const DEFAULT_NOTIFICATION_LEAD=15;
+const DEFAULT_NOTIFICATION_LEADS=[60,15];
+const NOTIFICATION_LEAD_OPTIONS=[5,10,15,30,60];
+const MAX_NOTIFICATION_LEADS=3;
 const NOTIFICATION_LEAD_KEY="mawaeidi-notification-lead-v1";
+const NOTIFICATION_LEADS_KEY="mawaeidi-notification-leads-v2";
 const SCHEDULE_TIMEZONE="Africa/Cairo";
 const cloud=window.supabase?.createClient
   ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
@@ -740,9 +774,17 @@ function makeId(){
   return `lesson-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 function textValue(value){return typeof value==="string"?value:""}
+function normalizeNotificationLeads(value,fallback=DEFAULT_NOTIFICATION_LEADS){
+  const values=Array.isArray(value)?value:[value];
+  const normalized=[...new Set(values.map(Number).filter(item=>NOTIFICATION_LEAD_OPTIONS.includes(item)))].sort((a,b)=>b-a).slice(0,MAX_NOTIFICATION_LEADS);
+  if(normalized.length)return normalized;
+  const safeFallback=Array.isArray(fallback)?fallback:[fallback];
+  return [...new Set(safeFallback.map(Number).filter(item=>NOTIFICATION_LEAD_OPTIONS.includes(item)))].sort((a,b)=>b-a).slice(0,MAX_NOTIFICATION_LEADS);
+}
 function normalizeLesson(item){
   const duration=Number(item.duration);
   const id=textValue(item.id);
+  const reminderMode=item.reminderMode==="off"||item.reminderMode==="custom"?item.reminderMode:"default";
   return {
     id:/^[A-Za-z0-9_-]{1,120}$/.test(id)?id:makeId(),
     type:item.type==="learn"?"learn":"teach",
@@ -755,6 +797,8 @@ function normalizeLesson(item){
     duration:Number.isFinite(duration)&&duration>=15&&duration<=720?duration:60,
     platform:textValue(item.platform),
     repeat:"أسبوعيًا",
+    reminderMode,
+    reminderLeads:normalizeNotificationLeads(item.reminderLeads,[DEFAULT_NOTIFICATION_LEAD]),
     notes:textValue(item.notes),
     schedules:Array.isArray(item.schedules)?item.schedules
       .filter(s=>s&&days.includes(s.day)&&TIME_RE.test(textValue(s.time)))
@@ -811,19 +855,38 @@ function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||"")}
 function vapidKeyIsConfigured(){return VAPID_PUBLIC_KEY&&!VAPID_PUBLIC_KEY.startsWith("__")}
 function validNotificationLead(value){
   const lead=Number(value);
-  return [5,10,15,30,60].includes(lead)?lead:DEFAULT_NOTIFICATION_LEAD;
+  return NOTIFICATION_LEAD_OPTIONS.includes(lead)?lead:DEFAULT_NOTIFICATION_LEAD;
 }
-function savedNotificationLead(){
-  try{return validNotificationLead(localStorage.getItem(NOTIFICATION_LEAD_KEY))}catch{return DEFAULT_NOTIFICATION_LEAD}
+function savedNotificationLeads(){
+  try{
+    const stored=localStorage.getItem(NOTIFICATION_LEADS_KEY);
+    if(stored)return normalizeNotificationLeads(JSON.parse(stored));
+    const legacy=localStorage.getItem(NOTIFICATION_LEAD_KEY);
+    return legacy===null?[...DEFAULT_NOTIFICATION_LEADS]:normalizeNotificationLeads([legacy]);
+  }catch{return [...DEFAULT_NOTIFICATION_LEADS]}
 }
-function rememberNotificationLead(value){
-  const lead=validNotificationLead(value);
-  try{localStorage.setItem(NOTIFICATION_LEAD_KEY,String(lead))}catch{}
-  return lead;
+function rememberNotificationLeads(value){
+  const leads=normalizeNotificationLeads(value);
+  try{localStorage.setItem(NOTIFICATION_LEADS_KEY,JSON.stringify(leads))}catch{}
+  return leads;
 }
 function notificationLeadText(value){
   const lead=validNotificationLead(value);
   return lead===60?"ساعة":lead+" دقيقة";
+}
+function notificationLeadsText(value){
+  const labels=normalizeNotificationLeads(value).map(notificationLeadText);
+  return labels.length===1?labels[0]:labels.slice(0,-1).join("، ")+" و"+labels.at(-1);
+}
+function notificationLeadChoices(leads,inputClass="notification-lead",handler="saveNotificationLeads(this)"){
+  const selected=new Set(normalizeNotificationLeads(leads));
+  return [60,30,15,10,5].map(value=>`<label class="lead-option"><input class="${inputClass}" type="checkbox" value="${value}" ${selected.has(value)?"checked":""} onchange="${handler}"><span>قبل ${notificationLeadText(value)}</span></label>`).join("");
+}
+function checkedNotificationLeads(selector){
+  return [...new Set([...document.querySelectorAll(selector+":checked")]
+    .map(input=>Number(input.value))
+    .filter(value=>NOTIFICATION_LEAD_OPTIONS.includes(value)))]
+    .sort((a,b)=>b-a);
 }
 function openToolDialog(title,intro,content){
   closeDataMenu();
@@ -933,31 +996,32 @@ async function refreshNotificationMenuStatus(){
     return false;
   }
 }
-function notificationSettingsMarkup({supported,configured,requiresInstall=false,permission,enabled,lead=DEFAULT_NOTIFICATION_LEAD,error=""}){
+function notificationSettingsMarkup({supported,configured,requiresInstall=false,permission,enabled,leads=DEFAULT_NOTIFICATION_LEADS,error=""}){
   if(!supported)return '<div class="tool-status error">هذا المتصفح لا يدعم تنبيهات الويب. جرّب Chrome أو Edge، أو ثبّت الموقع من Safari على iPhone.</div>';
   if(requiresInstall)return '<div class="tool-status">على iPhone وiPad يجب تثبيت مواعيدي على الشاشة الرئيسية أولًا، ثم فتحه من الأيقونة وتفعيل التنبيهات من داخله.</div><div class="tool-actions"><button type="button" class="tool-primary" onclick="installApp()">طريقة التثبيت</button></div>';
   if(!configured)return '<div class="tool-status">الميزة مجهّزة في النسخة المحلية، وستصبح قابلة للتفعيل بعد اعتماد التحديث وإضافة مفتاح التنبيهات الآمن.</div><div class="tool-card"><h3>كيف ستعمل؟</h3><p>بعد النشر ستضغط «تفعيل التنبيهات» مرة واحدة على كل جهاز، وستصلك الرسالة قبل الحصة حتى إن كان التطبيق مغلقًا.</p></div>';
-  const leadValue=validNotificationLead(lead);
+  const leadValues=normalizeNotificationLeads(leads);
   const statusClass=error?"error":enabled?"on":"";
   const statusText=error|| (enabled?"التنبيهات مفعّلة على هذا الجهاز.":permission==="denied"?"المتصفح حظر التنبيهات. اسمح بها من إعدادات الموقع ثم أعد المحاولة.":"التنبيهات غير مفعّلة على هذا الجهاز.");
   return `<div class="tool-status ${statusClass}">${esc(statusText)}</div>
     <div class="tool-card">
-      <h3>موعد التنبيه على هذا الجهاز</h3>
-      <p>اختر المدة أولًا، ثم فعّل التنبيهات. يمكنك تغييرها لاحقًا.</p>
-      <label class="tool-field" for="notificationLead"><span>نبّهني قبل الحصة بـ</span>
-        <select id="notificationLead" data-enabled="${enabled?"true":"false"}" onchange="saveNotificationLead()">
-          ${[5,10,15,30,60].map(value=>`<option value="${value}" ${leadValue===value?"selected":""}>${value===60?"ساعة":value+" دقيقة"}</option>`).join("")}
-        </select>
-      </label>
+      <h3>مواعيد التنبيه الافتراضية</h3>
+      <p>اختر من تنبيه إلى ثلاثة لكل حصة. ويمكنك تخصيص أي حصة من نافذة تعديلها.</p>
+      <div class="notification-leads" id="notificationLeadChoices" data-enabled="${enabled?"true":"false"}">${notificationLeadChoices(leadValues)}</div>
+      <div class="notification-features" aria-label="خصائص التنبيه">
+        <span class="notification-feature">صوت النظام</span>
+        <span class="notification-feature">اهتزاز عند دعمه</span>
+        <span class="notification-feature">يعمل والتطبيق مغلق</span>
+      </div>
       <div class="tool-actions">
         <button type="button" class="${enabled?"tool-danger":"tool-primary"}" id="notificationToggle" onclick="${enabled?"disableNotifications()":"enableNotifications()"}">${enabled?"إيقاف التنبيهات":"تفعيل التنبيهات"}</button>
-        ${enabled?'<button type="button" class="tool-secondary" id="notificationTest" onclick="testNotificationNow()">اختبار التنبيه الآن</button>':""}
+        ${enabled?'<button type="button" class="tool-secondary" id="notificationTest" onclick="testNotificationNow()">اختبار الصوت والتنبيه</button>':""}
       </div>
-      <p class="install-help">سيظهر إشعار عادي من نظام الجهاز، وليس منبّهًا مستمرًا مثل تطبيق الساعة.</p>
+      <p class="install-help">الصوت هو صوت الإشعارات الذي اخترته في الجهاز، وقد يمنعه الوضع الصامت أو «عدم الإزعاج». لا يستطيع الموقع معرفة إن كان صوت الجهاز مكتومًا.</p>
     </div>`;
 }
 async function readNotificationState(){
-  const base={supported:notificationSupport(),configured:vapidKeyIsConfigured(),requiresInstall:isIOS()&&!isStandalone(),permission:"default",enabled:false,lead:savedNotificationLead(),error:""};
+  const base={supported:notificationSupport(),configured:vapidKeyIsConfigured(),requiresInstall:isIOS()&&!isStandalone(),permission:"default",enabled:false,leads:savedNotificationLeads(),error:""};
   if(!base.supported||base.requiresInstall)return base;
   base.permission=Notification.permission;
   try{
@@ -966,13 +1030,13 @@ async function readNotificationState(){
     base.enabled=false;
     if(base.permission==="granted"&&subscription&&cloud&&currentUser){
       const {data,error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE)
-        .select("lead_minutes")
+        .select("lead_minutes,lead_minutes_list")
         .eq("user_id",currentUser.id)
         .eq("endpoint",subscription.endpoint)
         .maybeSingle();
       if(error)throw error;
       base.enabled=Boolean(data);
-      if(base.enabled&&Number(data?.lead_minutes))base.lead=rememberNotificationLead(data.lead_minutes);
+      if(base.enabled)base.leads=rememberNotificationLeads(data?.lead_minutes_list?.length?data.lead_minutes_list:[data?.lead_minutes]);
     }
   }catch(error){
     console.warn("تعذّر قراءة إعداد التنبيهات.",error);
@@ -1008,15 +1072,17 @@ function notificationFailureMessage(error,stage){
   }
   return "تعذّر تفعيل التنبيهات على هذا الجهاز.";
 }
-async function storePushSubscription(subscription,lead){
+async function storePushSubscription(subscription,leads){
   const json=subscription.toJSON();
+  const normalizedLeads=normalizeNotificationLeads(leads);
   const payload={
     user_id:currentUser.id,
     endpoint:subscription.endpoint,
     p256dh:json.keys?.p256dh||"",
     auth_key:json.keys?.auth||"",
     timezone:SCHEDULE_TIMEZONE,
-    lead_minutes:validNotificationLead(lead),
+    lead_minutes:Math.min(...normalizedLeads),
+    lead_minutes_list:normalizedLeads,
     updated_at:new Date().toISOString()
   };
   const {data:existing,error:lookupError}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE)
@@ -1032,6 +1098,7 @@ async function storePushSubscription(subscription,lead){
         auth_key:payload.auth_key,
         timezone:payload.timezone,
         lead_minutes:payload.lead_minutes,
+        lead_minutes_list:payload.lead_minutes_list,
         updated_at:payload.updated_at
       })
       .eq("user_id",currentUser.id)
@@ -1048,7 +1115,8 @@ async function enableNotifications(){
   if(!notificationSupport()||!vapidKeyIsConfigured()){await openNotificationSettings();return}
   notificationBusy=true;
   const button=document.getElementById("notificationToggle");if(button)button.disabled=true;
-  const lead=rememberNotificationLead(document.getElementById("notificationLead")?.value);
+  const selected=checkedNotificationLeads("#notificationLeadChoices .notification-lead");
+  const leads=rememberNotificationLeads(selected.length?selected:savedNotificationLeads());
   let stage="permission";
   try{
     const permission=await Notification.requestPermission();
@@ -1061,26 +1129,39 @@ async function enableNotifications(){
     let subscription=await registration.pushManager.getSubscription();
     if(!subscription)subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
     stage="cloud";
-    await storePushSubscription(subscription,lead);
+    await storePushSubscription(subscription,leads);
     updateNotificationMenuStatus(true);
     await openNotificationSettings();
   }catch(error){
     console.error("تعذّر تفعيل التنبيهات.",{stage,name:error?.name,code:error?.code,message:error?.message});
     const state=await readNotificationState();
-    state.lead=lead;
+    state.leads=leads;
     state.error=notificationFailureMessage(error,stage);
     document.getElementById("toolBody").innerHTML=notificationSettingsMarkup(state);
   }finally{
     notificationBusy=false;
   }
 }
-async function saveNotificationLead(){
+async function saveNotificationLeads(changedInput){
   if(notificationBusy||!currentUser||!cloudReady)return;
-  const field=document.getElementById("notificationLead");
-  const lead=rememberNotificationLead(field?.value);
+  const choices=document.getElementById("notificationLeadChoices");
+  let leads=checkedNotificationLeads("#notificationLeadChoices .notification-lead");
   const status=document.querySelector(".tool-status");
-  if(field?.dataset.enabled!=="true"){
-    if(status){status.className="tool-status";status.textContent=`سيتم التنبيه قبل ${notificationLeadText(lead)} عند التفعيل.`}
+  if(!leads.length){
+    if(changedInput)changedInput.checked=true;
+    leads=checkedNotificationLeads("#notificationLeadChoices .notification-lead");
+    if(status){status.className="tool-status error";status.textContent="اختر موعد تنبيه واحدًا على الأقل."}
+    return;
+  }
+  if(leads.length>MAX_NOTIFICATION_LEADS){
+    if(changedInput)changedInput.checked=false;
+    leads=checkedNotificationLeads("#notificationLeadChoices .notification-lead");
+    if(status){status.className="tool-status error";status.textContent="يمكن اختيار ثلاثة تنبيهات بحد أقصى."}
+    return;
+  }
+  leads=rememberNotificationLeads(leads);
+  if(choices?.dataset.enabled!=="true"){
+    if(status){status.className="tool-status";status.textContent=`سيتم التنبيه قبل ${notificationLeadsText(leads)} عند التفعيل.`}
     return;
   }
   notificationBusy=true;
@@ -1088,7 +1169,7 @@ async function saveNotificationLead(){
     const registration=await getAppWorker();
     const subscription=await registration?.pushManager.getSubscription();
     if(!subscription||Notification.permission!=="granted"){
-      if(status){status.className="tool-status";status.textContent=`سيتم التنبيه قبل ${notificationLeadText(lead)} عند التفعيل.`}
+      if(status){status.className="tool-status";status.textContent=`سيتم التنبيه قبل ${notificationLeadsText(leads)} عند التفعيل.`}
       return;
     }
     const {data:existing,error:lookupError}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE)
@@ -1098,18 +1179,18 @@ async function saveNotificationLead(){
       .maybeSingle();
     if(lookupError)throw lookupError;
     if(!existing?.id){
-      if(status){status.className="tool-status";status.textContent=`تم اختيار ${notificationLeadText(lead)}. اضغط «تفعيل التنبيهات» لحفظه.`}
+      if(status){status.className="tool-status";status.textContent=`تم اختيار ${notificationLeadsText(leads)}. اضغط «تفعيل التنبيهات» لحفظها.`}
       return;
     }
     const {error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE)
-      .update({lead_minutes:lead,timezone:SCHEDULE_TIMEZONE,updated_at:new Date().toISOString()})
+      .update({lead_minutes:Math.min(...leads),lead_minutes_list:leads,timezone:SCHEDULE_TIMEZONE,updated_at:new Date().toISOString()})
       .eq("user_id",currentUser.id)
       .eq("id",existing.id);
     if(error)throw error;
-    if(status){status.className="tool-status on";status.textContent=`تم الحفظ: التنبيه قبل ${notificationLeadText(lead)}.`}
+    if(status){status.className="tool-status on";status.textContent=`تم الحفظ: التنبيه قبل ${notificationLeadsText(leads)}.`}
   }catch(error){
-    console.error("تعذّر حفظ موعد التنبيه.",error);
-    if(status){status.className="tool-status error";status.textContent="تعذّر حفظ موعد التنبيه في حسابك. تحقق من الإنترنت وحاول مرة أخرى."}
+    console.error("تعذّر حفظ مواعيد التنبيه.",error);
+    if(status){status.className="tool-status error";status.textContent="تعذّر حفظ مواعيد التنبيه في حسابك. تحقق من الإنترنت وحاول مرة أخرى."}
   }finally{notificationBusy=false}
 }
 async function testNotificationNow(){
@@ -1122,15 +1203,20 @@ async function testNotificationNow(){
     const registration=await getAppWorker();
     if(!registration)throw new Error("service_worker_unavailable");
     await registration.showNotification("اختبار تنبيهات مواعيدي",{
-      body:"التنبيهات تعمل على هذا الجهاز بنجاح.",
+      body:"إذا سمعت الصوت أو شعرت بالاهتزاز، فإعداد الجهاز يعمل.",
       icon:"./icons/icon-192.png",
       badge:"./icons/icon-192.png",
       lang:"ar",
       dir:"rtl",
       tag:`mawaeidi-test-${Date.now()}`,
+      renotify:true,
+      silent:false,
+      vibrate:[200,120,200],
+      requireInteraction:true,
+      timestamp:Date.now(),
       data:{url:"./"}
     });
-    if(status){status.className="tool-status on";status.textContent="تم إرسال الاختبار. إذا لم يظهر، راجع إعدادات إشعارات الجهاز ووضع عدم الإزعاج."}
+    if(status){status.className="tool-status on";status.textContent="تم إرسال الاختبار. إن ظهر بلا صوت، ارفع صوت الإشعارات وأوقف «عدم الإزعاج» ثم اختبر مرة أخرى."}
   }catch(error){
     console.error("تعذّر اختبار التنبيه.",error);
     if(status){status.className="tool-status error";status.textContent=notificationFailureMessage(error,error?.message==="service_worker_unavailable"?"worker":"permission")}
@@ -1864,6 +1950,37 @@ function readSchedules(){
   }));
 }
 
+function setLessonReminderFields(mode="default",leads=[DEFAULT_NOTIFICATION_LEAD]){
+  const safeMode=mode==="off"||mode==="custom"?mode:"default";
+  document.getElementById("lessonReminderMode").value=safeMode;
+  const selected=new Set(normalizeNotificationLeads(leads,[DEFAULT_NOTIFICATION_LEAD]));
+  document.querySelectorAll(".lesson-reminder-lead").forEach(input=>{input.checked=selected.has(Number(input.value))});
+  toggleLessonReminderFields();
+}
+function toggleLessonReminderFields(){
+  const mode=document.getElementById("lessonReminderMode").value;
+  const custom=document.getElementById("lessonReminderCustom");
+  const hint=document.getElementById("lessonReminderHint");
+  custom.classList.toggle("show",mode==="custom");
+  if(mode==="off")hint.textContent="لن يُرسل أي تنبيه لهذه الحصة على أجهزتك.";
+  else if(mode==="custom")hint.textContent="هذه المواعيد ستتجاوز الإعداد العام لهذه الحصة فقط.";
+  else hint.textContent="سيُستخدم موعد التنبيه الافتراضي المحفوظ على كل جهاز.";
+}
+function validateLessonReminderChoice(changedInput){
+  const selected=checkedNotificationLeads(".lesson-reminder-lead");
+  if(!selected.length){
+    if(changedInput)changedInput.checked=true;
+    alert("اختر موعد تنبيه واحدًا على الأقل لهذه الحصة.");
+    return false;
+  }
+  if(selected.length>MAX_NOTIFICATION_LEADS){
+    if(changedInput)changedInput.checked=false;
+    alert("يمكن اختيار ثلاثة تنبيهات بحد أقصى للحصة.");
+    return false;
+  }
+  return true;
+}
+
 function toggleFields(){
   const st=document.getElementById("studentType").value;
   const src=document.getElementById("lessonSource").value;
@@ -1898,6 +2015,7 @@ function openNew(){
   document.getElementById("duration").value=60;
   document.getElementById("conflictBox").style.display="none";
   setScheduleRows([{day:"الاثنين",time:"18:00"}]);
+  setLessonReminderFields("default",[DEFAULT_NOTIFICATION_LEAD]);
   toggleFields();openDrawer();
 }
 function openQuickAdd(day,time){
@@ -1927,6 +2045,7 @@ function openEdit(id){
   document.getElementById("notes").value=l.notes||"";
   document.getElementById("conflictBox").style.display="none";
   setScheduleRows(l.schedules||[]);
+  setLessonReminderFields(l.reminderMode,l.reminderLeads);
   toggleFields();openDrawer();
 }
 
@@ -1958,6 +2077,8 @@ function conflicts(candidate){
 async function saveLesson(){
   const st=document.getElementById("studentType").value;
   const src=document.getElementById("lessonSource").value;
+  const reminderMode=document.getElementById("lessonReminderMode").value;
+  const reminderLeads=checkedNotificationLeads(".lesson-reminder-lead");
   const duration=Number(document.getElementById("duration").value);
   const groupStudents=document.getElementById("groupStudents").value.split(/[\n،,]+/).map(x=>x.trim()).filter(Boolean);
   const lesson={
@@ -1971,10 +2092,14 @@ async function saveLesson(){
     duration,
     platform:document.getElementById("platform").value.trim(),
     repeat:"أسبوعيًا",
+    reminderMode,
+    reminderLeads:normalizeNotificationLeads(reminderLeads,[DEFAULT_NOTIFICATION_LEAD]),
     schedules:readSchedules(),
     notes:document.getElementById("notes").value.trim()
   };
   if(!Number.isFinite(duration)||duration<15||duration>720){alert("اكتب مدة صحيحة بين 15 و720 دقيقة.");return}
+  if(reminderMode==="custom"&&!reminderLeads.length){alert("اختر موعد تنبيه واحدًا على الأقل لهذه الحصة.");return}
+  if(reminderMode==="custom"&&reminderLeads.length>MAX_NOTIFICATION_LEADS){alert("يمكن اختيار ثلاثة تنبيهات بحد أقصى للحصة.");return}
   if(!lesson.schedules.length||lesson.schedules.some(s=>!days.includes(s.day)||!TIME_RE.test(s.time))){alert("اختر يومًا ووقتًا صحيحين لكل موعد.");return}
   if(st==="individual"&&!lesson.name){alert("اكتب اسم الطالب أو عنوان الدرس.");return}
   if(st==="group"&&!groupStudents.length){alert("أضف اسم طالب واحد على الأقل في المجموعة.");return}

@@ -1,0 +1,33 @@
+-- Run this only after deploying the Edge Function and creating the named Vault secrets:
+-- mawaeidi_reminder_function_url and mawaeidi_reminder_cron_secret.
+
+create extension if not exists pg_cron;
+create extension if not exists pg_net with schema extensions;
+
+select cron.unschedule(jobid)
+from cron.job
+where jobname = 'mawaeidi-reminders-every-minute';
+
+select cron.schedule(
+  'mawaeidi-reminders-every-minute',
+  '* * * * *',
+  $$
+  select net.http_post(
+    url := (
+      select decrypted_secret
+      from vault.decrypted_secrets
+      where name = 'mawaeidi_reminder_function_url'
+    ),
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-mawaeidi-cron-secret', (
+        select decrypted_secret
+        from vault.decrypted_secrets
+        where name = 'mawaeidi_reminder_cron_secret'
+      )
+    ),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 30000
+  ) as request_id;
+  $$
+);

@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#234B6E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="مواعيدي">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <title>مواعيدي — الوقت أمانة</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Noto+Kufi+Arabic:wght@700;800&display=swap');
@@ -55,6 +63,21 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     linear-gradient(145deg,#E8EFF4,#F8FAFB 52%,#DFE9F0)
 }
 .auth-gate.hidden{display:none}
+.startup-gate{
+  position:fixed;inset:0;z-index:210;display:none;place-items:center;padding:22px;
+  background:
+    radial-gradient(circle at 15% 10%,rgba(124,157,182,.18),transparent 31%),
+    linear-gradient(145deg,#E8EFF4,#F8FAFB 52%,#DFE9F0)
+}
+body.auth-pending .startup-gate{display:grid}
+body.auth-pending .app{visibility:hidden}
+.startup-mark{display:grid;justify-items:center;gap:10px;text-align:center}
+.startup-name{color:var(--primary);font-family:"Noto Kufi Arabic",var(--font);font-size:29px;font-weight:800}
+.startup-note{color:var(--muted);font-size:12px;font-weight:700}
+.startup-spinner{
+  width:28px;height:28px;margin-top:4px;border:3px solid rgba(35,75,110,.16);border-top-color:var(--primary);
+  border-radius:50%;animation:startup-spin .75s linear infinite
+}
 .auth-card{
   width:min(430px,100%);padding:30px;border:1px solid rgba(35,75,110,.16);border-top:4px solid var(--primary);
   border-radius:14px;background:rgba(255,255,255,.97);box-shadow:0 24px 70px rgba(17,42,64,.18)
@@ -78,6 +101,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @keyframes card-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes shimmer{from{background-position:0 50%}to{background-position:200% 50%}}
 @keyframes pulse{from{opacity:.45}to{opacity:1}}
+@keyframes startup-spin{to{transform:rotate(360deg)}}
 
 .shell{
   min-height:100vh;position:relative;isolation:isolate;overflow:hidden;
@@ -98,6 +122,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
 .app{width:min(1380px,100%);margin:0 auto;padding:24px 30px 48px;position:relative;z-index:1}
 .header{
+  position:relative;z-index:80;overflow:visible;
   display:flex;align-items:center;justify-content:space-between;gap:22px;
   padding:0 2px 18px;border-bottom:1px solid rgba(35,75,110,.16);
   animation:page-in .55s ease both;
@@ -120,13 +145,16 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .data-menu>summary::-webkit-details-marker{display:none}
 .data-menu>summary:hover,.data-menu[open]>summary{border-color:#AFC0CC;background:#fff;color:var(--primary)}
 .data-popover{
-  position:absolute;top:calc(100% + 8px);left:0;z-index:60;width:250px;padding:8px;border:1px solid var(--line);
+  position:absolute;top:calc(100% + 8px);left:0;z-index:60;width:278px;padding:8px;border:1px solid var(--line);
   border-radius:11px;background:#fff;box-shadow:0 18px 42px rgba(17,42,64,.16)
 }
 .data-action{display:block;width:100%;padding:10px 11px;border:0;border-radius:8px;background:transparent;color:var(--ink);text-align:right}
 .data-action:hover{background:#F1F5F7}
 .data-action strong{display:block;font-size:12px;font-weight:800}
 .data-action small{display:block;margin-top:3px;color:var(--muted);font-size:10px;line-height:1.55}
+.data-action[hidden]{display:none}
+.data-state{display:inline-flex;align-items:center;margin-inline-start:5px;padding:2px 6px;border-radius:999px;background:#EEF3F6;color:#607380;font-size:9px;font-weight:800}
+.data-state.on{background:var(--teach-bg);color:var(--teach)}
 .data-separator{height:1px;margin:6px 4px;background:var(--line)}
 .data-action.logout{color:var(--danger)}
 .brand h1{
@@ -279,6 +307,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .week-slot{display:flex;flex-direction:column;gap:7px;min-height:108px;padding:8px;background:#FBFCFD}
 .week-slot.today{background:#F0F6FA}
 .week-slot.is-empty{background-image:linear-gradient(135deg,rgba(211,221,229,.14) 25%,transparent 25%,transparent 50%,rgba(211,221,229,.14) 50%,rgba(211,221,229,.14) 75%,transparent 75%,transparent);background-size:16px 16px}
+.quick-add-slot{
+  display:grid;place-items:center;width:100%;min-height:90px;padding:6px;border:1px dashed transparent;border-radius:8px;
+  background:transparent;color:#80919D;font-size:11px;font-weight:800;opacity:.48;transition:opacity .16s ease,border-color .16s ease,background .16s ease,color .16s ease
+}
+.quick-add-slot span{display:inline-flex;align-items:center;gap:5px}
+.quick-add-slot b{font-size:17px;font-weight:500;line-height:1}
+.quick-add-slot:hover,.quick-add-slot:focus-visible{opacity:1;border-color:#AFC3D1;background:rgba(255,255,255,.76);color:var(--primary)}
 .week-card{
   position:relative;min-height:90px;padding:10px 11px;border:1px solid var(--line);border-inline-start-width:5px;border-radius:9px;
   text-align:right;cursor:pointer;transition:box-shadow .16s ease,border-color .16s ease,transform .16s ease
@@ -298,6 +333,40 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .week-source .source-line{height:14px}
 .week-grid.is-empty{display:block;min-width:0}
 .week-empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px}
+
+.tool-backdrop{
+  position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:18px;opacity:0;pointer-events:none;
+  background:rgba(10,23,34,.48);backdrop-filter:blur(4px);transition:opacity .18s ease
+}
+.tool-backdrop.show{opacity:1;pointer-events:auto}
+.tool-dialog{
+  width:min(540px,100%);max-height:min(720px,88vh);overflow:hidden;border:1px solid rgba(35,75,110,.2);border-top:4px solid var(--primary);
+  border-radius:14px;background:#F8FAFB;box-shadow:0 26px 80px rgba(10,23,34,.25);transform:translateY(12px);transition:transform .18s ease
+}
+.tool-backdrop.show .tool-dialog{transform:none}
+.tool-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 19px 15px;border-bottom:1px solid var(--line);background:#fff}
+.tool-head h2{margin:0;color:var(--primary);font-size:21px}.tool-head p{margin:4px 0 0;color:var(--muted);font-size:11px;line-height:1.65}
+.tool-body{max-height:calc(88vh - 84px);overflow:auto;padding:15px}
+.tool-card{padding:14px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.tool-card+.tool-card{margin-top:10px}
+.tool-card h3{margin:0 0 5px;color:var(--ink);font-size:14px}.tool-card p{margin:0;color:var(--muted);font-size:11px;line-height:1.75}
+.tool-field{display:grid;gap:6px;margin-top:12px}.tool-field select{background:#fff}
+.tool-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}
+.tool-actions button{padding:9px 12px;border-radius:8px;font-size:12px;font-weight:800}
+.tool-actions .tool-primary{border:0;background:var(--primary);color:#fff}.tool-actions .tool-secondary{border:1px solid var(--line);background:#fff;color:var(--primary)}
+.tool-actions .tool-danger{border:0;background:var(--danger-bg);color:var(--danger)}
+.tool-actions button:disabled{cursor:wait;opacity:.55}
+.tool-status{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#EEF3F6;color:#5D6F7C;font-size:11px;font-weight:700;line-height:1.6}
+.tool-status::before{content:"";width:9px;height:9px;flex:0 0 auto;border-radius:50%;background:#8CA3B5}
+.tool-status.on{border-color:var(--teach-border);background:var(--teach-bg);color:var(--teach)}.tool-status.on::before{background:var(--teach)}
+.tool-status.error{border-color:#E7BDBD;background:var(--danger-bg);color:var(--danger)}.tool-status.error::before{background:var(--danger)}
+.history-list{display:grid;gap:9px}.history-empty{padding:30px 12px;text-align:center;color:var(--muted);font-size:12px}
+.history-item{padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.history-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.history-summary{color:var(--ink);font-size:12px;font-weight:800;line-height:1.55}
+.history-time{color:var(--muted);font-size:10px;white-space:nowrap}.history-detail{margin-top:4px;color:var(--muted);font-size:10px;line-height:1.55}
+.history-restore{margin-top:9px;padding:7px 9px;border:1px solid #BFCFD9;border-radius:7px;background:#F7FAFB;color:var(--primary);font-size:10px;font-weight:800}
+.history-restore:disabled{opacity:.55;cursor:wait}
+.install-help{margin-top:9px;padding:10px;border-radius:8px;background:#EEF3F6;color:#536977;font-size:11px;line-height:1.75}
 
 .backdrop{position:fixed;inset:0;z-index:80;opacity:0;pointer-events:none;background:rgba(10,23,34,.42);backdrop-filter:blur(3px);transition:opacity .2s ease}
 .backdrop.show{opacity:1;pointer-events:auto}
@@ -338,7 +407,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 @media(max-width:760px){
   .app{padding:14px 12px 28px}.header{gap:10px}.brand h1{font-size:27px}.brand small{display:none}.header-actions{gap:5px}
   .sync-status{display:inline-flex;justify-content:center;width:36px;height:36px;padding:0;border:1px solid var(--line);background:rgba(255,255,255,.82)}
-  .sync-status::before,.sync-text{display:none}.sync-icon{display:block}.data-menu>summary{padding:9px;font-size:11px}.data-popover{width:min(250px,calc(100vw - 24px))}
+  .sync-status::before,.sync-text{display:none}.sync-icon{display:block}.data-menu>summary{padding:9px;font-size:11px}.data-popover{width:min(278px,calc(100vw - 24px))}
   .add-btn{padding:10px 12px;font-size:13px}.hero{margin-top:14px}.hero-copy{padding:13px 15px}.kufi-quote{height:108px;background-size:150% auto}
   .controls{align-items:stretch}.tabs,.filters{flex:1}.tab,.filter{flex:1;min-width:0;padding:9px 8px}
   .panel{border-radius:9px}.timeline{padding:10px 12px 16px}
@@ -349,18 +418,28 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .week-table-wrap{padding:10px}.week-grid{grid-template-columns:66px repeat(7,minmax(145px,1fr));min-width:1080px}
   .week-time-label,.week-slot{min-height:102px}.week-time-label{padding-inline:4px}.week-slot{padding:6px}
   .week-card{min-height:88px;padding:9px}.week-name{font-size:12px}
+  .quick-add-slot{min-height:88px;opacity:.68}
   .hurufiyat span{width:410px;opacity:.07}.hurufiyat span:nth-child(1){top:-125px;right:-180px}
   .hurufiyat span:nth-child(4){bottom:-125px;left:-180px}
   .auth-card{padding:24px 20px}.auth-name{font-size:24px}.auth-card h2{font-size:21px}
+  .tool-backdrop{align-items:end;padding:0}.tool-dialog{width:100%;max-height:91vh;border-radius:16px 16px 0 0}.tool-body{max-height:calc(91vh - 84px)}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 </style>
 </head>
-<body>
+<body class="auth-pending">
 
-<div class="auth-gate" id="authGate">
+<div class="startup-gate" id="startupGate" role="status" aria-live="polite" aria-label="جارٍ فتح جدول مواعيدي">
+  <div class="startup-mark">
+    <div class="startup-name">مواعيدي</div>
+    <div class="startup-note">جارٍ فتح جدولك…</div>
+    <span class="startup-spinner" aria-hidden="true"></span>
+  </div>
+</div>
+
+<div class="auth-gate hidden" id="authGate">
   <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="auth-name">مواعيدي</div>
     <h2 id="authTitle">تسجيل الدخول</h2>
@@ -412,6 +491,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
         <details class="data-menu" id="dataMenu">
           <summary aria-label="فتح أدوات البيانات">البيانات</summary>
           <div class="data-popover">
+            <button type="button" class="data-action" id="installAction" onclick="installApp()" hidden>
+              <strong>تثبيت مواعيدي على الهاتف</strong>
+              <small>أيقونة على الشاشة وفتح كتطبيق كامل</small>
+            </button>
+            <button type="button" class="data-action" onclick="openNotificationSettings()">
+              <strong>تنبيهات الحصص <span class="data-state" id="notificationMenuStatus">غير مفعّلة</span></strong>
+              <small>تنبيه على هذا الجهاز قبل موعد الحصة</small>
+            </button>
+            <button type="button" class="data-action" onclick="openHistory()">
+              <strong>سجل التعديلات والحذف</strong>
+              <small>راجع آخر التغييرات واسترجع أي نسخة سابقة</small>
+            </button>
+            <div class="data-separator" aria-hidden="true"></div>
             <button type="button" class="data-action" onclick="exportBackup()">
               <strong>تنزيل نسخة احتياطية</strong>
               <small>حفظ كل المواعيد في ملف على جهازك</small>
@@ -605,6 +697,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   </div>
 </aside>
 
+<div class="tool-backdrop" id="toolBackdrop" aria-hidden="true" onclick="closeToolDialog(event)">
+  <section class="tool-dialog" id="toolDialog" role="dialog" aria-modal="true" aria-labelledby="toolTitle" aria-describedby="toolIntro" tabindex="-1">
+    <header class="tool-head">
+      <div>
+        <h2 id="toolTitle">أدوات مواعيدي</h2>
+        <p id="toolIntro"></p>
+      </div>
+      <button type="button" class="close" aria-label="إغلاق" onclick="closeToolDialog()">×</button>
+    </header>
+    <div class="tool-body" id="toolBody"></div>
+  </section>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js"></script>
 <script>
 const days=["الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"];
@@ -620,6 +725,11 @@ const BACKUP_VERSION=1;
 const MAX_BACKUP_BYTES=5*1024*1024;
 const MAX_BACKUP_LESSONS=2000;
 const AUTO_REFRESH_THROTTLE_MS=15000;
+const HISTORY_TABLE="mawaeidi_history";
+const PUSH_SUBSCRIPTIONS_TABLE="mawaeidi_push_subscriptions";
+const VAPID_PUBLIC_KEY="BCV1YqoeembJvO664BNkaJbrK_wMZGl5I1EQv1EgjeJO30kWIdEtQswrebKG7qt1jSKVQ0GtqLPipzHI1XGzFc8";
+const DEFAULT_NOTIFICATION_LEAD=15;
+const SCHEDULE_TIMEZONE="Africa/Cairo";
 const cloud=window.supabase?.createClient
   ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
   :null;
@@ -688,8 +798,306 @@ let saveInFlight=false;
 let backupInFlight=false;
 let pendingRemoteRow=null;
 let lastAutoRefreshAt=0;
+let deferredInstallPrompt=null;
+let serviceWorkerRegistration=null;
+let toolReturnFocus=null;
+let notificationBusy=false;
+let historySnapshots=new Map();
 
 function closeDataMenu(){document.getElementById("dataMenu")?.removeAttribute("open")}
+function isStandalone(){return window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone===true}
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||"")}
+function vapidKeyIsConfigured(){return VAPID_PUBLIC_KEY&&!VAPID_PUBLIC_KEY.startsWith("__")}
+function openToolDialog(title,intro,content){
+  closeDataMenu();
+  toolReturnFocus=document.activeElement;
+  document.getElementById("toolTitle").textContent=title;
+  document.getElementById("toolIntro").textContent=intro||"";
+  document.getElementById("toolBody").innerHTML=content||"";
+  const backdrop=document.getElementById("toolBackdrop");
+  backdrop.classList.add("show");
+  backdrop.setAttribute("aria-hidden","false");
+  document.body.classList.add("drawer-open");
+  requestAnimationFrame(()=>document.getElementById("toolDialog").focus());
+}
+function closeToolDialog(event){
+  const backdrop=document.getElementById("toolBackdrop");
+  if(event&&event.target!==backdrop)return;
+  backdrop.classList.remove("show");
+  backdrop.setAttribute("aria-hidden","true");
+  document.body.classList.remove("drawer-open");
+  if(toolReturnFocus?.focus)toolReturnFocus.focus();
+  toolReturnFocus=null;
+}
+function refreshInstallAction(){
+  const action=document.getElementById("installAction");
+  if(action)action.hidden=isStandalone();
+}
+async function registerAppWorker(){
+  if(!("serviceWorker" in navigator))return null;
+  const safeOrigin=location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1";
+  if(!safeOrigin)return null;
+  try{
+    serviceWorkerRegistration=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
+    return serviceWorkerRegistration;
+  }catch(error){
+    console.warn("تعذّر تسجيل خدمة تطبيق مواعيدي.",error);
+    return null;
+  }
+}
+async function installApp(){
+  closeDataMenu();
+  if(isStandalone()){
+    openToolDialog("مواعيدي مُثبّت","التطبيق يعمل الآن في وضع الشاشة الكاملة.",'<div class="tool-card"><h3>التثبيت مكتمل</h3><p>ستجد أيقونة مواعيدي بين تطبيقات الهاتف، ويمكنك فتحه مباشرة منها.</p></div>');
+    return;
+  }
+  if(deferredInstallPrompt){
+    const prompt=deferredInstallPrompt;
+    deferredInstallPrompt=null;
+    await prompt.prompt();
+    const choice=await prompt.userChoice;
+    if(choice?.outcome==="accepted")refreshInstallAction();
+    else refreshInstallAction();
+    return;
+  }
+  const help=isIOS()
+    ?'<div class="tool-card"><h3>على iPhone أو iPad</h3><p>افتح الموقع في Safari، واضغط زر المشاركة، ثم اختر «إضافة إلى الشاشة الرئيسية» وبعدها «إضافة».</p><div class="install-help">بعد التثبيت سيفتح مواعيدي كتطبيق كامل، ومن داخله يمكنك تفعيل التنبيهات.</div></div>'
+    :'<div class="tool-card"><h3>تثبيت التطبيق</h3><p>افتح قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». إن لم يظهر الخيار، حدّث الصفحة مرة واحدة ثم افتح القائمة مجددًا.</p></div>';
+  openToolDialog("تثبيت مواعيدي","خطوة واحدة تضع أيقونة التطبيق على هاتفك.",help);
+}
+function urlBase64ToUint8Array(value){
+  const padding="=".repeat((4-value.length%4)%4);
+  const base64=(value+padding).replace(/-/g,"+").replace(/_/g,"/");
+  const raw=atob(base64);
+  return Uint8Array.from([...raw].map(char=>char.charCodeAt(0)));
+}
+function notificationSupport(){
+  return "Notification" in window&&"serviceWorker" in navigator&&"PushManager" in window;
+}
+async function getAppWorker(){
+  if(serviceWorkerRegistration)return serviceWorkerRegistration;
+  const registered=await registerAppWorker();
+  if(registered)return registered;
+  if("serviceWorker" in navigator)return navigator.serviceWorker.ready.catch(()=>null);
+  return null;
+}
+function updateNotificationMenuStatus(enabled){
+  const status=document.getElementById("notificationMenuStatus");
+  if(!status)return;
+  status.textContent=enabled?"مفعّلة":"غير مفعّلة";
+  status.classList.toggle("on",Boolean(enabled));
+}
+async function refreshNotificationMenuStatus(){
+  if(!currentUser||!notificationSupport()){updateNotificationMenuStatus(false);return false}
+  try{
+    const registration=await getAppWorker();
+    const subscription=await registration?.pushManager.getSubscription();
+    let enabled=Notification.permission==="granted"&&Boolean(subscription);
+    if(enabled&&cloud&&currentUser){
+      const {data,error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE)
+        .select("id")
+        .eq("user_id",currentUser.id)
+        .eq("endpoint",subscription.endpoint)
+        .maybeSingle();
+      if(error)throw error;
+      enabled=Boolean(data);
+    }
+    updateNotificationMenuStatus(enabled);
+    return enabled;
+  }catch{
+    updateNotificationMenuStatus(false);
+    return false;
+  }
+}
+function notificationSettingsMarkup({supported,configured,requiresInstall=false,permission,enabled,lead=DEFAULT_NOTIFICATION_LEAD,error=""}){
+  if(!supported)return '<div class="tool-status error">هذا المتصفح لا يدعم تنبيهات الويب. جرّب Chrome أو Edge، أو ثبّت الموقع من Safari على iPhone.</div>';
+  if(requiresInstall)return '<div class="tool-status">على iPhone وiPad يجب تثبيت مواعيدي على الشاشة الرئيسية أولًا، ثم فتحه من الأيقونة وتفعيل التنبيهات من داخله.</div><div class="tool-actions"><button type="button" class="tool-primary" onclick="installApp()">طريقة التثبيت</button></div>';
+  if(!configured)return '<div class="tool-status">الميزة مجهّزة في النسخة المحلية، وستصبح قابلة للتفعيل بعد اعتماد التحديث وإضافة مفتاح التنبيهات الآمن.</div><div class="tool-card"><h3>كيف ستعمل؟</h3><p>بعد النشر ستضغط «تفعيل التنبيهات» مرة واحدة على كل جهاز، وستصلك الرسالة قبل الحصة حتى إن كان التطبيق مغلقًا.</p></div>';
+  const statusClass=error?"error":enabled?"on":"";
+  const statusText=error|| (enabled?"التنبيهات مفعّلة على هذا الجهاز.":permission==="denied"?"المتصفح حظر التنبيهات. اسمح بها من إعدادات الموقع ثم أعد المحاولة.":"التنبيهات غير مفعّلة على هذا الجهاز.");
+  return `<div class="tool-status ${statusClass}">${esc(statusText)}</div>
+    <div class="tool-card">
+      <h3>موعد التنبيه</h3>
+      <p>الإعداد خاص بهذا الجهاز، ويمكن تغييره لاحقًا.</p>
+      <label class="tool-field" for="notificationLead"><span>نبّهني قبل الحصة بـ</span>
+        <select id="notificationLead" ${enabled?"":"disabled"} onchange="saveNotificationLead()">
+          ${[5,10,15,30,60].map(value=>`<option value="${value}" ${Number(lead)===value?"selected":""}>${value===60?"ساعة":value+" دقيقة"}</option>`).join("")}
+        </select>
+      </label>
+      <div class="tool-actions">
+        <button type="button" class="${enabled?"tool-danger":"tool-primary"}" id="notificationToggle" onclick="${enabled?"disableNotifications()":"enableNotifications()"}">${enabled?"إيقاف التنبيهات":"تفعيل التنبيهات"}</button>
+      </div>
+    </div>`;
+}
+async function readNotificationState(){
+  const base={supported:notificationSupport(),configured:vapidKeyIsConfigured(),requiresInstall:isIOS()&&!isStandalone(),permission:"default",enabled:false,lead:DEFAULT_NOTIFICATION_LEAD,error:""};
+  if(!base.supported||base.requiresInstall)return base;
+  base.permission=Notification.permission;
+  try{
+    const registration=await getAppWorker();
+    const subscription=await registration?.pushManager.getSubscription();
+    base.enabled=false;
+    if(base.permission==="granted"&&subscription&&cloud&&currentUser){
+      const {data,error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE)
+        .select("lead_minutes")
+        .eq("user_id",currentUser.id)
+        .eq("endpoint",subscription.endpoint)
+        .maybeSingle();
+      if(error)throw error;
+      base.enabled=Boolean(data);
+      if(base.enabled&&Number(data?.lead_minutes))base.lead=Number(data.lead_minutes);
+    }
+  }catch(error){
+    console.warn("تعذّر قراءة إعداد التنبيهات.",error);
+    base.error="تعذّر قراءة إعداد التنبيهات. تحقق من الإنترنت ثم حاول مرة أخرى.";
+  }
+  return base;
+}
+async function openNotificationSettings(){
+  closeDataMenu();
+  if(!currentUser||!cloudReady){alert("انتظر حتى يكتمل تحميل حسابك ثم حاول مرة أخرى.");return}
+  openToolDialog("تنبيهات الحصص","إعداد مستقل لكل هاتف أو كمبيوتر.",'<div class="tool-status">جارٍ قراءة إعداد هذا الجهاز…</div>');
+  const state=await readNotificationState();
+  if(!document.getElementById("toolBackdrop").classList.contains("show"))return;
+  document.getElementById("toolBody").innerHTML=notificationSettingsMarkup(state);
+  updateNotificationMenuStatus(state.enabled);
+}
+async function enableNotifications(){
+  if(notificationBusy||!currentUser||!cloudReady)return;
+  if(!notificationSupport()||!vapidKeyIsConfigured()){await openNotificationSettings();return}
+  notificationBusy=true;
+  const button=document.getElementById("notificationToggle");if(button)button.disabled=true;
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission!=="granted")throw new Error("permission_denied");
+    const registration=await getAppWorker();
+    if(!registration)throw new Error("service_worker_unavailable");
+    let subscription=await registration.pushManager.getSubscription();
+    if(!subscription)subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
+    const json=subscription.toJSON();
+    const lead=Number(document.getElementById("notificationLead")?.value)||DEFAULT_NOTIFICATION_LEAD;
+    const {error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE).upsert({
+      user_id:currentUser.id,
+      endpoint:subscription.endpoint,
+      p256dh:json.keys?.p256dh||"",
+      auth_key:json.keys?.auth||"",
+      timezone:SCHEDULE_TIMEZONE,
+      lead_minutes:lead,
+      updated_at:new Date().toISOString()
+    },{onConflict:"endpoint"});
+    if(error)throw error;
+    updateNotificationMenuStatus(true);
+    await openNotificationSettings();
+  }catch(error){
+    console.error("تعذّر تفعيل التنبيهات.",error);
+    const message=error?.message==="permission_denied"?"لم تسمح للتطبيق بإرسال التنبيهات.":"تعذّر تفعيل التنبيهات. تحقق من اتصال الإنترنت وإذن المتصفح.";
+    const state=await readNotificationState();state.error=message;
+    document.getElementById("toolBody").innerHTML=notificationSettingsMarkup(state);
+  }finally{
+    notificationBusy=false;
+  }
+}
+async function saveNotificationLead(){
+  if(notificationBusy||!currentUser||!cloudReady)return;
+  const lead=Number(document.getElementById("notificationLead")?.value);
+  if(![5,10,15,30,60].includes(lead))return;
+  notificationBusy=true;
+  try{
+    const registration=await getAppWorker();
+    const subscription=await registration?.pushManager.getSubscription();
+    if(!subscription)return;
+    const {error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE).update({lead_minutes:lead,timezone:SCHEDULE_TIMEZONE,updated_at:new Date().toISOString()})
+      .eq("user_id",currentUser.id).eq("endpoint",subscription.endpoint);
+    if(error)throw error;
+    const status=document.querySelector(".tool-status");if(status){status.className="tool-status on";status.textContent="تم حفظ موعد التنبيه على هذا الجهاز."}
+  }catch(error){
+    console.error("تعذّر حفظ موعد التنبيه.",error);
+    const status=document.querySelector(".tool-status");if(status){status.className="tool-status error";status.textContent="تعذّر حفظ الإعداد. حاول مرة أخرى."}
+  }finally{notificationBusy=false}
+}
+async function disableNotifications(silent=false){
+  if(notificationBusy)return false;
+  notificationBusy=true;
+  const button=document.getElementById("notificationToggle");if(button)button.disabled=true;
+  try{
+    const registration=await getAppWorker();
+    const subscription=await registration?.pushManager.getSubscription();
+    if(subscription&&cloud&&currentUser){
+      const {error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE).delete().eq("user_id",currentUser.id).eq("endpoint",subscription.endpoint);
+      if(error&&!silent)throw error;
+      await subscription.unsubscribe();
+    }
+    updateNotificationMenuStatus(false);
+    if(!silent)await openNotificationSettings();
+    return true;
+  }catch(error){
+    console.error("تعذّر إيقاف التنبيهات.",error);
+    if(!silent){const status=document.querySelector(".tool-status");if(status){status.className="tool-status error";status.textContent="تعذّر إيقاف التنبيهات. حاول مرة أخرى."}}
+    return false;
+  }finally{notificationBusy=false}
+}
+function historyChangeSummary(entry){
+  const before=Array.isArray(entry?.before_lessons)?entry.before_lessons:[];
+  const after=Array.isArray(entry?.after_lessons)?entry.after_lessons:[];
+  const beforeMap=new Map(before.map(item=>[item?.id,item]));
+  const afterMap=new Map(after.map(item=>[item?.id,item]));
+  const added=after.filter(item=>!beforeMap.has(item?.id));
+  const removed=before.filter(item=>!afterMap.has(item?.id));
+  const changed=after.filter(item=>beforeMap.has(item?.id)&&JSON.stringify(beforeMap.get(item.id))!==JSON.stringify(item));
+  if(added.length===1&&!removed.length&&!changed.length)return {title:`إضافة حصة: ${added[0].name||"بدون اسم"}`,detail:"يمكن الرجوع إلى الجدول قبل إضافتها."};
+  if(removed.length===1&&!added.length&&!changed.length)return {title:`حذف حصة: ${removed[0].name||"بدون اسم"}`,detail:"يمكن استرجاع الحصة وكل مواعيدها."};
+  if(changed.length===1&&!added.length&&!removed.length)return {title:`تعديل حصة: ${changed[0].name||beforeMap.get(changed[0].id)?.name||"بدون اسم"}`,detail:"يمكن استرجاع بياناتها ومواعيدها السابقة."};
+  return {title:"تحديث عدة مواعيد",detail:`${added.length} إضافة · ${changed.length} تعديل · ${removed.length} حذف`};
+}
+function formatHistoryDate(value){
+  const date=new Date(value);
+  if(!Number.isFinite(date.getTime()))return "وقت غير معروف";
+  return new Intl.DateTimeFormat("ar-EG",{dateStyle:"medium",timeStyle:"short"}).format(date);
+}
+function renderHistoryRows(rows){
+  historySnapshots=new Map(rows.map(row=>[String(row.id),row]));
+  if(!rows.length)return '<div class="history-empty">لا توجد تعديلات مسجلة حتى الآن.</div>';
+  return `<div class="history-list">${rows.map(row=>{
+    const summary=historyChangeSummary(row);
+    return `<article class="history-item">
+      <div class="history-top"><div class="history-summary">${esc(summary.title)}</div><time class="history-time">${esc(formatHistoryDate(row.created_at))}</time></div>
+      <div class="history-detail">${esc(summary.detail)}</div>
+      <button type="button" class="history-restore" onclick="restoreHistory('${esc(String(row.id))}',this)">استعادة الجدول قبل هذا التغيير</button>
+    </article>`;
+  }).join("")}</div>`;
+}
+async function openHistory(){
+  closeDataMenu();
+  if(!currentUser||!cloudReady){alert("انتظر حتى يكتمل تحميل حسابك ثم حاول مرة أخرى.");return}
+  openToolDialog("سجل التعديلات والحذف","آخر 30 تغييرًا محفوظة في حسابك.",'<div class="tool-status">جارٍ تحميل السجل…</div>');
+  try{
+    const {data,error}=await cloud.from(HISTORY_TABLE)
+      .select("id,before_lessons,after_lessons,created_at")
+      .eq("user_id",currentUser.id)
+      .order("created_at",{ascending:false})
+      .limit(30);
+    if(error)throw error;
+    if(document.getElementById("toolBackdrop").classList.contains("show"))document.getElementById("toolBody").innerHTML=renderHistoryRows(data||[]);
+  }catch(error){
+    console.error("تعذّر تحميل سجل مواعيدي.",error);
+    document.getElementById("toolBody").innerHTML='<div class="tool-status">السجل مجهّز في النسخة المحلية، وسيبدأ حفظ التغييرات بعد اعتماد التحديث وتفعيل جدول السجل.</div>';
+  }
+}
+async function restoreHistory(id,button){
+  const snapshot=historySnapshots.get(String(id));
+  if(!snapshot||!Array.isArray(snapshot.before_lessons))return;
+  if(!confirm("سيعود الجدول كله إلى حالته قبل هذا التغيير. وسيُسجَّل الاسترجاع نفسه في السجل. هل تريد المتابعة؟"))return;
+  if(button)button.disabled=true;
+  const previous=lessons;
+  lessons=normalizeLessons(snapshot.before_lessons);
+  if(!await persist()){
+    lessons=previous;
+    if(button)button.disabled=false;
+    return;
+  }
+  render();
+  await openHistory();
+}
 function createBackupPayload(){
   return {
     format:BACKUP_FORMAT,
@@ -889,12 +1297,17 @@ function requestAutoRefresh(){
   lastAutoRefreshAt=now;
   refreshFromCloud(true);
 }
+function finishAuthBootstrap(){document.body.classList.remove("auth-pending")}
 function showAuth(){
   document.getElementById("authGate").classList.remove("hidden");
+  finishAuthBootstrap();
   const target=authMode==="update"?document.getElementById("authPassword"):document.getElementById("authEmail");
   target.focus();
 }
-function hideAuth(){document.getElementById("authGate").classList.add("hidden")}
+function hideAuth(){
+  document.getElementById("authGate").classList.add("hidden");
+  finishAuthBootstrap();
+}
 function setAuthMode(mode){
   authMode=["signin","recover","update"].includes(mode)?mode:"signin";
   const signin=authMode==="signin",recover=authMode==="recover",update=authMode==="update";
@@ -976,7 +1389,7 @@ async function submitAuth(){
 async function activateSession(user){
   if(!user||!cloud)return;
   if(loadingUserId===user.id)return;
-  if(currentUser?.id===user.id&&cloudReady){if(!realtimeChannel)startRealtime(user);hideAuth();return}
+  if(currentUser?.id===user.id&&cloudReady){if(!realtimeChannel)startRealtime(user);hideAuth();refreshNotificationMenuStatus();return}
   stopRealtime();
   lastCloudUpdatedAt=null;
   loadingUserId=user.id;
@@ -1013,6 +1426,7 @@ async function activateSession(user){
     hideAuth();
     setSync("saved","محفوظ سحابيًا");
     startRealtime(user);
+    refreshNotificationMenuStatus();
   }catch(error){
     console.error("تعذّر تحميل جدول مواعيدي.",error);
     cloudReady=false;
@@ -1027,12 +1441,13 @@ async function activateSession(user){
 async function logout(){
   if(!cloud)return;
   closeDataMenu();
+  await disableNotifications(true);
   const {error}=await cloud.auth.signOut();
   if(error){alert("تعذّر تسجيل الخروج. حاول مرة أخرى.");return}
   stopRealtime();
   sessionSequence++;
   loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;lastCloudUpdatedAt=null;
-  closeDrawer();render();showAuth();
+  closeDrawer();closeToolDialog();render();showAuth();
   setAuthMessage("تم تسجيل الخروج.");
 }
 async function persist(silent=false){
@@ -1263,6 +1678,15 @@ function renderWeek(){
       slot.className="week-slot"+(day===tn?" today":"")+(items.length?"":" is-empty");
       slot.setAttribute("role","cell");
       slot.setAttribute("aria-label",items.length?`${day}، ${fmt(time)}، ${items.length} حصة`:`${day}، ${fmt(time)}، فارغ`);
+      if(!items.length){
+        const add=document.createElement("button");
+        add.type="button";
+        add.className="quick-add-slot";
+        add.setAttribute("aria-label",`إضافة حصة يوم ${day} الساعة ${fmt(time)}`);
+        add.innerHTML='<span><b aria-hidden="true">＋</b> إضافة</span>';
+        add.onclick=()=>openQuickAdd(day,time);
+        slot.appendChild(add);
+      }
       items.forEach(o=>{
         const l=o.lesson,kind=l.type==="teach"?"أُدرِّس":"أدرس",src=sourceLabel(l),srcColor=sourceColor(l);
         const details=[`${l.duration} دقيقة`,l.subject,l.platform].filter(Boolean).map(esc).join(" · ");
@@ -1351,6 +1775,14 @@ function openNew(){
   document.getElementById("conflictBox").style.display="none";
   setScheduleRows([{day:"الاثنين",time:"18:00"}]);
   toggleFields();openDrawer();
+}
+function openQuickAdd(day,time){
+  const safeDay=days.includes(day)?day:"الاثنين";
+  const safeTime=TIME_RE.test(String(time))?String(time):"18:00";
+  openNew();
+  setScheduleRows([{day:safeDay,time:safeTime}]);
+  document.getElementById("drawerSub").textContent=`تم اختيار ${safeDay} الساعة ${fmt(safeTime)} من الجدول.`;
+  setTimeout(()=>document.getElementById("name").focus(),0);
 }
 function openEdit(id){
   const l=lessons.find(x=>x.id===id);if(!l)return;
@@ -1459,7 +1891,8 @@ async function deleteLesson(){
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){
     closeDataMenu();
-    if(document.getElementById("authGate").classList.contains("hidden"))closeDrawer();
+    if(document.getElementById("toolBackdrop").classList.contains("show"))closeToolDialog();
+    else if(document.getElementById("authGate").classList.contains("hidden"))closeDrawer();
   }
   if(e.key==="Enter"&&!document.getElementById("authGate").classList.contains("hidden"))submitAuth();
 });
@@ -1471,8 +1904,19 @@ document.addEventListener("visibilitychange",requestAutoRefresh);
 window.addEventListener("focus",requestAutoRefresh);
 window.addEventListener("online",requestAutoRefresh);
 window.addEventListener("offline",()=>{if(currentUser)setSync("error","غير متصل بالإنترنت")});
+window.addEventListener("beforeinstallprompt",event=>{
+  event.preventDefault();
+  deferredInstallPrompt=event;
+  refreshInstallAction();
+});
+window.addEventListener("appinstalled",()=>{
+  deferredInstallPrompt=null;
+  refreshInstallAction();
+});
 
 async function initApp(){
+  refreshInstallAction();
+  registerAppWorker();
   render();
   if(!cloud){
     showAuth();
@@ -1486,7 +1930,7 @@ async function initApp(){
       setTimeout(()=>{
         stopRealtime();
         sessionSequence++;loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;
-        recoveryUser=null;lastCloudUpdatedAt=null;setAuthMode("signin");closeDrawer();render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
+        recoveryUser=null;lastCloudUpdatedAt=null;setAuthMode("signin");closeDrawer();closeToolDialog();updateNotificationMenuStatus(false);render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
       },0);
     }else if(event==="SIGNED_IN"&&session?.user&&authMode!=="update"){
       if(recoveryLinkDetected){enterPasswordUpdate(session.user);return}

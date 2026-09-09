@@ -729,6 +729,7 @@ const HISTORY_TABLE="mawaeidi_history";
 const PUSH_SUBSCRIPTIONS_TABLE="mawaeidi_push_subscriptions";
 const VAPID_PUBLIC_KEY="BCV1YqoeembJvO664BNkaJbrK_wMZGl5I1EQv1EgjeJO30kWIdEtQswrebKG7qt1jSKVQ0GtqLPipzHI1XGzFc8";
 const DEFAULT_NOTIFICATION_LEAD=15;
+const NOTIFICATION_LEAD_KEY="mawaeidi-notification-lead-v1";
 const SCHEDULE_TIMEZONE="Africa/Cairo";
 const cloud=window.supabase?.createClient
   ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
@@ -808,6 +809,22 @@ function closeDataMenu(){document.getElementById("dataMenu")?.removeAttribute("o
 function isStandalone(){return window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone===true}
 function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||"")}
 function vapidKeyIsConfigured(){return VAPID_PUBLIC_KEY&&!VAPID_PUBLIC_KEY.startsWith("__")}
+function validNotificationLead(value){
+  const lead=Number(value);
+  return [5,10,15,30,60].includes(lead)?lead:DEFAULT_NOTIFICATION_LEAD;
+}
+function savedNotificationLead(){
+  try{return validNotificationLead(localStorage.getItem(NOTIFICATION_LEAD_KEY))}catch{return DEFAULT_NOTIFICATION_LEAD}
+}
+function rememberNotificationLead(value){
+  const lead=validNotificationLead(value);
+  try{localStorage.setItem(NOTIFICATION_LEAD_KEY,String(lead))}catch{}
+  return lead;
+}
+function notificationLeadText(value){
+  const lead=validNotificationLead(value);
+  return lead===60?"ساعة":lead+" دقيقة";
+}
 function openToolDialog(title,intro,content){
   closeDataMenu();
   toolReturnFocus=document.activeElement;
@@ -875,11 +892,18 @@ function notificationSupport(){
   return "Notification" in window&&"serviceWorker" in navigator&&"PushManager" in window;
 }
 async function getAppWorker(){
-  if(serviceWorkerRegistration)return serviceWorkerRegistration;
-  const registered=await registerAppWorker();
-  if(registered)return registered;
-  if("serviceWorker" in navigator)return navigator.serviceWorker.ready.catch(()=>null);
-  return null;
+  if(!("serviceWorker" in navigator))return null;
+  if(!serviceWorkerRegistration)await registerAppWorker();
+  try{
+    const ready=await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error("service_worker_timeout")),8000))
+    ]);
+    serviceWorkerRegistration=ready;
+    return ready;
+  }catch{
+    return serviceWorkerRegistration?.active?serviceWorkerRegistration:null;
+  }
 }
 function updateNotificationMenuStatus(enabled){
   const status=document.getElementById("notificationMenuStatus");
@@ -913,24 +937,27 @@ function notificationSettingsMarkup({supported,configured,requiresInstall=false,
   if(!supported)return '<div class="tool-status error">هذا المتصفح لا يدعم تنبيهات الويب. جرّب Chrome أو Edge، أو ثبّت الموقع من Safari على iPhone.</div>';
   if(requiresInstall)return '<div class="tool-status">على iPhone وiPad يجب تثبيت مواعيدي على الشاشة الرئيسية أولًا، ثم فتحه من الأيقونة وتفعيل التنبيهات من داخله.</div><div class="tool-actions"><button type="button" class="tool-primary" onclick="installApp()">طريقة التثبيت</button></div>';
   if(!configured)return '<div class="tool-status">الميزة مجهّزة في النسخة المحلية، وستصبح قابلة للتفعيل بعد اعتماد التحديث وإضافة مفتاح التنبيهات الآمن.</div><div class="tool-card"><h3>كيف ستعمل؟</h3><p>بعد النشر ستضغط «تفعيل التنبيهات» مرة واحدة على كل جهاز، وستصلك الرسالة قبل الحصة حتى إن كان التطبيق مغلقًا.</p></div>';
+  const leadValue=validNotificationLead(lead);
   const statusClass=error?"error":enabled?"on":"";
   const statusText=error|| (enabled?"التنبيهات مفعّلة على هذا الجهاز.":permission==="denied"?"المتصفح حظر التنبيهات. اسمح بها من إعدادات الموقع ثم أعد المحاولة.":"التنبيهات غير مفعّلة على هذا الجهاز.");
   return `<div class="tool-status ${statusClass}">${esc(statusText)}</div>
     <div class="tool-card">
-      <h3>موعد التنبيه</h3>
-      <p>الإعداد خاص بهذا الجهاز، ويمكن تغييره لاحقًا.</p>
+      <h3>موعد التنبيه على هذا الجهاز</h3>
+      <p>اختر المدة أولًا، ثم فعّل التنبيهات. يمكنك تغييرها لاحقًا.</p>
       <label class="tool-field" for="notificationLead"><span>نبّهني قبل الحصة بـ</span>
-        <select id="notificationLead" ${enabled?"":"disabled"} onchange="saveNotificationLead()">
-          ${[5,10,15,30,60].map(value=>`<option value="${value}" ${Number(lead)===value?"selected":""}>${value===60?"ساعة":value+" دقيقة"}</option>`).join("")}
+        <select id="notificationLead" data-enabled="${enabled?"true":"false"}" onchange="saveNotificationLead()">
+          ${[5,10,15,30,60].map(value=>`<option value="${value}" ${leadValue===value?"selected":""}>${value===60?"ساعة":value+" دقيقة"}</option>`).join("")}
         </select>
       </label>
       <div class="tool-actions">
         <button type="button" class="${enabled?"tool-danger":"tool-primary"}" id="notificationToggle" onclick="${enabled?"disableNotifications()":"enableNotifications()"}">${enabled?"إيقاف التنبيهات":"تفعيل التنبيهات"}</button>
+        ${enabled?'<button type="button" class="tool-secondary" id="notificationTest" onclick="testNotificationNow()">اختبار التنبيه الآن</button>':""}
       </div>
+      <p class="install-help">سيظهر إشعار عادي من نظام الجهاز، وليس منبّهًا مستمرًا مثل تطبيق الساعة.</p>
     </div>`;
 }
 async function readNotificationState(){
-  const base={supported:notificationSupport(),configured:vapidKeyIsConfigured(),requiresInstall:isIOS()&&!isStandalone(),permission:"default",enabled:false,lead:DEFAULT_NOTIFICATION_LEAD,error:""};
+  const base={supported:notificationSupport(),configured:vapidKeyIsConfigured(),requiresInstall:isIOS()&&!isStandalone(),permission:"default",enabled:false,lead:savedNotificationLead(),error:""};
   if(!base.supported||base.requiresInstall)return base;
   base.permission=Notification.permission;
   try{
@@ -945,7 +972,7 @@ async function readNotificationState(){
         .maybeSingle();
       if(error)throw error;
       base.enabled=Boolean(data);
-      if(base.enabled&&Number(data?.lead_minutes))base.lead=Number(data.lead_minutes);
+      if(base.enabled&&Number(data?.lead_minutes))base.lead=rememberNotificationLead(data.lead_minutes);
     }
   }catch(error){
     console.warn("تعذّر قراءة إعداد التنبيهات.",error);
@@ -962,36 +989,86 @@ async function openNotificationSettings(){
   document.getElementById("toolBody").innerHTML=notificationSettingsMarkup(state);
   updateNotificationMenuStatus(state.enabled);
 }
+function notificationFailureMessage(error,stage){
+  if(!navigator.onLine)return "الجهاز غير متصل بالإنترنت. اتصل بالإنترنت ثم أعد المحاولة.";
+  if(error?.message==="permission_denied"||Notification.permission==="denied"||error?.name==="NotAllowedError"){
+    return "المتصفح حظر الإشعارات. افتح إعدادات هذا الموقع واجعل الإشعارات «سماح»، ثم أعد المحاولة.";
+  }
+  if(error?.message==="permission_dismissed")return "لم يتم منح الإذن. اضغط تفعيل ثم اختر «سماح» في رسالة المتصفح.";
+  if(stage==="worker")return "تعذّر تشغيل خدمة التنبيهات داخل التطبيق. أغلق التطبيق وافتحه ثم حاول مرة أخرى.";
+  if(stage==="subscribe"){
+    if(error?.name==="InvalidAccessError")return "مفتاح خدمة التنبيهات غير صالح. يحتاج إعداد الموقع إلى تصحيح.";
+    if(error?.name==="AbortError")return "تعذّر الاتصال بخدمة إشعارات المتصفح. تأكد أن إشعارات المتصفح مسموحة في نظام الجهاز.";
+    return "المتصفح لم يتمكن من إنشاء اشتراك التنبيهات على هذا الجهاز.";
+  }
+  if(stage==="cloud"){
+    if(error?.code==="23505")return "اشتراك هذا الجهاز مرتبط مسبقًا بحساب آخر.";
+    if(error?.code==="42501")return "تم السماح بالإشعارات، لكن قاعدة البيانات رفضت حفظ اشتراك الجهاز.";
+    return "تم السماح بالإشعارات، لكن تعذّر ربط هذا الجهاز بحسابك السحابي.";
+  }
+  return "تعذّر تفعيل التنبيهات على هذا الجهاز.";
+}
+async function storePushSubscription(subscription,lead){
+  const json=subscription.toJSON();
+  const payload={
+    user_id:currentUser.id,
+    endpoint:subscription.endpoint,
+    p256dh:json.keys?.p256dh||"",
+    auth_key:json.keys?.auth||"",
+    timezone:SCHEDULE_TIMEZONE,
+    lead_minutes:validNotificationLead(lead),
+    updated_at:new Date().toISOString()
+  };
+  const {data:existing,error:lookupError}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE)
+    .select("id")
+    .eq("user_id",currentUser.id)
+    .eq("endpoint",subscription.endpoint)
+    .maybeSingle();
+  if(lookupError)throw lookupError;
+  if(existing?.id){
+    const {error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE)
+      .update({
+        p256dh:payload.p256dh,
+        auth_key:payload.auth_key,
+        timezone:payload.timezone,
+        lead_minutes:payload.lead_minutes,
+        updated_at:payload.updated_at
+      })
+      .eq("user_id",currentUser.id)
+      .eq("id",existing.id);
+    if(error)throw error;
+    return existing.id;
+  }
+  const {error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE).insert(payload);
+  if(error)throw error;
+  return true;
+}
 async function enableNotifications(){
   if(notificationBusy||!currentUser||!cloudReady)return;
   if(!notificationSupport()||!vapidKeyIsConfigured()){await openNotificationSettings();return}
   notificationBusy=true;
   const button=document.getElementById("notificationToggle");if(button)button.disabled=true;
+  const lead=rememberNotificationLead(document.getElementById("notificationLead")?.value);
+  let stage="permission";
   try{
     const permission=await Notification.requestPermission();
-    if(permission!=="granted")throw new Error("permission_denied");
+    if(permission==="denied")throw new Error("permission_denied");
+    if(permission!=="granted")throw new Error("permission_dismissed");
+    stage="worker";
     const registration=await getAppWorker();
     if(!registration)throw new Error("service_worker_unavailable");
+    stage="subscribe";
     let subscription=await registration.pushManager.getSubscription();
     if(!subscription)subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
-    const json=subscription.toJSON();
-    const lead=Number(document.getElementById("notificationLead")?.value)||DEFAULT_NOTIFICATION_LEAD;
-    const {error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE).upsert({
-      user_id:currentUser.id,
-      endpoint:subscription.endpoint,
-      p256dh:json.keys?.p256dh||"",
-      auth_key:json.keys?.auth||"",
-      timezone:SCHEDULE_TIMEZONE,
-      lead_minutes:lead,
-      updated_at:new Date().toISOString()
-    },{onConflict:"endpoint"});
-    if(error)throw error;
+    stage="cloud";
+    await storePushSubscription(subscription,lead);
     updateNotificationMenuStatus(true);
     await openNotificationSettings();
   }catch(error){
-    console.error("تعذّر تفعيل التنبيهات.",error);
-    const message=error?.message==="permission_denied"?"لم تسمح للتطبيق بإرسال التنبيهات.":"تعذّر تفعيل التنبيهات. تحقق من اتصال الإنترنت وإذن المتصفح.";
-    const state=await readNotificationState();state.error=message;
+    console.error("تعذّر تفعيل التنبيهات.",{stage,name:error?.name,code:error?.code,message:error?.message});
+    const state=await readNotificationState();
+    state.lead=lead;
+    state.error=notificationFailureMessage(error,stage);
     document.getElementById("toolBody").innerHTML=notificationSettingsMarkup(state);
   }finally{
     notificationBusy=false;
@@ -999,21 +1076,68 @@ async function enableNotifications(){
 }
 async function saveNotificationLead(){
   if(notificationBusy||!currentUser||!cloudReady)return;
-  const lead=Number(document.getElementById("notificationLead")?.value);
-  if(![5,10,15,30,60].includes(lead))return;
+  const field=document.getElementById("notificationLead");
+  const lead=rememberNotificationLead(field?.value);
+  const status=document.querySelector(".tool-status");
+  if(field?.dataset.enabled!=="true"){
+    if(status){status.className="tool-status";status.textContent=`سيتم التنبيه قبل ${notificationLeadText(lead)} عند التفعيل.`}
+    return;
+  }
   notificationBusy=true;
   try{
     const registration=await getAppWorker();
     const subscription=await registration?.pushManager.getSubscription();
-    if(!subscription)return;
-    const {error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE).update({lead_minutes:lead,timezone:SCHEDULE_TIMEZONE,updated_at:new Date().toISOString()})
-      .eq("user_id",currentUser.id).eq("endpoint",subscription.endpoint);
+    if(!subscription||Notification.permission!=="granted"){
+      if(status){status.className="tool-status";status.textContent=`سيتم التنبيه قبل ${notificationLeadText(lead)} عند التفعيل.`}
+      return;
+    }
+    const {data:existing,error:lookupError}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE)
+      .select("id")
+      .eq("user_id",currentUser.id)
+      .eq("endpoint",subscription.endpoint)
+      .maybeSingle();
+    if(lookupError)throw lookupError;
+    if(!existing?.id){
+      if(status){status.className="tool-status";status.textContent=`تم اختيار ${notificationLeadText(lead)}. اضغط «تفعيل التنبيهات» لحفظه.`}
+      return;
+    }
+    const {error}=await cloud.from(PUSH_SUBSCRIPTIONS_TABLE)
+      .update({lead_minutes:lead,timezone:SCHEDULE_TIMEZONE,updated_at:new Date().toISOString()})
+      .eq("user_id",currentUser.id)
+      .eq("id",existing.id);
     if(error)throw error;
-    const status=document.querySelector(".tool-status");if(status){status.className="tool-status on";status.textContent="تم حفظ موعد التنبيه على هذا الجهاز."}
+    if(status){status.className="tool-status on";status.textContent=`تم الحفظ: التنبيه قبل ${notificationLeadText(lead)}.`}
   }catch(error){
     console.error("تعذّر حفظ موعد التنبيه.",error);
-    const status=document.querySelector(".tool-status");if(status){status.className="tool-status error";status.textContent="تعذّر حفظ الإعداد. حاول مرة أخرى."}
+    if(status){status.className="tool-status error";status.textContent="تعذّر حفظ موعد التنبيه في حسابك. تحقق من الإنترنت وحاول مرة أخرى."}
   }finally{notificationBusy=false}
+}
+async function testNotificationNow(){
+  if(notificationBusy)return;
+  notificationBusy=true;
+  const button=document.getElementById("notificationTest");if(button)button.disabled=true;
+  const status=document.querySelector(".tool-status");
+  try{
+    if(Notification.permission!=="granted")throw new Error("permission_denied");
+    const registration=await getAppWorker();
+    if(!registration)throw new Error("service_worker_unavailable");
+    await registration.showNotification("اختبار تنبيهات مواعيدي",{
+      body:"التنبيهات تعمل على هذا الجهاز بنجاح.",
+      icon:"./icons/icon-192.png",
+      badge:"./icons/icon-192.png",
+      lang:"ar",
+      dir:"rtl",
+      tag:`mawaeidi-test-${Date.now()}`,
+      data:{url:"./"}
+    });
+    if(status){status.className="tool-status on";status.textContent="تم إرسال الاختبار. إذا لم يظهر، راجع إعدادات إشعارات الجهاز ووضع عدم الإزعاج."}
+  }catch(error){
+    console.error("تعذّر اختبار التنبيه.",error);
+    if(status){status.className="tool-status error";status.textContent=notificationFailureMessage(error,error?.message==="service_worker_unavailable"?"worker":"permission")}
+  }finally{
+    notificationBusy=false;
+    if(button)button.disabled=false;
+  }
 }
 async function disableNotifications(silent=false){
   if(notificationBusy)return false;

@@ -4,7 +4,12 @@ export type Lesson = {
   name?: unknown;
   platform?: unknown;
   schedules?: unknown;
+  reminderMode?: unknown;
+  reminderLeads?: unknown;
 };
+
+export const REMINDER_LEAD_OPTIONS = [5, 10, 15, 30, 60] as const;
+export const DEFAULT_REMINDER_LEADS = [60, 15] as const;
 
 const DAY_NAMES: Record<string, string> = {
   Mon: "الاثنين",
@@ -48,6 +53,27 @@ export function displayTime(time: string): string {
   const suffix = rawHour >= 12 ? "م" : "ص";
   const hour = rawHour % 12 || 12;
   return `${hour}:${String(minute).padStart(2, "0")} ${suffix}`;
+}
+
+export function normalizeReminderLeads(value: unknown, fallback: readonly number[] = DEFAULT_REMINDER_LEADS): number[] {
+  const values = Array.isArray(value) ? value : [value];
+  const normalized = [...new Set(values
+    .map(Number)
+    .filter(item => REMINDER_LEAD_OPTIONS.includes(item as typeof REMINDER_LEAD_OPTIONS[number])))]
+    .sort((left, right) => right - left)
+    .slice(0, 3);
+  if (normalized.length) return normalized;
+  return [...new Set(fallback
+    .map(Number)
+    .filter(item => REMINDER_LEAD_OPTIONS.includes(item as typeof REMINDER_LEAD_OPTIONS[number])))]
+    .sort((left, right) => right - left)
+    .slice(0, 3);
+}
+
+export function lessonReminderLeads(lesson: Lesson, deviceDefaults: readonly number[]): number[] {
+  if (lesson.reminderMode === "off") return [];
+  if (lesson.reminderMode === "custom") return normalizeReminderLeads(lesson.reminderLeads, [15]);
+  return normalizeReminderLeads(deviceDefaults);
 }
 
 export function reminderCandidates(

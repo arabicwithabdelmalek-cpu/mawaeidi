@@ -1,9 +1,16 @@
 import { createClient } from "npm:@supabase/supabase-js@2.115.0";
 import postgres from "npm:postgres@3.4.7";
 import webpush from "npm:web-push@3.6.7";
-import { displayTime, matchingLessons, reminderCandidates, timeParts, validLessons } from "./core.ts";
-
-const CRON_SECRET_SHA256 = "7f32b507fadb4d4993ec803232a079dd5e104c334a611905f0e676d682c4638c";
+import {
+  displayTime,
+  lessonReminderLeads,
+  matchingLessons,
+  normalizeReminderLeads,
+  REMINDER_LEAD_OPTIONS,
+  reminderCandidates,
+  timeParts,
+  validLessons
+} from "./core.ts";
 
 type SubscriptionRow = {
   id: string;
@@ -13,9 +20,11 @@ type SubscriptionRow = {
   auth_key: string;
   timezone: string;
   lead_minutes: number;
+  lead_minutes_list: number[] | null;
 };
 
 type RuntimeConfig = {
+  reminder_cron_secret: string | null;
   vapid_public_key: string | null;
   vapid_private_key: string | null;
   vapid_subject: string | null;
@@ -64,12 +73,14 @@ function secureEqual(left: string, right: string): boolean {
 async function loadRuntimeConfig(sql: SqlClient): Promise<Required<RuntimeConfig>> {
   const rows = await sql<RuntimeConfig[]>`
     select
+      max(decrypted_secret) filter (where name = 'mawaeidi_reminder_cron_secret') as reminder_cron_secret,
       max(decrypted_secret) filter (where name = 'mawaeidi_vapid_public_key') as vapid_public_key,
       max(decrypted_secret) filter (where name = 'mawaeidi_vapid_private_key') as vapid_private_key,
       max(decrypted_secret) filter (where name = 'mawaeidi_vapid_subject') as vapid_subject,
       max(decrypted_secret) filter (where name = 'mawaeidi_app_url') as app_url
     from vault.decrypted_secrets
     where name in (
+      'mawaeidi_reminder_cron_secret',
       'mawaeidi_vapid_public_key',
       'mawaeidi_vapid_private_key',
       'mawaeidi_vapid_subject',
@@ -77,7 +88,13 @@ async function loadRuntimeConfig(sql: SqlClient): Promise<Required<RuntimeConfig
     )
   `;
   const config = rows[0];
-  if (!config?.vapid_public_key || !config.vapid_private_key || !config.vapid_subject || !config.app_url) {
+  if (
+    !config?.reminder_cron_secret
+    || !config.vapid_public_key
+    || !config.vapid_private_key
+    || !config.vapid_subject
+    || !config.app_url
+  ) {
     throw new Error("Reminder configuration is incomplete");
   }
   return config as Required<RuntimeConfig>;
@@ -142,8 +159,19 @@ Deno.serve(async request => {
 
   let sql: SqlClient | null = null;
   try {
+    sql = postgres(env("SUPABASE_DB_URL"), {
+      prepare: false,
+      max: 1,
+      idle_timeout: 5,
+      connect_timeout: 10
+    });
+    const config = await loadRuntimeConfig(sql);
+
     const suppliedSecret = request.headers.get("x-mawaeidi-cron-secret") || "";
-    if (!suppliedSecret || !secureEqual(await sha256(suppliedSecret), CRON_SECRET_SHA256)) {
+    if (
+      !suppliedSecret
+      || !secureEqual(await sha256(suppliedSecret), await sha256(config.reminder_cron_secret))
+    ) {
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -155,19 +183,12 @@ Deno.serve(async request => {
 
     const { data: subscriptions, error: subscriptionError } = await db
       .from("mawaeidi_push_subscriptions")
-      .select("id,user_id,endpoint,p256dh,auth_key,timezone,lead_minutes");
+      .select("id,user_id,endpoint,p256dh,auth_key,timezone,lead_minutes,lead_minutes_list");
     if (subscriptionError) throw subscriptionError;
 
     const rows = (subscriptions || []) as SubscriptionRow[];
     if (!rows.length) return Response.json({ checked: 0, sent: 0, stale: 0, errors: 0 });
 
-    sql = postgres(env("SUPABASE_DB_URL"), {
-      prepare: false,
-      max: 1,
-      idle_timeout: 5,
-      connect_timeout: 10
-    });
-    const config = await loadRuntimeConfig(sql);
     webpush.setVapidDetails(config.vapid_subject, config.vapid_public_key, config.vapid_private_key);
 
     const userIds = [...new Set(rows.map(row => row.user_id))];
@@ -184,73 +205,84 @@ Deno.serve(async request => {
     let errors = 0;
 
     subscriptionsLoop: for (const subscription of rows) {
-      const candidateOccurrences = reminderCandidates(baseMinute, subscription.lead_minutes).map(occurrenceAt => {
-        const local = timeParts(occurrenceAt, subscription.timezone || "UTC");
-        return { occurrenceAt, local };
-      });
+      const defaultLeads = normalizeReminderLeads(
+        subscription.lead_minutes_list,
+        [subscription.lead_minutes]
+      );
+      const userLessons = lessonsByUser.get(subscription.user_id) || [];
 
-      for (const { occurrenceAt, local } of candidateOccurrences) {
-        if (!local.day || !local.time) continue;
-        const matches = matchingLessons(lessonsByUser.get(subscription.user_id) || [], local.day, local.time);
+      for (const leadMinutes of REMINDER_LEAD_OPTIONS) {
+        const candidateOccurrences = reminderCandidates(baseMinute, leadMinutes, 2).map(occurrenceAt => {
+          const local = timeParts(occurrenceAt, subscription.timezone || "UTC");
+          return { occurrenceAt, local };
+        });
 
-        for (const lesson of matches) {
-          const lessonId = typeof lesson.id === "string" && lesson.id ? lesson.id : "unknown";
-          let claimId: string | null = null;
-          try {
-            claimId = await claimReminder(sql, subscription.id, lessonId, occurrenceAt, subscription.lead_minutes);
-          } catch (claimError) {
-            errors++;
-            console.error("Unable to claim reminder", claimError);
-            continue;
-          }
-          if (!claimId) continue;
+        for (const { occurrenceAt, local } of candidateOccurrences) {
+          if (!local.day || !local.time) continue;
+          const matches = matchingLessons(userLessons, local.day, local.time)
+            .filter(lesson => lessonReminderLeads(lesson, defaultLeads).includes(leadMinutes));
 
-          const name = typeof lesson.name === "string" && lesson.name.trim() ? lesson.name.trim() : "حصة";
-          const platform = typeof lesson.platform === "string" && lesson.platform.trim()
-            ? ` · ${lesson.platform.trim()}`
-            : "";
-          const remainingMinutes = Math.max(
-            0,
-            Math.round((occurrenceAt.getTime() - baseMinute.getTime()) / 60000)
-          );
-          const payload = JSON.stringify({
-            title: remainingMinutes === 0
-              ? "موعد الحصة الآن"
-              : `حصة بعد ${remainingMinutes === 60 ? "ساعة" : remainingMinutes + " دقيقة"}`,
-            body: `${name} · ${displayTime(local.time)}${platform}`,
-            url: config.app_url,
-            tag: `mawaeidi-${lessonId}-${occurrenceAt.toISOString()}`
-          });
-
-          try {
-            await webpush.sendNotification({
-              endpoint: subscription.endpoint,
-              keys: { p256dh: subscription.p256dh, auth: subscription.auth_key }
-            }, payload, {
-              TTL: Math.max(120, remainingMinutes * 60),
-              timeout: 10000
-            });
-            await markReminderSent(sql, claimId);
-            sent++;
-          } catch (error) {
-            const statusCode = Number((error as { statusCode?: unknown })?.statusCode);
-            if (statusCode === 404 || statusCode === 410) {
-              const { error: deleteError } = await db
-                .from("mawaeidi_push_subscriptions")
-                .delete()
-                .eq("id", subscription.id);
-              if (deleteError) {
-                await markReminderFailed(sql, claimId, deleteError);
-                errors++;
-              } else {
-                stale++;
-              }
-              continue subscriptionsLoop;
+          for (const lesson of matches) {
+            const lessonId = typeof lesson.id === "string" && lesson.id ? lesson.id : "unknown";
+            let claimId: string | null = null;
+            try {
+              claimId = await claimReminder(sql, subscription.id, lessonId, occurrenceAt, leadMinutes);
+            } catch (claimError) {
+              errors++;
+              console.error("Unable to claim reminder", claimError);
+              continue;
             }
+            if (!claimId) continue;
 
-            await markReminderFailed(sql, claimId, error);
-            errors++;
-            console.error("Unable to send reminder", error);
+            const name = typeof lesson.name === "string" && lesson.name.trim() ? lesson.name.trim() : "حصة";
+            const platform = typeof lesson.platform === "string" && lesson.platform.trim()
+              ? ` · ${lesson.platform.trim()}`
+              : "";
+            const remainingMinutes = Math.max(
+              0,
+              Math.round((occurrenceAt.getTime() - baseMinute.getTime()) / 60000)
+            );
+            const payload = JSON.stringify({
+              title: remainingMinutes === 0
+                ? "موعد الحصة الآن"
+                : `حصة بعد ${remainingMinutes === 60 ? "ساعة" : remainingMinutes + " دقيقة"}`,
+              body: `${name} · ${displayTime(local.time)}${platform}`,
+              url: config.app_url,
+              timestamp: occurrenceAt.getTime(),
+              tag: `mawaeidi-${lessonId}-${occurrenceAt.toISOString()}-${leadMinutes}`
+            });
+
+            try {
+              await webpush.sendNotification({
+                endpoint: subscription.endpoint,
+                keys: { p256dh: subscription.p256dh, auth: subscription.auth_key }
+              }, payload, {
+                TTL: Math.max(120, remainingMinutes * 60),
+                urgency: "high",
+                timeout: 10000
+              });
+              await markReminderSent(sql, claimId);
+              sent++;
+            } catch (error) {
+              const statusCode = Number((error as { statusCode?: unknown })?.statusCode);
+              if (statusCode === 404 || statusCode === 410) {
+                const { error: deleteError } = await db
+                  .from("mawaeidi_push_subscriptions")
+                  .delete()
+                  .eq("id", subscription.id);
+                if (deleteError) {
+                  await markReminderFailed(sql, claimId, deleteError);
+                  errors++;
+                } else {
+                  stale++;
+                }
+                continue subscriptionsLoop;
+              }
+
+              await markReminderFailed(sql, claimId, error);
+              errors++;
+              console.error("Unable to send reminder", error);
+            }
           }
         }
       }

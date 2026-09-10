@@ -222,6 +222,18 @@ body.auth-pending .app{visibility:hidden}
 .filter.teach-filter.active{background:var(--teach);color:#fff}
 .filter.learn-filter.active{background:var(--learn);color:#fff}
 
+.workspace-switch{
+  display:flex;width:max-content;margin:16px 0 0 auto;padding:4px;border:1px solid var(--line);border-radius:11px;
+  background:rgba(251,252,253,.92);box-shadow:0 5px 16px rgba(17,42,64,.05);animation:page-in .6s .04s ease both
+}
+.workspace-switch button{
+  min-width:105px;padding:9px 16px;border:0;border-radius:8px;background:transparent;color:var(--muted);
+  font-size:13px;font-weight:800;transition:background .16s ease,color .16s ease,box-shadow .16s ease
+}
+.workspace-switch button:hover{background:#EFF4F7;color:var(--primary)}
+.workspace-switch button.active{background:var(--primary);color:#fff;box-shadow:0 5px 14px rgba(35,75,110,.16)}
+.workspace[hidden],.finance-view[hidden]{display:none!important}
+
 .content{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:14px}
 .panel{
   overflow:hidden;border:1px solid var(--line);border-top:3px solid var(--primary);border-radius:10px;
@@ -334,6 +346,59 @@ body.auth-pending .app{visibility:hidden}
 .week-grid.is-empty{display:block;min-width:0}
 .week-empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px}
 
+.finance-view{margin-top:16px;animation:page-in .4s ease both}
+.finance-toolbar{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:12px;padding:18px 20px;
+  border:1px solid var(--line);border-top:3px solid var(--primary);border-radius:10px;background:rgba(251,252,253,.95);box-shadow:var(--shadow)
+}
+.finance-toolbar h2{margin:0;color:var(--primary);font-size:21px;font-weight:800}
+.finance-toolbar p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.7}
+.finance-period{display:grid;gap:5px;min-width:180px}.finance-period input{direction:ltr;text-align:center;font-weight:800}
+.finance-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px;margin-bottom:12px}
+.currency-summary{overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow-soft)}
+.currency-summary-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);background:#F2F6F8}
+.currency-summary-head strong{font-size:14px}.currency-code{padding:3px 7px;border-radius:6px;background:var(--primary);color:#fff;font-size:10px;font-weight:800;direction:ltr}
+.currency-metrics{display:grid;grid-template-columns:1fr 1fr}
+.currency-metric{min-height:82px;padding:11px 13px;border-bottom:1px solid var(--line)}
+.currency-metric:nth-child(odd){border-inline-end:1px solid var(--line)}
+.currency-metric:nth-last-child(-n+2){border-bottom:0}
+.currency-metric small{display:block;color:var(--muted);font-size:10px;font-weight:700}
+.currency-metric strong{display:block;margin-top:6px;color:var(--primary);font-size:17px;font-weight:800;direction:ltr;text-align:right}
+.currency-metric.received strong{color:var(--teach)}.currency-metric.remaining strong{color:var(--learn)}.currency-metric.expense strong{color:var(--danger)}
+.finance-empty-summary{grid-column:1/-1;padding:20px;border:1px dashed #BFCED8;border-radius:10px;background:rgba(251,252,253,.78);color:var(--muted);font-size:12px;text-align:center}
+.finance-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.6fr);gap:12px;align-items:start}
+.finance-panel{overflow:hidden;border:1px solid var(--line);border-top:3px solid var(--primary);border-radius:10px;background:rgba(251,252,253,.95);box-shadow:var(--shadow)}
+.finance-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-bottom:1px solid var(--line)}
+.finance-panel-head h3{margin:0;font-size:16px}.finance-panel-head span{color:var(--muted);font-size:11px}
+.finance-panel-action{padding:8px 10px;border:1px solid #BCCCD7;border-radius:8px;background:#fff;color:var(--primary);font-size:11px;font-weight:800}
+.finance-list{display:grid;gap:9px;padding:13px}
+.finance-empty{padding:34px 16px;text-align:center;color:var(--muted);font-size:12px;line-height:1.8}
+.finance-empty strong{display:block;margin-bottom:4px;color:var(--ink);font-size:14px}
+.agreement-card{padding:13px 14px;border:1px solid var(--line);border-inline-start:5px solid var(--source-color,var(--primary));border-radius:10px;background:#fff}
+.agreement-card.archived{opacity:.68;background:#F3F5F6}
+.agreement-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.agreement-name{font-size:14px;font-weight:800}.agreement-sub{margin-top:3px;color:var(--muted);font-size:10px}
+.agreement-amount{color:var(--primary);font-size:14px;font-weight:800;direction:ltr;text-align:left;white-space:nowrap}
+.agreement-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.agreement-tag{padding:4px 7px;border-radius:999px;background:#EEF3F6;color:#536977;font-size:9px;font-weight:800}
+.agreement-tag.advance{background:var(--teach-bg);color:var(--teach)}.agreement-tag.arrears{background:var(--learn-bg);color:var(--learn)}
+.agreement-progress{margin-top:11px;padding:10px;border-radius:8px;background:#F3F6F8}
+.agreement-progress-top{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#526674;font-size:10px;font-weight:800}
+.agreement-track{height:7px;margin-top:7px;overflow:hidden;border-radius:999px;background:#DCE5EA}.agreement-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--teach),#63A092)}
+.agreement-balance{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;color:var(--muted);font-size:10px}.agreement-balance strong{color:var(--ink);font-size:12px;direction:ltr}
+.agreement-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}.agreement-actions button{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;color:#596A76;font-size:10px;font-weight:800}
+.agreement-actions .main{border-color:var(--primary);background:var(--primary);color:#fff}.agreement-actions .warn{color:var(--learn)}
+.payment-item{padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.payment-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.payment-party{font-size:12px;font-weight:800}.payment-amount{color:var(--teach);font-size:13px;font-weight:800;direction:ltr;white-space:nowrap}.payment-amount.expense{color:var(--danger)}
+.payment-meta{margin-top:4px;color:var(--muted);font-size:9px;line-height:1.65}.payment-remove{margin-top:7px;padding:4px 6px;border:0;background:transparent;color:var(--danger);font-size:9px;font-weight:800}
+.finance-form{display:grid;gap:10px}.finance-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.finance-form .full{grid-column:1/-1}
+.finance-form-note{padding:9px 10px;border-radius:8px;background:#EEF3F6;color:#5D6F7C;font-size:10px;line-height:1.7}
+.finance-lesson-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:190px;overflow:auto;padding:7px;border:1px solid var(--line);border-radius:8px;background:#F7F9FA}
+.finance-lesson-option{display:flex;align-items:flex-start;gap:7px;padding:8px;border:1px solid transparent;border-radius:7px;background:#fff;color:var(--ink);font-size:10px;line-height:1.5;cursor:pointer}
+.finance-lesson-option:has(input:checked){border-color:#93AFC2;background:#EAF2F7}.finance-lesson-option input{width:auto;margin-top:2px;accent-color:var(--primary)}
+.finance-dialog-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}.finance-dialog-actions button{padding:9px 12px;border-radius:8px;font-size:11px;font-weight:800}
+.finance-dialog-actions .save{border:0;background:var(--primary);color:#fff}.finance-dialog-actions .cancel{border:1px solid var(--line);background:#fff;color:var(--muted)}
+.finance-calculation{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.finance-calculation div{padding:9px;border-radius:8px;background:#F1F5F7;text-align:center}.finance-calculation small{display:block;color:var(--muted);font-size:9px}.finance-calculation strong{display:block;margin-top:4px;color:var(--primary);font-size:13px}
+
 .tool-backdrop{
   position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:18px;opacity:0;pointer-events:none;
   background:rgba(10,23,34,.48);backdrop-filter:blur(4px);transition:opacity .18s ease
@@ -408,14 +473,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .primary{border:0;background:var(--primary);color:#fff}.secondary{border:1px solid var(--line);background:#fff;color:#596A76}.danger{border:0;background:var(--danger-bg);color:var(--danger)}
 
 @media(max-width:1000px){
-  .hero,.content{grid-template-columns:1fr}.hero-copy,.next{min-height:auto}
+  .hero,.content,.finance-layout{grid-template-columns:1fr}.hero-copy,.next{min-height:auto}
 }
 @media(max-width:760px){
   .app{padding:14px 12px 28px}.header{gap:10px}.brand h1{font-size:27px}.brand small{display:none}.header-actions{gap:5px}
   .sync-status{display:inline-flex;justify-content:center;width:36px;height:36px;padding:0;border:1px solid var(--line);background:rgba(255,255,255,.82)}
   .sync-status::before,.sync-text{display:none}.sync-icon{display:block}.data-menu>summary{padding:9px;font-size:11px}.data-popover{width:min(278px,calc(100vw - 24px))}
   .add-btn{padding:10px 12px;font-size:13px}.hero{margin-top:14px}.hero-copy{padding:13px 15px}.kufi-quote{height:108px;background-size:150% auto}
-  .controls{align-items:stretch}.tabs,.filters{flex:1}.tab,.filter{flex:1;min-width:0;padding:9px 8px}
+  .workspace-switch{width:100%;margin-top:12px}.workspace-switch button{flex:1;min-width:0}.controls{align-items:stretch}.tabs,.filters{flex:1}.tab,.filter{flex:1;min-width:0;padding:9px 8px}
   .panel{border-radius:9px}.timeline{padding:10px 12px 16px}
   .timeline-row{grid-template-columns:70px minmax(0,1fr);gap:8px}.t-time{min-height:38px;padding:6px;font-size:11px}.lesson{padding:12px}.actions{flex-direction:column}
   .grid{grid-template-columns:1fr}.field.full{grid-column:auto}.row{grid-template-columns:1fr 1fr auto}
@@ -426,6 +491,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .week-card{min-height:88px;padding:9px}.week-name{font-size:12px}
   .quick-add-slot{min-height:88px;opacity:.68}
   .notification-leads{grid-template-columns:repeat(2,1fr)}
+  .finance-toolbar{align-items:stretch;flex-direction:column;padding:15px}.finance-period{min-width:0}.finance-summary{grid-template-columns:1fr}.finance-form-grid,.finance-lesson-list{grid-template-columns:1fr}.finance-calculation{grid-template-columns:1fr}.agreement-top{gap:8px}
   .hurufiyat span{width:410px;opacity:.07}.hurufiyat span:nth-child(1){top:-125px;right:-180px}
   .hurufiyat span:nth-child(4){bottom:-125px;left:-180px}
   .auth-card{padding:24px 20px}.auth-name{font-size:24px}.auth-card h2{font-size:21px}
@@ -524,9 +590,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
           </div>
         </details>
         <input id="backupFile" type="file" accept="application/json,.json" onchange="importBackup(event)" hidden>
-        <button type="button" class="add-btn" onclick="openNew()">＋ إضافة حصة</button>
+        <button type="button" class="add-btn" id="primaryActionButton" onclick="handlePrimaryAction()">＋ إضافة حصة</button>
       </div>
     </header>
+
+    <nav class="workspace-switch" aria-label="أقسام مواعيدي">
+      <button type="button" id="scheduleSectionButton" class="active" aria-pressed="true" aria-controls="scheduleWorkspace" onclick="setSection('schedule',this)">المواعيد</button>
+      <button type="button" id="financeSectionButton" aria-pressed="false" aria-controls="financeView" onclick="setSection('finance',this)">المالية</button>
+    </nav>
+
+    <div class="workspace" id="scheduleWorkspace">
 
     <section class="hero">
       <div class="hero-copy">
@@ -594,6 +667,46 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
       </div>
       <div class="week-table-wrap" tabindex="0" aria-label="الجدول الأسبوعي؛ يمكن تمريره أفقيًا على الشاشات الصغيرة">
         <div class="week-grid" id="weekGrid" role="table" aria-label="مواعيد الأسبوع مرتبة حسب الوقت"></div>
+      </div>
+    </section>
+    </div>
+
+    <section id="financeView" class="finance-view" aria-labelledby="financeHeading" hidden>
+      <div class="finance-toolbar">
+        <div>
+          <h2 id="financeHeading">الملخص المالي</h2>
+          <p>الاتفاقات، الحصص المحسوبة، والدفعات الفعلية في مكان واحد.</p>
+        </div>
+        <label class="finance-period" for="financeMonth">
+          <span>الفترة</span>
+          <input id="financeMonth" type="month" onchange="changeFinanceMonth(this.value)">
+        </label>
+      </div>
+
+      <div class="finance-summary" id="financeSummary" aria-live="polite"></div>
+
+      <div class="finance-layout">
+        <section class="finance-panel" aria-labelledby="agreementsHeading">
+          <header class="finance-panel-head">
+            <div>
+              <h3 id="agreementsHeading">الاتفاقات المالية</h3>
+              <span id="financeAgreementCount">0 اتفاق</span>
+            </div>
+            <button type="button" class="finance-panel-action" onclick="openFinanceAgreement()">＋ اتفاق جديد</button>
+          </header>
+          <div class="finance-list" id="financeAgreements"></div>
+        </section>
+
+        <aside class="finance-panel" aria-labelledby="paymentsHeading">
+          <header class="finance-panel-head">
+            <div>
+              <h3 id="paymentsHeading">الدفعات</h3>
+              <span>المسجلة خلال الفترة</span>
+            </div>
+            <button type="button" class="finance-panel-action" onclick="openFinancePayment()">＋ تسجيل دفعة</button>
+          </header>
+          <div class="finance-list" id="financePayments"></div>
+        </aside>
       </div>
     </section>
   </div>
@@ -751,9 +864,10 @@ const TIME_RE=/^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const SOURCE_COLORS=["#A7445A","#6555A4","#28769B","#B76D28","#3F7B4A","#8B4E87","#3E708D","#98623F"];
 const PRIVATE_SOURCE_COLOR="#9B7449";
 const BACKUP_FORMAT="mawaeidi-backup";
-const BACKUP_VERSION=1;
+const BACKUP_VERSION=2;
 const MAX_BACKUP_BYTES=5*1024*1024;
 const MAX_BACKUP_LESSONS=2000;
+const MAX_FINANCE_RECORDS=5000;
 const AUTO_REFRESH_THROTTLE_MS=15000;
 const HISTORY_TABLE="mawaeidi_history";
 const PUSH_SUBSCRIPTIONS_TABLE="mawaeidi_push_subscriptions";
@@ -765,6 +879,9 @@ const MAX_NOTIFICATION_LEADS=3;
 const NOTIFICATION_LEAD_KEY="mawaeidi-notification-lead-v1";
 const NOTIFICATION_LEADS_KEY="mawaeidi-notification-leads-v2";
 const SCHEDULE_TIMEZONE="Africa/Cairo";
+const FINANCE_VERSION=1;
+const FINANCE_CURRENCIES=["EGP","USD","EUR","GBP","SAR","AED"];
+const FINANCE_METHODS=["paypal","bank","wise","cash","other"];
 const cloud=window.supabase?.createClient
   ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
   :null;
@@ -814,6 +931,94 @@ function normalizeLessons(list){
     return lesson;
   });
 }
+function cleanFinanceText(value,max=240){return textValue(value).trim().slice(0,max)}
+function normalizeMoney(value){
+  const amount=Number(value);
+  return Number.isFinite(amount)&&amount>=0&&amount<=1000000000?Math.round((amount+Number.EPSILON)*100)/100:0;
+}
+function validDateKey(value){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(textValue(value)))return false;
+  const date=new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value;
+}
+function validMonthKey(value){return /^\d{4}-(?:0[1-9]|1[0-2])$/.test(textValue(value))}
+function emptyFinance(){return {version:FINANCE_VERSION,agreements:[],cycles:[],payments:[],monthCounts:[]}}
+function normalizeFinance(value){
+  const source=value&&typeof value==="object"&&!Array.isArray(value)?value:{};
+  const result=emptyFinance(),agreementIds=new Set(),cycleIds=new Set(),paymentIds=new Set(),countKeys=new Set();
+  result.agreements=(Array.isArray(source.agreements)?source.agreements:[]).slice(0,MAX_FINANCE_RECORDS).filter(item=>item&&typeof item==="object").map(item=>{
+    let id=cleanFinanceText(item.id,120);
+    if(!/^[A-Za-z0-9_-]{1,120}$/.test(id)||agreementIds.has(id))id=makeId();
+    agreementIds.add(id);
+    const amount=normalizeMoney(item.amount),packageSize=Math.min(500,Math.max(1,Math.round(Number(item.packageSize)||1)));
+    return {
+      id,
+      direction:item.direction==="expense"?"expense":"income",
+      partyType:item.partyType==="center"||item.partyType==="other"?item.partyType:"private",
+      name:cleanFinanceText(item.name,160),
+      billingModel:item.billingModel==="monthly"?"monthly":"package",
+      paymentTiming:item.paymentTiming==="arrears"?"arrears":"advance",
+      amount,
+      currency:FINANCE_CURRENCIES.includes(item.currency)?item.currency:"USD",
+      packageSize,
+      paymentMethod:FINANCE_METHODS.includes(item.paymentMethod)?item.paymentMethod:"bank",
+      lessonIds:[...new Set((Array.isArray(item.lessonIds)?item.lessonIds:[]).map(id=>cleanFinanceText(id,120)).filter(id=>/^[A-Za-z0-9_-]{1,120}$/.test(id)))].slice(0,200),
+      startDate:validDateKey(item.startDate)?item.startDate:currentDateKey(),
+      active:item.active!==false,
+      notes:cleanFinanceText(item.notes,1000),
+      createdAt:cleanFinanceText(item.createdAt,40)||new Date().toISOString(),
+      updatedAt:cleanFinanceText(item.updatedAt,40)||new Date().toISOString()
+    };
+  });
+  result.cycles=(Array.isArray(source.cycles)?source.cycles:[]).slice(0,MAX_FINANCE_RECORDS).filter(item=>item&&agreementIds.has(cleanFinanceText(item.agreementId,120))).map(item=>{
+    let id=cleanFinanceText(item.id,120);
+    if(!/^[A-Za-z0-9_-]{1,120}$/.test(id)||cycleIds.has(id))id=makeId();
+    cycleIds.add(id);
+    return {
+      id,
+      agreementId:cleanFinanceText(item.agreementId,120),
+      startDate:validDateKey(item.startDate)?item.startDate:currentDateKey(),
+      endDate:validDateKey(item.endDate)?item.endDate:null,
+      targetSessions:Math.min(500,Math.max(1,Math.round(Number(item.targetSessions)||1))),
+      amount:normalizeMoney(item.amount),
+      countOverride:item.countOverride!==null&&item.countOverride!==undefined&&Number.isInteger(Number(item.countOverride))&&Number(item.countOverride)>=0&&Number(item.countOverride)<=10000?Number(item.countOverride):null,
+      createdAt:cleanFinanceText(item.createdAt,40)||new Date().toISOString()
+    };
+  });
+  result.payments=(Array.isArray(source.payments)?source.payments:[]).slice(0,MAX_FINANCE_RECORDS).filter(item=>item&&agreementIds.has(cleanFinanceText(item.agreementId,120))).map(item=>{
+    let id=cleanFinanceText(item.id,120);
+    if(!/^[A-Za-z0-9_-]{1,120}$/.test(id)||paymentIds.has(id))id=makeId();
+    paymentIds.add(id);
+    const agreementId=cleanFinanceText(item.agreementId,120),agreement=result.agreements.find(entry=>entry.id===agreementId);
+    return {
+      id,
+      agreementId,
+      targetType:item.targetType==="month"?"month":"cycle",
+      targetKey:cleanFinanceText(item.targetKey,120),
+      amount:normalizeMoney(item.amount),
+      currency:FINANCE_CURRENCIES.includes(item.currency)?item.currency:(agreement?.currency||"USD"),
+      date:validDateKey(item.date)?item.date:currentDateKey(),
+      method:FINANCE_METHODS.includes(item.method)?item.method:"bank",
+      note:cleanFinanceText(item.note,500),
+      createdAt:cleanFinanceText(item.createdAt,40)||new Date().toISOString()
+    };
+  });
+  result.monthCounts=(Array.isArray(source.monthCounts)?source.monthCounts:[]).slice(0,MAX_FINANCE_RECORDS).filter(item=>item&&agreementIds.has(cleanFinanceText(item.agreementId,120))&&validMonthKey(item.period)).map(item=>{
+    const key=`${cleanFinanceText(item.agreementId,120)}|${item.period}`;
+    if(countKeys.has(key))return null;
+    countKeys.add(key);
+    return {agreementId:cleanFinanceText(item.agreementId,120),period:item.period,count:Math.min(10000,Math.max(0,Math.round(Number(item.count)||0))),note:cleanFinanceText(item.note,500),updatedAt:cleanFinanceText(item.updatedAt,40)||new Date().toISOString()};
+  }).filter(Boolean);
+  result.agreements.filter(item=>item.active&&item.billingModel==="package").forEach(agreement=>{
+    if(result.cycles.some(cycle=>cycle.agreementId===agreement.id&&!cycle.endDate))return;
+    const previous=result.cycles.filter(cycle=>cycle.agreementId===agreement.id).sort((a,b)=>(b.endDate||b.startDate).localeCompare(a.endDate||a.startDate))[0];
+    let id=`cycle-${agreement.id}`.slice(0,120);
+    if(cycleIds.has(id))id=makeId();
+    cycleIds.add(id);
+    result.cycles.push({id,agreementId:agreement.id,startDate:previous?.endDate?addDaysToDateKey(previous.endDate,1):agreement.startDate,endDate:null,targetSessions:agreement.packageSize,amount:agreement.amount,countOverride:null,createdAt:agreement.createdAt});
+  });
+  return result;
+}
 function loadLocalLessons(){
   try{
     const raw=localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -827,9 +1032,13 @@ function loadLocalLessons(){
 }
 
 let lessons=[];
+let finance=emptyFinance();
 let currentFilter="all";
 let currentView="today";
+let currentSection="schedule";
+let selectedFinanceMonth=currentDateKey().slice(0,7);
 let editingId=null;
+let financeEditingAgreementId=null;
 let currentUser=null;
 let cloudReady=false;
 let authMode="signin";
@@ -908,6 +1117,7 @@ function closeToolDialog(event){
   document.body.classList.remove("drawer-open");
   if(toolReturnFocus?.focus)toolReturnFocus.focus();
   toolReturnFocus=null;
+  setTimeout(flushPendingRemote,0);
 }
 function refreshInstallAction(){
   const action=document.getElementById("installAction");
@@ -1249,14 +1459,33 @@ async function disableNotifications(silent=false){
 function historyChangeSummary(entry){
   const before=Array.isArray(entry?.before_lessons)?entry.before_lessons:[];
   const after=Array.isArray(entry?.after_lessons)?entry.after_lessons:[];
+  const beforeFinance=normalizeFinance(entry?.before_finance),afterFinance=normalizeFinance(entry?.after_finance);
   const beforeMap=new Map(before.map(item=>[item?.id,item]));
   const afterMap=new Map(after.map(item=>[item?.id,item]));
   const added=after.filter(item=>!beforeMap.has(item?.id));
   const removed=before.filter(item=>!afterMap.has(item?.id));
   const changed=after.filter(item=>beforeMap.has(item?.id)&&JSON.stringify(beforeMap.get(item.id))!==JSON.stringify(item));
+  const lessonChanged=added.length||removed.length||changed.length;
+  const beforeAgreements=new Map(beforeFinance.agreements.map(item=>[item.id,item])),afterAgreements=new Map(afterFinance.agreements.map(item=>[item.id,item]));
+  const addedAgreements=afterFinance.agreements.filter(item=>!beforeAgreements.has(item.id));
+  const changedAgreements=afterFinance.agreements.filter(item=>beforeAgreements.has(item.id)&&JSON.stringify(beforeAgreements.get(item.id))!==JSON.stringify(item));
+  const beforePayments=new Map(beforeFinance.payments.map(item=>[item.id,item])),afterPayments=new Map(afterFinance.payments.map(item=>[item.id,item]));
+  const addedPayments=afterFinance.payments.filter(item=>!beforePayments.has(item.id)),removedPayments=beforeFinance.payments.filter(item=>!afterPayments.has(item.id));
+  const financeChanged=JSON.stringify(beforeFinance)!==JSON.stringify(afterFinance);
+  if(financeChanged&&!lessonChanged){
+    if(addedAgreements.length===1&&!addedPayments.length)return {title:`إضافة اتفاق مالي: ${addedAgreements[0].name||"بدون اسم"}`,detail:"يمكن استعادة الاتفاقات والدفعات إلى حالتها السابقة."};
+    if(addedPayments.length===1&&!addedAgreements.length){
+      const agreement=afterAgreements.get(addedPayments[0].agreementId);
+      return {title:`تسجيل دفعة: ${agreement?.name||"اتفاق مالي"}`,detail:`${formatMoney(addedPayments[0].amount,addedPayments[0].currency)} · ${paymentMethodLabel(addedPayments[0].method)}`};
+    }
+    if(removedPayments.length===1)return {title:"حذف دفعة مالية",detail:`تم حذف ${formatMoney(removedPayments[0].amount,removedPayments[0].currency)} من السجل.`};
+    if(changedAgreements.length===1)return {title:`تعديل اتفاق مالي: ${changedAgreements[0].name||"بدون اسم"}`,detail:"يشمل التعديل شروط الاتفاق أو حالته."};
+    return {title:"تحديث البيانات المالية",detail:"تغيّر رصيد حصص أو عدد شهري أو أكثر من سجل مالي."};
+  }
   if(added.length===1&&!removed.length&&!changed.length)return {title:`إضافة حصة: ${added[0].name||"بدون اسم"}`,detail:"يمكن الرجوع إلى الجدول قبل إضافتها."};
   if(removed.length===1&&!added.length&&!changed.length)return {title:`حذف حصة: ${removed[0].name||"بدون اسم"}`,detail:"يمكن استرجاع الحصة وكل مواعيدها."};
   if(changed.length===1&&!added.length&&!removed.length)return {title:`تعديل حصة: ${changed[0].name||beforeMap.get(changed[0].id)?.name||"بدون اسم"}`,detail:"يمكن استرجاع بياناتها ومواعيدها السابقة."};
+  if(financeChanged&&lessonChanged)return {title:"تحديث المواعيد والمالية",detail:"يمكن استعادة كل بيانات الحساب إلى ما قبل هذا التغيير."};
   return {title:"تحديث عدة مواعيد",detail:`${added.length} إضافة · ${changed.length} تعديل · ${removed.length} حذف`};
 }
 function formatHistoryDate(value){
@@ -1272,7 +1501,7 @@ function renderHistoryRows(rows){
     return `<article class="history-item">
       <div class="history-top"><div class="history-summary">${esc(summary.title)}</div><time class="history-time">${esc(formatHistoryDate(row.created_at))}</time></div>
       <div class="history-detail">${esc(summary.detail)}</div>
-      <button type="button" class="history-restore" onclick="restoreHistory('${esc(String(row.id))}',this)">استعادة الجدول قبل هذا التغيير</button>
+      <button type="button" class="history-restore" onclick="restoreHistory('${esc(String(row.id))}',this)">استعادة البيانات قبل هذا التغيير</button>
     </article>`;
   }).join("")}</div>`;
 }
@@ -1282,7 +1511,7 @@ async function openHistory(){
   openToolDialog("سجل التعديلات والحذف","آخر 30 تغييرًا محفوظة في حسابك.",'<div class="tool-status">جارٍ تحميل السجل…</div>');
   try{
     const {data,error}=await cloud.from(HISTORY_TABLE)
-      .select("id,before_lessons,after_lessons,created_at")
+      .select("id,before_lessons,after_lessons,before_finance,after_finance,created_at")
       .eq("user_id",currentUser.id)
       .order("created_at",{ascending:false})
       .limit(30);
@@ -1296,12 +1525,13 @@ async function openHistory(){
 async function restoreHistory(id,button){
   const snapshot=historySnapshots.get(String(id));
   if(!snapshot||!Array.isArray(snapshot.before_lessons))return;
-  if(!confirm("سيعود الجدول كله إلى حالته قبل هذا التغيير. وسيُسجَّل الاسترجاع نفسه في السجل. هل تريد المتابعة؟"))return;
+  if(!confirm("ستعود المواعيد والبيانات المالية إلى حالتها قبل هذا التغيير. وسيُسجَّل الاسترجاع نفسه في السجل. هل تريد المتابعة؟"))return;
   if(button)button.disabled=true;
-  const previous=lessons;
+  const previousLessons=lessons,previousFinance=finance;
   lessons=normalizeLessons(snapshot.before_lessons);
+  finance=normalizeFinance(snapshot.before_finance);
   if(!await persist()){
-    lessons=previous;
+    lessons=previousLessons;finance=previousFinance;
     if(button)button.disabled=false;
     return;
   }
@@ -1314,22 +1544,28 @@ function createBackupPayload(){
     version:BACKUP_VERSION,
     exportedAt:new Date().toISOString(),
     lessonCount:lessons.length,
-    lessons
+    financeAgreementCount:finance.agreements.length,
+    paymentCount:finance.payments.length,
+    lessons,
+    finance
   };
 }
 function parseBackupText(rawText){
   const cleanText=textValue(rawText).replace(/^\uFEFF/,"");
   let parsed;
   try{parsed=JSON.parse(cleanText)}catch{throw new Error("invalid_json")}
-  let source;
+  let source,financeSource=emptyFinance();
   if(Array.isArray(parsed))source=parsed;
-  else if(parsed&&parsed.format===BACKUP_FORMAT&&parsed.version===BACKUP_VERSION&&Array.isArray(parsed.lessons))source=parsed.lessons;
+  else if(parsed&&parsed.format===BACKUP_FORMAT&&(parsed.version===1||parsed.version===BACKUP_VERSION)&&Array.isArray(parsed.lessons)){
+    source=parsed.lessons;
+    if(parsed.version>=2)financeSource=parsed.finance;
+  }
   else throw new Error("invalid_format");
   if(source.length>MAX_BACKUP_LESSONS)throw new Error("too_many_lessons");
   if(source.some(item=>!item||typeof item!=="object"||Array.isArray(item)))throw new Error("invalid_lesson");
   const restored=normalizeLessons(source);
   if(restored.some(lesson=>!lesson.schedules.length))throw new Error("invalid_schedule");
-  return restored;
+  return {lessons:restored,finance:normalizeFinance(financeSource)};
 }
 function exportBackup(){
   closeDataMenu();
@@ -1369,15 +1605,16 @@ async function importBackup(event){
   setSync("saving","جارٍ فحص النسخة");
   try{
     const restored=parseBackupText(await file.text());
-    const warning=restored.length
-      ?`سيتم استبدال ${lessons.length} حصة حاليًا بـ ${restored.length} حصة من النسخة الاحتياطية. هل تريد المتابعة؟`
-      :"هذه النسخة فارغة وستحذف كل المواعيد الحالية. هل تريد المتابعة؟";
+    const warning=restored.lessons.length||restored.finance.agreements.length
+      ?`سيتم استبدال بياناتك الحالية بالنسخة التي تحتوي على ${restored.lessons.length} حصة و${restored.finance.agreements.length} اتفاق مالي. هل تريد المتابعة؟`
+      :"هذه النسخة فارغة وستحذف كل المواعيد والبيانات المالية الحالية. هل تريد المتابعة؟";
     if(!confirm(warning)){setSync("saved","لم تتغير البيانات");return}
-    const previous=lessons;
-    lessons=restored;
-    if(!await persist()){lessons=previous;return}
+    const previousLessons=lessons,previousFinance=finance;
+    lessons=restored.lessons;
+    finance=restored.finance;
+    if(!await persist()){lessons=previousLessons;finance=previousFinance;return}
     render();
-    alert(`تمت استعادة النسخة الاحتياطية بنجاح (${lessons.length} حصة).`);
+    alert(`تمت استعادة النسخة الاحتياطية بنجاح (${lessons.length} حصة و${finance.agreements.length} اتفاق مالي).`);
   }catch(error){
     console.error("تعذّر استعادة النسخة الاحتياطية.",error);
     setSync("error","النسخة غير صالحة");
@@ -1409,7 +1646,7 @@ function setSync(state,message){
   box.disabled=state==="saving";
   box.setAttribute("aria-label",`${message}؛ اضغط لتحديث المواعيد من السحابة`);
 }
-function isDrawerVisible(){return document.getElementById("drawer").classList.contains("show")}
+function isDrawerVisible(){return document.getElementById("drawer").classList.contains("show")||Boolean(document.querySelector("#toolBackdrop.show .finance-form"))}
 function remoteRowIsNewer(row){
   const remote=textValue(row?.updated_at);
   if(!remote)return !lastCloudUpdatedAt;
@@ -1421,6 +1658,7 @@ function remoteRowIsNewer(row){
 function applyRemoteRow(row,message="تم تحديث المواعيد"){
   if(!row||!currentUser||row.user_id!==currentUser.id||!Array.isArray(row.lessons)||!remoteRowIsNewer(row))return false;
   lessons=normalizeLessons(row.lessons);
+  finance=normalizeFinance(row.finance);
   lastCloudUpdatedAt=textValue(row.updated_at)||lastCloudUpdatedAt;
   render();
   setSync("saved",message);
@@ -1484,7 +1722,7 @@ async function refreshFromCloud(silent=false){
   setSync("saving","جارٍ التحديث");
   try{
     const {data,error}=await cloud.from("mawaeidi_data")
-      .select("user_id,lessons,updated_at")
+      .select("user_id,lessons,finance,updated_at")
       .eq("user_id",currentUser.id)
       .maybeSingle();
     if(error)throw error;
@@ -1610,12 +1848,13 @@ async function activateSession(user){
   setSync("saving","جارٍ التحميل");
   try{
     const {data,error}=await cloud.from("mawaeidi_data")
-      .select("lessons,updated_at")
+      .select("lessons,finance,updated_at")
       .eq("user_id",user.id)
       .maybeSingle();
     if(error)throw error;
     if(sequence!==sessionSequence)return;
     lessons=normalizeLessons(data?.lessons||[]);
+    finance=normalizeFinance(data?.finance);
     lastCloudUpdatedAt=textValue(data?.updated_at)||null;
     let needsInitialSave=!data;
 
@@ -1656,7 +1895,7 @@ async function logout(){
   if(error){alert("تعذّر تسجيل الخروج. حاول مرة أخرى.");return}
   stopRealtime();
   sessionSequence++;
-  loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;lastCloudUpdatedAt=null;
+  loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];finance=emptyFinance();editingId=null;lastCloudUpdatedAt=null;
   closeDrawer();closeToolDialog();render();showAuth();
   setAuthMessage("تم تسجيل الخروج.");
 }
@@ -1672,6 +1911,7 @@ async function persist(silent=false){
     const {data,error}=await cloud.from("mawaeidi_data").upsert({
       user_id:currentUser.id,
       lessons,
+      finance,
       updated_at:updatedAt
     },{onConflict:"user_id"}).select("updated_at").single();
     if(error)throw error;
@@ -1711,6 +1951,143 @@ function fmt(t){
 }
 function mins(t){const value=TIME_RE.test(String(t))?String(t):"00:00";const[h,m]=value.split(":").map(Number);return h*60+m}
 function todayName(){return["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"][new Date().getDay()]}
+function currentDateKey(date=new Date()){
+  try{
+    const parts=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:SCHEDULE_TIMEZONE,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(date).filter(part=>part.type!=="literal").map(part=>[part.type,part.value]));
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }catch{return new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+}
+function currentTimeKey(date=new Date()){
+  try{
+    const parts=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:SCHEDULE_TIMEZONE,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(date).filter(part=>part.type!=="literal").map(part=>[part.type,part.value]));
+    return `${parts.hour}:${parts.minute}`;
+  }catch{return `${String(date.getHours()).padStart(2,"0")}:${String(date.getMinutes()).padStart(2,"0")}`}
+}
+function addDaysToDateKey(value,daysToAdd){
+  if(!validDateKey(value))return currentDateKey();
+  const date=new Date(`${value}T12:00:00Z`);date.setUTCDate(date.getUTCDate()+Number(daysToAdd||0));return date.toISOString().slice(0,10);
+}
+function monthBounds(period){
+  if(!validMonthKey(period))period=currentDateKey().slice(0,7);
+  const [year,month]=period.split("-").map(Number);
+  const start=`${year}-${String(month).padStart(2,"0")}-01`;
+  const end=new Date(Date.UTC(year,month,0)).toISOString().slice(0,10);
+  return {start,end};
+}
+function monthLabel(period){
+  const {start}=monthBounds(period);
+  return new Date(`${start}T12:00:00Z`).toLocaleDateString("ar-EG",{month:"long",year:"numeric",timeZone:"UTC"});
+}
+function dayNameForDateKey(value){
+  if(!validDateKey(value))return "";
+  return ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"][new Date(`${value}T12:00:00Z`).getUTCDay()];
+}
+function maxDateKey(a,b){return a>b?a:b}
+function minDateKey(a,b){return a<b?a:b}
+function agreementLessons(agreement){
+  const ids=new Set(agreement?.lessonIds||[]);
+  return lessons.filter(lesson=>ids.has(lesson.id));
+}
+function scheduledSessionsBetween(agreement,fromDate,toDate){
+  if(!validDateKey(fromDate)||!validDateKey(toDate)||fromDate>toDate)return 0;
+  const linked=agreementLessons(agreement);
+  if(!linked.length)return 0;
+  let total=0,cursor=new Date(`${fromDate}T12:00:00Z`),end=new Date(`${toDate}T12:00:00Z`),guard=0;
+  while(cursor<=end&&guard<3700){
+    const key=cursor.toISOString().slice(0,10),day=dayNameForDateKey(key);
+    linked.forEach(lesson=>{total+=(lesson.schedules||[]).filter(schedule=>schedule.day===day).length});
+    cursor.setUTCDate(cursor.getUTCDate()+1);guard++;
+  }
+  return total;
+}
+function scheduledSessionsThroughNow(agreement,fromDate){
+  const today=currentDateKey(),yesterday=addDaysToDateKey(today,-1),linked=agreementLessons(agreement);
+  let total=fromDate<=yesterday?scheduledSessionsBetween(agreement,fromDate,yesterday):0;
+  if(fromDate>today)return 0;
+  const day=dayNameForDateKey(today),nowTime=currentTimeKey();
+  linked.forEach(lesson=>{total+=(lesson.schedules||[]).filter(schedule=>schedule.day===day&&schedule.time<=nowTime).length});
+  return total;
+}
+function automaticMonthCount(agreement,period){
+  const bounds=monthBounds(period),start=maxDateKey(bounds.start,agreement.startDate||bounds.start);
+  return scheduledSessionsBetween(agreement,start,bounds.end);
+}
+function monthCountRecord(agreementId,period){return finance.monthCounts.find(item=>item.agreementId===agreementId&&item.period===period)||null}
+function monthSessionCount(agreement,period){
+  const record=monthCountRecord(agreement.id,period);
+  return record?record.count:automaticMonthCount(agreement,period);
+}
+function agreementCycles(agreementId){return finance.cycles.filter(item=>item.agreementId===agreementId).sort((a,b)=>b.startDate.localeCompare(a.startDate)||b.createdAt.localeCompare(a.createdAt))}
+function openAgreementCycle(agreementId){return agreementCycles(agreementId).find(item=>!item.endDate)||null}
+function cycleSessionCount(agreement,cycle){
+  if(!cycle)return 0;
+  if(Number.isInteger(cycle.countOverride))return cycle.countOverride;
+  const start=maxDateKey(cycle.startDate,agreement.startDate);
+  return cycle.endDate?scheduledSessionsBetween(agreement,start,cycle.endDate):scheduledSessionsThroughNow(agreement,start);
+}
+function cycleCompletionDate(agreement,cycle){
+  if(!cycle||cycleSessionCount(agreement,cycle)<cycle.targetSessions)return null;
+  if(Number.isInteger(cycle.countOverride))return cycle.endDate||currentDateKey();
+  const today=currentDateKey(),nowTime=currentTimeKey(),start=maxDateKey(cycle.startDate,agreement.startDate),last=cycle.endDate||today,linked=agreementLessons(agreement);
+  let total=0,cursor=new Date(`${start}T12:00:00Z`),end=new Date(`${last}T12:00:00Z`),guard=0;
+  while(cursor<=end&&guard<3700){
+    const key=cursor.toISOString().slice(0,10),day=dayNameForDateKey(key),isToday=key===today;
+    linked.forEach(lesson=>{total+=(lesson.schedules||[]).filter(schedule=>schedule.day===day&&(!isToday||cycle.endDate||schedule.time<=nowTime)).length});
+    if(total>=cycle.targetSessions)return key;
+    cursor.setUTCDate(cursor.getUTCDate()+1);guard++;
+  }
+  return cycle.endDate||currentDateKey();
+}
+function targetPayments(agreementId,targetType,targetKey){return finance.payments.filter(item=>item.agreementId===agreementId&&item.targetType===targetType&&item.targetKey===targetKey)}
+function targetPaid(agreementId,targetType,targetKey){return targetPayments(agreementId,targetType,targetKey).reduce((sum,item)=>sum+item.amount,0)}
+function cycleDuePeriod(agreement,cycle){
+  if(agreement.paymentTiming==="advance")return cycle.startDate.slice(0,7);
+  if(cycle.endDate)return cycle.endDate.slice(0,7);
+  return cycleCompletionDate(agreement,cycle)?.slice(0,7)||null;
+}
+function agreementObligations(period){
+  const obligations=[];
+  finance.agreements.filter(item=>item.active).forEach(agreement=>{
+    if(agreement.startDate>monthBounds(period).end)return;
+    if(agreement.billingModel==="monthly"){
+      obligations.push({agreement,targetType:"month",targetKey:period,amount:monthSessionCount(agreement,period)*agreement.amount});
+      return;
+    }
+    agreementCycles(agreement.id).forEach(cycle=>{
+      if(cycleDuePeriod(agreement,cycle)===period)obligations.push({agreement,targetType:"cycle",targetKey:cycle.id,amount:cycle.amount});
+    });
+  });
+  return obligations;
+}
+function currencyLabel(code){return ({EGP:"الجنيه المصري",USD:"الدولار الأمريكي",EUR:"اليورو",GBP:"الجنيه الإسترليني",SAR:"الريال السعودي",AED:"الدرهم الإماراتي"})[code]||code}
+function paymentMethodLabel(value){return ({paypal:"PayPal",bank:"تحويل بنكي",wise:"Wise",cash:"نقدي",other:"طريقة أخرى"})[value]||"طريقة أخرى"}
+function partyTypeLabel(value){return value==="center"?"مركز":value==="other"?"جهة أخرى":"طالب خاص"}
+function billingModelLabel(value){return value==="monthly"?"حساب شهري بالحصة":"رصيد حصص"}
+function timingLabel(value){return value==="arrears"?"دفع مؤخر":"دفع مقدم"}
+function formatMoney(amount,currency){return `${new Intl.NumberFormat("en-US",{minimumFractionDigits:0,maximumFractionDigits:2}).format(normalizeMoney(amount))} ${currency}`}
+function financeSourceColor(agreement){
+  if(agreement.partyType==="private")return PRIVATE_SOURCE_COLOR;
+  return sourceColorFromLabel(agreement.name||partyTypeLabel(agreement.partyType));
+}
+function handlePrimaryAction(){currentSection==="finance"?openFinanceAgreement():openNew()}
+function updateSectionChrome(){
+  document.getElementById("scheduleWorkspace").hidden=currentSection!=="schedule";
+  document.getElementById("financeView").hidden=currentSection!=="finance";
+  document.querySelectorAll(".workspace-switch button").forEach(item=>{
+    const active=(currentSection==="finance"&&item.id==="financeSectionButton")||(currentSection==="schedule"&&item.id==="scheduleSectionButton");
+    item.classList.toggle("active",active);item.setAttribute("aria-pressed",String(active));
+  });
+  document.getElementById("primaryActionButton").textContent=currentSection==="finance"?"＋ اتفاق مالي":"＋ إضافة حصة";
+}
+function setSection(section,button){
+  currentSection=section==="finance"?"finance":"schedule";
+  updateSectionChrome();
+  if(currentSection==="finance")renderFinance();
+}
+function changeFinanceMonth(value){
+  selectedFinanceMonth=validMonthKey(value)?value:currentDateKey().slice(0,7);
+  renderFinance();
+}
 function filtered(){return lessons.filter(l=>l&&(currentFilter==="all"||l.type===currentFilter))}
 function getWeekLayout(list=filtered()){
   const occurrences=getOccurrences(list);
@@ -1738,11 +2115,13 @@ function setView(v,btn){
 }
 
 function render(){
+  updateSectionChrome();
   renderHeader();
   renderTimeline();
   renderSummary();
   renderWeekBars();
   renderWeek();
+  renderFinance();
 }
 
 function renderHeader(){
@@ -1921,6 +2300,318 @@ function renderWeek(){
     });
     grid.appendChild(row);
   });
+}
+
+function financeSummaryData(period){
+  const currencies=new Set(),rows=new Map(),obligations=agreementObligations(period);
+  const ensure=currency=>{
+    currencies.add(currency);
+    if(!rows.has(currency))rows.set(currency,{currency,expected:0,received:0,remaining:0,expenses:0});
+    return rows.get(currency);
+  };
+  obligations.forEach(item=>{
+    const row=ensure(item.agreement.currency),paid=targetPaid(item.agreement.id,item.targetType,item.targetKey);
+    if(item.agreement.direction==="income"){
+      row.expected+=item.amount;
+      row.remaining+=Math.max(0,item.amount-paid);
+    }
+  });
+  finance.payments.filter(item=>item.date.slice(0,7)===period).forEach(payment=>{
+    const agreement=finance.agreements.find(item=>item.id===payment.agreementId);
+    if(!agreement)return;
+    const row=ensure(payment.currency);
+    if(agreement.direction==="expense")row.expenses+=payment.amount;
+    else row.received+=payment.amount;
+  });
+  finance.agreements.filter(item=>item.active).forEach(item=>currencies.add(item.currency));
+  return [...currencies].sort().map(currency=>rows.get(currency)||{currency,expected:0,received:0,remaining:0,expenses:0});
+}
+function renderFinanceSummary(){
+  const box=document.getElementById("financeSummary");
+  if(!box)return;
+  const rows=financeSummaryData(selectedFinanceMonth);
+  if(!rows.length){
+    box.innerHTML='<div class="finance-empty-summary">أضف أول اتفاق مالي ليظهر ملخص الدخل والمدفوعات هنا.</div>';
+    return;
+  }
+  box.innerHTML=rows.map(row=>`<article class="currency-summary">
+    <header class="currency-summary-head"><strong>${esc(currencyLabel(row.currency))}</strong><span class="currency-code">${esc(row.currency)}</span></header>
+    <div class="currency-metrics">
+      <div class="currency-metric"><small>دخل متوقع</small><strong>${esc(formatMoney(row.expected,row.currency))}</strong></div>
+      <div class="currency-metric received"><small>دخل استلمته</small><strong>${esc(formatMoney(row.received,row.currency))}</strong></div>
+      <div class="currency-metric remaining"><small>متبقٍّ عن الفترة</small><strong>${esc(formatMoney(row.remaining,row.currency))}</strong></div>
+      <div class="currency-metric expense"><small>مصروفات دفعتها</small><strong>${esc(formatMoney(row.expenses,row.currency))}</strong></div>
+    </div>
+  </article>`).join("");
+}
+function agreementCardMarkup(agreement){
+  const color=financeSourceColor(agreement),linked=agreementLessons(agreement),timing=timingLabel(agreement.paymentTiming);
+  let progress="",amountText="",balanceText="";
+  if(agreement.billingModel==="monthly"){
+    const count=monthSessionCount(agreement,selectedFinanceMonth),expected=count*agreement.amount,paid=targetPaid(agreement.id,"month",selectedFinanceMonth),manual=Boolean(monthCountRecord(agreement.id,selectedFinanceMonth));
+    amountText=`${formatMoney(agreement.amount,agreement.currency)} / حصة`;
+    progress=`<div class="agreement-progress">
+      <div class="agreement-progress-top"><span>${count} حصة في ${esc(monthLabel(selectedFinanceMonth))}</span><span>${manual?"عدد مُراجع":"محسوب من الجدول"}</span></div>
+      <div class="agreement-balance"><span>${agreement.direction==="income"?"المتوقع للفترة":"المصروف المتوقع"}</span><strong>${esc(formatMoney(expected,agreement.currency))}</strong></div>
+      <div class="agreement-balance"><span>${agreement.direction==="income"?"المستلم / المتبقي":"المدفوع / المتبقي"}</span><strong>${esc(formatMoney(paid,agreement.currency))} / ${esc(formatMoney(Math.max(0,expected-paid),agreement.currency))}</strong></div>
+    </div>`;
+  }else{
+    const cycle=openAgreementCycle(agreement.id)||agreementCycles(agreement.id)[0],count=cycle?cycleSessionCount(agreement,cycle):0,target=cycle?.targetSessions||agreement.packageSize,paid=cycle?targetPaid(agreement.id,"cycle",cycle.id):0,amount=cycle?.amount??agreement.amount,pct=Math.min(100,target?count/target*100:0);
+    amountText=formatMoney(amount,agreement.currency);
+    balanceText=`<div class="agreement-balance"><span>${agreement.direction==="income"?"المستلم / المتبقي":"المدفوع / المتبقي"}</span><strong>${esc(formatMoney(paid,agreement.currency))} / ${esc(formatMoney(Math.max(0,amount-paid),agreement.currency))}</strong></div>`;
+    progress=`<div class="agreement-progress">
+      <div class="agreement-progress-top"><span>${count} من ${target} حصة</span><span>${count>=target?"اكتمل الرصيد":"الرصيد الجاري"}</span></div>
+      <div class="agreement-track" aria-label="تم احتساب ${count} من ${target} حصة"><div class="agreement-fill" style="width:${pct}%"></div></div>
+      ${balanceText}
+    </div>`;
+  }
+  const actions=agreement.active?`<div class="agreement-actions">
+    <button type="button" class="main" onclick="openFinancePayment('${agreement.id}')">تسجيل دفعة</button>
+    <button type="button" onclick="${agreement.billingModel==="monthly"?`openMonthCount('${agreement.id}')`:`openPackageCount('${agreement.id}')`}">${agreement.billingModel==="monthly"?"مراجعة عدد الحصص":"تصحيح رصيد الحصص"}</button>
+    ${agreement.billingModel==="package"?`<button type="button" onclick="startNewPackageCycle('${agreement.id}')">بدء رصيد جديد</button>`:""}
+    <button type="button" onclick="openFinanceAgreement('${agreement.id}')">تعديل</button>
+    <button type="button" class="warn" onclick="archiveFinanceAgreement('${agreement.id}')">أرشفة</button>
+  </div>`:`<div class="agreement-actions"><button type="button" class="main" onclick="reactivateFinanceAgreement('${agreement.id}')">إعادة التفعيل</button><button type="button" onclick="openFinanceAgreement('${agreement.id}')">عرض وتعديل</button></div>`;
+  return `<article class="agreement-card${agreement.active?"":" archived"}" style="--source-color:${color}">
+    <div class="agreement-top">
+      <div><div class="agreement-name">${esc(agreement.name||"اتفاق بدون اسم")}</div><div class="agreement-sub">${esc(partyTypeLabel(agreement.partyType))} · ${linked.length} حصة مرتبطة</div></div>
+      <div class="agreement-amount">${esc(amountText)}</div>
+    </div>
+    <div class="agreement-tags">
+      <span class="agreement-tag">${esc(agreement.direction==="income"?"دخل":"مصروف")}</span>
+      <span class="agreement-tag">${esc(billingModelLabel(agreement.billingModel))}</span>
+      <span class="agreement-tag ${agreement.paymentTiming}">${esc(timing)}</span>
+      <span class="agreement-tag">${esc(paymentMethodLabel(agreement.paymentMethod))}</span>
+      ${agreement.active?"":'<span class="agreement-tag">مؤرشف</span>'}
+    </div>
+    ${progress}${actions}
+  </article>`;
+}
+function renderFinanceAgreements(){
+  const box=document.getElementById("financeAgreements"),active=finance.agreements.filter(item=>item.active),archived=finance.agreements.filter(item=>!item.active);
+  if(!box)return;
+  document.getElementById("financeAgreementCount").textContent=`${active.length} نشط${archived.length?` · ${archived.length} مؤرشف`:""}`;
+  const sorted=[...active.sort((a,b)=>a.name.localeCompare(b.name,"ar")),...archived.sort((a,b)=>a.name.localeCompare(b.name,"ar"))];
+  box.innerHTML=sorted.length?sorted.map(agreementCardMarkup).join(""):'<div class="finance-empty"><strong>لا توجد اتفاقات مالية</strong>أضف الطالب الخاص أو المركز مرة واحدة، ثم اربطه بحصصه.</div>';
+}
+function renderFinancePayments(){
+  const box=document.getElementById("financePayments");
+  if(!box)return;
+  const payments=finance.payments.filter(item=>item.date.slice(0,7)===selectedFinanceMonth).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
+  if(!payments.length){box.innerHTML='<div class="finance-empty"><strong>لا توجد دفعات في هذه الفترة</strong>عند استلام أو دفع مبلغ، سجّله ليظهر في الملخص.</div>';return}
+  box.innerHTML=payments.map(payment=>{
+    const agreement=finance.agreements.find(item=>item.id===payment.agreementId);
+    if(!agreement)return "";
+    const target=payment.targetType==="month"?monthLabel(payment.targetKey):"رصيد حصص";
+    return `<article class="payment-item">
+      <div class="payment-top"><div class="payment-party">${esc(agreement.name)}</div><div class="payment-amount${agreement.direction==="expense"?" expense":""}">${esc(formatMoney(payment.amount,payment.currency))}</div></div>
+      <div class="payment-meta">${esc(payment.date)} · ${esc(paymentMethodLabel(payment.method))} · ${esc(target)}</div>
+      ${payment.note?`<div class="payment-meta">${esc(payment.note)}</div>`:""}
+      <button type="button" class="payment-remove" onclick="deleteFinancePayment('${payment.id}')">حذف الدفعة</button>
+    </article>`;
+  }).join("");
+}
+function renderFinance(){
+  const month=document.getElementById("financeMonth");
+  if(!month)return;
+  if(!validMonthKey(selectedFinanceMonth))selectedFinanceMonth=currentDateKey().slice(0,7);
+  month.value=selectedFinanceMonth;
+  renderFinanceSummary();renderFinanceAgreements();renderFinancePayments();
+}
+
+function cloneFinanceState(){return JSON.parse(JSON.stringify(finance))}
+async function commitFinance(previous,closeDialog=true){
+  finance=normalizeFinance(finance);
+  if(!await persist()){finance=previous;return false}
+  renderFinance();
+  if(closeDialog)closeToolDialog();
+  return true;
+}
+function financeLessonOptions(selectedIds=[],direction="income"){
+  const selected=new Set(selectedIds),requiredType=direction==="expense"?"learn":"teach",available=lessons.filter(item=>item.type===requiredType);
+  if(!available.length)return `<div class="finance-form-note full">لا توجد حاليًا حصص من نوع «${direction==="expense"?"أدرس":"أُدرِّس"}». يمكنك حفظ الاتفاق وربط الحصص به لاحقًا.</div>`;
+  return available.map(lesson=>`<label class="finance-lesson-option">
+    <input type="checkbox" class="finance-lesson-check" value="${esc(lesson.id)}" ${selected.has(lesson.id)?"checked":""}>
+    <span><strong>${esc(lesson.name||"بدون اسم")}</strong><br>${esc(sourceLabel(lesson))} · ${(lesson.schedules||[]).length} موعد أسبوعي</span>
+  </label>`).join("");
+}
+function selectedFinanceLessons(){return [...document.querySelectorAll(".finance-lesson-check:checked")].map(input=>input.value)}
+function refreshFinanceLessonOptions(){
+  const box=document.getElementById("financeLessonOptions");if(!box)return;
+  const selected=selectedFinanceLessons(),direction=document.getElementById("financeDirection")?.value||"income";
+  box.innerHTML=financeLessonOptions(selected,direction);
+}
+function toggleFinanceAgreementFields(){
+  const model=document.getElementById("financeBillingModel")?.value||"package",packageField=document.getElementById("financePackageField"),amountLabel=document.getElementById("financeAmountLabel"),modelHint=document.getElementById("financeModelHint");
+  if(packageField)packageField.style.display=model==="package"?"flex":"none";
+  if(amountLabel)amountLabel.textContent=model==="package"?"قيمة رصيد الحصص":"سعر الحصة الواحدة";
+  if(modelHint)modelHint.textContent=model==="package"?"مناسب للطالب الخاص أو المركز الذي يجمع 12 أو 16 حصة ثم يبدأ رصيدًا جديدًا.":"يجمع الموقع عدد حصص الشهر المرتبطة، ويمكنك مراجعة العدد قبل اعتماد الحساب.";
+}
+function openFinanceAgreement(id=null){
+  if(!cloudReady||!currentUser){alert("انتظر حتى يكتمل تحميل حسابك ثم حاول مرة أخرى.");return}
+  const existing=id?finance.agreements.find(item=>item.id===id):null;
+  financeEditingAgreementId=existing?.id||null;
+  const agreement=existing||{direction:"income",partyType:"private",billingModel:"package",paymentTiming:"advance",amount:0,currency:"USD",packageSize:8,paymentMethod:"paypal",lessonIds:[],startDate:currentDateKey(),notes:""};
+  const currencyOptions=FINANCE_CURRENCIES.map(code=>`<option value="${code}" ${agreement.currency===code?"selected":""}>${currencyLabel(code)} (${code})</option>`).join("");
+  const methodOptions=FINANCE_METHODS.map(value=>`<option value="${value}" ${agreement.paymentMethod===value?"selected":""}>${paymentMethodLabel(value)}</option>`).join("");
+  openToolDialog(existing?"تعديل الاتفاق المالي":"اتفاق مالي جديد","سجّل شروط الدفع مرة واحدة واربطها بالحصص المناسبة.",`<div class="finance-form">
+    <div class="finance-form-grid">
+      <div class="field"><label for="financeDirection">نوع الحساب</label><select id="financeDirection" onchange="refreshFinanceLessonOptions()"><option value="income" ${agreement.direction==="income"?"selected":""}>دخل أحصل عليه</option><option value="expense" ${agreement.direction==="expense"?"selected":""}>مصروف أدفعه</option></select></div>
+      <div class="field"><label for="financePartyType">الجهة</label><select id="financePartyType"><option value="private" ${agreement.partyType==="private"?"selected":""}>طالب خاص</option><option value="center" ${agreement.partyType==="center"?"selected":""}>مركز</option><option value="other" ${agreement.partyType==="other"?"selected":""}>جهة أخرى</option></select></div>
+      <div class="field full"><label for="financeAgreementName">اسم الطالب أو المركز</label><input id="financeAgreementName" maxlength="160" value="${esc(agreement.name||"")}" placeholder="مثلاً: أحمد أو مركز لسان"></div>
+      <div class="field"><label for="financeBillingModel">طريقة الحساب</label><select id="financeBillingModel" onchange="toggleFinanceAgreementFields()"><option value="package" ${agreement.billingModel==="package"?"selected":""}>رصيد بعدد حصص</option><option value="monthly" ${agreement.billingModel==="monthly"?"selected":""}>حساب شهري بالحصة</option></select></div>
+      <div class="field"><label for="financePaymentTiming">موعد الدفع</label><select id="financePaymentTiming"><option value="advance" ${agreement.paymentTiming==="advance"?"selected":""}>مقدم</option><option value="arrears" ${agreement.paymentTiming==="arrears"?"selected":""}>مؤخر</option></select></div>
+      <div class="field" id="financePackageField"><label for="financePackageSize">عدد حصص الرصيد</label><input id="financePackageSize" type="number" min="1" max="500" step="1" value="${agreement.packageSize||8}"></div>
+      <div class="field"><label for="financeAmount" id="financeAmountLabel">قيمة رصيد الحصص</label><input id="financeAmount" type="number" inputmode="decimal" min="0.01" max="1000000000" step="0.01" value="${agreement.amount||""}"></div>
+      <div class="field"><label for="financeCurrency">العملة</label><select id="financeCurrency">${currencyOptions}</select></div>
+      <div class="field"><label for="financePaymentMethod">طريقة الدفع المعتادة</label><select id="financePaymentMethod">${methodOptions}</select></div>
+      <div class="field full"><label for="financeStartDate">بداية الاتفاق</label><input id="financeStartDate" type="date" value="${esc(agreement.startDate)}"></div>
+    </div>
+    <div class="finance-form-note" id="financeModelHint"></div>
+    <div class="field"><label>الحصص المرتبطة بهذا الاتفاق</label><div class="finance-lesson-list" id="financeLessonOptions">${financeLessonOptions(agreement.lessonIds,agreement.direction)}</div></div>
+    <div class="field"><label for="financeAgreementNotes">ملاحظات</label><textarea id="financeAgreementNotes" maxlength="1000" placeholder="أي تفاصيل تحتاج تذكرها">${esc(agreement.notes||"")}</textarea></div>
+    <div class="finance-dialog-actions"><button type="button" class="save" onclick="saveFinanceAgreement()">حفظ الاتفاق</button><button type="button" class="cancel" onclick="closeToolDialog()">إلغاء</button></div>
+  </div>`);
+  toggleFinanceAgreementFields();
+}
+async function saveFinanceAgreement(){
+  const name=document.getElementById("financeAgreementName").value.trim(),billingModel=document.getElementById("financeBillingModel").value,amount=normalizeMoney(document.getElementById("financeAmount").value),packageSize=Math.round(Number(document.getElementById("financePackageSize").value)||0),startDate=document.getElementById("financeStartDate").value;
+  if(!name){alert("اكتب اسم الطالب أو المركز.");return}
+  if(amount<=0){alert("اكتب قيمة مالية أكبر من صفر.");return}
+  if(billingModel==="package"&&(packageSize<1||packageSize>500)){alert("اكتب عدد حصص صحيحًا للرصيد.");return}
+  if(!validDateKey(startDate)){alert("اختر تاريخ بداية صحيحًا.");return}
+  const previous=cloneFinanceState(),now=new Date().toISOString(),old=finance.agreements.find(item=>item.id===financeEditingAgreementId),agreement={
+    id:old?.id||makeId(),direction:document.getElementById("financeDirection").value,partyType:document.getElementById("financePartyType").value,name,billingModel,
+    paymentTiming:document.getElementById("financePaymentTiming").value,amount,currency:document.getElementById("financeCurrency").value,packageSize:billingModel==="package"?packageSize:1,
+    paymentMethod:document.getElementById("financePaymentMethod").value,lessonIds:selectedFinanceLessons(),startDate,active:old?.active!==false,notes:document.getElementById("financeAgreementNotes").value.trim(),createdAt:old?.createdAt||now,updatedAt:now
+  };
+  finance.agreements=old?finance.agreements.map(item=>item.id===old.id?agreement:item):[...finance.agreements,agreement];
+  const openCycle=openAgreementCycle(agreement.id);
+  if(billingModel==="package"){
+    if(openCycle){openCycle.targetSessions=packageSize;openCycle.amount=amount;if(startDate>openCycle.startDate)openCycle.startDate=startDate}
+    else finance.cycles.push({id:makeId(),agreementId:agreement.id,startDate,targetSessions:packageSize,amount,countOverride:null,endDate:null,createdAt:now});
+  }else if(openCycle){
+    openCycle.countOverride=cycleSessionCount(agreement,openCycle);openCycle.endDate=currentDateKey();
+  }
+  if(await commitFinance(previous))financeEditingAgreementId=null;
+}
+function paymentAgreementOptions(selectedId){
+  return finance.agreements.filter(item=>item.active).map(item=>`<option value="${item.id}" ${item.id===selectedId?"selected":""}>${esc(item.name)} — ${esc(item.direction==="income"?"دخل":"مصروف")}</option>`).join("");
+}
+function openFinancePayment(agreementId=null){
+  const active=finance.agreements.filter(item=>item.active);
+  if(!active.length){alert("أضف اتفاقًا ماليًا أولًا، ثم سجّل الدفعة.");return}
+  const selected=active.some(item=>item.id===agreementId)?agreementId:active[0].id;
+  openToolDialog("تسجيل دفعة","سجّل المبلغ الذي استلمته أو دفعته فعلًا.",`<div class="finance-form">
+    <div class="finance-form-grid">
+      <div class="field full"><label for="financePaymentAgreement">الطالب أو المركز</label><select id="financePaymentAgreement" onchange="updateFinancePaymentFields(true)">${paymentAgreementOptions(selected)}</select></div>
+      <div class="field full" id="financePaymentTarget"></div>
+      <div class="field"><label for="financePaymentAmount">المبلغ</label><input id="financePaymentAmount" type="number" inputmode="decimal" min="0.01" max="1000000000" step="0.01"></div>
+      <div class="field"><label for="financePaymentDate">تاريخ الدفعة</label><input id="financePaymentDate" type="date" value="${currentDateKey()}"></div>
+      <div class="field full"><label for="financePaymentMethodValue">طريقة الدفع</label><select id="financePaymentMethodValue">${FINANCE_METHODS.map(value=>`<option value="${value}">${paymentMethodLabel(value)}</option>`).join("")}</select></div>
+      <div class="field full"><label for="financePaymentNote">ملاحظة اختيارية</label><textarea id="financePaymentNote" maxlength="500" placeholder="مثلاً: دفعة سبتمبر"></textarea></div>
+    </div>
+    <div class="finance-form-note" id="financePaymentHint"></div>
+    <div class="finance-dialog-actions"><button type="button" class="save" onclick="saveFinancePayment()">حفظ الدفعة</button><button type="button" class="cancel" onclick="closeToolDialog()">إلغاء</button></div>
+  </div>`);
+  updateFinancePaymentFields(true);
+}
+function updateFinancePaymentFields(resetAmount=false){
+  const agreement=finance.agreements.find(item=>item.id===document.getElementById("financePaymentAgreement")?.value);if(!agreement)return;
+  const target=document.getElementById("financePaymentTarget"),hint=document.getElementById("financePaymentHint"),method=document.getElementById("financePaymentMethodValue");
+  let suggested=0;
+  if(agreement.billingModel==="monthly"){
+    const enteredPeriod=document.getElementById("financePaymentMonth")?.value,period=validMonthKey(enteredPeriod)?enteredPeriod:selectedFinanceMonth;
+    const expected=monthSessionCount(agreement,period)*agreement.amount,paid=targetPaid(agreement.id,"month",period);suggested=Math.max(0,expected-paid);
+    target.innerHTML=`<label for="financePaymentMonth">الشهر الذي تخصه الدفعة</label><input id="financePaymentMonth" type="month" value="${period}" onchange="updateFinancePaymentFields(true)">`;
+    hint.textContent=`${monthSessionCount(agreement,period)} حصة × ${formatMoney(agreement.amount,agreement.currency)}؛ المتبقي حاليًا ${formatMoney(suggested,agreement.currency)}.`;
+  }else{
+    const cycles=agreementCycles(agreement.id),suggestedCycle=cycles.find(cycle=>Math.max(0,cycle.amount-targetPaid(agreement.id,"cycle",cycle.id))>0)||cycles[0];
+    target.innerHTML=`<label for="financePaymentCycle">رصيد الحصص الذي تخصه الدفعة</label><select id="financePaymentCycle" onchange="updateFinancePaymentCycleAmount()">${cycles.map(cycle=>`<option value="${cycle.id}" ${cycle.id===suggestedCycle?.id?"selected":""}>بدأ ${cycle.startDate}${cycle.endDate?` · انتهى ${cycle.endDate}`:" · جارٍ"}</option>`).join("")}</select>`;
+    if(suggestedCycle)suggested=Math.max(0,suggestedCycle.amount-targetPaid(agreement.id,"cycle",suggestedCycle.id));
+    hint.textContent=`قيمة الرصيد ${formatMoney(suggestedCycle?.amount||agreement.amount,agreement.currency)}؛ المتبقي حاليًا ${formatMoney(suggested,agreement.currency)}.`;
+  }
+  if(method)method.value=agreement.paymentMethod;
+  if(resetAmount||!document.getElementById("financePaymentAmount").value)document.getElementById("financePaymentAmount").value=suggested||"";
+}
+function updateFinancePaymentCycleAmount(){
+  const agreement=finance.agreements.find(item=>item.id===document.getElementById("financePaymentAgreement")?.value),cycle=finance.cycles.find(item=>item.id===document.getElementById("financePaymentCycle")?.value);if(!agreement||!cycle)return;
+  const remaining=Math.max(0,cycle.amount-targetPaid(agreement.id,"cycle",cycle.id));
+  document.getElementById("financePaymentAmount").value=remaining||"";
+  document.getElementById("financePaymentHint").textContent=`قيمة الرصيد ${formatMoney(cycle.amount,agreement.currency)}؛ المتبقي حاليًا ${formatMoney(remaining,agreement.currency)}.`;
+}
+async function saveFinancePayment(){
+  const agreement=finance.agreements.find(item=>item.id===document.getElementById("financePaymentAgreement").value),amount=normalizeMoney(document.getElementById("financePaymentAmount").value),date=document.getElementById("financePaymentDate").value;
+  if(!agreement){alert("اختر اتفاقًا ماليًا صحيحًا.");return}
+  if(amount<=0){alert("اكتب مبلغًا أكبر من صفر.");return}
+  if(!validDateKey(date)){alert("اختر تاريخ دفعة صحيحًا.");return}
+  const targetType=agreement.billingModel==="monthly"?"month":"cycle",targetKey=targetType==="month"?document.getElementById("financePaymentMonth")?.value:document.getElementById("financePaymentCycle")?.value;
+  if((targetType==="month"&&!validMonthKey(targetKey))||(targetType==="cycle"&&!finance.cycles.some(item=>item.id===targetKey&&item.agreementId===agreement.id))){alert("اختر الفترة التي تخصها الدفعة.");return}
+  const previous=cloneFinanceState();
+  finance.payments.push({id:makeId(),agreementId:agreement.id,targetType,targetKey,amount,currency:agreement.currency,date,method:document.getElementById("financePaymentMethodValue").value,note:document.getElementById("financePaymentNote").value.trim(),createdAt:new Date().toISOString()});
+  await commitFinance(previous);
+}
+function openMonthCount(agreementId){
+  const agreement=finance.agreements.find(item=>item.id===agreementId&&item.billingModel==="monthly");if(!agreement)return;
+  openToolDialog("مراجعة عدد الحصص",agreement.name,"<div class=\"finance-form\"><div class=\"finance-form-grid\"><div class=\"field\"><label for=\"financeCountMonth\">الشهر</label><input id=\"financeCountMonth\" type=\"month\" value=\""+selectedFinanceMonth+"\" onchange=\"refreshMonthCountForm('"+agreement.id+"')\"></div><div class=\"field\"><label for=\"financeCountValue\">العدد الفعلي المحسوب</label><input id=\"financeCountValue\" type=\"number\" min=\"0\" max=\"10000\" step=\"1\"></div><div class=\"field full\"><label for=\"financeCountNote\">ملاحظة</label><textarea id=\"financeCountNote\" maxlength=\"500\"></textarea></div></div><div class=\"finance-form-note\" id=\"financeCountHint\"></div><div class=\"finance-dialog-actions\"><button type=\"button\" class=\"save\" onclick=\"saveMonthCount('"+agreement.id+"')\">حفظ العدد</button><button type=\"button\" class=\"cancel\" onclick=\"clearMonthCount('"+agreement.id+"')\">العودة للحساب التلقائي</button></div></div>");
+  refreshMonthCountForm(agreement.id);
+}
+function refreshMonthCountForm(agreementId){
+  const agreement=finance.agreements.find(item=>item.id===agreementId),period=document.getElementById("financeCountMonth")?.value;if(!agreement||!validMonthKey(period))return;
+  const automatic=automaticMonthCount(agreement,period),record=monthCountRecord(agreement.id,period);
+  document.getElementById("financeCountValue").value=record?.count??automatic;
+  document.getElementById("financeCountNote").value=record?.note||"";
+  document.getElementById("financeCountHint").textContent=`الجدول يعطي ${automatic} حصة تلقائيًا. عدّل الرقم فقط إذا كانت هناك حصة ملغاة أو إضافية.`;
+}
+async function saveMonthCount(agreementId){
+  const agreement=finance.agreements.find(item=>item.id===agreementId),period=document.getElementById("financeCountMonth").value,count=Math.round(Number(document.getElementById("financeCountValue").value));
+  if(!agreement||!validMonthKey(period)||!Number.isInteger(count)||count<0||count>10000){alert("اكتب عدد حصص صحيحًا.");return}
+  const previous=cloneFinanceState(),record={agreementId,period,count,note:document.getElementById("financeCountNote").value.trim(),updatedAt:new Date().toISOString()};
+  finance.monthCounts=finance.monthCounts.some(item=>item.agreementId===agreementId&&item.period===period)?finance.monthCounts.map(item=>item.agreementId===agreementId&&item.period===period?record:item):[...finance.monthCounts,record];
+  selectedFinanceMonth=period;await commitFinance(previous);
+}
+async function clearMonthCount(agreementId){
+  const period=document.getElementById("financeCountMonth")?.value;if(!validMonthKey(period))return;
+  const previous=cloneFinanceState();finance.monthCounts=finance.monthCounts.filter(item=>!(item.agreementId===agreementId&&item.period===period));selectedFinanceMonth=period;await commitFinance(previous);
+}
+function openPackageCount(agreementId){
+  const agreement=finance.agreements.find(item=>item.id===agreementId),cycle=openAgreementCycle(agreementId)||agreementCycles(agreementId)[0];if(!agreement||!cycle)return;
+  const automatic=cycle.endDate?scheduledSessionsBetween(agreement,maxDateKey(cycle.startDate,agreement.startDate),cycle.endDate):scheduledSessionsThroughNow(agreement,maxDateKey(cycle.startDate,agreement.startDate)),current=cycleSessionCount(agreement,cycle);
+  openToolDialog("تصحيح رصيد الحصص",agreement.name,`<div class="finance-form"><div class="finance-calculation"><div><small>الحساب التلقائي</small><strong>${automatic}</strong></div><div><small>الرصيد المسجل</small><strong>${current}</strong></div><div><small>إجمالي الرصيد</small><strong>${cycle.targetSessions}</strong></div></div><div class="finance-form-grid"><div class="field full"><label for="financePackageCountValue">عدد الحصص التي تم احتسابها فعلًا</label><input id="financePackageCountValue" type="number" min="0" max="10000" step="1" value="${current}"></div></div><div class="finance-form-note">استخدم التصحيح عند وجود حصة ملغاة أو إضافية. ويمكنك العودة للحساب التلقائي في أي وقت.</div><div class="finance-dialog-actions"><button type="button" class="save" onclick="savePackageCount('${agreement.id}','${cycle.id}')">حفظ الرصيد</button><button type="button" class="cancel" onclick="clearPackageCount('${agreement.id}','${cycle.id}')">العودة للحساب التلقائي</button></div></div>`);
+}
+async function savePackageCount(agreementId,cycleId){
+  const count=Math.round(Number(document.getElementById("financePackageCountValue").value)),cycle=finance.cycles.find(item=>item.id===cycleId&&item.agreementId===agreementId);if(!cycle||!Number.isInteger(count)||count<0||count>10000){alert("اكتب عدد حصص صحيحًا.");return}
+  const previous=cloneFinanceState();cycle.countOverride=count;await commitFinance(previous);
+}
+async function clearPackageCount(agreementId,cycleId){
+  const cycle=finance.cycles.find(item=>item.id===cycleId&&item.agreementId===agreementId);if(!cycle)return;
+  const previous=cloneFinanceState();cycle.countOverride=null;await commitFinance(previous);
+}
+function startNewPackageCycle(agreementId){
+  const agreement=finance.agreements.find(item=>item.id===agreementId&&item.billingModel==="package");if(!agreement)return;
+  const current=openAgreementCycle(agreementId),count=current?cycleSessionCount(agreement,current):0;
+  openToolDialog("بدء رصيد حصص جديد",agreement.name,`<div class="finance-form"><div class="finance-form-note">سيُغلق الرصيد الجاري عند ${count} حصة، وسيظل أي مبلغ متبقٍّ ظاهرًا في سجله. اختر تاريخ أول يوم يدخل في الرصيد الجديد.</div><div class="finance-form-grid"><div class="field"><label for="financeNewCycleDate">بداية الرصيد الجديد</label><input id="financeNewCycleDate" type="date" value="${addDaysToDateKey(currentDateKey(),1)}"></div><div class="field"><label for="financeNewCycleTarget">عدد الحصص</label><input id="financeNewCycleTarget" type="number" min="1" max="500" step="1" value="${agreement.packageSize}"></div><div class="field full"><label for="financeNewCycleAmount">قيمة الرصيد (${agreement.currency})</label><input id="financeNewCycleAmount" type="number" min="0.01" max="1000000000" step="0.01" value="${agreement.amount}"></div></div><div class="finance-dialog-actions"><button type="button" class="save" onclick="saveNewPackageCycle('${agreement.id}')">بدء الرصيد</button><button type="button" class="cancel" onclick="closeToolDialog()">إلغاء</button></div></div>`);
+}
+async function saveNewPackageCycle(agreementId){
+  const agreement=finance.agreements.find(item=>item.id===agreementId),date=document.getElementById("financeNewCycleDate").value,target=Math.round(Number(document.getElementById("financeNewCycleTarget").value)),amount=normalizeMoney(document.getElementById("financeNewCycleAmount").value);if(!agreement||!validDateKey(date)||target<1||target>500||amount<=0){alert("راجع تاريخ الرصيد وعدد الحصص والقيمة.");return}
+  const previous=cloneFinanceState(),current=openAgreementCycle(agreementId),now=new Date().toISOString();
+  if(current&&date<=current.startDate){alert("اختر تاريخًا بعد بداية الرصيد الجاري.");return}
+  if(current){current.countOverride=cycleSessionCount(agreement,current);current.endDate=addDaysToDateKey(date,-1)}
+  agreement.packageSize=target;agreement.amount=amount;agreement.updatedAt=now;
+  finance.cycles.push({id:makeId(),agreementId,startDate:date,endDate:null,targetSessions:target,amount,countOverride:null,createdAt:now});
+  await commitFinance(previous);
+}
+async function archiveFinanceAgreement(agreementId){
+  const agreement=finance.agreements.find(item=>item.id===agreementId);if(!agreement||!confirm(`أرشفة الاتفاق المالي مع ${agreement.name}؟ ستظل دفعاته القديمة محفوظة.`))return;
+  const previous=cloneFinanceState();agreement.active=false;agreement.updatedAt=new Date().toISOString();await commitFinance(previous,false);
+}
+async function reactivateFinanceAgreement(agreementId){
+  const agreement=finance.agreements.find(item=>item.id===agreementId);if(!agreement)return;
+  const previous=cloneFinanceState();agreement.active=true;agreement.updatedAt=new Date().toISOString();finance=normalizeFinance(finance);await commitFinance(previous,false);
+}
+async function deleteFinancePayment(paymentId){
+  const payment=finance.payments.find(item=>item.id===paymentId);if(!payment||!confirm("حذف هذه الدفعة من السجل؟"))return;
+  const previous=cloneFinanceState();finance.payments=finance.payments.filter(item=>item.id!==paymentId);await commitFinance(previous,false);
 }
 
 function scheduleRowHTML(day="الاثنين",time="18:00"){
@@ -2178,7 +2869,7 @@ async function initApp(){
     }else if(event==="SIGNED_OUT"){
       setTimeout(()=>{
         stopRealtime();
-        sessionSequence++;loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;
+        sessionSequence++;loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];finance=emptyFinance();editingId=null;
         recoveryUser=null;lastCloudUpdatedAt=null;setAuthMode("signin");closeDrawer();closeToolDialog();updateNotificationMenuStatus(false);render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
       },0);
     }else if(event==="SIGNED_IN"&&session?.user&&authMode!=="update"){

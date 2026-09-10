@@ -288,6 +288,12 @@ body.auth-pending .app{visibility:hidden}
 .fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--primary),#6F93AE)}
 
 .week-view{display:none}
+.week-panel-head{align-items:center}
+.week-panel-title{display:grid;gap:4px}.week-panel-title span{color:var(--muted);font-size:11px;font-weight:700}
+.week-navigation{display:flex;align-items:center;gap:6px;padding:4px;border:1px solid var(--line);border-radius:9px;background:#F4F7F9}
+.week-navigation button{min-width:54px;padding:7px 9px;border:0;border-radius:6px;background:transparent;color:#60727F;font-size:10px;font-weight:800}
+.week-navigation button:hover,.week-navigation button:focus-visible{background:#fff;color:var(--primary);outline:none;box-shadow:0 2px 8px rgba(17,42,64,.08)}
+.week-navigation .week-current{border:1px solid #B9CAD5;background:#fff;color:var(--primary)}
 .week-legend{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px 18px;padding:11px 16px;border-bottom:1px solid var(--line);background:#F5F8FA}
 .legend-types,.source-legend{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
 .legend-title{margin-inline-end:2px;color:var(--muted);font-size:11px;font-weight:700}
@@ -312,6 +318,7 @@ body.auth-pending .app{visibility:hidden}
 .week-corner{right:0;z-index:5;background:#DDE7ED;color:#526674}
 .week-day-head.today{background:#DCEAF3;box-shadow:inset 0 4px 0 #47769A}
 .week-day-head .count{display:grid;place-items:center;min-width:25px;height:25px;padding:0 5px;border:1px solid #C9D6DE;border-radius:999px;background:#fff;color:var(--muted);font-size:10px}
+.week-day-label{display:grid;gap:2px;text-align:center}.week-day-label small{color:#758794;font-size:9px;font-weight:700}
 .week-time-label{
   position:sticky;right:0;z-index:2;display:flex;align-items:flex-start;justify-content:center;min-height:108px;padding:13px 6px;
   background:#F1F5F7;color:var(--primary);font-size:12px;font-weight:800;white-space:nowrap
@@ -343,6 +350,9 @@ body.auth-pending .app{visibility:hidden}
 .week-meta{margin-top:3px;color:#64727C;font-size:11px;line-height:1.55}
 .week-source{display:flex;align-items:center;gap:5px;margin-top:7px;color:#52636F;font-size:10px;font-weight:800}
 .week-source .source-line{height:14px}
+.week-status-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
+.week-card.session-inactive,.lesson.session-inactive{filter:saturate(.68);opacity:.78}
+.week-card.session-inactive .week-name,.lesson.session-inactive .lesson-name{text-decoration:line-through;text-decoration-thickness:1px}
 .week-grid.is-empty{display:block;min-width:0}
 .week-empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px}
 
@@ -398,6 +408,26 @@ body.auth-pending .app{visibility:hidden}
 .finance-dialog-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}.finance-dialog-actions button{padding:9px 12px;border-radius:8px;font-size:11px;font-weight:800}
 .finance-dialog-actions .save{border:0;background:var(--primary);color:#fff}.finance-dialog-actions .cancel{border:1px solid var(--line);background:#fff;color:var(--muted)}
 .finance-calculation{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.finance-calculation div{padding:9px;border-radius:8px;background:#F1F5F7;text-align:center}.finance-calculation small{display:block;color:var(--muted);font-size:9px}.finance-calculation strong{display:block;margin-top:4px;color:var(--primary);font-size:13px}
+
+.session-status-chip{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid #CAD5DC;border-radius:999px;
+  background:#F4F7F9;color:#657682;font-size:10px;font-weight:800;line-height:1;white-space:nowrap;cursor:pointer
+}
+.session-status-chip::before{content:"";width:7px;height:7px;flex:0 0 auto;border-radius:50%;background:#899BA7}
+.session-status-chip:hover,.session-status-chip:focus-visible{border-color:#8CA8BA;outline:none;box-shadow:0 0 0 3px rgba(35,75,110,.1)}
+.session-status-chip.completed{border-color:#A7D3C7;background:#E8F5F1;color:#267366}.session-status-chip.completed::before{background:#2F8677}
+.session-status-chip.ongoing{border-color:#8FB6D0;background:#E8F2F8;color:#285E82}.session-status-chip.ongoing::before{background:#3E7FA8;box-shadow:0 0 0 4px rgba(62,127,168,.13)}
+.session-status-chip.cancelled{border-color:#E2BBBB;background:#FBEEEE;color:#9A4141}.session-status-chip.cancelled::before{background:#B84E4E}
+.session-status-chip.counted-cancel{border-color:#E3C591;background:#FFF5DF;color:#8D5B17}.session-status-chip.counted-cancel::before{background:#B8791C}
+.session-status-chip.rescheduled{border-color:#AFC5DB;background:#EDF4FA;color:#37698F}.session-status-chip.rescheduled::before{background:#4C7FA5}
+.session-status-chip.free{border-color:#C7B9DD;background:#F4EFFA;color:#6B5194}.session-status-chip.free::before{background:#7B5AA7}
+.session-status-form{display:grid;gap:12px}.session-status-current{padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#5D6F7C;font-size:11px;line-height:1.7}
+.session-status-current strong{display:block;color:var(--ink);font-size:13px}.session-status-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.session-status-option{position:relative;display:flex;align-items:flex-start;gap:9px;padding:11px;border:1px solid #C9D5DD;border-radius:9px;background:#fff;cursor:pointer;transition:.15s ease}
+.session-status-option:hover{border-color:#9DB4C3;background:#F7FAFB}.session-status-option:has(input:checked){border-color:var(--primary);background:#EAF2F7;box-shadow:inset 0 0 0 1px rgba(35,75,110,.08)}
+.session-status-option input{width:auto;margin-top:3px;accent-color:var(--primary)}.session-status-option span{display:grid;gap:2px}.session-status-option b{color:var(--ink);font-size:11px}.session-status-option small{color:var(--muted);font-size:9px;line-height:1.55}
+.session-reschedule-fields{display:none;grid-template-columns:1fr 1fr;gap:9px;padding:11px;border:1px dashed #ABC0CE;border-radius:9px;background:#F4F8FA}.session-reschedule-fields.show{display:grid}
+.session-status-note{padding:9px 10px;border-radius:8px;background:#EEF3F6;color:#5D6F7C;font-size:10px;line-height:1.7}
 
 .tool-backdrop{
   position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:18px;opacity:0;pointer-events:none;
@@ -490,13 +520,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .panel{border-radius:9px}.timeline{padding:10px 12px 16px}
   .timeline-row{grid-template-columns:70px minmax(0,1fr);gap:8px}.t-time{min-height:38px;padding:6px;font-size:11px}.lesson{padding:12px}.actions{flex-direction:column}
   .grid,.lesson-finance-grid{grid-template-columns:1fr}.field.full,.lesson-finance-grid .full{grid-column:auto}.row{grid-template-columns:1fr 1fr auto}
-  .week-view .panel-head{align-items:flex-start}.week-view .panel-head span{max-width:190px;line-height:1.55;text-align:left}
+  .week-view .panel-head{align-items:stretch;flex-direction:column}.week-panel-title{gap:3px}.week-panel-title span{max-width:none;line-height:1.55;text-align:right}
+  .week-navigation{align-self:stretch;justify-content:space-between}.week-navigation button{flex:1}
   .week-legend{align-items:flex-start;padding:10px 11px}.source-legend{width:100%}
   .week-table-wrap{padding:10px}.week-grid{grid-template-columns:66px repeat(7,minmax(145px,1fr));min-width:1080px}
   .week-time-label,.week-slot{min-height:102px}.week-time-label{padding-inline:4px}.week-slot{padding:6px}
   .week-card{min-height:88px;padding:9px}.week-name{font-size:12px}
   .quick-add-slot{min-height:88px;opacity:.68}
-  .notification-leads{grid-template-columns:repeat(2,1fr)}
+  .notification-leads,.session-status-options{grid-template-columns:repeat(2,1fr)}
+  .session-reschedule-fields{grid-template-columns:1fr}
   .finance-toolbar{align-items:stretch;flex-direction:column;padding:15px}.finance-period{min-width:0}.finance-summary{grid-template-columns:1fr}.finance-form-grid,.finance-lesson-list{grid-template-columns:1fr}.finance-calculation{grid-template-columns:1fr}.agreement-top{gap:8px}
   .hurufiyat span{width:410px;opacity:.07}.hurufiyat span:nth-child(1){top:-125px;right:-180px}
   .hurufiyat span:nth-child(4){bottom:-125px;left:-180px}
@@ -659,9 +691,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     </section>
 
     <section id="weekView" class="panel week-view">
-      <div class="panel-head">
-        <h2>الأسبوع</h2>
-        <span>كل صف يجمع المواعيد التي تبدأ في الوقت نفسه</span>
+      <div class="panel-head week-panel-head">
+        <div class="week-panel-title">
+          <h2>الأسبوع</h2>
+          <span id="weekRangeLabel">كل صف يجمع المواعيد التي تبدأ في الوقت نفسه</span>
+        </div>
+        <nav class="week-navigation" aria-label="التنقل بين الأسابيع">
+          <button type="button" onclick="changeScheduleWeek(-1)" aria-label="عرض الأسبوع السابق">السابق</button>
+          <button type="button" class="week-current" onclick="resetScheduleWeek()">الحالي</button>
+          <button type="button" onclick="changeScheduleWeek(1)" aria-label="عرض الأسبوع التالي">التالي</button>
+        </nav>
       </div>
       <div class="week-legend" aria-label="دليل ألوان الجدول">
         <div class="legend-types">
@@ -957,6 +996,7 @@ const BACKUP_VERSION=2;
 const MAX_BACKUP_BYTES=5*1024*1024;
 const MAX_BACKUP_LESSONS=2000;
 const MAX_FINANCE_RECORDS=5000;
+const MAX_SESSION_RECORDS=5000;
 const AUTO_REFRESH_THROTTLE_MS=15000;
 const HISTORY_TABLE="mawaeidi_history";
 const PUSH_SUBSCRIPTIONS_TABLE="mawaeidi_push_subscriptions";
@@ -971,6 +1011,7 @@ const SCHEDULE_TIMEZONE="Africa/Cairo";
 const FINANCE_VERSION=1;
 const FINANCE_CURRENCIES=["EGP","USD","EUR","GBP","SAR","AED"];
 const FINANCE_METHODS=["paypal","bank","wise","cash","other"];
+const SESSION_RECORD_STATUSES=["default","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"];
 const cloud=window.supabase?.createClient
   ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
   :null;
@@ -986,6 +1027,33 @@ function normalizeNotificationLeads(value,fallback=DEFAULT_NOTIFICATION_LEADS){
   if(normalized.length)return normalized;
   const safeFallback=Array.isArray(fallback)?fallback:[fallback];
   return [...new Set(safeFallback.map(Number).filter(item=>NOTIFICATION_LEAD_OPTIONS.includes(item)))].sort((a,b)=>b-a).slice(0,MAX_NOTIFICATION_LEADS);
+}
+function normalizeSessionRecords(value){
+  const records=[],ids=new Set(),baseKeys=new Set();
+  for(const item of (Array.isArray(value)?value:[]).slice(0,MAX_SESSION_RECORDS)){
+    if(!item||typeof item!=="object")continue;
+    const kind=item.kind==="replacement"?"replacement":"base",date=textValue(item.date),time=textValue(item.time);
+    if(!validDateKey(date)||!TIME_RE.test(time))continue;
+    let status=SESSION_RECORD_STATUSES.includes(item.status)?item.status:"default";
+    if(kind==="base"&&status==="default")continue;
+    if(kind==="replacement"&&status==="rescheduled")status="default";
+    const sourceDate=textValue(item.sourceDate),sourceTime=textValue(item.sourceTime);
+    if(kind==="replacement"&&(!validDateKey(sourceDate)||!TIME_RE.test(sourceTime)))continue;
+    const baseKey=`${date}|${time}`;
+    if(kind==="base"&&baseKeys.has(baseKey))continue;
+    let id=textValue(item.id);
+    if(!/^[A-Za-z0-9_-]{1,120}$/.test(id))id=kind==="base"?`base-${date}-${time.replace(":","")}`:makeId();
+    while(ids.has(id))id=makeId();
+    ids.add(id);
+    if(kind==="base")baseKeys.add(baseKey);
+    const record={id,kind,date,time,status,updatedAt:textValue(item.updatedAt)||new Date().toISOString()};
+    if(kind==="base"&&status==="rescheduled"&&/^[A-Za-z0-9_-]{1,120}$/.test(textValue(item.replacementId)))record.replacementId=textValue(item.replacementId);
+    if(kind==="replacement"){record.sourceDate=sourceDate;record.sourceTime=sourceTime}
+    records.push(record);
+  }
+  const replacementIds=new Set(records.filter(item=>item.kind==="replacement").map(item=>item.id));
+  const linkedReplacementIds=new Set(records.filter(item=>item.kind==="base"&&item.status==="rescheduled"&&replacementIds.has(item.replacementId)).map(item=>item.replacementId));
+  return records.filter(item=>item.kind==="base"?(item.status!=="rescheduled"||linkedReplacementIds.has(item.replacementId)):linkedReplacementIds.has(item.id));
 }
 function normalizeLesson(item){
   const duration=Number(item.duration);
@@ -1006,6 +1074,7 @@ function normalizeLesson(item){
     reminderMode,
     reminderLeads:normalizeNotificationLeads(item.reminderLeads,[DEFAULT_NOTIFICATION_LEAD]),
     notes:textValue(item.notes),
+    sessionRecords:normalizeSessionRecords(item.sessionRecords),
     schedules:Array.isArray(item.schedules)?item.schedules
       .filter(s=>s&&days.includes(s.day)&&TIME_RE.test(textValue(s.time)))
       .map(s=>({day:s.day,time:s.time})):[]
@@ -1167,6 +1236,7 @@ let lessons=[];
 let finance=emptyFinance();
 let currentFilter="all";
 let currentView="today";
+let selectedWeekOffset=0;
 let currentSection="schedule";
 let selectedFinanceMonth=currentDateKey().slice(0,7);
 let editingId=null;
@@ -1190,6 +1260,7 @@ let serviceWorkerRegistration=null;
 let toolReturnFocus=null;
 let notificationBusy=false;
 let historySnapshots=new Map();
+let activeSessionContext=null;
 
 function closeDataMenu(){document.getElementById("dataMenu")?.removeAttribute("open")}
 function isStandalone(){return window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone===true}
@@ -1248,6 +1319,7 @@ function closeToolDialog(event){
   backdrop.classList.remove("show");
   backdrop.setAttribute("aria-hidden","true");
   document.body.classList.remove("drawer-open");
+  activeSessionContext=null;
   if(toolReturnFocus?.focus)toolReturnFocus.focus();
   toolReturnFocus=null;
   setTimeout(flushPendingRemote,0);
@@ -1589,6 +1661,23 @@ async function disableNotifications(silent=false){
     return false;
   }finally{notificationBusy=false}
 }
+function sessionOnlyHistorySummary(beforeLesson,afterLesson){
+  if(!beforeLesson||!afterLesson)return null;
+  const {sessionRecords:beforeRecords=[],...beforeBase}=beforeLesson;
+  const {sessionRecords:afterRecords=[],...afterBase}=afterLesson;
+  if(JSON.stringify(beforeBase)!==JSON.stringify(afterBase)||JSON.stringify(beforeRecords)===JSON.stringify(afterRecords))return null;
+  const beforeMap=new Map(beforeRecords.map(item=>[item.id,item])),afterMap=new Map(afterRecords.map(item=>[item.id,item]));
+  const changed=afterRecords.find(item=>!beforeMap.has(item.id)||JSON.stringify(beforeMap.get(item.id))!==JSON.stringify(item));
+  const removed=beforeRecords.find(item=>!afterMap.has(item.id));
+  const record=(changed?.kind==="base"?changed:null)||(removed?.kind==="base"?removed:null)||changed||removed;
+  let detail="تم تحديث حالة إحدى الحصص.";
+  if(record){
+    const date=record.kind==="replacement"?record.date:record.date,time=record.time;
+    const label=!changed?"عادت إلى الحالة التلقائية":changed.kind==="replacement"&&changed.status==="default"?"موعد بديل":sessionStatusInfo(changed.status).full;
+    detail=`${formatSessionDate(date)} · ${fmt(time)} · ${label}`;
+  }
+  return {title:`تحديث حالة حصة: ${afterLesson.name||beforeLesson.name||"بدون اسم"}`,detail};
+}
 function historyChangeSummary(entry){
   const before=Array.isArray(entry?.before_lessons)?entry.before_lessons:[];
   const after=Array.isArray(entry?.after_lessons)?entry.after_lessons:[];
@@ -1617,7 +1706,10 @@ function historyChangeSummary(entry){
   }
   if(added.length===1&&!removed.length&&!changed.length)return {title:`إضافة حصة: ${added[0].name||"بدون اسم"}`,detail:"يمكن الرجوع إلى الجدول قبل إضافتها."};
   if(removed.length===1&&!added.length&&!changed.length)return {title:`حذف حصة: ${removed[0].name||"بدون اسم"}`,detail:"يمكن استرجاع الحصة وكل مواعيدها."};
-  if(changed.length===1&&!added.length&&!removed.length)return {title:`تعديل حصة: ${changed[0].name||beforeMap.get(changed[0].id)?.name||"بدون اسم"}`,detail:"يمكن استرجاع بياناتها ومواعيدها السابقة."};
+  if(changed.length===1&&!added.length&&!removed.length){
+    const sessionSummary=sessionOnlyHistorySummary(beforeMap.get(changed[0].id),changed[0]);
+    return sessionSummary||{title:`تعديل حصة: ${changed[0].name||beforeMap.get(changed[0].id)?.name||"بدون اسم"}`,detail:"يمكن استرجاع بياناتها ومواعيدها السابقة."};
+  }
   if(financeChanged&&lessonChanged)return {title:"تحديث المواعيد والمالية",detail:"يمكن استعادة كل بيانات الحساب إلى ما قبل هذا التغيير."};
   return {title:"تحديث عدة مواعيد",detail:`${added.length} إضافة · ${changed.length} تعديل · ${removed.length} حذف`};
 }
@@ -1779,7 +1871,7 @@ function setSync(state,message){
   box.disabled=state==="saving";
   box.setAttribute("aria-label",`${message}؛ اضغط لتحديث المواعيد من السحابة`);
 }
-function isDrawerVisible(){return document.getElementById("drawer").classList.contains("show")||Boolean(document.querySelector("#toolBackdrop.show .finance-form"))}
+function isDrawerVisible(){return document.getElementById("drawer").classList.contains("show")||Boolean(document.querySelector("#toolBackdrop.show .finance-form, #toolBackdrop.show .session-status-form"))}
 function remoteRowIsNewer(row){
   const remote=textValue(row?.updated_at);
   if(!remote)return !lastCloudUpdatedAt;
@@ -2083,7 +2175,7 @@ function fmt(t){
   return `${hh}:${String(m).padStart(2,"0")} ${p}`;
 }
 function mins(t){const value=TIME_RE.test(String(t))?String(t):"00:00";const[h,m]=value.split(":").map(Number);return h*60+m}
-function todayName(){return["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"][new Date().getDay()]}
+function todayName(){return dayNameForDateKey(currentDateKey())}
 function currentDateKey(date=new Date()){
   try{
     const parts=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:SCHEDULE_TIMEZONE,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(date).filter(part=>part.type!=="literal").map(part=>[part.type,part.value]));
@@ -2115,11 +2207,200 @@ function dayNameForDateKey(value){
   if(!validDateKey(value))return "";
   return ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"][new Date(`${value}T12:00:00Z`).getUTCDay()];
 }
+function selectedWeekAnchor(){return addDaysToDateKey(currentDateKey(),selectedWeekOffset*7)}
+function weekDateForDay(day,anchor=selectedWeekAnchor()){
+  const target=days.indexOf(day),current=days.indexOf(dayNameForDateKey(anchor));
+  return target<0||current<0?anchor:addDaysToDateKey(anchor,target-current);
+}
+function formatSessionDate(value,short=false){
+  if(!validDateKey(value))return "تاريخ غير معروف";
+  return new Date(`${value}T12:00:00Z`).toLocaleDateString("ar-EG",short
+    ?{day:"numeric",month:"numeric",timeZone:"UTC"}
+    :{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});
+}
+function selectedWeekRangeLabel(){
+  const start=weekDateForDay(days[0]),end=weekDateForDay(days[days.length-1]);
+  const startDate=new Date(`${start}T12:00:00Z`),endDate=new Date(`${end}T12:00:00Z`);
+  const sameMonth=start.slice(0,7)===end.slice(0,7);
+  const first=startDate.toLocaleDateString("ar-EG",sameMonth?{day:"numeric",timeZone:"UTC"}:{day:"numeric",month:"long",timeZone:"UTC"});
+  const last=endDate.toLocaleDateString("ar-EG",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});
+  return `${first} — ${last}`;
+}
+function baseSessionRecord(lesson,date,time){
+  return (lesson?.sessionRecords||[]).find(item=>item.kind==="base"&&item.date===date&&item.time===time)||null;
+}
+function replacementSessionRecord(lesson,id){
+  return (lesson?.sessionRecords||[]).find(item=>item.kind==="replacement"&&item.id===id)||null;
+}
+function occurrenceHasEnded(occurrence,nowDate=currentDateKey(),nowTime=currentTimeKey()){
+  if(occurrence.date<nowDate)return true;
+  if(occurrence.date>nowDate)return false;
+  return mins(occurrence.time)+Number(occurrence.lesson?.duration||60)<=mins(nowTime);
+}
+function occurrenceHasStarted(occurrence,nowDate=currentDateKey(),nowTime=currentTimeKey()){
+  if(occurrence.date<nowDate)return true;
+  if(occurrence.date>nowDate)return false;
+  return mins(occurrence.time)<=mins(nowTime);
+}
+function occurrenceRawStatus(occurrence){return occurrence.record?.status||"default"}
+function occurrenceStatus(occurrence){
+  const explicit=occurrenceRawStatus(occurrence);
+  if(explicit!=="default")return explicit;
+  if(occurrenceHasEnded(occurrence))return "completed";
+  if(occurrenceHasStarted(occurrence))return "ongoing";
+  return "upcoming";
+}
+function sessionStatusInfo(status){
+  return ({
+    upcoming:{short:"قادمة",full:"قادمة",className:"upcoming"},
+    ongoing:{short:"جارية",full:"جارية الآن",className:"ongoing"},
+    completed:{short:"تمت",full:"تمت وتُحسب",className:"completed"},
+    cancelled_unpaid:{short:"لا تُحسب",full:"أُلغيت ولا تُحسب",className:"cancelled"},
+    cancelled_counted:{short:"تُحسب",full:"أُلغيت وتُحسب",className:"counted-cancel"},
+    free:{short:"مجانية",full:"تمت مجانًا",className:"free"},
+    rescheduled:{short:"تأجلت",full:"تأجلت إلى موعد آخر",className:"rescheduled"}
+  })[status]||{short:"قادمة",full:"قادمة",className:"upcoming"};
+}
+function occurrenceIsInactive(occurrence){return ["cancelled_unpaid","cancelled_counted","rescheduled"].includes(occurrenceStatus(occurrence))}
+function occurrenceCountsFinancially(occurrence,includeFuture=true){
+  const status=occurrenceRawStatus(occurrence);
+  if(["cancelled_unpaid","free","rescheduled"].includes(status))return 0;
+  if(["completed","cancelled_counted"].includes(status))return 1;
+  return includeFuture||occurrenceHasEnded(occurrence)?1:0;
+}
+function datedOccurrencesForDate(date,list=lessons){
+  if(!validDateKey(date))return [];
+  const day=dayNameForDateKey(date),occurrences=[];
+  (Array.isArray(list)?list:[]).forEach(lesson=>{
+    (lesson.schedules||[]).filter(schedule=>schedule.day===day).forEach(schedule=>{
+      const record=baseSessionRecord(lesson,date,schedule.time);
+      occurrences.push({lesson,date,day,time:schedule.time,kind:"base",record,recordId:record?.id||""});
+    });
+    (lesson.sessionRecords||[]).filter(record=>record.kind==="replacement"&&record.date===date).forEach(record=>{
+      occurrences.push({lesson,date,day,time:record.time,kind:"replacement",record,recordId:record.id,sourceDate:record.sourceDate,sourceTime:record.sourceTime});
+    });
+  });
+  return occurrences.sort((a,b)=>a.time.localeCompare(b.time)||a.lesson.name.localeCompare(b.lesson.name,"ar"));
+}
+function currentWeekOccurrences(list=filtered()){
+  return days.flatMap(day=>datedOccurrencesForDate(weekDateForDay(day),list));
+}
+function sessionStatusButtonMarkup(occurrence){
+  const info=sessionStatusInfo(occurrenceStatus(occurrence));
+  const prefix=occurrence.kind==="replacement"?"بديل · ":"";
+  return `<button type="button" class="session-status-chip ${info.className}" title="${esc(info.full)}" aria-label="تغيير حالة حصة ${esc(occurrence.lesson.name||"بدون اسم")}: ${esc(info.full)}" onclick="event.stopPropagation();openSessionStatus('${occurrence.lesson.id}','${occurrence.date}','${occurrence.time}','${occurrence.kind}','${occurrence.recordId||""}')">${prefix}${esc(info.short)}</button>`;
+}
+function findSessionOccurrence(lessonId,date,time,kind="base",recordId=""){
+  const lesson=lessons.find(item=>item.id===lessonId);
+  if(!lesson||!validDateKey(date)||!TIME_RE.test(time))return null;
+  if(kind==="replacement"){
+    const record=replacementSessionRecord(lesson,recordId);
+    return record?{lesson,date:record.date,day:dayNameForDateKey(record.date),time:record.time,kind:"replacement",record,recordId:record.id,sourceDate:record.sourceDate,sourceTime:record.sourceTime}:null;
+  }
+  const record=baseSessionRecord(lesson,date,time);
+  return {lesson,date,day:dayNameForDateKey(date),time,kind:"base",record,recordId:record?.id||""};
+}
+function sessionStatusOption(value,title,detail,selected){
+  return `<label class="session-status-option"><input type="radio" name="sessionStatusChoice" value="${value}" ${selected===value?"checked":""} onchange="toggleSessionRescheduleFields()"><span><b>${title}</b><small>${detail}</small></span></label>`;
+}
+function openSessionStatus(lessonId,date,time,kind="base",recordId=""){
+  const occurrence=findSessionOccurrence(lessonId,date,time,kind,recordId);if(!occurrence)return;
+  const raw=occurrenceRawStatus(occurrence),selected=raw==="default"?"automatic":raw;
+  let replacement=null;
+  if(kind==="base"&&raw==="rescheduled")replacement=replacementSessionRecord(occurrence.lesson,occurrence.record?.replacementId);
+  const suggestedDate=replacement?.date||occurrence.date,suggestedTime=replacement?.time||occurrence.time;
+  activeSessionContext={lessonId,date:occurrence.date,time:occurrence.time,kind,recordId:occurrence.recordId||""};
+  const info=sessionStatusInfo(occurrenceStatus(occurrence));
+  const moveDetails=replacement?`<br>الموعد البديل: ${esc(formatSessionDate(replacement.date))} · ${esc(fmt(replacement.time))}`:kind==="replacement"?`<br>بديل عن: ${esc(formatSessionDate(occurrence.sourceDate))} · ${esc(fmt(occurrence.sourceTime))}`:"";
+  const content=`<div class="session-status-form">
+    <div class="session-status-current"><strong>${esc(occurrence.lesson.name||"بدون اسم")}</strong>${esc(formatSessionDate(occurrence.date))} · ${esc(fmt(occurrence.time))}<br>الحالة الحالية: ${esc(info.full)}${moveDetails}</div>
+    <div class="session-status-options">
+      ${sessionStatusOption("automatic","تلقائي حسب الموعد","قبل الموعد: قادمة، وبعد انتهائه: تمت وتُحسب.",selected)}
+      ${sessionStatusOption("completed","تمت وتُحسب","تدخل في الحساب وتخصم من رصيد الباقة.",selected)}
+      ${sessionStatusOption("cancelled_unpaid","أُلغيت ولا تُحسب","لا تدخل في الحساب المالي.",selected)}
+      ${sessionStatusOption("cancelled_counted","أُلغيت وتُحسب","للإلغاء المتأخر الذي يُحتسب ماليًا.",selected)}
+      ${sessionStatusOption("free","تمت مجانًا","تُسجل دون مبلغ أو خصم من الرصيد.",selected)}
+      ${sessionStatusOption("rescheduled",kind==="replacement"?"تأجيل الموعد البديل":"تأجيل الحصة","ينقل هذه الحصة وحدها إلى تاريخ ووقت جديدين.",selected)}
+    </div>
+    <div class="session-reschedule-fields${selected==="rescheduled"?" show":""}" id="sessionRescheduleFields">
+      <div class="field"><label for="sessionNewDate">التاريخ الجديد</label><input id="sessionNewDate" type="date" value="${suggestedDate}"></div>
+      <div class="field"><label for="sessionNewTime">الوقت الجديد</label><input id="sessionNewTime" type="time" value="${suggestedTime}"></div>
+    </div>
+    <div class="session-status-note">التغيير يخص هذه الحصة بتاريخها فقط، وسيظهر في الحساب المالي وسجل التعديلات وعلى أجهزتك الأخرى.</div>
+    <div class="finance-dialog-actions"><button type="button" class="save" onclick="saveSessionStatus(this)">حفظ الحالة</button><button type="button" class="cancel" onclick="closeToolDialog()">إلغاء</button></div>
+  </div>`;
+  openToolDialog("حالة الحصة","تعديل سريع لا يغيّر موعدك الأسبوعي الأساسي.",content);
+  activeSessionContext={lessonId,date:occurrence.date,time:occurrence.time,kind,recordId:occurrence.recordId||""};
+}
+function toggleSessionRescheduleFields(){
+  const selected=document.querySelector('input[name="sessionStatusChoice"]:checked')?.value;
+  document.getElementById("sessionRescheduleFields")?.classList.toggle("show",selected==="rescheduled");
+}
+function rescheduleConflict(context,newDate,newTime){
+  const lesson=lessons.find(item=>item.id===context.lessonId);if(!lesson)return null;
+  const start=mins(newTime),end=start+Number(lesson.duration||60);
+  return datedOccurrencesForDate(newDate,lessons).find(item=>{
+    if(context.kind==="base"&&item.kind==="base"&&item.lesson.id===context.lessonId&&item.date===context.date&&item.time===context.time)return false;
+    if(context.kind==="replacement"&&item.kind==="replacement"&&item.lesson.id===context.lessonId&&item.recordId===context.recordId)return false;
+    if(occurrenceIsInactive(item))return false;
+    const otherStart=mins(item.time),otherEnd=otherStart+Number(item.lesson.duration||60);
+    return start<otherEnd&&end>otherStart;
+  })||null;
+}
+function lessonWithSessionStatus(lesson,context,status,newDate="",newTime=""){
+  let records=(lesson.sessionRecords||[]).map(item=>({...item})),now=new Date().toISOString();
+  if(context.kind==="replacement"){
+    const index=records.findIndex(item=>item.kind==="replacement"&&item.id===context.recordId);
+    if(index<0)throw new Error("Replacement session not found");
+    if(status==="rescheduled")records[index]={...records[index],date:newDate,time:newTime,status:"default",updatedAt:now};
+    else records[index]={...records[index],status:status==="automatic"?"default":status,updatedAt:now};
+    return normalizeLesson({...lesson,sessionRecords:records});
+  }
+  const oldBase=records.find(item=>item.kind==="base"&&item.date===context.date&&item.time===context.time)||null;
+  const oldReplacement=oldBase?.replacementId?records.find(item=>item.kind==="replacement"&&item.id===oldBase.replacementId):null;
+  records=records.filter(item=>!(item.kind==="base"&&item.date===context.date&&item.time===context.time)&&item.id!==oldBase?.replacementId);
+  if(status==="automatic")return normalizeLesson({...lesson,sessionRecords:records});
+  if(status==="rescheduled"){
+    const replacementId=oldReplacement?.id||makeId();
+    records.push({id:`base-${context.date}-${context.time.replace(":","")}`,kind:"base",date:context.date,time:context.time,status:"rescheduled",replacementId,updatedAt:now});
+    records.push({id:replacementId,kind:"replacement",date:newDate,time:newTime,status:"default",sourceDate:context.date,sourceTime:context.time,updatedAt:now});
+  }else records.push({id:`base-${context.date}-${context.time.replace(":","")}`,kind:"base",date:context.date,time:context.time,status,updatedAt:now});
+  return normalizeLesson({...lesson,sessionRecords:records});
+}
+async function saveSessionStatus(button){
+  const context=activeSessionContext,status=document.querySelector('input[name="sessionStatusChoice"]:checked')?.value;
+  if(!context||!["automatic","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"].includes(status))return;
+  let newDate="",newTime="";
+  if(status==="rescheduled"){
+    newDate=document.getElementById("sessionNewDate")?.value||"";newTime=document.getElementById("sessionNewTime")?.value||"";
+    if(!validDateKey(newDate)||!TIME_RE.test(newTime)){alert("اختر تاريخًا ووقتًا صحيحين.");return}
+    if(newDate===context.date&&newTime===context.time){alert("اختر موعدًا مختلفًا عن الموعد الحالي.");return}
+    const conflict=rescheduleConflict(context,newDate,newTime);
+    if(conflict){alert(`الموعد الجديد يتعارض مع حصة ${conflict.lesson.name||"أخرى"} الساعة ${fmt(conflict.time)}.`);return}
+  }
+  const index=lessons.findIndex(item=>item.id===context.lessonId);if(index<0)return;
+  const previous=lessons;
+  try{
+    const updated=lessonWithSessionStatus(lessons[index],context,status,newDate,newTime);
+    lessons=lessons.map((item,itemIndex)=>itemIndex===index?updated:item);
+  }catch(error){console.error("تعذّر تحديث حالة الحصة.",error);alert("تعذّر تحديث هذه الحصة. حدّث الصفحة وحاول مرة أخرى.");return}
+  if(button)button.disabled=true;
+  if(!await persist()){lessons=previous;if(button)button.disabled=false;return}
+  closeToolDialog();render();
+}
 function maxDateKey(a,b){return a>b?a:b}
 function minDateKey(a,b){return a<b?a:b}
 function agreementLessons(agreement){
   const ids=new Set(agreement?.lessonIds||[]);
   return lessons.filter(lesson=>ids.has(lesson.id));
+}
+function agreementSessionCountOnDate(agreement,date,throughNow=false){
+  const linked=agreementLessons(agreement);
+  if(!linked.length||!validDateKey(date))return 0;
+  return datedOccurrencesForDate(date,linked).reduce((total,occurrence)=>{
+    if(throughNow&&!occurrenceHasEnded(occurrence))return total;
+    return total+occurrenceCountsFinancially(occurrence,!throughNow);
+  },0);
 }
 function scheduledSessionsBetween(agreement,fromDate,toDate){
   if(!validDateKey(fromDate)||!validDateKey(toDate)||fromDate>toDate)return 0;
@@ -2127,18 +2408,17 @@ function scheduledSessionsBetween(agreement,fromDate,toDate){
   if(!linked.length)return 0;
   let total=0,cursor=new Date(`${fromDate}T12:00:00Z`),end=new Date(`${toDate}T12:00:00Z`),guard=0;
   while(cursor<=end&&guard<3700){
-    const key=cursor.toISOString().slice(0,10),day=dayNameForDateKey(key);
-    linked.forEach(lesson=>{total+=(lesson.schedules||[]).filter(schedule=>schedule.day===day).length});
+    const key=cursor.toISOString().slice(0,10);
+    total+=agreementSessionCountOnDate(agreement,key,false);
     cursor.setUTCDate(cursor.getUTCDate()+1);guard++;
   }
   return total;
 }
 function scheduledSessionsThroughNow(agreement,fromDate){
-  const today=currentDateKey(),yesterday=addDaysToDateKey(today,-1),linked=agreementLessons(agreement);
+  const today=currentDateKey(),yesterday=addDaysToDateKey(today,-1);
   let total=fromDate<=yesterday?scheduledSessionsBetween(agreement,fromDate,yesterday):0;
   if(fromDate>today)return 0;
-  const day=dayNameForDateKey(today),nowTime=currentTimeKey();
-  linked.forEach(lesson=>{total+=(lesson.schedules||[]).filter(schedule=>schedule.day===day&&schedule.time<=nowTime).length});
+  total+=agreementSessionCountOnDate(agreement,today,true);
   return total;
 }
 function automaticMonthCount(agreement,period){
@@ -2161,11 +2441,11 @@ function cycleSessionCount(agreement,cycle){
 function cycleCompletionDate(agreement,cycle){
   if(!cycle||cycleSessionCount(agreement,cycle)<cycle.targetSessions)return null;
   if(Number.isInteger(cycle.countOverride))return cycle.endDate||currentDateKey();
-  const today=currentDateKey(),nowTime=currentTimeKey(),start=maxDateKey(cycle.startDate,agreement.startDate),last=cycle.endDate||today,linked=agreementLessons(agreement);
+  const today=currentDateKey(),start=maxDateKey(cycle.startDate,agreement.startDate),last=cycle.endDate||today;
   let total=0,cursor=new Date(`${start}T12:00:00Z`),end=new Date(`${last}T12:00:00Z`),guard=0;
   while(cursor<=end&&guard<3700){
-    const key=cursor.toISOString().slice(0,10),day=dayNameForDateKey(key),isToday=key===today;
-    linked.forEach(lesson=>{total+=(lesson.schedules||[]).filter(schedule=>schedule.day===day&&(!isToday||cycle.endDate||schedule.time<=nowTime)).length});
+    const key=cursor.toISOString().slice(0,10),isToday=key===today;
+    total+=agreementSessionCountOnDate(agreement,key,isToday&&!cycle.endDate);
     if(total>=cycle.targetSessions)return key;
     cursor.setUTCDate(cursor.getUTCDate()+1);guard++;
   }
@@ -2223,12 +2503,18 @@ function changeFinanceMonth(value){
 }
 function filtered(){return lessons.filter(l=>l&&(currentFilter==="all"||l.type===currentFilter))}
 function getWeekLayout(list=filtered()){
-  const occurrences=getOccurrences(list);
+  const occurrences=currentWeekOccurrences(list);
   const times=[...new Set(occurrences.map(o=>o.time))].sort((a,b)=>mins(a)-mins(b));
   const slots=new Map(times.flatMap(time=>days.map(day=>[`${time}|${day}`,[]])));
   occurrences.forEach(item=>slots.get(`${item.time}|${item.day}`)?.push(item));
   return {occurrences,times,slots};
 }
+function changeScheduleWeek(delta){
+  const next=selectedWeekOffset+Number(delta||0);
+  selectedWeekOffset=Math.max(-260,Math.min(260,next));
+  renderWeek();
+}
+function resetScheduleWeek(){selectedWeekOffset=0;renderWeek()}
 
 function setFilter(f,btn){
   currentFilter=f;
@@ -2258,14 +2544,16 @@ function render(){
 }
 
 function renderHeader(){
-  const d=new Date(), tn=todayName();
-  const items=getOccurrences(filtered()).filter(o=>o.day===tn).sort((a,b)=>a.time.localeCompare(b.time));
-  document.getElementById("dateLabel").textContent=d.toLocaleDateString("ar-EG",{day:"numeric",month:"short"});
-  document.getElementById("todayHeading").textContent=`${tn} — ${d.toLocaleDateString("ar-EG",{day:"numeric",month:"long"})}`;
-  document.getElementById("todayCount").textContent=`${items.length} حصة`;
+  const d=new Date(),tn=todayName(),today=currentDateKey();
+  const cairoDate=new Date(`${today}T12:00:00Z`);
+  const items=datedOccurrencesForDate(today,filtered());
+  const activeItems=items.filter(item=>!occurrenceIsInactive(item));
+  document.getElementById("dateLabel").textContent=cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"short",timeZone:"UTC"});
+  document.getElementById("todayHeading").textContent=`${tn} — ${cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"long",timeZone:"UTC"})}`;
+  document.getElementById("todayCount").textContent=`${activeItems.length} حصة`;
 
-  const now=d.getHours()*60+d.getMinutes();
-  const next=items.find(o=>mins(o.time)+Number(o.lesson.duration||60)>=now);
+  const now=mins(currentTimeKey(d));
+  const next=activeItems.find(o=>occurrenceRawStatus(o)!=="completed"&&mins(o.time)+Number(o.lesson.duration||60)>=now);
   const card=document.getElementById("nextCard");
   if(next){
     const l=next.lesson;
@@ -2298,8 +2586,7 @@ function renderHeader(){
 }
 
 function renderTimeline(){
-  const tn=todayName();
-  const items=getOccurrences(filtered()).filter(o=>o.day===tn).sort((a,b)=>a.time.localeCompare(b.time));
+  const items=datedOccurrencesForDate(currentDateKey(),filtered());
   const box=document.getElementById("timeline");
   if(!items.length){
     box.innerHTML='<div class="empty">لا توجد حصص اليوم.</div>';
@@ -2316,7 +2603,7 @@ function renderTimeline(){
     row.style.animationDelay=`${i*.05}s`;
     row.innerHTML=`
       <div class="t-time">${fmt(o.time)}</div>
-      <div class="lesson ${l.type}" style="--source-color:${srcColor}" onclick="openEdit('${l.id}')">
+      <div class="lesson ${l.type}${occurrenceIsInactive(o)?" session-inactive":""}" style="--source-color:${srcColor}" onclick="openEdit('${l.id}')">
         <div>
           <div class="lesson-name">${esc(l.name||"بدون اسم")}</div>
           <div class="lesson-meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة</div>
@@ -2324,6 +2611,7 @@ function renderTimeline(){
             <span class="pill ${l.type}">${l.type==="teach"?"أُدرِّس":"أدرس"}</span>
             <span class="pill">${people}</span>
             <span class="pill">${src}</span>
+            ${sessionStatusButtonMarkup(o)}
           </div>
         </div>
         <div class="actions">
@@ -2357,6 +2645,8 @@ function renderWeekBars(){
 
 function renderWeek(){
   const list=filtered(),grid=document.getElementById("weekGrid"),legend=document.getElementById("sourceLegend"),layout=getWeekLayout(list),occ=layout.occurrences,tn=todayName();
+  const rangeLabel=document.getElementById("weekRangeLabel"),isCurrentWeek=selectedWeekOffset===0;
+  if(rangeLabel)rangeLabel.textContent=`${selectedWeekRangeLabel()}${isCurrentWeek?" · الأسبوع الحالي":""}`;
   grid.innerHTML="";
   const sourceNames=[...new Set(list.map(sourceLabel))].sort((a,b)=>a.localeCompare(b,"ar"));
   legend.innerHTML=sourceNames.length
@@ -2380,10 +2670,10 @@ function renderWeek(){
   corner.className="week-corner";corner.setAttribute("role","columnheader");corner.textContent="الوقت";
   head.appendChild(corner);
   days.forEach(day=>{
-    const count=occ.filter(o=>o.day===day).length;
+    const count=occ.filter(o=>o.day===day&&!occurrenceIsInactive(o)).length,date=weekDateForDay(day);
     const cell=document.createElement("div");
-    cell.className="week-day-head"+(day===tn?" today":"");cell.setAttribute("role","columnheader");
-    cell.innerHTML=`<span class="count">${count}</span><span>${day}</span>`;
+    cell.className="week-day-head"+(isCurrentWeek&&day===tn?" today":"");cell.setAttribute("role","columnheader");
+    cell.innerHTML=`<span class="count">${count}</span><span class="week-day-label"><span>${day}</span><small>${esc(formatSessionDate(date,true))}</small></span>`;
     head.appendChild(cell);
   });
   grid.appendChild(head);
@@ -2397,7 +2687,7 @@ function renderWeek(){
     days.forEach(day=>{
       const items=layout.slots.get(`${time}|${day}`)||[];
       const slot=document.createElement("div");
-      slot.className="week-slot"+(day===tn?" today":"")+(items.length?"":" is-empty");
+      slot.className="week-slot"+(isCurrentWeek&&day===tn?" today":"")+(items.length?"":" is-empty");
       slot.setAttribute("role","cell");
       slot.setAttribute("aria-label",items.length?`${day}، ${fmt(time)}، ${items.length} حصة`:`${day}، ${fmt(time)}، فارغ`);
       if(!items.length){
@@ -2413,7 +2703,7 @@ function renderWeek(){
         const l=o.lesson,kind=l.type==="teach"?"أُدرِّس":"أدرس",src=sourceLabel(l),srcColor=sourceColor(l);
         const details=[`${l.duration} دقيقة`,l.subject,l.platform].filter(Boolean).map(esc).join(" · ");
         const card=document.createElement("article");
-        card.className=`week-card ${l.type}`;card.style.setProperty("--source-color",srcColor);
+        card.className=`week-card ${l.type}${occurrenceIsInactive(o)?" session-inactive":""}`;card.style.setProperty("--source-color",srcColor);
         card.setAttribute("role","button");card.setAttribute("tabindex","0");
         card.setAttribute("aria-label",`${kind}: ${l.name||"بدون اسم"}، ${day} ${fmt(time)}، ${src}`);
         card.innerHTML=`
@@ -2423,7 +2713,7 @@ function renderWeek(){
           </div>
           <div class="week-name">${esc(l.name||"بدون اسم")}</div>
           <div class="week-meta">${details}</div>
-          <div class="week-source"><i class="source-line" aria-hidden="true"></i>${esc(src)}</div>`;
+          <div class="week-status-row"><div class="week-source"><i class="source-line" aria-hidden="true"></i>${esc(src)}</div>${sessionStatusButtonMarkup(o)}</div>`;
         card.onclick=()=>openEdit(l.id);
         card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit(l.id)}};
         card.querySelector(".icon-btn").onclick=e=>{e.stopPropagation();copyLessonById(l.id)};
@@ -2484,7 +2774,7 @@ function agreementCardMarkup(agreement){
     const count=monthSessionCount(agreement,selectedFinanceMonth),expected=count*agreement.amount,paid=targetPaid(agreement.id,"month",selectedFinanceMonth),manual=Boolean(monthCountRecord(agreement.id,selectedFinanceMonth));
     amountText=`${formatMoney(agreement.amount,agreement.currency)} / حصة`;
     progress=`<div class="agreement-progress">
-      <div class="agreement-progress-top"><span>${count} حصة في ${esc(monthLabel(selectedFinanceMonth))}</span><span>${manual?"عدد مُراجع":"محسوب من الجدول"}</span></div>
+      <div class="agreement-progress-top"><span>${count} حصة في ${esc(monthLabel(selectedFinanceMonth))}</span><span>${manual?"عدد مُراجع":"حسب حالات الحصص"}</span></div>
       <div class="agreement-balance"><span>${agreement.direction==="income"?"المتوقع للفترة":"المصروف المتوقع"}</span><strong>${esc(formatMoney(expected,agreement.currency))}</strong></div>
       <div class="agreement-balance"><span>${agreement.direction==="income"?"المستلم / المتبقي":"المدفوع / المتبقي"}</span><strong>${esc(formatMoney(paid,agreement.currency))} / ${esc(formatMoney(Math.max(0,expected-paid),agreement.currency))}</strong></div>
     </div>`;
@@ -2867,8 +3157,8 @@ function toggleLessonFinanceModelFields(){
   if(packageField)packageField.style.display=model==="package"?"flex":"none";
   if(amountLabel)amountLabel.textContent=model==="package"?"قيمة رصيد الحصص":"سعر الحصة الواحدة";
   if(hint)hint.textContent=model==="package"
-    ?"سيحسب الموقع الحصص التي مرّ موعدها، ويمكنك تصحيح الرصيد عند الإلغاء أو الإضافة."
-    :"سيجمع الموقع مواعيد الشهر تلقائيًا، ويمكنك مراجعة العدد الفعلي قبل اعتماد الحساب.";
+    ?"سيخصم الموقع الحصص المنفذة تلقائيًا وفق حالة كل حصة، ويمكنك تعديل أي إلغاء أو تأجيل من الجدول."
+    :"سيجمع الموقع حصص الشهر وفق حالاتها تلقائيًا، ويمكنك مراجعة العدد الفعلي قبل اعتماد الحساب.";
 }
 function refreshLessonFinanceForLessonFields(){
   const type=document.getElementById("type")?.value||"teach",source=document.getElementById("lessonSource")?.value||"private";
@@ -3033,6 +3323,7 @@ function conflicts(candidate){
 async function saveLesson(){
   const st=document.getElementById("studentType").value;
   const src=document.getElementById("lessonSource").value;
+  const existingLesson=editingId?lessons.find(item=>item.id===editingId):null;
   const reminderMode=document.getElementById("lessonReminderMode").value;
   const reminderLeads=checkedNotificationLeads(".lesson-reminder-lead");
   const duration=Number(document.getElementById("duration").value);
@@ -3050,6 +3341,7 @@ async function saveLesson(){
     repeat:"أسبوعيًا",
     reminderMode,
     reminderLeads:normalizeNotificationLeads(reminderLeads,[DEFAULT_NOTIFICATION_LEAD]),
+    sessionRecords:existingLesson?.sessionRecords||[],
     schedules:readSchedules(),
     notes:document.getElementById("notes").value.trim()
   };

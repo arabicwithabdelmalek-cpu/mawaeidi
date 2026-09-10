@@ -218,8 +218,8 @@ Deno.serve(async request => {
         });
 
         for (const { occurrenceAt, local } of candidateOccurrences) {
-          if (!local.day || !local.time) continue;
-          const matches = matchingLessons(userLessons, local.day, local.time)
+          if (!local.day || !local.date || !local.time) continue;
+          const matches = matchingLessons(userLessons, local.day, local.time, local.date)
             .filter(lesson => lessonReminderLeads(lesson, defaultLeads).includes(leadMinutes));
 
           for (const lesson of matches) {

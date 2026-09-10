@@ -466,6 +466,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .add-time{background:var(--accent-soft);color:var(--primary)}.remove{background:var(--danger-bg);color:var(--danger)}
 .hint{margin-top:3px;color:#7D8992;font-size:11px}
 .lesson-reminder-custom{display:none;margin-top:10px;padding:10px;border:1px dashed #C8D4DD;border-radius:9px;background:#F6F9FA}.lesson-reminder-custom.show{display:block}
+.lesson-finance-fields{display:none;margin-top:10px;padding:11px;border:1px dashed #BFCED8;border-radius:9px;background:#F6F9FA}.lesson-finance-fields.show{display:block}
+.lesson-finance-status{margin-top:8px;padding:9px 10px;border-radius:8px;background:#EEF3F6;color:#5D6F7C;font-size:10px;line-height:1.7}
+.lesson-finance-status strong{color:var(--primary)}
+.lesson-finance-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.lesson-finance-grid .full{grid-column:1/-1}
+.lesson-finance-direction{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:10px;padding:9px 10px;border-radius:8px;background:var(--teach-bg);color:var(--teach);font-size:10px;font-weight:800}
+.lesson-finance-direction.expense{background:var(--learn-bg);color:var(--learn)}
 .conflict{display:none;margin-top:7px;padding:9px;border:1px solid #E7BDBD;border-radius:8px;background:var(--danger-bg);color:var(--danger);font-size:12px;line-height:1.65}
 .drawer-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-top:1px solid var(--line);background:#fff}
 .group{display:flex;flex-wrap:wrap;gap:7px}
@@ -483,7 +489,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .workspace-switch{width:100%;margin-top:12px}.workspace-switch button{flex:1;min-width:0}.controls{align-items:stretch}.tabs,.filters{flex:1}.tab,.filter{flex:1;min-width:0;padding:9px 8px}
   .panel{border-radius:9px}.timeline{padding:10px 12px 16px}
   .timeline-row{grid-template-columns:70px minmax(0,1fr);gap:8px}.t-time{min-height:38px;padding:6px;font-size:11px}.lesson{padding:12px}.actions{flex-direction:column}
-  .grid{grid-template-columns:1fr}.field.full{grid-column:auto}.row{grid-template-columns:1fr 1fr auto}
+  .grid,.lesson-finance-grid{grid-template-columns:1fr}.field.full,.lesson-finance-grid .full{grid-column:auto}.row{grid-template-columns:1fr 1fr auto}
   .week-view .panel-head{align-items:flex-start}.week-view .panel-head span{max-width:190px;line-height:1.55;text-align:left}
   .week-legend{align-items:flex-start;padding:10px 11px}.source-legend{width:100%}
   .week-table-wrap{padding:10px}.week-grid{grid-template-columns:66px repeat(7,minmax(145px,1fr));min-width:1080px}
@@ -692,7 +698,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
               <h3 id="agreementsHeading">الاتفاقات المالية</h3>
               <span id="financeAgreementCount">0 اتفاق</span>
             </div>
-            <button type="button" class="finance-panel-action" onclick="openFinanceAgreement()">＋ اتفاق جديد</button>
+            <button type="button" class="finance-panel-action" onclick="openFinanceAgreement()">＋ اتفاق مستقل</button>
           </header>
           <div class="finance-list" id="financeAgreements"></div>
         </section>
@@ -728,7 +734,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
       <div class="grid">
         <div class="field">
           <label for="type">نوع الحصة</label>
-          <select id="type">
+          <select id="type" onchange="refreshLessonFinanceForLessonFields()">
             <option value="teach">أُدرِّس</option>
             <option value="learn">أدرس</option>
           </select>
@@ -742,7 +748,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
         </div>
         <div class="field full" id="centerField" style="display:none">
           <label for="centerName">اسم المركز</label>
-          <input id="centerName" placeholder="مثلاً: مركز لسان">
+          <input id="centerName" placeholder="مثلاً: مركز لسان" oninput="syncLessonFinanceSuggestedName()">
         </div>
       </div>
     </section>
@@ -759,7 +765,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
         </div>
         <div class="field">
           <label id="nameLabel" for="name">اسم الطالب / عنوان الدرس</label>
-          <input id="name" placeholder="مثلاً: أحمد">
+          <input id="name" placeholder="مثلاً: أحمد" oninput="syncLessonFinanceSuggestedName()">
         </div>
         <div class="field full" id="groupField" style="display:none">
           <label for="groupStudents">طلاب المجموعة</label>
@@ -796,6 +802,89 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
         <div id="scheduleRows"></div>
         <div class="hint">أضف كل أيام الحصة هنا بدل إنشاء الحصة أكثر من مرة.</div>
         <div id="conflictBox" class="conflict" role="alert"></div>
+      </div>
+    </section>
+
+    <section class="section" id="lessonFinanceSection">
+      <div class="section-title">الحساب المالي</div>
+      <div class="field full">
+        <label for="lessonFinanceMode">متابعة هذه الحصة ماليًا</label>
+        <select id="lessonFinanceMode" onchange="toggleLessonFinanceFields()">
+          <option value="none">بدون متابعة مالية</option>
+          <option value="existing">ربط باتفاق موجود</option>
+          <option value="new">إنشاء اتفاق جديد</option>
+        </select>
+      </div>
+      <div class="lesson-finance-status" id="lessonFinanceNoneHint">يمكنك إضافة الحساب المالي الآن أو ربط الحصة به لاحقًا.</div>
+
+      <div class="lesson-finance-fields" id="lessonFinanceExistingFields">
+        <div class="field full">
+          <label for="lessonFinanceAgreement">الاتفاق المالي</label>
+          <select id="lessonFinanceAgreement" onchange="renderLessonFinanceAgreementHint()"></select>
+        </div>
+        <div class="lesson-finance-status" id="lessonFinanceAgreementHint"></div>
+      </div>
+
+      <div class="lesson-finance-fields" id="lessonFinanceNewFields">
+        <div class="lesson-finance-direction" id="lessonFinanceDirectionHint"></div>
+        <div class="lesson-finance-grid">
+          <div class="field full">
+            <label for="lessonFinanceName">اسم الاتفاق</label>
+            <input id="lessonFinanceName" maxlength="160" placeholder="يُملأ تلقائيًا من بيانات الحصة">
+          </div>
+          <div class="field">
+            <label for="lessonFinanceBillingModel">طريقة الحساب</label>
+            <select id="lessonFinanceBillingModel" onchange="toggleLessonFinanceModelFields()">
+              <option value="package">رصيد بعدد حصص</option>
+              <option value="monthly">حساب شهري بالحصة</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="lessonFinancePaymentTiming">موعد الدفع</label>
+            <select id="lessonFinancePaymentTiming">
+              <option value="advance">مقدم</option>
+              <option value="arrears">مؤخر</option>
+            </select>
+          </div>
+          <div class="field" id="lessonFinancePackageField">
+            <label for="lessonFinancePackageSize">عدد حصص الرصيد</label>
+            <input id="lessonFinancePackageSize" type="number" min="1" max="500" step="1" value="8">
+          </div>
+          <div class="field">
+            <label for="lessonFinanceAmount" id="lessonFinanceAmountLabel">قيمة رصيد الحصص</label>
+            <input id="lessonFinanceAmount" type="number" inputmode="decimal" min="0.01" max="1000000000" step="0.01">
+          </div>
+          <div class="field">
+            <label for="lessonFinanceCurrency">العملة</label>
+            <select id="lessonFinanceCurrency">
+              <option value="EGP">الجنيه المصري (EGP)</option>
+              <option value="USD" selected>الدولار الأمريكي (USD)</option>
+              <option value="EUR">اليورو (EUR)</option>
+              <option value="GBP">الجنيه الإسترليني (GBP)</option>
+              <option value="SAR">الريال السعودي (SAR)</option>
+              <option value="AED">الدرهم الإماراتي (AED)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="lessonFinancePaymentMethod">طريقة الدفع المعتادة</label>
+            <select id="lessonFinancePaymentMethod">
+              <option value="paypal">PayPal</option>
+              <option value="bank">تحويل بنكي</option>
+              <option value="wise">Wise</option>
+              <option value="cash">نقدي</option>
+              <option value="other">طريقة أخرى</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label for="lessonFinanceStartDate">بداية الاتفاق</label>
+            <input id="lessonFinanceStartDate" type="date">
+          </div>
+          <div class="field full">
+            <label for="lessonFinanceNotes">ملاحظات مالية اختيارية</label>
+            <textarea id="lessonFinanceNotes" maxlength="1000" placeholder="أي تفاصيل تخص الدفع أو الاتفاق"></textarea>
+          </div>
+        </div>
+        <div class="lesson-finance-status" id="lessonFinanceModelHint"></div>
       </div>
     </section>
 
@@ -1019,6 +1108,49 @@ function normalizeFinance(value){
   });
   return result;
 }
+function financeDirectionForLessonType(type){return type==="learn"?"expense":"income"}
+function financePartyTypeForLessonSource(source){return source==="center"?"center":"private"}
+function applyLessonFinanceSelection(value,lesson,selection){
+  const next=normalizeFinance(JSON.parse(JSON.stringify(value&&typeof value==="object"?value:emptyFinance()))),lessonId=textValue(lesson?.id),mode=selection?.mode||"none";
+  if(!/^[A-Za-z0-9_-]{1,120}$/.test(lessonId))throw new Error("Invalid lesson finance link");
+  const direction=financeDirectionForLessonType(lesson?.type),partyType=financePartyTypeForLessonSource(lesson?.lessonSource),now=new Date().toISOString();
+  const target=mode==="existing"?next.agreements.find(item=>item.id===selection.agreementId):null;
+  if(mode==="existing"&&(!target||target.direction!==direction||target.partyType!==partyType))throw new Error("Incompatible finance agreement");
+  next.agreements.forEach(agreement=>{
+    if(agreement.id===target?.id||!agreement.lessonIds.includes(lessonId))return;
+    agreement.lessonIds=agreement.lessonIds.filter(id=>id!==lessonId);
+    agreement.updatedAt=now;
+  });
+  if(mode==="none")return normalizeFinance(next);
+  if(mode==="existing"){
+    if(!target.lessonIds.includes(lessonId)){
+      target.lessonIds.push(lessonId);
+      target.updatedAt=now;
+    }
+    return normalizeFinance(next);
+  }
+  if(mode!=="new")throw new Error("Invalid lesson finance mode");
+  const draft=selection.agreement||{},amount=normalizeMoney(draft.amount),billingModel=draft.billingModel==="monthly"?"monthly":"package",packageSize=Math.round(Number(draft.packageSize)||0),startDate=textValue(draft.startDate);
+  if(!cleanFinanceText(draft.name,160)||amount<=0||!validDateKey(startDate)||(billingModel==="package"&&(packageSize<1||packageSize>500)))throw new Error("Invalid finance agreement details");
+  next.agreements.push({
+    id:makeId(),direction,partyType,name:cleanFinanceText(draft.name,160),billingModel,
+    paymentTiming:draft.paymentTiming==="arrears"?"arrears":"advance",amount,
+    currency:FINANCE_CURRENCIES.includes(draft.currency)?draft.currency:"USD",
+    packageSize:billingModel==="package"?packageSize:1,
+    paymentMethod:FINANCE_METHODS.includes(draft.paymentMethod)?draft.paymentMethod:"bank",
+    lessonIds:[lessonId],startDate,active:true,notes:cleanFinanceText(draft.notes,1000),createdAt:now,updatedAt:now
+  });
+  return normalizeFinance(next);
+}
+function unlinkLessonFromFinance(value,lessonId){
+  const next=normalizeFinance(JSON.parse(JSON.stringify(value&&typeof value==="object"?value:emptyFinance()))),now=new Date().toISOString();
+  next.agreements.forEach(agreement=>{
+    if(!agreement.lessonIds.includes(lessonId))return;
+    agreement.lessonIds=agreement.lessonIds.filter(id=>id!==lessonId);
+    agreement.updatedAt=now;
+  });
+  return normalizeFinance(next);
+}
 function loadLocalLessons(){
   try{
     const raw=localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -1039,6 +1171,7 @@ let currentSection="schedule";
 let selectedFinanceMonth=currentDateKey().slice(0,7);
 let editingId=null;
 let financeEditingAgreementId=null;
+let lessonFinanceOriginalAgreementId=null;
 let currentUser=null;
 let cloudReady=false;
 let authMode="signin";
@@ -2069,7 +2202,7 @@ function financeSourceColor(agreement){
   if(agreement.partyType==="private")return PRIVATE_SOURCE_COLOR;
   return sourceColorFromLabel(agreement.name||partyTypeLabel(agreement.partyType));
 }
-function handlePrimaryAction(){currentSection==="finance"?openFinanceAgreement():openNew()}
+function handlePrimaryAction(){currentSection==="finance"?openFinancePayment():openNew()}
 function updateSectionChrome(){
   document.getElementById("scheduleWorkspace").hidden=currentSection!=="schedule";
   document.getElementById("financeView").hidden=currentSection!=="finance";
@@ -2077,7 +2210,7 @@ function updateSectionChrome(){
     const active=(currentSection==="finance"&&item.id==="financeSectionButton")||(currentSection==="schedule"&&item.id==="scheduleSectionButton");
     item.classList.toggle("active",active);item.setAttribute("aria-pressed",String(active));
   });
-  document.getElementById("primaryActionButton").textContent=currentSection==="finance"?"＋ اتفاق مالي":"＋ إضافة حصة";
+  document.getElementById("primaryActionButton").textContent=currentSection==="finance"?"＋ تسجيل دفعة":"＋ إضافة حصة";
 }
 function setSection(section,button){
   currentSection=section==="finance"?"finance":"schedule";
@@ -2331,7 +2464,7 @@ function renderFinanceSummary(){
   if(!box)return;
   const rows=financeSummaryData(selectedFinanceMonth);
   if(!rows.length){
-    box.innerHTML='<div class="finance-empty-summary">أضف أول اتفاق مالي ليظهر ملخص الدخل والمدفوعات هنا.</div>';
+    box.innerHTML='<div class="finance-empty-summary">افتح أول حصة واضبط «الحساب المالي» من نافذتها؛ وسيظهر الملخص هنا تلقائيًا.</div>';
     return;
   }
   box.innerHTML=rows.map(row=>`<article class="currency-summary">
@@ -2392,7 +2525,7 @@ function renderFinanceAgreements(){
   if(!box)return;
   document.getElementById("financeAgreementCount").textContent=`${active.length} نشط${archived.length?` · ${archived.length} مؤرشف`:""}`;
   const sorted=[...active.sort((a,b)=>a.name.localeCompare(b.name,"ar")),...archived.sort((a,b)=>a.name.localeCompare(b.name,"ar"))];
-  box.innerHTML=sorted.length?sorted.map(agreementCardMarkup).join(""):'<div class="finance-empty"><strong>لا توجد اتفاقات مالية</strong>أضف الطالب الخاص أو المركز مرة واحدة، ثم اربطه بحصصه.</div>';
+  box.innerHTML=sorted.length?sorted.map(agreementCardMarkup).join(""):'<div class="finance-empty"><strong>لا توجد اتفاقات مالية</strong>أنشئ الاتفاق من داخل الحصة نفسها، أو أضف اتفاقًا مستقلًا غير مرتبط بحصة.</div>';
 }
 function renderFinancePayments(){
   const box=document.getElementById("financePayments");
@@ -2480,12 +2613,17 @@ async function saveFinanceAgreement(){
   if(amount<=0){alert("اكتب قيمة مالية أكبر من صفر.");return}
   if(billingModel==="package"&&(packageSize<1||packageSize>500)){alert("اكتب عدد حصص صحيحًا للرصيد.");return}
   if(!validDateKey(startDate)){alert("اختر تاريخ بداية صحيحًا.");return}
-  const previous=cloneFinanceState(),now=new Date().toISOString(),old=finance.agreements.find(item=>item.id===financeEditingAgreementId),agreement={
+  const previous=cloneFinanceState(),now=new Date().toISOString(),old=finance.agreements.find(item=>item.id===financeEditingAgreementId),selectedLessonIds=selectedFinanceLessons(),selectedLessonSet=new Set(selectedLessonIds),agreement={
     id:old?.id||makeId(),direction:document.getElementById("financeDirection").value,partyType:document.getElementById("financePartyType").value,name,billingModel,
     paymentTiming:document.getElementById("financePaymentTiming").value,amount,currency:document.getElementById("financeCurrency").value,packageSize:billingModel==="package"?packageSize:1,
-    paymentMethod:document.getElementById("financePaymentMethod").value,lessonIds:selectedFinanceLessons(),startDate,active:old?.active!==false,notes:document.getElementById("financeAgreementNotes").value.trim(),createdAt:old?.createdAt||now,updatedAt:now
+    paymentMethod:document.getElementById("financePaymentMethod").value,lessonIds:selectedLessonIds,startDate,active:old?.active!==false,notes:document.getElementById("financeAgreementNotes").value.trim(),createdAt:old?.createdAt||now,updatedAt:now
   };
-  finance.agreements=old?finance.agreements.map(item=>item.id===old.id?agreement:item):[...finance.agreements,agreement];
+  finance.agreements=finance.agreements.map(item=>{
+    if(item.id===agreement.id)return agreement;
+    const lessonIds=item.lessonIds.filter(id=>!selectedLessonSet.has(id));
+    return lessonIds.length===item.lessonIds.length?item:{...item,lessonIds,updatedAt:now};
+  });
+  if(!old)finance.agreements.push(agreement);
   const openCycle=openAgreementCycle(agreement.id);
   if(billingModel==="package"){
     if(openCycle){openCycle.targetSessions=packageSize;openCycle.amount=amount;if(startDate>openCycle.startDate)openCycle.startDate=startDate}
@@ -2672,12 +2810,139 @@ function validateLessonReminderChoice(changedInput){
   return true;
 }
 
+function linkedFinanceAgreementsForLesson(lessonId){
+  return finance.agreements.filter(agreement=>agreement.lessonIds.includes(lessonId));
+}
+function compatibleLessonFinanceAgreements(type,source,includeId=null){
+  const direction=financeDirectionForLessonType(type),partyType=financePartyTypeForLessonSource(source);
+  return finance.agreements.filter(agreement=>(agreement.active||agreement.id===includeId)&&agreement.direction===direction&&agreement.partyType===partyType);
+}
+function lessonFinanceSuggestedName(){
+  const source=document.getElementById("lessonSource")?.value;
+  const lessonName=document.getElementById("name")?.value.trim()||"";
+  const centerName=document.getElementById("centerName")?.value.trim()||"";
+  return source==="center"?(centerName||lessonName):lessonName;
+}
+function syncLessonFinanceSuggestedName(){
+  const input=document.getElementById("lessonFinanceName");if(!input)return;
+  const suggestion=lessonFinanceSuggestedName(),oldSuggestion=input.dataset.autoValue||"";
+  if(!input.value.trim()||input.value===oldSuggestion)input.value=suggestion;
+  input.dataset.autoValue=suggestion;
+}
+function lessonFinanceAgreementBrief(agreement){
+  if(!agreement)return "";
+  const model=agreement.billingModel==="monthly"
+    ?`${formatMoney(agreement.amount,agreement.currency)} لكل حصة`
+    :`${agreement.packageSize} حصة بقيمة ${formatMoney(agreement.amount,agreement.currency)}`;
+  return `${model} · ${timingLabel(agreement.paymentTiming)} · مرتبط بـ ${agreement.lessonIds.length} حصة${agreement.active?"":" · مؤرشف"}`;
+}
+function refreshLessonFinanceAgreementOptions(preferredId=null){
+  const select=document.getElementById("lessonFinanceAgreement");if(!select)return;
+  const current=preferredId||select.value||lessonFinanceOriginalAgreementId;
+  const agreements=compatibleLessonFinanceAgreements(
+    document.getElementById("type")?.value,
+    document.getElementById("lessonSource")?.value,
+    lessonFinanceOriginalAgreementId
+  );
+  if(!agreements.length){
+    select.innerHTML='<option value="">لا يوجد اتفاق مالي مناسب</option>';
+    select.disabled=true;
+  }else{
+    select.disabled=false;
+    select.innerHTML=agreements.map(agreement=>`<option value="${agreement.id}">${esc(agreement.name||"اتفاق بدون اسم")} — ${esc(agreement.billingModel==="monthly"?"بالحصة":"رصيد حصص")}${agreement.active?"":" — مؤرشف"}</option>`).join("");
+    if(agreements.some(agreement=>agreement.id===current))select.value=current;
+  }
+  renderLessonFinanceAgreementHint();
+}
+function renderLessonFinanceAgreementHint(){
+  const select=document.getElementById("lessonFinanceAgreement"),hint=document.getElementById("lessonFinanceAgreementHint");if(!select||!hint)return;
+  const agreement=finance.agreements.find(item=>item.id===select.value);
+  hint.innerHTML=agreement
+    ?`<strong>${esc(agreement.name||"اتفاق مالي")}</strong><br>${esc(lessonFinanceAgreementBrief(agreement))}<br>ستدخل هذه الحصة تلقائيًا ضمن حساب الاتفاق.`
+    :'لا يوجد اتفاق مناسب؛ اختر «إنشاء اتفاق جديد».';
+}
+function toggleLessonFinanceModelFields(){
+  const model=document.getElementById("lessonFinanceBillingModel")?.value||"package";
+  const packageField=document.getElementById("lessonFinancePackageField"),amountLabel=document.getElementById("lessonFinanceAmountLabel"),hint=document.getElementById("lessonFinanceModelHint");
+  if(packageField)packageField.style.display=model==="package"?"flex":"none";
+  if(amountLabel)amountLabel.textContent=model==="package"?"قيمة رصيد الحصص":"سعر الحصة الواحدة";
+  if(hint)hint.textContent=model==="package"
+    ?"سيحسب الموقع الحصص التي مرّ موعدها، ويمكنك تصحيح الرصيد عند الإلغاء أو الإضافة."
+    :"سيجمع الموقع مواعيد الشهر تلقائيًا، ويمكنك مراجعة العدد الفعلي قبل اعتماد الحساب.";
+}
+function refreshLessonFinanceForLessonFields(){
+  const type=document.getElementById("type")?.value||"teach",source=document.getElementById("lessonSource")?.value||"private";
+  const direction=document.getElementById("lessonFinanceDirectionHint");
+  if(direction){
+    direction.classList.toggle("expense",type==="learn");
+    direction.innerHTML=`<span>${type==="learn"?"مصروف أدفعه":"دخل أحصل عليه"}</span><span>${source==="center"?"مركز":"درس خاص"}</span>`;
+  }
+  refreshLessonFinanceAgreementOptions();
+  syncLessonFinanceSuggestedName();
+}
+function toggleLessonFinanceFields(){
+  const mode=document.getElementById("lessonFinanceMode")?.value||"none";
+  document.getElementById("lessonFinanceNoneHint")?.toggleAttribute("hidden",mode!=="none");
+  document.getElementById("lessonFinanceExistingFields")?.classList.toggle("show",mode==="existing");
+  document.getElementById("lessonFinanceNewFields")?.classList.toggle("show",mode==="new");
+  if(mode==="existing")refreshLessonFinanceAgreementOptions();
+  if(mode==="new"){refreshLessonFinanceForLessonFields();toggleLessonFinanceModelFields()}
+}
+function setLessonFinanceFields(lesson=null){
+  const linked=lesson?linkedFinanceAgreementsForLesson(lesson.id):[],preferred=linked.find(agreement=>agreement.active)||linked[0]||null;
+  lessonFinanceOriginalAgreementId=preferred?.id||null;
+  const name=document.getElementById("lessonFinanceName");
+  name.value="";name.dataset.autoValue="";
+  document.getElementById("lessonFinanceBillingModel").value="package";
+  document.getElementById("lessonFinancePaymentTiming").value="advance";
+  document.getElementById("lessonFinancePackageSize").value=8;
+  document.getElementById("lessonFinanceAmount").value="";
+  document.getElementById("lessonFinanceCurrency").value="USD";
+  document.getElementById("lessonFinancePaymentMethod").value=document.getElementById("lessonSource").value==="center"?"bank":"paypal";
+  document.getElementById("lessonFinanceStartDate").value=currentDateKey();
+  document.getElementById("lessonFinanceNotes").value="";
+  document.getElementById("lessonFinanceMode").value=preferred?"existing":"none";
+  refreshLessonFinanceForLessonFields();
+  refreshLessonFinanceAgreementOptions(preferred?.id||null);
+  toggleLessonFinanceFields();
+}
+function readLessonFinanceSelection(lesson){
+  const mode=document.getElementById("lessonFinanceMode")?.value||"none";
+  if(mode==="none")return {mode:"none"};
+  if(mode==="existing"){
+    const agreementId=document.getElementById("lessonFinanceAgreement")?.value;
+    const agreement=finance.agreements.find(item=>item.id===agreementId);
+    if(!agreement){alert("اختر اتفاقًا ماليًا، أو أنشئ اتفاقًا جديدًا.");return null}
+    if(agreement.direction!==financeDirectionForLessonType(lesson.type)||agreement.partyType!==financePartyTypeForLessonSource(lesson.lessonSource)){
+      alert("الاتفاق المختار لا يناسب نوع الحصة أو جهتها.");return null;
+    }
+    return {mode:"existing",agreementId};
+  }
+  const billingModel=document.getElementById("lessonFinanceBillingModel").value;
+  const amount=normalizeMoney(document.getElementById("lessonFinanceAmount").value);
+  const packageSize=Math.round(Number(document.getElementById("lessonFinancePackageSize").value)||0);
+  const startDate=document.getElementById("lessonFinanceStartDate").value;
+  const name=document.getElementById("lessonFinanceName").value.trim()||lessonFinanceSuggestedName();
+  if(!name){alert("اكتب اسم الاتفاق المالي.");return null}
+  if(amount<=0){alert("اكتب قيمة مالية أكبر من صفر.");return null}
+  if(billingModel==="package"&&(packageSize<1||packageSize>500)){alert("اكتب عدد حصص صحيحًا للرصيد.");return null}
+  if(!validDateKey(startDate)){alert("اختر تاريخ بداية صحيحًا للاتفاق المالي.");return null}
+  return {mode:"new",agreement:{
+    name,billingModel,amount,packageSize,startDate,
+    paymentTiming:document.getElementById("lessonFinancePaymentTiming").value,
+    currency:document.getElementById("lessonFinanceCurrency").value,
+    paymentMethod:document.getElementById("lessonFinancePaymentMethod").value,
+    notes:document.getElementById("lessonFinanceNotes").value.trim()
+  }};
+}
+
 function toggleFields(){
   const st=document.getElementById("studentType").value;
   const src=document.getElementById("lessonSource").value;
   document.getElementById("groupField").style.display=st==="group"?"flex":"none";
   document.getElementById("centerField").style.display=src==="center"?"flex":"none";
   document.getElementById("nameLabel").textContent=st==="group"?"اسم المجموعة / عنوان الدرس":"اسم الطالب / عنوان الدرس";
+  refreshLessonFinanceForLessonFields();
 }
 function openDrawer(){
   document.getElementById("backdrop").classList.add("show");
@@ -2707,7 +2972,7 @@ function openNew(){
   document.getElementById("conflictBox").style.display="none";
   setScheduleRows([{day:"الاثنين",time:"18:00"}]);
   setLessonReminderFields("default",[DEFAULT_NOTIFICATION_LEAD]);
-  toggleFields();openDrawer();
+  toggleFields();setLessonFinanceFields();openDrawer();
 }
 function openQuickAdd(day,time){
   const safeDay=days.includes(day)?day:"الاثنين";
@@ -2737,7 +3002,7 @@ function openEdit(id){
   document.getElementById("conflictBox").style.display="none";
   setScheduleRows(l.schedules||[]);
   setLessonReminderFields(l.reminderMode,l.reminderLeads);
-  toggleFields();openDrawer();
+  toggleFields();setLessonFinanceFields(l);openDrawer();
 }
 
 function conflicts(candidate){
@@ -2796,15 +3061,23 @@ async function saveLesson(){
   if(st==="group"&&!groupStudents.length){alert("أضف اسم طالب واحد على الأقل في المجموعة.");return}
   if(st==="group"&&!lesson.name)lesson.name="مجموعة "+groupStudents.slice(0,2).join(" و");
   if(src==="center"&&!lesson.centerName){alert("اكتب اسم المركز.");return}
+  const financeSelection=readLessonFinanceSelection(lesson);
+  if(!financeSelection)return;
 
   const c=conflicts(lesson),box=document.getElementById("conflictBox");
   if(c.length){
     box.innerHTML="<strong>يوجد تعارض:</strong><br>"+c.map(x=>`${x.day} ${fmt(x.time)} مع ${esc(x.name)} (${fmt(x.exTime)})`).join("<br>");
     box.style.display="block";return;
   }
-  const previous=lessons;
+  const previous=lessons,previousFinance=finance;
+  let nextFinance;
+  try{nextFinance=applyLessonFinanceSelection(finance,lesson,financeSelection)}catch(error){
+    console.error("تعذّر تجهيز الحساب المالي للحصة.",error);
+    alert("تعذّر تجهيز الحساب المالي. راجع بيانات الاتفاق وحاول مرة أخرى.");return;
+  }
   lessons=editingId?lessons.map(l=>l.id===editingId?lesson:l):[...lessons,lesson];
-  if(!await persist()){lessons=previous;return}
+  finance=nextFinance;
+  if(!await persist()){lessons=previous;finance=previousFinance;return}
   render();closeDrawer();
 }
 function copyLessonById(id){
@@ -2814,16 +3087,22 @@ function copyLessonById(id){
   document.getElementById("drawerTitle").textContent="نسخ الحصة";
   document.getElementById("drawerSub").textContent="عدّل الاسم أو الموعد ثم احفظ النسخة الجديدة.";
   document.getElementById("name").value=(o.name||"حصة")+" - نسخة";
+  syncLessonFinanceSuggestedName();
   document.getElementById("copyBtn").style.display="none";
   document.getElementById("deleteBtn").style.display="none";
 }
 function copyLesson(){if(editingId)copyLessonById(editingId)}
 async function deleteLesson(){
   if(!editingId)return;
-  if(confirm("هل تريد حذف هذه الحصة وكل مواعيدها؟")){
-    const previous=lessons;
+  const linked=linkedFinanceAgreementsForLesson(editingId);
+  const message=linked.length
+    ?"هل تريد حذف هذه الحصة وكل مواعيدها؟ ستُفصل عن حسابها المالي، بينما سيبقى الاتفاق والدفعات محفوظين في قسم المالية."
+    :"هل تريد حذف هذه الحصة وكل مواعيدها؟";
+  if(confirm(message)){
+    const previous=lessons,previousFinance=finance;
     lessons=lessons.filter(l=>l.id!==editingId);
-    if(!await persist()){lessons=previous;return}
+    finance=unlinkLessonFromFinance(finance,editingId);
+    if(!await persist()){lessons=previous;finance=previousFinance;return}
     render();closeDrawer();
   }
 }

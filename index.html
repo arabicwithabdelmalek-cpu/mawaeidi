@@ -367,36 +367,58 @@ body.auth-pending .app{visibility:hidden}
 .finance-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px;margin-bottom:12px}
 .currency-summary{overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow-soft)}
 .currency-summary-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);background:#F2F6F8}
-.currency-summary-head strong{font-size:14px}.currency-code{padding:3px 7px;border-radius:6px;background:var(--primary);color:#fff;font-size:10px;font-weight:800;direction:ltr}
+.currency-summary-head strong{font-size:14px}.currency-summary-head small{display:block;margin-top:2px;color:var(--muted);font-size:9px;font-weight:600}.currency-code{padding:3px 7px;border-radius:6px;background:var(--primary);color:#fff;font-size:10px;font-weight:800;direction:ltr}
 .currency-metrics{display:grid;grid-template-columns:1fr 1fr}
 .currency-metric{min-height:82px;padding:11px 13px;border-bottom:1px solid var(--line)}
 .currency-metric:nth-child(odd){border-inline-end:1px solid var(--line)}
 .currency-metric:nth-last-child(-n+2){border-bottom:0}
 .currency-metric small{display:block;color:var(--muted);font-size:10px;font-weight:700}
 .currency-metric strong{display:block;margin-top:6px;color:var(--primary);font-size:17px;font-weight:800;direction:ltr;text-align:right}
-.currency-metric.received strong{color:var(--teach)}.currency-metric.remaining strong{color:var(--learn)}.currency-metric.expense strong{color:var(--danger)}
+.currency-metric.received strong{color:var(--teach)}.currency-metric.due strong{color:var(--danger)}.currency-metric.soon strong{color:var(--learn)}
 .finance-empty-summary{grid-column:1/-1;padding:20px;border:1px dashed #BFCED8;border-radius:10px;background:rgba(251,252,253,.78);color:var(--muted);font-size:12px;text-align:center}
+.finance-explainer{margin:-2px 0 12px;padding:9px 11px;border-inline-start:3px solid #88A9BE;border-radius:7px;background:rgba(237,244,248,.88);color:#566B78;font-size:10px;line-height:1.7}.finance-explainer strong{color:var(--primary)}
 .finance-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.6fr);gap:12px;align-items:start}
 .finance-panel{overflow:hidden;border:1px solid var(--line);border-top:3px solid var(--primary);border-radius:10px;background:rgba(251,252,253,.95);box-shadow:var(--shadow)}
 .finance-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-bottom:1px solid var(--line)}
 .finance-panel-head h3{margin:0;font-size:16px}.finance-panel-head span{color:var(--muted);font-size:11px}
-.finance-panel-action{padding:8px 10px;border:1px solid #BCCCD7;border-radius:8px;background:#fff;color:var(--primary);font-size:11px;font-weight:800}
+.finance-panel-action{min-height:36px;padding:8px 10px;border:1px solid #BCCCD7;border-radius:8px;background:#fff;color:var(--primary);font-size:11px;font-weight:800}
 .finance-list{display:grid;gap:9px;padding:13px}
 .finance-empty{padding:34px 16px;text-align:center;color:var(--muted);font-size:12px;line-height:1.8}
 .finance-empty strong{display:block;margin-bottom:4px;color:var(--ink);font-size:14px}
+.finance-groups{display:grid;gap:14px;padding:13px}
+.finance-group{display:grid;gap:8px}
+.finance-group+.finance-group{padding-top:13px;border-top:1px solid var(--line)}
+.finance-group-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px}
+.finance-group-title{display:flex;align-items:center;gap:7px;margin:0;color:var(--ink);font-size:12px;font-weight:800}
+.finance-group-title::before{content:"";width:8px;height:8px;border-radius:50%;background:#8195A2}
+.finance-group.due .finance-group-title::before{background:var(--danger)}
+.finance-group.soon .finance-group-title::before{background:var(--learn)}
+.finance-group.ongoing .finance-group-title::before{background:var(--primary)}
+.finance-group.paid .finance-group-title::before{background:var(--teach)}
+.finance-group.archived .finance-group-title::before{background:#97A5AE}
+.finance-group-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 7px;border-radius:999px;background:#EAF0F4;color:#536977;font-size:9px;font-weight:800}
+.finance-group-list{display:grid;gap:9px}
 .agreement-card{padding:13px 14px;border:1px solid var(--line);border-inline-start:5px solid var(--source-color,var(--primary));border-radius:10px;background:#fff}
 .agreement-card.archived{opacity:.68;background:#F3F5F6}
 .agreement-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.agreement-name{font-size:14px;font-weight:800}.agreement-sub{margin-top:3px;color:var(--muted);font-size:10px}
+.agreement-heading{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.agreement-name{font-size:14px;font-weight:800}.agreement-sub{margin-top:4px;color:var(--muted);font-size:10px}
 .agreement-amount{color:var(--primary);font-size:14px;font-weight:800;direction:ltr;text-align:left;white-space:nowrap}
+.agreement-state{display:inline-flex;align-items:center;min-height:24px;padding:3px 7px;border:1px solid #C7D3DA;border-radius:999px;background:#F3F6F8;color:#60727E;font-size:9px;font-weight:800;white-space:nowrap}
+.agreement-state.due{border-color:#E2BBBB;background:#FBEEEE;color:#9A4141}.agreement-state.soon{border-color:#E3C591;background:#FFF5DF;color:#8D5B17}.agreement-state.ongoing{border-color:#AFC5DB;background:#EDF4FA;color:#37698F}.agreement-state.paid{border-color:#A7D3C7;background:#E8F5F1;color:#267366}
 .agreement-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.agreement-tag{padding:4px 7px;border-radius:999px;background:#EEF3F6;color:#536977;font-size:9px;font-weight:800}
 .agreement-tag.advance{background:var(--teach-bg);color:var(--teach)}.agreement-tag.arrears{background:var(--learn-bg);color:var(--learn)}
 .agreement-progress{margin-top:11px;padding:10px;border-radius:8px;background:#F3F6F8}
 .agreement-progress-top{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#526674;font-size:10px;font-weight:800}
 .agreement-track{height:7px;margin-top:7px;overflow:hidden;border-radius:999px;background:#DCE5EA}.agreement-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--teach),#63A092)}
 .agreement-balance{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;color:var(--muted);font-size:10px}.agreement-balance strong{color:var(--ink);font-size:12px;direction:ltr}
-.agreement-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}.agreement-actions button{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;color:#596A76;font-size:10px;font-weight:800}
-.agreement-actions .main{border-color:var(--primary);background:var(--primary);color:#fff}.agreement-actions .warn{color:var(--learn)}
+.agreement-status-note{margin-top:8px;color:#586C78;font-size:10px;line-height:1.65}.agreement-status-note strong{color:var(--ink)}
+.agreement-actions{display:flex;align-items:flex-start;flex-wrap:wrap;gap:7px;margin-top:11px}.agreement-actions button,.agreement-more summary{min-height:34px;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;color:#596A76;font-size:10px;font-weight:800}
+.agreement-actions .main{border-color:var(--primary);background:var(--primary);color:#fff}.agreement-more{flex:1 1 120px;min-width:120px}.agreement-more summary{display:flex;align-items:center;justify-content:center;list-style:none;cursor:pointer}.agreement-more summary::-webkit-details-marker{display:none}.agreement-more summary::after{content:"⌄";margin-inline-start:6px}.agreement-more[open] summary::after{transform:rotate(180deg)}
+.agreement-more-menu{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px;padding:7px;border:1px solid var(--line);border-radius:8px;background:#F7F9FA}.agreement-more-menu button{width:100%;background:#fff}.agreement-more-menu .warn{color:var(--danger)}
+.finance-month-report{display:grid;gap:9px;padding:13px;border-bottom:1px solid var(--line);background:#F7F9FA}
+.month-report-card{overflow:hidden;border:1px solid var(--line);border-radius:9px;background:#fff}
+.month-report-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border-bottom:1px solid var(--line);font-size:10px;font-weight:800}.month-report-code{direction:ltr;color:var(--primary)}
+.month-report-grid{display:grid;grid-template-columns:1fr 1fr}.month-report-metric{padding:9px 10px;border-bottom:1px solid var(--line)}.month-report-metric:nth-child(odd){border-inline-end:1px solid var(--line)}.month-report-metric:nth-last-child(-n+2){border-bottom:0}.month-report-metric small{display:block;color:var(--muted);font-size:9px}.month-report-metric strong{display:block;margin-top:4px;color:var(--ink);font-size:11px;direction:ltr;text-align:right}.month-report-metric.received strong{color:var(--teach)}.month-report-metric.remaining strong{color:var(--learn)}.month-report-metric.expense strong{color:var(--danger)}
 .payment-item{padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:#fff}
 .payment-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.payment-party{font-size:12px;font-weight:800}.payment-amount{color:var(--teach);font-size:13px;font-weight:800;direction:ltr;white-space:nowrap}.payment-amount.expense{color:var(--danger)}
 .payment-meta{margin-top:4px;color:var(--muted);font-size:9px;line-height:1.65}.payment-remove{margin-top:7px;padding:4px 6px;border:0;background:transparent;color:var(--danger);font-size:9px;font-weight:800}
@@ -529,7 +551,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .quick-add-slot{min-height:88px;opacity:.68}
   .notification-leads,.session-status-options{grid-template-columns:repeat(2,1fr)}
   .session-reschedule-fields{grid-template-columns:1fr}
-  .finance-toolbar{align-items:stretch;flex-direction:column;padding:15px}.finance-period{min-width:0}.finance-summary{grid-template-columns:1fr}.finance-form-grid,.finance-lesson-list{grid-template-columns:1fr}.finance-calculation{grid-template-columns:1fr}.agreement-top{gap:8px}
+  .finance-toolbar{align-items:stretch;flex-direction:column;padding:15px}.finance-period{min-width:0}.finance-summary{grid-template-columns:1fr}.finance-form-grid,.finance-lesson-list{grid-template-columns:1fr}.finance-calculation{grid-template-columns:1fr}.agreement-top{gap:8px}.agreement-more-menu{grid-template-columns:1fr}
   .hurufiyat span{width:410px;opacity:.07}.hurufiyat span:nth-child(1){top:-125px;right:-180px}
   .hurufiyat span:nth-child(4){bottom:-125px;left:-180px}
   .auth-card{padding:24px 20px}.auth-name{font-size:24px}.auth-card h2{font-size:21px}
@@ -720,36 +742,38 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
       <div class="finance-toolbar">
         <div>
           <h2 id="financeHeading">الملخص المالي</h2>
-          <p>الاتفاقات، الحصص المحسوبة، والدفعات الفعلية في مكان واحد.</p>
+          <p>اعرف قيمة أرصدتك الجارية، وما استحق، وما تم تحصيله دون حساب يدوي.</p>
         </div>
         <label class="finance-period" for="financeMonth">
-          <span>الفترة</span>
+          <span>كشف شهر</span>
           <input id="financeMonth" type="month" onchange="changeFinanceMonth(this.value)">
         </label>
       </div>
 
       <div class="finance-summary" id="financeSummary" aria-live="polite"></div>
+      <div class="finance-explainer"><strong>قيمة الأرصدة الجارية</strong> هي قيمة الباقات الحالية كلها، أما <strong>المستحق الآن</strong> فهو ما حان موعد تحصيله فقط.</div>
 
       <div class="finance-layout">
         <section class="finance-panel" aria-labelledby="agreementsHeading">
           <header class="finance-panel-head">
             <div>
-              <h3 id="agreementsHeading">الاتفاقات المالية</h3>
+              <h3 id="agreementsHeading">المتابعة المالية</h3>
               <span id="financeAgreementCount">0 اتفاق</span>
             </div>
-            <button type="button" class="finance-panel-action" onclick="openFinanceAgreement()">＋ اتفاق مستقل</button>
+            <button type="button" class="finance-panel-action" onclick="openFinanceAgreement()">＋ حساب مستقل</button>
           </header>
-          <div class="finance-list" id="financeAgreements"></div>
+          <div class="finance-groups" id="financeAgreements"></div>
         </section>
 
         <aside class="finance-panel" aria-labelledby="paymentsHeading">
           <header class="finance-panel-head">
             <div>
-              <h3 id="paymentsHeading">الدفعات</h3>
-              <span>المسجلة خلال الفترة</span>
+              <h3 id="paymentsHeading">كشف الشهر</h3>
+              <span id="financeReportPeriodLabel">الحركة المالية خلال الفترة</span>
             </div>
             <button type="button" class="finance-panel-action" onclick="openFinancePayment()">＋ تسجيل دفعة</button>
           </header>
+          <div class="finance-month-report" id="financeMonthReport"></div>
           <div class="finance-list" id="financePayments"></div>
         </aside>
       </div>
@@ -908,6 +932,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
             <label for="lessonFinancePaymentMethod">طريقة الدفع المعتادة</label>
             <select id="lessonFinancePaymentMethod">
               <option value="paypal">PayPal</option>
+              <option value="vodafone_cash">فودافون كاش</option>
+              <option value="instapay">InstaPay</option>
               <option value="bank">تحويل بنكي</option>
               <option value="wise">Wise</option>
               <option value="cash">نقدي</option>
@@ -1010,7 +1036,7 @@ const NOTIFICATION_LEADS_KEY="mawaeidi-notification-leads-v2";
 const SCHEDULE_TIMEZONE="Africa/Cairo";
 const FINANCE_VERSION=1;
 const FINANCE_CURRENCIES=["EGP","USD","EUR","GBP","SAR","AED"];
-const FINANCE_METHODS=["paypal","bank","wise","cash","other"];
+const FINANCE_METHODS=["vodafone_cash","instapay","bank","paypal","wise","cash","other"];
 const SESSION_RECORD_STATUSES=["default","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"];
 const cloud=window.supabase?.createClient
   ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
@@ -2455,7 +2481,6 @@ function targetPayments(agreementId,targetType,targetKey){return finance.payment
 function targetPaid(agreementId,targetType,targetKey){return targetPayments(agreementId,targetType,targetKey).reduce((sum,item)=>sum+item.amount,0)}
 function cycleDuePeriod(agreement,cycle){
   if(agreement.paymentTiming==="advance")return cycle.startDate.slice(0,7);
-  if(cycle.endDate)return cycle.endDate.slice(0,7);
   return cycleCompletionDate(agreement,cycle)?.slice(0,7)||null;
 }
 function agreementObligations(period){
@@ -2472,12 +2497,106 @@ function agreementObligations(period){
   });
   return obligations;
 }
+function monthKeysBetween(startPeriod,endPeriod){
+  if(!validMonthKey(startPeriod)||!validMonthKey(endPeriod)||startPeriod>endPeriod)return [];
+  const result=[],[startYear,startMonth]=startPeriod.split("-").map(Number),[endYear,endMonth]=endPeriod.split("-").map(Number);
+  let year=startYear,month=startMonth,guard=0;
+  while((year<endYear||(year===endYear&&month<=endMonth))&&guard<1200){
+    result.push(`${year}-${String(month).padStart(2,"0")}`);
+    month++;if(month>12){month=1;year++}guard++;
+  }
+  return result;
+}
+function agreementCurrentTarget(agreement,period=selectedFinanceMonth){
+  if(!agreement)return null;
+  if(agreement.billingModel==="monthly"){
+    if(monthBounds(period).end<agreement.startDate)return null;
+    return {agreement,targetType:"month",targetKey:period,amount:monthSessionCount(agreement,period)*agreement.amount};
+  }
+  const cycle=openAgreementCycle(agreement.id)||agreementCycles(agreement.id)[0];
+  return cycle?{agreement,targetType:"cycle",targetKey:cycle.id,amount:cycle.amount,cycle}:null;
+}
+function financeTargetDueDate(agreement,targetType,targetKey){
+  if(!agreement)return null;
+  if(targetType==="month"){
+    if(!validMonthKey(targetKey))return null;
+    const bounds=monthBounds(targetKey);
+    if(bounds.end<agreement.startDate)return null;
+    return agreement.paymentTiming==="advance"?maxDateKey(bounds.start,agreement.startDate):bounds.end;
+  }
+  const cycle=finance.cycles.find(item=>item.id===targetKey&&item.agreementId===agreement.id);
+  if(!cycle)return null;
+  return agreement.paymentTiming==="advance"?cycle.startDate:cycleCompletionDate(agreement,cycle);
+}
+function agreementDueTargets(agreement,asOf=currentDateKey()){
+  if(!agreement||!validDateKey(asOf))return [];
+  const targets=[];
+  if(agreement.billingModel==="package"){
+    agreementCycles(agreement.id).forEach(cycle=>{
+      const dueDate=financeTargetDueDate(agreement,"cycle",cycle.id),paid=targetPaid(agreement.id,"cycle",cycle.id),remaining=Math.max(0,cycle.amount-paid);
+      if(dueDate&&dueDate<=asOf&&remaining>0)targets.push({agreement,targetType:"cycle",targetKey:cycle.id,amount:cycle.amount,paid,remaining,dueDate,cycle});
+    });
+    return targets.sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  }
+  const archiveDate=!agreement.active&&validDateKey(String(agreement.updatedAt||"").slice(0,10))?String(agreement.updatedAt).slice(0,10):asOf;
+  const endDate=minDateKey(asOf,archiveDate),startPeriod=agreement.startDate.slice(0,7),endPeriod=endDate.slice(0,7);
+  monthKeysBetween(startPeriod,endPeriod).forEach(period=>{
+    const dueDate=financeTargetDueDate(agreement,"month",period),amount=monthSessionCount(agreement,period)*agreement.amount,paid=targetPaid(agreement.id,"month",period),remaining=Math.max(0,amount-paid);
+    if(dueDate&&dueDate<=asOf&&amount>0&&remaining>0)targets.push({agreement,targetType:"month",targetKey:period,amount,paid,remaining,dueDate});
+  });
+  return targets;
+}
+function daysBetweenDateKeys(fromDate,toDate){
+  if(!validDateKey(fromDate)||!validDateKey(toDate))return null;
+  return Math.round((new Date(`${toDate}T12:00:00Z`)-new Date(`${fromDate}T12:00:00Z`))/86400000);
+}
+function packageCompletionForecast(agreement,cycle){
+  if(!agreement||!cycle)return null;
+  const counted=cycleSessionCount(agreement,cycle),remaining=Math.max(0,cycle.targetSessions-counted);
+  if(!remaining)return cycleCompletionDate(agreement,cycle)||currentDateKey();
+  if(!agreementLessons(agreement).length)return null;
+  let found=0,cursor=new Date(`${currentDateKey()}T12:00:00Z`),guard=0;
+  while(guard<740){
+    const date=cursor.toISOString().slice(0,10);
+    let count=agreementSessionCountOnDate(agreement,date,false);
+    if(date===currentDateKey())count=Math.max(0,count-agreementSessionCountOnDate(agreement,date,true));
+    found+=count;
+    if(found>=remaining)return date;
+    cursor.setUTCDate(cursor.getUTCDate()+1);guard++;
+  }
+  return null;
+}
+function agreementFinancialState(agreement,period=selectedFinanceMonth,asOf=currentDateKey()){
+  const current=agreementCurrentTarget(agreement,period),paid=current?targetPaid(agreement.id,current.targetType,current.targetKey):0,remaining=current?Math.max(0,current.amount-paid):0;
+  const dueTargets=agreementDueTargets(agreement,asOf),dueAmount=dueTargets.reduce((sum,item)=>sum+item.remaining,0);
+  let remainingSessions=null,forecastDate=null,isSoon=false;
+  if(current?.cycle){
+    const count=cycleSessionCount(agreement,current.cycle);
+    remainingSessions=Math.max(0,current.cycle.targetSessions-count);
+    forecastDate=agreement.paymentTiming==="arrears"?packageCompletionForecast(agreement,current.cycle):financeTargetDueDate(agreement,"cycle",current.cycle.id);
+    isSoon=remaining>0&&!dueAmount&&agreement.paymentTiming==="arrears"&&remainingSessions>0&&remainingSessions<=2;
+  }else if(current&&remaining>0){
+    const dueDate=financeTargetDueDate(agreement,current.targetType,current.targetKey),days=dueDate?daysBetweenDateKeys(asOf,dueDate):null;
+    forecastDate=dueDate;
+    isSoon=!dueAmount&&days!==null&&days>=0&&days<=7;
+  }
+  let status="ongoing";
+  if(!agreement.active)status="archived";
+  else if(dueAmount>0)status="due";
+  else if(current&&current.amount>0&&remaining<=0)status="paid";
+  else if(isSoon)status="soon";
+  return {status,current,paid,remaining,dueTargets,dueAmount,remainingSessions,forecastDate};
+}
 function currencyLabel(code){return ({EGP:"الجنيه المصري",USD:"الدولار الأمريكي",EUR:"اليورو",GBP:"الجنيه الإسترليني",SAR:"الريال السعودي",AED:"الدرهم الإماراتي"})[code]||code}
-function paymentMethodLabel(value){return ({paypal:"PayPal",bank:"تحويل بنكي",wise:"Wise",cash:"نقدي",other:"طريقة أخرى"})[value]||"طريقة أخرى"}
+function currencyShortLabel(code){return ({EGP:"ج.م",USD:"دولار",EUR:"يورو",GBP:"إسترليني",SAR:"ر.س",AED:"د.إ"})[code]||code}
+function paymentMethodLabel(value){return ({paypal:"PayPal",bank:"تحويل بنكي",vodafone_cash:"فودافون كاش",instapay:"InstaPay",wise:"Wise",cash:"نقدي",other:"طريقة أخرى"})[value]||"طريقة أخرى"}
 function partyTypeLabel(value){return value==="center"?"مركز":value==="other"?"جهة أخرى":"طالب خاص"}
 function billingModelLabel(value){return value==="monthly"?"حساب شهري بالحصة":"رصيد حصص"}
 function timingLabel(value){return value==="arrears"?"دفع مؤخر":"دفع مقدم"}
-function formatMoney(amount,currency){return `${new Intl.NumberFormat("en-US",{minimumFractionDigits:0,maximumFractionDigits:2}).format(normalizeMoney(amount))} ${currency}`}
+function formatMoney(amount,currency){
+  const number=Number(amount),safe=Number.isFinite(number)?Math.round((number+Number.EPSILON)*100)/100:0;
+  return `${new Intl.NumberFormat("en-US",{minimumFractionDigits:0,maximumFractionDigits:2}).format(safe)} ${currencyShortLabel(currency)}`;
+}
 function financeSourceColor(agreement){
   if(agreement.partyType==="private")return PRIVATE_SOURCE_COLOR;
   return sourceColorFromLabel(agreement.name||partyTypeLabel(agreement.partyType));
@@ -2729,14 +2848,21 @@ function financeSummaryData(period){
   const currencies=new Set(),rows=new Map(),obligations=agreementObligations(period);
   const ensure=currency=>{
     currencies.add(currency);
-    if(!rows.has(currency))rows.set(currency,{currency,expected:0,received:0,remaining:0,expenses:0});
+    if(!rows.has(currency))rows.set(currency,{currency,currentValue:0,dueNow:0,soon:0,received:0,expenses:0,periodDue:0,periodRemaining:0,expected:0,remaining:0});
     return rows.get(currency);
   };
+  finance.agreements.forEach(agreement=>{
+    const state=agreementFinancialState(agreement,currentDateKey().slice(0,7)),row=ensure(agreement.currency);
+    if(agreement.direction!=="income")return;
+    if(agreement.active&&state.current)row.currentValue+=state.current.amount;
+    if(agreement.active)row.dueNow+=state.dueAmount;
+    if(agreement.active&&state.status==="soon")row.soon+=state.remaining;
+  });
   obligations.forEach(item=>{
     const row=ensure(item.agreement.currency),paid=targetPaid(item.agreement.id,item.targetType,item.targetKey);
     if(item.agreement.direction==="income"){
-      row.expected+=item.amount;
-      row.remaining+=Math.max(0,item.amount-paid);
+      row.periodDue+=item.amount;
+      row.periodRemaining+=Math.max(0,item.amount-paid);
     }
   });
   finance.payments.filter(item=>item.date.slice(0,7)===period).forEach(payment=>{
@@ -2747,7 +2873,11 @@ function financeSummaryData(period){
     else row.received+=payment.amount;
   });
   finance.agreements.filter(item=>item.active).forEach(item=>currencies.add(item.currency));
-  return [...currencies].sort().map(currency=>rows.get(currency)||{currency,expected:0,received:0,remaining:0,expenses:0});
+  return [...currencies].sort().map(currency=>{
+    const row=rows.get(currency)||{currency,currentValue:0,dueNow:0,soon:0,received:0,expenses:0,periodDue:0,periodRemaining:0};
+    row.expected=row.periodDue;row.remaining=row.periodRemaining;
+    return row;
+  });
 }
 function renderFinanceSummary(){
   const box=document.getElementById("financeSummary");
@@ -2758,16 +2888,49 @@ function renderFinanceSummary(){
     return;
   }
   box.innerHTML=rows.map(row=>`<article class="currency-summary">
-    <header class="currency-summary-head"><strong>${esc(currencyLabel(row.currency))}</strong><span class="currency-code">${esc(row.currency)}</span></header>
+    <header class="currency-summary-head"><div><strong>${esc(currencyLabel(row.currency))}</strong><small>الوضع الحالي · كشف ${esc(monthLabel(selectedFinanceMonth))}</small></div><span class="currency-code">${esc(row.currency)}</span></header>
     <div class="currency-metrics">
-      <div class="currency-metric"><small>دخل متوقع</small><strong>${esc(formatMoney(row.expected,row.currency))}</strong></div>
-      <div class="currency-metric received"><small>دخل استلمته</small><strong>${esc(formatMoney(row.received,row.currency))}</strong></div>
-      <div class="currency-metric remaining"><small>متبقٍّ عن الفترة</small><strong>${esc(formatMoney(row.remaining,row.currency))}</strong></div>
-      <div class="currency-metric expense"><small>مصروفات دفعتها</small><strong>${esc(formatMoney(row.expenses,row.currency))}</strong></div>
+      <div class="currency-metric"><small>قيمة الأرصدة الجارية</small><strong>${esc(formatMoney(row.currentValue,row.currency))}</strong></div>
+      <div class="currency-metric due"><small>مستحق للتحصيل الآن</small><strong>${esc(formatMoney(row.dueNow,row.currency))}</strong></div>
+      <div class="currency-metric soon"><small>قريب التحصيل</small><strong>${esc(formatMoney(row.soon,row.currency))}</strong></div>
+      <div class="currency-metric received"><small>استلمته خلال الشهر</small><strong>${esc(formatMoney(row.received,row.currency))}</strong></div>
     </div>
   </article>`).join("");
 }
-function agreementCardMarkup(agreement){
+function renderFinanceMonthReport(){
+  const box=document.getElementById("financeMonthReport"),label=document.getElementById("financeReportPeriodLabel");
+  if(!box)return;
+  if(label)label.textContent=`الحركة المالية في ${monthLabel(selectedFinanceMonth)}`;
+  const rows=financeSummaryData(selectedFinanceMonth);
+  if(!rows.length){box.innerHTML='<div class="finance-empty">لا توجد حركة مالية لهذا الشهر.</div>';return}
+  box.innerHTML=rows.map(row=>`<article class="month-report-card">
+    <header class="month-report-head"><span>${esc(currencyLabel(row.currency))}</span><span class="month-report-code">${esc(row.currency)}</span></header>
+    <div class="month-report-grid">
+      <div class="month-report-metric"><small>استحق خلال الشهر</small><strong>${esc(formatMoney(row.periodDue,row.currency))}</strong></div>
+      <div class="month-report-metric received"><small>تم تحصيله</small><strong>${esc(formatMoney(row.received,row.currency))}</strong></div>
+      <div class="month-report-metric remaining"><small>باقٍ من استحقاقات الشهر</small><strong>${esc(formatMoney(row.periodRemaining,row.currency))}</strong></div>
+      <div class="month-report-metric expense"><small>مصروفات مدفوعة</small><strong>${esc(formatMoney(row.expenses,row.currency))}</strong></div>
+    </div>
+  </article>`).join("");
+}
+function financeDateLabel(value){
+  if(!validDateKey(value))return "";
+  return new Date(`${value}T12:00:00Z`).toLocaleDateString("ar-EG",{day:"numeric",month:"long",timeZone:"UTC"});
+}
+function agreementStateLabel(status,direction="income"){
+  if(status==="paid")return direction==="income"?"تم التحصيل":"تم الدفع";
+  return ({due:"مستحق الآن",soon:"اقترب الاستحقاق",ongoing:"جاري",archived:"مؤرشف"})[status]||"جاري";
+}
+function agreementStatusNote(agreement,state){
+  if(state.status==="archived")return "الاتفاق مؤرشف، وتظل دفعاته السابقة محفوظة في السجل.";
+  if(state.status==="due")return `<strong>${esc(formatMoney(state.dueAmount,agreement.currency))}</strong> ${agreement.direction==="income"?"مطلوب تحصيله الآن":"مطلوب دفعه الآن"}.`;
+  if(state.status==="soon"&&state.current?.cycle)return `متبقٍّ <strong>${state.remainingSessions}</strong> حصة${state.forecastDate?`، والاستحقاق المتوقع ${esc(financeDateLabel(state.forecastDate))}`:""}.`;
+  if(state.status==="soon")return `اقترب موعد الاستحقاق${state.forecastDate?` في ${esc(financeDateLabel(state.forecastDate))}`:""}.`;
+  if(state.status==="paid")return agreement.direction==="income"?"تم تحصيل قيمة الحساب الجاري بالكامل.":"تم دفع قيمة الحساب الجاري بالكامل.";
+  if(state.current?.cycle&&state.remainingSessions!==null)return `متبقٍّ <strong>${state.remainingSessions}</strong> حصة قبل اكتمال الرصيد${state.forecastDate?` · متوقع ${esc(financeDateLabel(state.forecastDate))}`:""}.`;
+  return agreement.paymentTiming==="advance"?"الحساب مرتبط بالحصة ويتحدث تلقائيًا.":"سيظهر كمستحق عند اكتمال الفترة.";
+}
+function agreementCardMarkup(agreement,state=agreementFinancialState(agreement)){
   const color=financeSourceColor(agreement),linked=agreementLessons(agreement),timing=timingLabel(agreement.paymentTiming);
   let progress="",amountText="",balanceText="";
   if(agreement.billingModel==="monthly"){
@@ -2775,29 +2938,32 @@ function agreementCardMarkup(agreement){
     amountText=`${formatMoney(agreement.amount,agreement.currency)} / حصة`;
     progress=`<div class="agreement-progress">
       <div class="agreement-progress-top"><span>${count} حصة في ${esc(monthLabel(selectedFinanceMonth))}</span><span>${manual?"عدد مُراجع":"حسب حالات الحصص"}</span></div>
-      <div class="agreement-balance"><span>${agreement.direction==="income"?"المتوقع للفترة":"المصروف المتوقع"}</span><strong>${esc(formatMoney(expected,agreement.currency))}</strong></div>
-      <div class="agreement-balance"><span>${agreement.direction==="income"?"المستلم / المتبقي":"المدفوع / المتبقي"}</span><strong>${esc(formatMoney(paid,agreement.currency))} / ${esc(formatMoney(Math.max(0,expected-paid),agreement.currency))}</strong></div>
+      <div class="agreement-balance"><span>${agreement.direction==="income"?"قيمة حساب الشهر":"مصروف الشهر"}</span><strong>${esc(formatMoney(expected,agreement.currency))}</strong></div>
+      <div class="agreement-balance"><span>${agreement.direction==="income"?"المحصّل / المتبقي":"المدفوع / المتبقي"}</span><strong>${esc(formatMoney(paid,agreement.currency))} / ${esc(formatMoney(Math.max(0,expected-paid),agreement.currency))}</strong></div>
     </div>`;
   }else{
     const cycle=openAgreementCycle(agreement.id)||agreementCycles(agreement.id)[0],count=cycle?cycleSessionCount(agreement,cycle):0,target=cycle?.targetSessions||agreement.packageSize,paid=cycle?targetPaid(agreement.id,"cycle",cycle.id):0,amount=cycle?.amount??agreement.amount,pct=Math.min(100,target?count/target*100:0);
     amountText=formatMoney(amount,agreement.currency);
-    balanceText=`<div class="agreement-balance"><span>${agreement.direction==="income"?"المستلم / المتبقي":"المدفوع / المتبقي"}</span><strong>${esc(formatMoney(paid,agreement.currency))} / ${esc(formatMoney(Math.max(0,amount-paid),agreement.currency))}</strong></div>`;
+    balanceText=`<div class="agreement-balance"><span>${agreement.direction==="income"?"المحصّل / المتبقي":"المدفوع / المتبقي"}</span><strong>${esc(formatMoney(paid,agreement.currency))} / ${esc(formatMoney(Math.max(0,amount-paid),agreement.currency))}</strong></div>`;
     progress=`<div class="agreement-progress">
       <div class="agreement-progress-top"><span>${count} من ${target} حصة</span><span>${count>=target?"اكتمل الرصيد":"الرصيد الجاري"}</span></div>
       <div class="agreement-track" aria-label="تم احتساب ${count} من ${target} حصة"><div class="agreement-fill" style="width:${pct}%"></div></div>
       ${balanceText}
     </div>`;
   }
+  const currentCycle=agreement.billingModel==="package"?(openAgreementCycle(agreement.id)||agreementCycles(agreement.id)[0]):null,canStartNew=Boolean(currentCycle&&cycleSessionCount(agreement,currentCycle)>=currentCycle.targetSessions);
   const actions=agreement.active?`<div class="agreement-actions">
-    <button type="button" class="main" onclick="openFinancePayment('${agreement.id}')">تسجيل دفعة</button>
-    <button type="button" onclick="${agreement.billingModel==="monthly"?`openMonthCount('${agreement.id}')`:`openPackageCount('${agreement.id}')`}">${agreement.billingModel==="monthly"?"مراجعة عدد الحصص":"تصحيح رصيد الحصص"}</button>
-    ${agreement.billingModel==="package"?`<button type="button" onclick="startNewPackageCycle('${agreement.id}')">بدء رصيد جديد</button>`:""}
-    <button type="button" onclick="openFinanceAgreement('${agreement.id}')">تعديل</button>
-    <button type="button" class="warn" onclick="archiveFinanceAgreement('${agreement.id}')">أرشفة</button>
+    <button type="button" class="main" onclick="openFinancePayment('${agreement.id}')">${agreement.direction==="income"?"تسجيل استلام":"تسجيل دفع"}</button>
+    <details class="agreement-more"><summary>المزيد</summary><div class="agreement-more-menu">
+      <button type="button" onclick="${agreement.billingModel==="monthly"?`openMonthCount('${agreement.id}')`:`openPackageCount('${agreement.id}')`}">${agreement.billingModel==="monthly"?"مراجعة الحصص":"تصحيح الحصص"}</button>
+      ${canStartNew?`<button type="button" onclick="startNewPackageCycle('${agreement.id}')">بدء رصيد جديد</button>`:""}
+      <button type="button" onclick="openFinanceAgreement('${agreement.id}')">تعديل الاتفاق</button>
+      <button type="button" class="warn" onclick="archiveFinanceAgreement('${agreement.id}')">أرشفة الاتفاق</button>
+    </div></details>
   </div>`:`<div class="agreement-actions"><button type="button" class="main" onclick="reactivateFinanceAgreement('${agreement.id}')">إعادة التفعيل</button><button type="button" onclick="openFinanceAgreement('${agreement.id}')">عرض وتعديل</button></div>`;
   return `<article class="agreement-card${agreement.active?"":" archived"}" style="--source-color:${color}">
     <div class="agreement-top">
-      <div><div class="agreement-name">${esc(agreement.name||"اتفاق بدون اسم")}</div><div class="agreement-sub">${esc(partyTypeLabel(agreement.partyType))} · ${linked.length} حصة مرتبطة</div></div>
+      <div><div class="agreement-heading"><div class="agreement-name">${esc(agreement.name||"اتفاق بدون اسم")}</div><span class="agreement-state ${state.status}">${esc(agreementStateLabel(state.status,agreement.direction))}</span></div><div class="agreement-sub">${esc(partyTypeLabel(agreement.partyType))} · ${linked.length?"مرتبط تلقائيًا بالجدول":"غير مرتبط بجدول"}</div></div>
       <div class="agreement-amount">${esc(amountText)}</div>
     </div>
     <div class="agreement-tags">
@@ -2807,15 +2973,25 @@ function agreementCardMarkup(agreement){
       <span class="agreement-tag">${esc(paymentMethodLabel(agreement.paymentMethod))}</span>
       ${agreement.active?"":'<span class="agreement-tag">مؤرشف</span>'}
     </div>
-    ${progress}${actions}
+    ${progress}<div class="agreement-status-note">${agreementStatusNote(agreement,state)}</div>${actions}
   </article>`;
 }
 function renderFinanceAgreements(){
   const box=document.getElementById("financeAgreements"),active=finance.agreements.filter(item=>item.active),archived=finance.agreements.filter(item=>!item.active);
   if(!box)return;
-  document.getElementById("financeAgreementCount").textContent=`${active.length} نشط${archived.length?` · ${archived.length} مؤرشف`:""}`;
-  const sorted=[...active.sort((a,b)=>a.name.localeCompare(b.name,"ar")),...archived.sort((a,b)=>a.name.localeCompare(b.name,"ar"))];
-  box.innerHTML=sorted.length?sorted.map(agreementCardMarkup).join(""):'<div class="finance-empty"><strong>لا توجد اتفاقات مالية</strong>أنشئ الاتفاق من داخل الحصة نفسها، أو أضف اتفاقًا مستقلًا غير مرتبط بحصة.</div>';
+  document.getElementById("financeAgreementCount").textContent=`${active.length} حسابات جارية${archived.length?` · ${archived.length} مؤرشفة`:""}`;
+  const entries=finance.agreements.map(agreement=>({agreement,state:agreementFinancialState(agreement)}));
+  const groups=[
+    {key:"due",title:"مستحق الآن"},
+    {key:"soon",title:"قريب الاستحقاق"},
+    {key:"ongoing",title:"جاري وغير مستحق"},
+    {key:"paid",title:"تمت تسويته"},
+    {key:"archived",title:"الاتفاقات المؤرشفة"}
+  ].map(group=>({...group,items:entries.filter(item=>item.state.status===group.key).sort((a,b)=>a.agreement.name.localeCompare(b.agreement.name,"ar"))})).filter(group=>group.items.length);
+  box.innerHTML=groups.length?groups.map(group=>`<section class="finance-group ${group.key}" aria-labelledby="finance-group-${group.key}">
+    <header class="finance-group-head"><h4 class="finance-group-title" id="finance-group-${group.key}">${group.title}</h4><span class="finance-group-count">${group.items.length}</span></header>
+    <div class="finance-group-list">${group.items.map(item=>agreementCardMarkup(item.agreement,item.state)).join("")}</div>
+  </section>`).join(""):'<div class="finance-empty"><strong>لا توجد اتفاقات مالية</strong>أضف الحساب المالي من داخل الحصة؛ وسيظهر هنا ويتحدث تلقائيًا.</div>';
 }
 function renderFinancePayments(){
   const box=document.getElementById("financePayments");
@@ -2839,7 +3015,7 @@ function renderFinance(){
   if(!month)return;
   if(!validMonthKey(selectedFinanceMonth))selectedFinanceMonth=currentDateKey().slice(0,7);
   month.value=selectedFinanceMonth;
-  renderFinanceSummary();renderFinanceAgreements();renderFinancePayments();
+  renderFinanceSummary();renderFinanceAgreements();renderFinanceMonthReport();renderFinancePayments();
 }
 
 function cloneFinanceState(){return JSON.parse(JSON.stringify(finance))}
@@ -2949,12 +3125,13 @@ function updateFinancePaymentFields(resetAmount=false){
   const target=document.getElementById("financePaymentTarget"),hint=document.getElementById("financePaymentHint"),method=document.getElementById("financePaymentMethodValue");
   let suggested=0;
   if(agreement.billingModel==="monthly"){
-    const enteredPeriod=document.getElementById("financePaymentMonth")?.value,period=validMonthKey(enteredPeriod)?enteredPeriod:selectedFinanceMonth;
+    const enteredPeriod=document.getElementById("financePaymentMonth")?.value,oldestDue=agreementDueTargets(agreement).find(item=>item.targetType==="month"),period=validMonthKey(enteredPeriod)?enteredPeriod:(oldestDue?.targetKey||selectedFinanceMonth);
     const expected=monthSessionCount(agreement,period)*agreement.amount,paid=targetPaid(agreement.id,"month",period);suggested=Math.max(0,expected-paid);
     target.innerHTML=`<label for="financePaymentMonth">الشهر الذي تخصه الدفعة</label><input id="financePaymentMonth" type="month" value="${period}" onchange="updateFinancePaymentFields(true)">`;
     hint.textContent=`${monthSessionCount(agreement,period)} حصة × ${formatMoney(agreement.amount,agreement.currency)}؛ المتبقي حاليًا ${formatMoney(suggested,agreement.currency)}.`;
   }else{
-    const cycles=agreementCycles(agreement.id),suggestedCycle=cycles.find(cycle=>Math.max(0,cycle.amount-targetPaid(agreement.id,"cycle",cycle.id))>0)||cycles[0];
+    const cycles=agreementCycles(agreement.id).filter(cycle=>!(agreement.paymentTiming==="arrears"&&cycle.endDate&&cycleSessionCount(agreement,cycle)<cycle.targetSessions));
+    const dueCycle=agreementDueTargets(agreement).find(item=>item.targetType==="cycle")?.cycle,suggestedCycle=dueCycle||cycles.find(cycle=>!cycle.endDate&&Math.max(0,cycle.amount-targetPaid(agreement.id,"cycle",cycle.id))>0)||cycles.find(cycle=>Math.max(0,cycle.amount-targetPaid(agreement.id,"cycle",cycle.id))>0)||cycles[0];
     target.innerHTML=`<label for="financePaymentCycle">رصيد الحصص الذي تخصه الدفعة</label><select id="financePaymentCycle" onchange="updateFinancePaymentCycleAmount()">${cycles.map(cycle=>`<option value="${cycle.id}" ${cycle.id===suggestedCycle?.id?"selected":""}>بدأ ${cycle.startDate}${cycle.endDate?` · انتهى ${cycle.endDate}`:" · جارٍ"}</option>`).join("")}</select>`;
     if(suggestedCycle)suggested=Math.max(0,suggestedCycle.amount-targetPaid(agreement.id,"cycle",suggestedCycle.id));
     hint.textContent=`قيمة الرصيد ${formatMoney(suggestedCycle?.amount||agreement.amount,agreement.currency)}؛ المتبقي حاليًا ${formatMoney(suggested,agreement.currency)}.`;
@@ -3018,6 +3195,7 @@ async function clearPackageCount(agreementId,cycleId){
 function startNewPackageCycle(agreementId){
   const agreement=finance.agreements.find(item=>item.id===agreementId&&item.billingModel==="package");if(!agreement)return;
   const current=openAgreementCycle(agreementId),count=current?cycleSessionCount(agreement,current):0;
+  if(current&&count<current.targetSessions){alert(`الرصيد الجاري لم يكتمل بعد: ${count} من ${current.targetSessions} حصة. صحّح عدد الحصص أولًا إذا كان العداد غير دقيق.`);return}
   openToolDialog("بدء رصيد حصص جديد",agreement.name,`<div class="finance-form"><div class="finance-form-note">سيُغلق الرصيد الجاري عند ${count} حصة، وسيظل أي مبلغ متبقٍّ ظاهرًا في سجله. اختر تاريخ أول يوم يدخل في الرصيد الجديد.</div><div class="finance-form-grid"><div class="field"><label for="financeNewCycleDate">بداية الرصيد الجديد</label><input id="financeNewCycleDate" type="date" value="${addDaysToDateKey(currentDateKey(),1)}"></div><div class="field"><label for="financeNewCycleTarget">عدد الحصص</label><input id="financeNewCycleTarget" type="number" min="1" max="500" step="1" value="${agreement.packageSize}"></div><div class="field full"><label for="financeNewCycleAmount">قيمة الرصيد (${agreement.currency})</label><input id="financeNewCycleAmount" type="number" min="0.01" max="1000000000" step="0.01" value="${agreement.amount}"></div></div><div class="finance-dialog-actions"><button type="button" class="save" onclick="saveNewPackageCycle('${agreement.id}')">بدء الرصيد</button><button type="button" class="cancel" onclick="closeToolDialog()">إلغاء</button></div></div>`);
 }
 async function saveNewPackageCycle(agreementId){

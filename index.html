@@ -346,9 +346,6 @@ body.auth-pending .app{visibility:hidden}
 .week-grid.full-day.density-comfortable .week-time-label,.week-grid.full-day.density-comfortable .week-slot{min-height:108px}.week-grid.full-day.density-comfortable .quick-add-slot{min-height:88px}
 .week-slot{position:relative;display:flex;flex-direction:column;gap:7px;min-height:108px;padding:8px;background:#FBFCFD;transition:background .14s ease,box-shadow .14s ease}
 .week-slot.drag-over{background:#EAF5F1;box-shadow:inset 0 0 0 2px #6AA493}
-.week-current-time{position:absolute;left:0;right:0;z-index:6;height:0;border-top:2px solid #C65151;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(198,81,81,.15))}
-.week-current-time::before{content:"";position:absolute;right:73px;top:-5px;width:8px;height:8px;border-radius:50%;background:#C65151;box-shadow:0 0 0 3px rgba(198,81,81,.14)}
-.week-current-time span{position:absolute;left:8px;top:-12px;padding:2px 7px;border-radius:999px;background:#C65151;color:#fff;font-size:8px;font-weight:800;direction:rtl;white-space:nowrap}
 .week-card.dragging{opacity:.48;transform:scale(.985);box-shadow:none}
 .week-card-tools{display:flex;align-items:center;gap:4px}
 .week-move-btn{cursor:grab}.week-move-btn:active{cursor:grabbing}
@@ -588,7 +585,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .week-grid.density-comfortable .week-time-label,.week-grid.density-comfortable .week-slot{min-height:126px}.week-grid.density-comfortable .quick-add-slot{min-height:106px}
   .week-grid.full-day.density-compact .week-time-label,.week-grid.full-day.density-compact .week-slot{min-height:58px}.week-grid.full-day.density-compact .quick-add-slot{min-height:42px}
   .week-grid.full-day.density-comfortable .week-time-label,.week-grid.full-day.density-comfortable .week-slot{min-height:102px}.week-grid.full-day.density-comfortable .quick-add-slot{min-height:82px}
-  .week-current-time::before{right:61px}.week-current-time span{left:5px}
   .quick-add-grid,.week-move-grid,.move-scope{grid-template-columns:1fr}
   .week-gap-control{min-height:31px}.week-gap-control button{height:25px}
   .week-card{min-height:88px;padding:9px}.week-name{font-size:12px}
@@ -3009,29 +3005,6 @@ function renderWeek(){
       if(candidate&&(!nextTime||mins(candidate)<mins(nextTime)))appendWeekGapControl(grid,candidate);
     }
   });
-  requestAnimationFrame(updateCurrentTimeIndicator);
-}
-
-function updateCurrentTimeIndicator(){
-  const grid=document.getElementById("weekGrid");if(!grid)return;
-  grid.querySelector(".week-current-time")?.remove();
-  if(currentView!=="week"||selectedWeekOffset!==0||!grid.children.length)return;
-  const cells=[...grid.querySelectorAll(".week-time-label[data-week-time]")].sort((a,b)=>mins(a.dataset.weekTime)-mins(b.dataset.weekTime));
-  if(!cells.length)return;
-  const now=currentTimeKey(),nowMinutes=mins(now),firstMinutes=mins(cells[0].dataset.weekTime),lastMinutes=mins(cells.at(-1).dataset.weekTime);
-  if(nowMinutes<firstMinutes-60||nowMinutes>lastMinutes+60)return;
-  let top=null;
-  for(let i=0;i<cells.length;i++){
-    const cell=cells[i],start=mins(cell.dataset.weekTime),next=cells[i+1],nextMinutes=next?mins(next.dataset.weekTime):start+60;
-    if(nowMinutes>=start&&nowMinutes<=nextMinutes){
-      const startTop=cell.offsetTop,nextTop=next?next.offsetTop:cell.offsetTop+cell.offsetHeight,ratio=Math.max(0,Math.min(1,(nowMinutes-start)/Math.max(1,nextMinutes-start)));
-      top=startTop+(nextTop-startTop)*ratio;break;
-    }
-  }
-  if(top===null&&nowMinutes<firstMinutes)top=Math.max(cells[0].offsetTop-cells[0].offsetHeight*(firstMinutes-nowMinutes)/60,58);
-  if(top===null&&nowMinutes>lastMinutes)top=cells.at(-1).offsetTop+cells.at(-1).offsetHeight*Math.min(1,(nowMinutes-lastMinutes)/60);
-  if(top===null)return;
-  const line=document.createElement("div");line.className="week-current-time";line.style.top=`${Math.round(top)}px`;line.innerHTML=`<span>الآن · ${esc(fmt(now))}</span>`;grid.appendChild(line);
 }
 
 function financeSummaryData(period){
@@ -3885,7 +3858,6 @@ async function initApp(){
   refreshInstallAction();
   registerAppWorker();
   render();
-  setInterval(()=>{if(currentView==="week")updateCurrentTimeIndicator()},30000);
   if(!cloud){
     showAuth();
     setAuthMessage("تعذّر تحميل خدمة الحساب. تحقق من اتصال الإنترنت ثم حدّث الصفحة.",true);

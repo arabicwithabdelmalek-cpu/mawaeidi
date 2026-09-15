@@ -1,0 +1,292 @@
+name: Patch week time view
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-week-time-view.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch schedule week view
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          def replace_once(old, new, label):
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly one match, found {count}')
+              text = text.replace(old, new, 1)
+
+          replace_once(
+          '''const NOTIFICATION_LEAD_KEY="mawaeidi-notification-lead-v1";
+          const NOTIFICATION_LEADS_KEY="mawaeidi-notification-leads-v2";
+          const SCHEDULE_TIMEZONE="Africa/Cairo";''',
+          '''const NOTIFICATION_LEAD_KEY="mawaeidi-notification-lead-v1";
+          const NOTIFICATION_LEADS_KEY="mawaeidi-notification-leads-v2";
+          const WEEK_TIME_MODE_KEY="mawaeidi-week-time-mode-v1";
+          const SCHEDULE_TIMEZONE="Africa/Cairo";''',
+          'week mode storage key')
+
+          replace_once(
+          '''let currentFilter="all";
+          let currentView="today";
+          let selectedWeekOffset=0;
+          let currentSection="schedule";''',
+          '''let currentFilter="all";
+          let currentView="today";
+          let selectedWeekOffset=0;
+          let weekTimeMode=savedWeekTimeMode();
+          let expandedWeekTimes=new Set();
+          let currentSection="schedule";''',
+          'week mode state')
+
+          replace_once(
+          '''.week-navigation .week-current{border:1px solid #B9CAD5;background:#fff;color:var(--primary)}
+          .week-legend{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px 18px;padding:11px 16px;border-bottom:1px solid var(--line);background:#F5F8FA}''',
+          '''.week-navigation .week-current{border:1px solid #B9CAD5;background:#fff;color:var(--primary)}
+          .week-time-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:#fff}
+          .week-time-toolbar-copy{display:grid;gap:2px}.week-time-toolbar-copy strong{color:var(--ink);font-size:11px}.week-time-toolbar-copy span{color:var(--muted);font-size:9px;line-height:1.55}
+          .week-time-switch{display:flex;align-items:center;gap:4px;padding:3px;border:1px solid var(--line);border-radius:8px;background:#F4F7F9}
+          .week-time-switch button{min-height:32px;padding:6px 11px;border:0;border-radius:6px;background:transparent;color:#667985;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer}
+          .week-time-switch button:hover,.week-time-switch button:focus-visible{background:#fff;color:var(--primary);outline:none}
+          .week-time-switch button.active{background:var(--primary);color:#fff;box-shadow:0 3px 9px rgba(35,75,110,.14)}
+          .week-legend{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px 18px;padding:11px 16px;border-bottom:1px solid var(--line);background:#F5F8FA}''',
+          'week time toolbar css')
+
+          replace_once(
+          '''.week-time-label{
+            position:sticky;right:0;z-index:2;display:flex;align-items:flex-start;justify-content:center;min-height:108px;padding:13px 6px;
+            background:#F1F5F7;color:var(--primary);font-size:12px;font-weight:800;white-space:nowrap
+          }
+          .week-slot{display:flex;flex-direction:column;gap:7px;min-height:108px;padding:8px;background:#FBFCFD}''',
+          '''.week-time-label{
+            position:sticky;right:0;z-index:2;display:flex;align-items:flex-start;justify-content:center;min-height:108px;padding:13px 6px;
+            background:#F1F5F7;color:var(--primary);font-size:12px;font-weight:800;white-space:nowrap
+          }
+          .week-gap-control{grid-column:1/-1;display:grid;place-items:center;min-height:29px;border-bottom:1px solid var(--line);background:#F7FAFB}
+          .week-gap-control button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:84px;height:23px;padding:2px 10px;border:1px dashed #B8C8D2;border-radius:999px;background:#fff;color:#718591;font-family:var(--font);font-size:9px;font-weight:800;cursor:pointer;transition:border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+          .week-gap-control button b{color:var(--primary);font-size:14px;font-weight:600;line-height:1}.week-gap-control button small{font-size:9px;font-weight:800;direction:ltr}
+          .week-gap-control button:hover,.week-gap-control button:focus-visible{border-color:#799AB0;color:var(--primary);outline:none;box-shadow:0 3px 10px rgba(17,42,64,.08);transform:translateY(-1px)}
+          .week-grid.full-day .week-time-label,.week-grid.full-day .week-slot{min-height:82px}
+          .week-grid.full-day .quick-add-slot{min-height:64px}
+          .week-slot{display:flex;flex-direction:column;gap:7px;min-height:108px;padding:8px;background:#FBFCFD}''',
+          'week gap css')
+
+          replace_once(
+          '''  .week-navigation{align-self:stretch;justify-content:space-between}.week-navigation button{flex:1}
+            .week-legend{align-items:flex-start;padding:10px 11px}.source-legend{width:100%}
+            .week-table-wrap{padding:10px}.week-grid{grid-template-columns:66px repeat(7,minmax(145px,1fr));min-width:1080px}
+            .week-time-label,.week-slot{min-height:102px}.week-time-label{padding-inline:4px}.week-slot{padding:6px}
+            .week-card{min-height:88px;padding:9px}.week-name{font-size:12px}
+            .quick-add-slot{min-height:88px;opacity:.68}''',
+          '''  .week-navigation{align-self:stretch;justify-content:space-between}.week-navigation button{flex:1}
+            .week-time-toolbar{align-items:stretch;flex-direction:column;padding:10px 11px}.week-time-switch{width:100%}.week-time-switch button{flex:1}
+            .week-legend{align-items:flex-start;padding:10px 11px}.source-legend{width:100%}
+            .week-table-wrap{padding:10px}.week-grid{grid-template-columns:66px repeat(7,minmax(145px,1fr));min-width:1080px}
+            .week-time-label,.week-slot{min-height:102px}.week-time-label{padding-inline:4px}.week-slot{padding:6px}
+            .week-grid.full-day .week-time-label,.week-grid.full-day .week-slot{min-height:76px}.week-grid.full-day .quick-add-slot{min-height:60px}
+            .week-gap-control{min-height:31px}.week-gap-control button{height:25px}
+            .week-card{min-height:88px;padding:9px}.week-name{font-size:12px}
+            .quick-add-slot{min-height:88px;opacity:.68}''',
+          'mobile week time css')
+
+          replace_once(
+          '''      </div>
+                <div class="week-legend" aria-label="دليل ألوان الجدول">''',
+          '''      </div>
+                <div class="week-time-toolbar" aria-label="طريقة عرض أوقات الأسبوع">
+                  <div class="week-time-toolbar-copy">
+                    <strong>عرض الأوقات</strong>
+                    <span id="weekTimeModeHint">اعرض المواعيد الموجودة فقط، وافتح ساعة فارغة عند الحاجة.</span>
+                  </div>
+                  <div class="week-time-switch" role="group" aria-label="طريقة عرض ساعات الجدول">
+                    <button type="button" id="weekCompactTimeMode" class="active" aria-pressed="true" onclick="setWeekTimeMode('compact')">المواعيد فقط</button>
+                    <button type="button" id="weekFullTimeMode" aria-pressed="false" onclick="setWeekTimeMode('full')">24 ساعة</button>
+                  </div>
+                </div>
+                <div class="week-legend" aria-label="دليل ألوان الجدول">''',
+          'week time toolbar markup')
+
+          replace_once(
+          '''function getWeekLayout(list=filtered()){
+            const occurrences=currentWeekOccurrences(list);
+            const times=[...new Set(occurrences.map(o=>o.time))].sort((a,b)=>mins(a)-mins(b));
+            const slots=new Map(times.flatMap(time=>days.map(day=>[`${time}|${day}`,[]])));
+            occurrences.forEach(item=>slots.get(`${item.time}|${item.day}`)?.push(item));
+            return {occurrences,times,slots};
+          }
+          function changeScheduleWeek(delta){
+            const next=selectedWeekOffset+Number(delta||0);
+            selectedWeekOffset=Math.max(-260,Math.min(260,next));
+            renderWeek();
+          }
+          function resetScheduleWeek(){selectedWeekOffset=0;renderWeek()}''',
+          '''function savedWeekTimeMode(){
+            try{return localStorage.getItem(WEEK_TIME_MODE_KEY)==="full"?"full":"compact"}catch{return "compact"}
+          }
+          function rememberWeekTimeMode(mode){
+            try{localStorage.setItem(WEEK_TIME_MODE_KEY,mode)}catch{}
+          }
+          function shiftedWeekTime(time,deltaMinutes){
+            const base=mins(time),total=base+Number(deltaMinutes||0);
+            if(!Number.isFinite(base)||total<0||total>=1440)return null;
+            return `${String(Math.floor(total/60)).padStart(2,"0")}:${String(total%60).padStart(2,"0")}`;
+          }
+          function fullDayWeekTimes(){return Array.from({length:24},(_,hour)=>`${String(hour).padStart(2,"0")}:00`)}
+          function getWeekLayout(list=filtered()){
+            const occurrences=currentWeekOccurrences(list),occurrenceTimes=[...new Set(occurrences.map(o=>o.time))];
+            let times=occurrenceTimes;
+            if(weekTimeMode==="full")times=[...new Set([...fullDayWeekTimes(),...occurrenceTimes])];
+            else if(expandedWeekTimes.size)times=[...new Set([...occurrenceTimes,...expandedWeekTimes])];
+            times.sort((a,b)=>mins(a)-mins(b));
+            const slots=new Map(times.flatMap(time=>days.map(day=>[`${time}|${day}`,[]])));
+            occurrences.forEach(item=>slots.get(`${item.time}|${item.day}`)?.push(item));
+            return {occurrences,times,slots};
+          }
+          function renderWeekTimeModeChrome(){
+            const compact=weekTimeMode!=="full",compactButton=document.getElementById("weekCompactTimeMode"),fullButton=document.getElementById("weekFullTimeMode"),hint=document.getElementById("weekTimeModeHint");
+            if(compactButton){compactButton.classList.toggle("active",compact);compactButton.setAttribute("aria-pressed",String(compact))}
+            if(fullButton){fullButton.classList.toggle("active",!compact);fullButton.setAttribute("aria-pressed",String(!compact))}
+            if(hint)hint.textContent=compact?"المواعيد الموجودة فقط؛ استخدم علامة + بين الصفوف لإظهار ساعة فارغة.":"كل ساعات اليوم من 00:00 إلى 23:00، مع إظهار أي مواعيد إضافية مثل أنصاف الساعات.";
+          }
+          function setWeekTimeMode(mode){
+            weekTimeMode=mode==="full"?"full":"compact";
+            expandedWeekTimes.clear();rememberWeekTimeMode(weekTimeMode);renderWeek();
+          }
+          function revealWeekTime(time){
+            if(weekTimeMode!=="compact"||!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time))return;
+            expandedWeekTimes.add(time);renderWeek();
+            requestAnimationFrame(()=>document.querySelector(`[data-week-time="${time}"]`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));
+          }
+          function changeScheduleWeek(delta){
+            const next=selectedWeekOffset+Number(delta||0);
+            selectedWeekOffset=Math.max(-260,Math.min(260,next));
+            expandedWeekTimes.clear();renderWeek();
+          }
+          function resetScheduleWeek(){selectedWeekOffset=0;expandedWeekTimes.clear();renderWeek()}''',
+          'week layout and mode functions')
+
+          replace_once(
+          '''function setFilter(f,btn){
+            currentFilter=f;
+            document.querySelectorAll(".filter").forEach(b=>{b.classList.remove("active");b.setAttribute("aria-pressed","false")});
+            btn.classList.add("active");
+            btn.setAttribute("aria-pressed","true");
+            render();
+          }''',
+          '''function setFilter(f,btn){
+            currentFilter=f;expandedWeekTimes.clear();
+            document.querySelectorAll(".filter").forEach(b=>{b.classList.remove("active");b.setAttribute("aria-pressed","false")});
+            btn.classList.add("active");
+            btn.setAttribute("aria-pressed","true");
+            render();
+          }''',
+          'reset expanded times on filter')
+
+          replace_once(
+          '''function renderWeek(){
+            const list=filtered(),grid=document.getElementById("weekGrid"),legend=document.getElementById("sourceLegend"),layout=getWeekLayout(list),occ=layout.occurrences,tn=todayName();
+            const rangeLabel=document.getElementById("weekRangeLabel"),isCurrentWeek=selectedWeekOffset===0;
+            if(rangeLabel)rangeLabel.textContent=`${selectedWeekRangeLabel()}${isCurrentWeek?" · الأسبوع الحالي":""}`;
+            grid.innerHTML="";''',
+          '''function appendWeekGapControl(grid,time){
+            if(!time)return;
+            const gap=document.createElement("div"),button=document.createElement("button");
+            gap.className="week-gap-control";gap.setAttribute("aria-hidden","false");
+            button.type="button";button.setAttribute("aria-label",`إظهار صف الساعة ${fmt(time)}`);
+            button.innerHTML=`<b aria-hidden="true">＋</b><small>${esc(fmt(time))}</small>`;
+            button.onclick=()=>revealWeekTime(time);gap.appendChild(button);grid.appendChild(gap);
+          }
+          function renderWeek(){
+            const list=filtered(),grid=document.getElementById("weekGrid"),legend=document.getElementById("sourceLegend"),layout=getWeekLayout(list),occ=layout.occurrences,tn=todayName();
+            const rangeLabel=document.getElementById("weekRangeLabel"),isCurrentWeek=selectedWeekOffset===0;
+            if(rangeLabel)rangeLabel.textContent=`${selectedWeekRangeLabel()}${isCurrentWeek?" · الأسبوع الحالي":""}`;
+            renderWeekTimeModeChrome();
+            grid.innerHTML="";grid.classList.toggle("full-day",weekTimeMode==="full");''',
+          'render week mode chrome')
+
+          replace_once(
+          '''  grid.appendChild(head);
+
+            times.forEach(time=>{
+              const row=document.createElement("div");
+              row.className="week-grid-row";row.setAttribute("role","row");''',
+          '''  grid.appendChild(head);
+
+            if(weekTimeMode==="compact"&&times.length){
+              const beforeFirst=shiftedWeekTime(times[0],-60);
+              if(beforeFirst)appendWeekGapControl(grid,beforeFirst);
+            }
+
+            times.forEach((time,timeIndex)=>{
+              const row=document.createElement("div");
+              row.className="week-grid-row";row.setAttribute("role","row");row.dataset.weekTime=time;''',
+          'render week gap before rows')
+
+          replace_once(
+          '''    grid.appendChild(row);
+            });
+          }
+
+          function financeSummaryData(period){''',
+          '''    grid.appendChild(row);
+              if(weekTimeMode==="compact"){
+                const candidate=shiftedWeekTime(time,60),nextTime=times[timeIndex+1]||null;
+                if(candidate&&(!nextTime||mins(candidate)<mins(nextTime)))appendWeekGapControl(grid,candidate);
+              }
+            });
+          }
+
+          function financeSummaryData(period){''',
+          'render week gap after rows')
+
+          path.write_text(text, encoding='utf-8')
+
+          sw = Path('sw.js')
+          sw_text = sw.read_text(encoding='utf-8')
+          if 'const CACHE_NAME="mawaeidi-shell-v8";' not in sw_text:
+              raise SystemExit('service worker cache version v8 not found')
+          sw.write_text(sw_text.replace('const CACHE_NAME="mawaeidi-shell-v8";','const CACHE_NAME="mawaeidi-shell-v9";',1), encoding='utf-8')
+
+          # Sanity checks for the intended UI behavior.
+          updated = path.read_text(encoding='utf-8')
+          required = [
+              'id="weekCompactTimeMode"', 'id="weekFullTimeMode"',
+              'function revealWeekTime(time)', 'function fullDayWeekTimes()',
+              'className="week-gap-control"', 'grid.classList.toggle("full-day"'
+          ]
+          for marker in required:
+              if marker not in updated:
+                  raise SystemExit(f'missing marker after patch: {marker}')
+
+          # Validate the one inline application script with Node syntax checking.
+          matches = re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>', updated, flags=re.S|re.I)
+          if not matches:
+              raise SystemExit('inline script not found')
+          Path('/tmp/mawaeidi-inline.js').write_text('\n'.join(matches), encoding='utf-8')
+          PY
+          node --check /tmp/mawaeidi-inline.js
+      - name: Commit update
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/patch-week-time-view.yml
+          git add index.html sw.js
+          git commit -m "Add flexible week time views"
+          git push origin HEAD:main

@@ -20,37 +20,30 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           path=Path('index.html')
           text=path.read_text(encoding='utf-8')
 
-          css='''.week-current-time{position:absolute;left:0;right:0;z-index:6;height:0;border-top:2px solid #C65151;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(198,81,81,.15))}\n.week-current-time::before{content:"";position:absolute;right:73px;top:-5px;width:8px;height:8px;border-radius:50%;background:#C65151;box-shadow:0 0 0 3px rgba(198,81,81,.14)}\n.week-current-time span{position:absolute;left:8px;top:-12px;padding:2px 7px;border-radius:999px;background:#C65151;color:#fff;font-size:8px;font-weight:800;direction:rtl;white-space:nowrap}\n'''
-          if css not in text:
-              raise SystemExit('current time css block not found')
-          text=text.replace(css,'',1)
-
-          call='''  requestAnimationFrame(updateCurrentTimeIndicator);\n}\n\nfunction financeSummaryData(period){'''
-          if call not in text:
-              raise SystemExit('renderWeek indicator call not found')
-          text=text.replace(call,'''\n}\n\nfunction financeSummaryData(period){''',1)
+          text=re.sub(r'\.week-current-time\{[^\n]*\}\n\.week-current-time::before\{[^\n]*\}\n\.week-current-time span\{[^\n]*\}\n?','',text,count=1)
+          text=text.replace('  requestAnimationFrame(updateCurrentTimeIndicator);\n','')
+          text=text.replace('  setInterval(()=>{if(currentView==="week")updateCurrentTimeIndicator()},30000);\n','')
 
           start=text.find('function updateCurrentTimeIndicator(){')
-          end=text.find('\nfunction financeSummaryData(period){', start)
-          if start < 0 or end < 0:
-              raise SystemExit('current time function not found')
-          text=text[:start]+text[end+1:]
+          if start >= 0:
+              end=text.find('\nfunction financeSummaryData(period){', start)
+              if end < 0:
+                  raise SystemExit('financeSummaryData boundary not found')
+              text=text[:start]+text[end+1:]
 
-          interval='''  setInterval(()=>{if(currentView==="week")updateCurrentTimeIndicator()},30000);\n'''
-          if interval not in text:
-              raise SystemExit('current time interval not found')
-          text=text.replace(interval,'',1)
+          if 'week-current-time' in text or 'updateCurrentTimeIndicator' in text:
+              raise SystemExit('current time highlight references remain')
 
           path.write_text(text,encoding='utf-8')
 
           sw=Path('sw.js')
           sw_text=sw.read_text(encoding='utf-8')
-          if 'mawaeidi-shell-v10' in sw_text:
-              sw_text=sw_text.replace('mawaeidi-shell-v10','mawaeidi-shell-v11',1)
+          sw_text=sw_text.replace('mawaeidi-shell-v10','mawaeidi-shell-v11',1)
           sw.write_text(sw_text,encoding='utf-8')
           PY
 

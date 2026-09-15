@@ -16,6 +16,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Fix script guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/rebuild_finance_v28.py')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("if 'Finance rebuild v28 — month-first accounting' in text:","if 'function financeMonthShift(period,delta)' in text:")
+          p.write_text(s,encoding='utf-8')
+          PY
       - name: Apply finance rebuild
         run: python scripts/rebuild_finance_v28.py
       - name: Validate inline JavaScript
@@ -31,7 +40,7 @@ jobs:
       - name: Verify finance rebuild markers
         run: |
           grep -q 'finance-rebuild-v28' index.html
-          grep -q 'Finance rebuild v28 — month-first accounting' index.html
+          grep -q 'function financeMonthShift(period,delta)' index.html
           grep -q 'mawaeidi-shell-v28' sw.js
       - name: Commit finance rebuild
         run: |

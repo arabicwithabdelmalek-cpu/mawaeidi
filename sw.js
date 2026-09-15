@@ -1,4 +1,4 @@
-const CACHE_NAME="mawaeidi-shell-v15";
+const CACHE_NAME="mawaeidi-shell-v16";
 const APP_SHELL=[
   "./",
   "./index.html",

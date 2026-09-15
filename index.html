@@ -1146,6 +1146,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 @media(max-width:560px){.fin30-ready-card{align-items:stretch;flex-direction:column}.fin30-ready-money{justify-content:space-between}.fin30-ready-money button{min-width:112px}}
 </style>
 
+
+<style id="section-visibility-v31">
+/* Keep main workspaces mutually exclusive even when their component CSS sets display. */
+#scheduleWorkspace[hidden],
+#worldClockView[hidden],
+#financeView[hidden]{display:none!important}
+</style>
 </head>
 <body class="auth-pending">
 

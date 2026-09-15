@@ -521,6 +521,10 @@ body.auth-pending .app{visibility:hidden}
 .history-restore:disabled{opacity:.55;cursor:wait}
 .install-help{margin-top:9px;padding:10px;border-radius:8px;background:#EEF3F6;color:#536977;font-size:11px;line-height:1.75}
 
+.timezone-field-hint{margin-top:2px;padding:8px 9px;border-radius:7px;background:#F3F6F8;color:#667984;font-size:10px;line-height:1.65}.timezone-field-hint.warn{background:#FFF6E8;color:#94621F}.timezone-field-hint.error{background:var(--danger-bg);color:var(--danger)}
+.student-time-pill{border-color:#BFD0DB!important;background:#F1F6F9!important;color:#3F6279!important}.week-student-time{margin-top:6px;padding:5px 7px;border-radius:6px;background:rgba(255,255,255,.72);color:#48697F;font-size:9px;font-weight:800;line-height:1.45}
+.world-clock-tool{display:grid;gap:12px}.world-clock-section{padding:13px;border:1px solid var(--line);border-radius:10px;background:#fff}.world-clock-section>header{display:flex;align-items:start;justify-content:space-between;gap:10px;margin-bottom:11px}.world-clock-section h3{margin:0;color:var(--primary);font-size:15px}.world-clock-section p{margin:3px 0 0;color:var(--muted);font-size:10px;line-height:1.6}.world-zone-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.world-zone-add button,.world-convert-actions button{min-height:39px;padding:8px 12px;border:0;border-radius:8px;background:var(--primary);color:#fff;font-size:11px;font-weight:800}.world-search-hint{margin:5px 2px 9px;color:#7A8993;font-size:9px;line-height:1.55}.world-clock-cards{display:grid;gap:7px}.world-clock-card{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-inline-start:4px solid #7A9BB0;border-radius:9px;background:#F8FAFB}.world-clock-card.home{border-inline-start-color:var(--primary);background:#EEF4F7}.world-clock-card small,.world-clock-card span{display:block;color:var(--muted);font-size:9px}.world-clock-card strong{display:block;margin:2px 0;color:var(--ink);font-size:11px;line-height:1.5}.world-clock-time{padding-inline-end:22px;color:var(--primary);font-size:19px;font-weight:800;direction:ltr;white-space:nowrap}.world-remove{position:absolute;top:6px;left:6px;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:transparent;color:#85959F;font-size:17px}.world-remove:hover{background:#fff;color:var(--danger)}.world-convert-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.world-convert-actions{display:flex;gap:7px;margin-top:10px}.world-convert-actions .secondary{border:1px solid var(--line);background:#fff;color:var(--primary)}.world-convert-result{display:grid;gap:3px;margin-top:10px;padding:11px;border-inline-start:4px solid var(--primary);border-radius:8px;background:#EEF4F7}.world-convert-result small,.world-convert-result span{color:#667984;font-size:10px;line-height:1.55}.world-convert-result strong{color:var(--primary);font-size:18px;direction:ltr;text-align:right}.world-convert-result.error{border-inline-start-color:var(--danger);background:var(--danger-bg);color:var(--danger);font-size:11px}
+
 .backdrop{position:fixed;inset:0;z-index:80;opacity:0;pointer-events:none;background:rgba(10,23,34,.42);backdrop-filter:blur(3px);transition:opacity .2s ease}
 .backdrop.show{opacity:1;pointer-events:auto}
 .drawer{
@@ -589,6 +593,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .week-gap-control{min-height:31px}.week-gap-control button{height:25px}
   .week-card{min-height:88px;padding:9px}.week-name{font-size:12px}
   .quick-add-slot{min-height:88px;opacity:.68}
+  .world-convert-grid{grid-template-columns:1fr}.world-clock-time{font-size:17px}.world-zone-add{grid-template-columns:1fr}.world-zone-add button{width:100%}
   .notification-leads,.session-status-options{grid-template-columns:repeat(2,1fr)}
   .session-reschedule-fields{grid-template-columns:1fr}
   .finance-toolbar{align-items:stretch;flex-direction:column;padding:15px}.finance-period{min-width:0}.finance-summary{grid-template-columns:1fr}.finance-form-grid,.finance-lesson-list{grid-template-columns:1fr}.finance-calculation{grid-template-columns:1fr}.agreement-top{gap:8px}.agreement-more-menu{grid-template-columns:1fr}
@@ -662,8 +667,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
           <span class="sync-text" id="syncStatusText">جارٍ التحميل</span>
         </button>
         <details class="data-menu" id="dataMenu">
-          <summary aria-label="فتح أدوات البيانات">البيانات</summary>
+          <summary aria-label="فتح أدوات مواعيدي">الأدوات</summary>
           <div class="data-popover">
+            <button type="button" class="data-action" onclick="openWorldClock()">
+              <strong>الساعة العالمية</strong>
+              <small>اعرف وقت الطالب وحوّل المواعيد بين الدول</small>
+            </button>
+            <div class="data-separator" aria-hidden="true"></div>
             <button type="button" class="data-action" id="installAction" onclick="installApp()" hidden>
               <strong>تثبيت مواعيدي على الهاتف</strong>
               <small>أيقونة على الشاشة وفتح كتطبيق كامل</small>
@@ -892,6 +902,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
           <label for="groupStudents">طلاب المجموعة</label>
           <textarea id="groupStudents" placeholder="كل اسم في سطر أو افصل بينهم بفاصلة"></textarea>
         </div>
+        <div class="field full lesson-timezone-field">
+          <label for="studentTimeZoneInput">بلد الطالب / المنطقة الزمنية</label>
+          <input id="studentTimeZoneInput" list="lessonTimeZoneOptions" placeholder="مثلاً: أذربيجان أو باكو" autocomplete="off" oninput="lessonTimeZoneInputChanged()" onchange="updateStudentTimeZoneHint()">
+          <datalist id="lessonTimeZoneOptions"></datalist>
+          <div class="timezone-field-hint" id="studentTimeZoneHint">اختياري — سيظهر وقت الطالب بجانب موعد مصر، ويتغير تلقائيًا مع التوقيت الصيفي.</div>
+        </div>
       </div>
     </section>
 
@@ -1093,11 +1109,13 @@ const NOTIFICATION_LEAD_KEY="mawaeidi-notification-lead-v1";
 const NOTIFICATION_LEADS_KEY="mawaeidi-notification-leads-v2";
 const WEEK_TIME_MODE_KEY="mawaeidi-week-time-mode-v1";
 const WEEK_DENSITY_KEY="mawaeidi-week-density-v1";
+const WORLD_CLOCK_ZONES_KEY="mawaeidi-world-clock-zones-v1";
 const SCHEDULE_TIMEZONE="Africa/Cairo";
 const FINANCE_VERSION=1;
 const FINANCE_CURRENCIES=["EGP","USD","EUR","GBP","SAR","AED"];
 const FINANCE_METHODS=["vodafone_cash","instapay","bank","paypal","wise","cash","other"];
 const SESSION_RECORD_STATUSES=["default","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"];
+const TIMEZONE_COUNTRY_MAP={"Europe/Andorra":"AD","Asia/Dubai":"AE","Asia/Kabul":"AF","America/Antigua":"AG","America/Anguilla":"AI","Europe/Tirane":"AL","Asia/Yerevan":"AM","Africa/Luanda":"AO","Antarctica/McMurdo":"AQ","Antarctica/Casey":"AQ","Antarctica/Davis":"AQ","Antarctica/DumontDUrville":"AQ","Antarctica/Mawson":"AQ","Antarctica/Palmer":"AQ","Antarctica/Rothera":"AQ","Antarctica/Syowa":"AQ","Antarctica/Troll":"AQ","Antarctica/Vostok":"AQ","America/Argentina/Buenos_Aires":"AR","America/Argentina/Cordoba":"AR","America/Argentina/Salta":"AR","America/Argentina/Jujuy":"AR","America/Argentina/Tucuman":"AR","America/Argentina/Catamarca":"AR","America/Argentina/La_Rioja":"AR","America/Argentina/San_Juan":"AR","America/Argentina/Mendoza":"AR","America/Argentina/San_Luis":"AR","America/Argentina/Rio_Gallegos":"AR","America/Argentina/Ushuaia":"AR","Pacific/Pago_Pago":"AS","Europe/Vienna":"AT","Australia/Lord_Howe":"AU","Antarctica/Macquarie":"AU","Australia/Hobart":"AU","Australia/Melbourne":"AU","Australia/Sydney":"AU","Australia/Broken_Hill":"AU","Australia/Brisbane":"AU","Australia/Lindeman":"AU","Australia/Adelaide":"AU","Australia/Darwin":"AU","Australia/Perth":"AU","Australia/Eucla":"AU","America/Aruba":"AW","Europe/Mariehamn":"AX","Asia/Baku":"AZ","Europe/Sarajevo":"BA","America/Barbados":"BB","Asia/Dhaka":"BD","Europe/Brussels":"BE","Africa/Ouagadougou":"BF","Europe/Sofia":"BG","Asia/Bahrain":"BH","Africa/Bujumbura":"BI","Africa/Porto-Novo":"BJ","America/St_Barthelemy":"BL","Atlantic/Bermuda":"BM","Asia/Brunei":"BN","America/La_Paz":"BO","America/Kralendijk":"BQ","America/Noronha":"BR","America/Belem":"BR","America/Fortaleza":"BR","America/Recife":"BR","America/Araguaina":"BR","America/Maceio":"BR","America/Bahia":"BR","America/Sao_Paulo":"BR","America/Campo_Grande":"BR","America/Cuiaba":"BR","America/Santarem":"BR","America/Porto_Velho":"BR","America/Boa_Vista":"BR","America/Manaus":"BR","America/Eirunepe":"BR","America/Rio_Branco":"BR","America/Nassau":"BS","Asia/Thimphu":"BT","Africa/Gaborone":"BW","Europe/Minsk":"BY","America/Belize":"BZ","America/St_Johns":"CA","America/Halifax":"CA","America/Glace_Bay":"CA","America/Moncton":"CA","America/Goose_Bay":"CA","America/Blanc-Sablon":"CA","America/Toronto":"CA","America/Iqaluit":"CA","America/Atikokan":"CA","America/Winnipeg":"CA","America/Resolute":"CA","America/Rankin_Inlet":"CA","America/Regina":"CA","America/Swift_Current":"CA","America/Edmonton":"CA","America/Cambridge_Bay":"CA","America/Inuvik":"CA","America/Vancouver":"CA","America/Creston":"CA","America/Dawson_Creek":"CA","America/Fort_Nelson":"CA","America/Whitehorse":"CA","America/Dawson":"CA","Indian/Cocos":"CC","Africa/Kinshasa":"CD","Africa/Lubumbashi":"CD","Africa/Bangui":"CF","Africa/Brazzaville":"CG","Europe/Zurich":"CH","Africa/Abidjan":"CI","Pacific/Rarotonga":"CK","America/Santiago":"CL","America/Coyhaique":"CL","America/Punta_Arenas":"CL","Pacific/Easter":"CL","Africa/Douala":"CM","Asia/Shanghai":"CN","Asia/Urumqi":"CN","America/Bogota":"CO","America/Costa_Rica":"CR","America/Havana":"CU","Atlantic/Cape_Verde":"CV","America/Curacao":"CW","Indian/Christmas":"CX","Asia/Nicosia":"CY","Asia/Famagusta":"CY","Europe/Prague":"CZ","Europe/Berlin":"DE","Europe/Busingen":"DE","Africa/Djibouti":"DJ","Europe/Copenhagen":"DK","America/Dominica":"DM","America/Santo_Domingo":"DO","Africa/Algiers":"DZ","America/Guayaquil":"EC","Pacific/Galapagos":"EC","Europe/Tallinn":"EE","Africa/Cairo":"EG","Africa/El_Aaiun":"EH","Africa/Asmara":"ER","Europe/Madrid":"ES","Africa/Ceuta":"ES","Atlantic/Canary":"ES","Africa/Addis_Ababa":"ET","Europe/Helsinki":"FI","Pacific/Fiji":"FJ","Atlantic/Stanley":"FK","Pacific/Chuuk":"FM","Pacific/Pohnpei":"FM","Pacific/Kosrae":"FM","Atlantic/Faroe":"FO","Europe/Paris":"FR","Africa/Libreville":"GA","Europe/London":"GB","America/Grenada":"GD","Asia/Tbilisi":"GE","America/Cayenne":"GF","Europe/Guernsey":"GG","Africa/Accra":"GH","Europe/Gibraltar":"GI","America/Nuuk":"GL","America/Danmarkshavn":"GL","America/Scoresbysund":"GL","America/Thule":"GL","Africa/Banjul":"GM","Africa/Conakry":"GN","America/Guadeloupe":"GP","Africa/Malabo":"GQ","Europe/Athens":"GR","Atlantic/South_Georgia":"GS","America/Guatemala":"GT","Pacific/Guam":"GU","Africa/Bissau":"GW","America/Guyana":"GY","Asia/Hong_Kong":"HK","America/Tegucigalpa":"HN","Europe/Zagreb":"HR","America/Port-au-Prince":"HT","Europe/Budapest":"HU","Asia/Jakarta":"ID","Asia/Pontianak":"ID","Asia/Makassar":"ID","Asia/Jayapura":"ID","Europe/Dublin":"IE","Asia/Jerusalem":"IL","Europe/Isle_of_Man":"IM","Asia/Kolkata":"IN","Indian/Chagos":"IO","Asia/Baghdad":"IQ","Asia/Tehran":"IR","Atlantic/Reykjavik":"IS","Europe/Rome":"IT","Europe/Jersey":"JE","America/Jamaica":"JM","Asia/Amman":"JO","Asia/Tokyo":"JP","Africa/Nairobi":"KE","Asia/Bishkek":"KG","Asia/Phnom_Penh":"KH","Pacific/Tarawa":"KI","Pacific/Kanton":"KI","Pacific/Kiritimati":"KI","Indian/Comoro":"KM","America/St_Kitts":"KN","Asia/Pyongyang":"KP","Asia/Seoul":"KR","Asia/Kuwait":"KW","America/Cayman":"KY","Asia/Almaty":"KZ","Asia/Qyzylorda":"KZ","Asia/Qostanay":"KZ","Asia/Aqtobe":"KZ","Asia/Aqtau":"KZ","Asia/Atyrau":"KZ","Asia/Oral":"KZ","Asia/Vientiane":"LA","Asia/Beirut":"LB","America/St_Lucia":"LC","Europe/Vaduz":"LI","Asia/Colombo":"LK","Africa/Monrovia":"LR","Africa/Maseru":"LS","Europe/Vilnius":"LT","Europe/Luxembourg":"LU","Europe/Riga":"LV","Africa/Tripoli":"LY","Africa/Casablanca":"MA","Europe/Monaco":"MC","Europe/Chisinau":"MD","Europe/Podgorica":"ME","America/Marigot":"MF","Indian/Antananarivo":"MG","Pacific/Majuro":"MH","Pacific/Kwajalein":"MH","Europe/Skopje":"MK","Africa/Bamako":"ML","Asia/Yangon":"MM","Asia/Ulaanbaatar":"MN","Asia/Hovd":"MN","Asia/Macau":"MO","Pacific/Saipan":"MP","America/Martinique":"MQ","Africa/Nouakchott":"MR","America/Montserrat":"MS","Europe/Malta":"MT","Indian/Mauritius":"MU","Indian/Maldives":"MV","Africa/Blantyre":"MW","America/Mexico_City":"MX","America/Cancun":"MX","America/Merida":"MX","America/Monterrey":"MX","America/Matamoros":"MX","America/Chihuahua":"MX","America/Ciudad_Juarez":"MX","America/Ojinaga":"MX","America/Mazatlan":"MX","America/Bahia_Banderas":"MX","America/Hermosillo":"MX","America/Tijuana":"MX","Asia/Kuala_Lumpur":"MY","Asia/Kuching":"MY","Africa/Maputo":"MZ","Africa/Windhoek":"NA","Pacific/Noumea":"NC","Africa/Niamey":"NE","Pacific/Norfolk":"NF","Africa/Lagos":"NG","America/Managua":"NI","Europe/Amsterdam":"NL","Europe/Oslo":"NO","Asia/Kathmandu":"NP","Pacific/Nauru":"NR","Pacific/Niue":"NU","Pacific/Auckland":"NZ","Pacific/Chatham":"NZ","Asia/Muscat":"OM","America/Panama":"PA","America/Lima":"PE","Pacific/Tahiti":"PF","Pacific/Marquesas":"PF","Pacific/Gambier":"PF","Pacific/Port_Moresby":"PG","Pacific/Bougainville":"PG","Asia/Manila":"PH","Asia/Karachi":"PK","Europe/Warsaw":"PL","America/Miquelon":"PM","Pacific/Pitcairn":"PN","America/Puerto_Rico":"PR","Asia/Gaza":"PS","Asia/Hebron":"PS","Europe/Lisbon":"PT","Atlantic/Madeira":"PT","Atlantic/Azores":"PT","Pacific/Palau":"PW","America/Asuncion":"PY","Asia/Qatar":"QA","Indian/Reunion":"RE","Europe/Bucharest":"RO","Europe/Belgrade":"RS","Europe/Kaliningrad":"RU","Europe/Moscow":"RU","Europe/Simferopol":"UA","Europe/Kirov":"RU","Europe/Volgograd":"RU","Europe/Astrakhan":"RU","Europe/Saratov":"RU","Europe/Ulyanovsk":"RU","Europe/Samara":"RU","Asia/Yekaterinburg":"RU","Asia/Omsk":"RU","Asia/Novosibirsk":"RU","Asia/Barnaul":"RU","Asia/Tomsk":"RU","Asia/Novokuznetsk":"RU","Asia/Krasnoyarsk":"RU","Asia/Irkutsk":"RU","Asia/Chita":"RU","Asia/Yakutsk":"RU","Asia/Khandyga":"RU","Asia/Vladivostok":"RU","Asia/Ust-Nera":"RU","Asia/Magadan":"RU","Asia/Sakhalin":"RU","Asia/Srednekolymsk":"RU","Asia/Kamchatka":"RU","Asia/Anadyr":"RU","Africa/Kigali":"RW","Asia/Riyadh":"SA","Pacific/Guadalcanal":"SB","Indian/Mahe":"SC","Africa/Khartoum":"SD","Europe/Stockholm":"SE","Asia/Singapore":"SG","Atlantic/St_Helena":"SH","Europe/Ljubljana":"SI","Arctic/Longyearbyen":"SJ","Europe/Bratislava":"SK","Africa/Freetown":"SL","Europe/San_Marino":"SM","Africa/Dakar":"SN","Africa/Mogadishu":"SO","America/Paramaribo":"SR","Africa/Juba":"SS","Africa/Sao_Tome":"ST","America/El_Salvador":"SV","America/Lower_Princes":"SX","Asia/Damascus":"SY","Africa/Mbabane":"SZ","America/Grand_Turk":"TC","Africa/Ndjamena":"TD","Indian/Kerguelen":"TF","Africa/Lome":"TG","Asia/Bangkok":"TH","Asia/Dushanbe":"TJ","Pacific/Fakaofo":"TK","Asia/Dili":"TL","Asia/Ashgabat":"TM","Africa/Tunis":"TN","Pacific/Tongatapu":"TO","Europe/Istanbul":"TR","America/Port_of_Spain":"TT","Pacific/Funafuti":"TV","Asia/Taipei":"TW","Africa/Dar_es_Salaam":"TZ","Europe/Kyiv":"UA","Africa/Kampala":"UG","Pacific/Midway":"UM","Pacific/Wake":"UM","America/New_York":"US","America/Detroit":"US","America/Kentucky/Louisville":"US","America/Kentucky/Monticello":"US","America/Indiana/Indianapolis":"US","America/Indiana/Vincennes":"US","America/Indiana/Winamac":"US","America/Indiana/Marengo":"US","America/Indiana/Petersburg":"US","America/Indiana/Vevay":"US","America/Chicago":"US","America/Indiana/Tell_City":"US","America/Indiana/Knox":"US","America/Menominee":"US","America/North_Dakota/Center":"US","America/North_Dakota/New_Salem":"US","America/North_Dakota/Beulah":"US","America/Denver":"US","America/Boise":"US","America/Phoenix":"US","America/Los_Angeles":"US","America/Anchorage":"US","America/Juneau":"US","America/Sitka":"US","America/Metlakatla":"US","America/Yakutat":"US","America/Nome":"US","America/Adak":"US","Pacific/Honolulu":"US","America/Montevideo":"UY","Asia/Samarkand":"UZ","Asia/Tashkent":"UZ","Europe/Vatican":"VA","America/St_Vincent":"VC","America/Caracas":"VE","America/Tortola":"VG","America/St_Thomas":"VI","Asia/Ho_Chi_Minh":"VN","Pacific/Efate":"VU","Pacific/Wallis":"WF","Pacific/Apia":"WS","Asia/Aden":"YE","Indian/Mayotte":"YT","Africa/Johannesburg":"ZA","Africa/Lusaka":"ZM","Africa/Harare":"ZW"};
 const cloud=window.supabase?.createClient
   ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
   :null;
@@ -1107,6 +1125,10 @@ function makeId(){
   return `lesson-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 function textValue(value){return typeof value==="string"?value:""}
+function validTimeZone(value){
+  const zone=textValue(value).trim();if(!zone)return false;
+  try{new Intl.DateTimeFormat("en",{timeZone:zone}).format(new Date());return true}catch{return false}
+}
 function normalizeNotificationLeads(value,fallback=DEFAULT_NOTIFICATION_LEADS){
   const values=Array.isArray(value)?value:[value];
   const normalized=[...new Set(values.map(Number).filter(item=>NOTIFICATION_LEAD_OPTIONS.includes(item)))].sort((a,b)=>b-a).slice(0,MAX_NOTIFICATION_LEADS);
@@ -1152,6 +1174,7 @@ function normalizeLesson(item){
     lessonSource:item.lessonSource==="center"?"center":"private",
     name:textValue(item.name),
     groupStudents:Array.isArray(item.groupStudents)?item.groupStudents.filter(x=>typeof x==="string"&&x.trim()).map(x=>x.trim()):[],
+    studentTimeZone:validTimeZone(item.studentTimeZone)?textValue(item.studentTimeZone).trim():"",
     centerName:textValue(item.centerName),
     subject:textValue(item.subject),
     duration:Number.isFinite(duration)&&duration>=15&&duration<=720?duration:60,
@@ -1352,6 +1375,8 @@ let toolReturnFocus=null;
 let notificationBusy=false;
 let historySnapshots=new Map();
 let activeSessionContext=null;
+let worldClockInterval=null;
+let timeZoneCatalogCache=null;
 
 function closeDataMenu(){document.getElementById("dataMenu")?.removeAttribute("open")}
 function isStandalone(){return window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone===true}
@@ -1412,6 +1437,7 @@ function closeToolDialog(event){
   document.body.classList.remove("drawer-open");
   activeSessionContext=null;
   activeWeekMoveContext=null;
+  if(worldClockInterval){clearInterval(worldClockInterval);worldClockInterval=null}
   if(toolReturnFocus?.focus)toolReturnFocus.focus();
   toolReturnFocus=null;
   setTimeout(flushPendingRemote,0);
@@ -1451,6 +1477,65 @@ async function installApp(){
     ?'<div class="tool-card"><h3>على iPhone أو iPad</h3><p>افتح الموقع في Safari، واضغط زر المشاركة، ثم اختر «إضافة إلى الشاشة الرئيسية» وبعدها «إضافة».</p><div class="install-help">بعد التثبيت سيفتح مواعيدي كتطبيق كامل، ومن داخله يمكنك تفعيل التنبيهات.</div></div>'
     :'<div class="tool-card"><h3>تثبيت التطبيق</h3><p>افتح قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». إن لم يظهر الخيار، حدّث الصفحة مرة واحدة ثم افتح القائمة مجددًا.</p></div>';
   openToolDialog("تثبيت مواعيدي","خطوة واحدة تضع أيقونة التطبيق على هاتفك.",help);
+}
+function savedWorldClockZones(){
+  try{
+    const raw=localStorage.getItem(WORLD_CLOCK_ZONES_KEY);if(raw===null)return [SCHEDULE_TIMEZONE,"Asia/Baku"].filter(validTimeZone);
+    const stored=JSON.parse(raw),zones=(Array.isArray(stored)?stored:[]).filter(validTimeZone);return [...new Set([SCHEDULE_TIMEZONE,...zones])].slice(0,10);
+  }catch{return [SCHEDULE_TIMEZONE,"Asia/Baku"].filter(validTimeZone)}
+}
+function rememberWorldClockZones(zones){try{localStorage.setItem(WORLD_CLOCK_ZONES_KEY,JSON.stringify([...new Set(zones.filter(validTimeZone).filter(zone=>zone!==SCHEDULE_TIMEZONE))].slice(0,9)))}catch{}}
+function renderWorldClockCards(){
+  const box=document.getElementById("worldClockCards");if(!box)return;const now=new Date(),zones=savedWorldClockZones();
+  box.innerHTML=zones.map(zone=>{
+    const entry=timeZoneEntry(zone),dateKey=dateKeyInZone(now,zone),dateText=new Date(`${dateKey}T12:00:00Z`).toLocaleDateString("ar-EG",{weekday:"long",day:"numeric",month:"short",timeZone:"UTC"});
+    return `<article class="world-clock-card${zone===SCHEDULE_TIMEZONE?" home":""}"><div><small>${zone===SCHEDULE_TIMEZONE?"التوقيت الأساسي":"الوقت الآن"}</small><strong>${esc(entry?.label||zone)}</strong><span>${esc(dateText)} · ${esc(worldOffsetText(now,zone))}</span></div><div class="world-clock-time">${esc(formattedTimeInZone(now,zone))}</div>${zone===SCHEDULE_TIMEZONE?"":`<button type="button" class="world-remove" aria-label="إزالة ${esc(entry?.label||zone)}" onclick="removeWorldClockZone('${esc(zone)}')">×</button>`}</article>`;
+  }).join("");
+}
+function addWorldClockZone(){
+  const input=document.getElementById("worldZoneSearch"),result=resolvedZoneFromInput(input);if(!input||!input.value.trim())return;
+  if(!result.entry){const hint=document.getElementById("worldZoneSearchHint");if(hint)hint.textContent=result.ambiguous?"هذه الدولة فيها أكثر من منطقة زمنية؛ اختر المدينة/المنطقة من الاقتراحات.":"لم أتعرف على المنطقة. اختر نتيجة من القائمة.";return}
+  const zones=savedWorldClockZones();if(!zones.includes(result.entry.zone))zones.push(result.entry.zone);rememberWorldClockZones(zones);input.value="";input.dataset.zone="";input.dataset.zoneLabel="";document.getElementById("worldZoneSearchHint").textContent="اكتب اسم الدولة بالعربي أو المدينة، ثم اختر النتيجة.";renderWorldClockCards();
+}
+function removeWorldClockZone(zone){rememberWorldClockZones(savedWorldClockZones().filter(item=>item!==zone));renderWorldClockCards()}
+function worldZoneInputChanged(input){if(input.value!==input.dataset.zoneLabel){input.dataset.zone="";input.dataset.zoneLabel=""}}
+function convertWorldTime(){
+  const date=document.getElementById("worldConvertDate")?.value,time=document.getElementById("worldConvertTime")?.value,fromResult=resolvedZoneFromInput(document.getElementById("worldFromZone")),toResult=resolvedZoneFromInput(document.getElementById("worldToZone")),box=document.getElementById("worldConvertResult");if(!box)return;
+  if(!validDateKey(date)||!TIME_RE.test(time)){box.className="world-convert-result error";box.textContent="اختر تاريخًا ووقتًا صحيحين.";return}
+  if(!fromResult.entry||!toResult.entry){box.className="world-convert-result error";box.textContent="اختر منطقتين زمنيتين واضحتين من الاقتراحات؛ الدول متعددة التوقيت تحتاج تحديد المنطقة.";return}
+  const instant=wallTimeToInstant(date,time,fromResult.entry.zone);if(!instant){box.className="world-convert-result error";box.textContent="تعذّر تحويل هذا الموعد.";return}
+  const targetDate=dateKeyInZone(instant,toResult.entry.zone),targetTime=formattedTimeInZone(instant,toResult.entry.zone),dateText=new Date(`${targetDate}T12:00:00Z`).toLocaleDateString("ar-EG",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});
+  box.className="world-convert-result";box.innerHTML=`<small>${esc(fromResult.entry.label)}</small><strong>${esc(fmt(time))} ← ${esc(targetTime)}</strong><span>${esc(toResult.entry.label)} · ${esc(dateText)}${esc(dayShiftLabel(date,targetDate))}</span>`;
+}
+function swapWorldConverter(){
+  const from=document.getElementById("worldFromZone"),to=document.getElementById("worldToZone");if(!from||!to)return;
+  const a={value:from.value,zone:from.dataset.zone,label:from.dataset.zoneLabel};from.value=to.value;from.dataset.zone=to.dataset.zone||"";from.dataset.zoneLabel=to.dataset.zoneLabel||"";to.value=a.value;to.dataset.zone=a.zone||"";to.dataset.zoneLabel=a.label||"";convertWorldTime();
+}
+function openWorldClock(){
+  closeDataMenu();
+  const content=`<div class="world-clock-tool">
+    <section class="world-clock-section"><header><div><h3>الوقت الآن</h3><p>أضف البلاد التي تتعامل معها وسيظل الوقت محدثًا تلقائيًا.</p></div></header><div class="world-zone-add"><input id="worldZoneSearch" list="worldTimeZoneOptions" placeholder="اكتب: أذربيجان، روسيا، باكو…" autocomplete="off" oninput="worldZoneInputChanged(this)"><button type="button" onclick="addWorldClockZone()">＋ إضافة</button></div><div class="world-search-hint" id="worldZoneSearchHint">اكتب اسم الدولة بالعربي أو المدينة، ثم اختر النتيجة.</div><datalist id="worldTimeZoneOptions"></datalist><div class="world-clock-cards" id="worldClockCards"></div></section>
+    <section class="world-clock-section"><header><div><h3>تحويل موعد</h3><p>حوّل أي ساعة بين مصر وأي بلد، أو بين بلدين مباشرة.</p></div></header><div class="world-convert-grid"><div class="field"><label for="worldConvertDate">التاريخ</label><input id="worldConvertDate" type="date" value="${currentDateKey()}" onchange="convertWorldTime()"></div><div class="field"><label for="worldConvertTime">الساعة</label><input id="worldConvertTime" type="time" value="${currentTimeKey()}" oninput="convertWorldTime()"></div><div class="field"><label for="worldFromZone">من توقيت</label><input id="worldFromZone" list="worldTimeZoneOptions" autocomplete="off" oninput="worldZoneInputChanged(this)" onchange="convertWorldTime()"></div><div class="field"><label for="worldToZone">إلى توقيت</label><input id="worldToZone" list="worldTimeZoneOptions" autocomplete="off" oninput="worldZoneInputChanged(this)" onchange="convertWorldTime()"></div></div><div class="world-convert-actions"><button type="button" onclick="convertWorldTime()">تحويل</button><button type="button" class="secondary" onclick="swapWorldConverter()">⇄ عكس الاتجاه</button></div><div class="world-convert-result" id="worldConvertResult" aria-live="polite"></div></section>
+  </div>`;
+  openToolDialog("الساعة العالمية","المواعيد محسوبة بالمناطق الزمنية الحقيقية، وليس بفرق ساعات ثابت.",content);populateTimeZoneDatalist("worldTimeZoneOptions");
+  const target=savedWorldClockZones().find(zone=>zone!==SCHEDULE_TIMEZONE)||"Asia/Baku";setTimeZoneInput(document.getElementById("worldFromZone"),SCHEDULE_TIMEZONE);setTimeZoneInput(document.getElementById("worldToZone"),validTimeZone(target)?target:SCHEDULE_TIMEZONE);renderWorldClockCards();convertWorldTime();
+  if(worldClockInterval)clearInterval(worldClockInterval);worldClockInterval=setInterval(renderWorldClockCards,30000);
+}
+function lessonTimeZoneInputChanged(){const input=document.getElementById("studentTimeZoneInput");if(input&&input.value!==input.dataset.zoneLabel){input.dataset.zone="";input.dataset.zoneLabel=""}updateStudentTimeZoneHint()}
+function readLessonTimeZone(){const input=document.getElementById("studentTimeZoneInput");if(!input||!input.value.trim())return "";return resolvedZoneFromInput(input).entry?.zone||""}
+function setLessonTimeZoneField(zone=""){
+  populateTimeZoneDatalist("lessonTimeZoneOptions");const input=document.getElementById("studentTimeZoneInput");if(!input)return;
+  if(validTimeZone(zone))setTimeZoneInput(input,zone);else{input.value="";input.dataset.zone="";input.dataset.zoneLabel=""}updateStudentTimeZoneHint();
+}
+function updateStudentTimeZoneHint(){
+  const input=document.getElementById("studentTimeZoneInput"),hint=document.getElementById("studentTimeZoneHint");if(!input||!hint)return;
+  hint.classList.remove("warn","error");if(!input.value.trim()){hint.textContent="اختياري — سيظهر وقت الطالب بجانب موعد مصر، ويتغير تلقائيًا مع التوقيت الصيفي.";return}
+  const result=resolveTimeZoneText(input.value);if(!result.entry){hint.classList.add(result.ambiguous?"warn":"error");hint.textContent=result.ambiguous?"هذه الدولة فيها أكثر من منطقة زمنية؛ اختر المدينة أو المنطقة من الاقتراحات.":"اختر منطقة زمنية صحيحة من الاقتراحات.";return}
+  input.dataset.zone=result.entry.zone;input.dataset.zoneLabel=result.entry.label;
+  const schedules=readSchedules();if(!schedules.length){hint.textContent=`تم اختيار ${result.entry.label}.`;return}
+  const first=schedules[0];let date=weekDateForDay(first.day,currentDateKey());if(date<currentDateKey()||(date===currentDateKey()&&mins(first.time)<mins(currentTimeKey())))date=addDaysToDateKey(date,7);
+  const info=studentTimeInfo({lesson:{studentTimeZone:result.entry.zone},date,time:first.time});if(!info){hint.textContent=`تم اختيار ${result.entry.label}.`;return}
+  hint.classList.toggle("warn",info.odd);hint.textContent=`${first.day} ${fmt(first.time)} في مصر = ${info.time} لدى الطالب (${info.label})${info.shift}.${info.odd?" هذا وقت متأخر/مبكر لدى الطالب.":""}`;
 }
 function urlBase64ToUint8Array(value){
   const padding="=".repeat((4-value.length%4)%4);
@@ -2267,6 +2352,97 @@ function fmt(t){
   return `${hh}:${String(m).padStart(2,"0")} ${p}`;
 }
 function mins(t){const value=TIME_RE.test(String(t))?String(t):"00:00";const[h,m]=value.split(":").map(Number);return h*60+m}
+function normalizeZoneSearch(value){
+  return String(value||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[إأآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/[_/().,-]+/g," ").replace(/\s+/g," ").trim();
+}
+function countryNameForZone(zone){
+  const code=TIMEZONE_COUNTRY_MAP[zone];if(!code)return "";
+  try{return new Intl.DisplayNames(["ar-EG"],{type:"region"}).of(code)||code}catch{return code}
+}
+function genericNameForZone(zone,date=new Date()){
+  try{return new Intl.DateTimeFormat("ar-EG",{timeZone:zone,timeZoneName:"longGeneric"}).formatToParts(date).find(part=>part.type==="timeZoneName")?.value||zone}catch{return zone}
+}
+function timeZoneCatalog(){
+  if(timeZoneCatalogCache)return timeZoneCatalogCache;
+  let zones=[];
+  try{zones=typeof Intl.supportedValuesOf==="function"?Intl.supportedValuesOf("timeZone"):Object.keys(TIMEZONE_COUNTRY_MAP)}catch{zones=Object.keys(TIMEZONE_COUNTRY_MAP)}
+  if(!zones.includes(SCHEDULE_TIMEZONE))zones.push(SCHEDULE_TIMEZONE);
+  const countryCounts={};zones.forEach(zone=>{const code=TIMEZONE_COUNTRY_MAP[zone];if(code)countryCounts[code]=(countryCounts[code]||0)+1});
+  timeZoneCatalogCache=[...new Set(zones)].filter(validTimeZone).map(zone=>{
+    const code=TIMEZONE_COUNTRY_MAP[zone]||"",country=countryNameForZone(zone),zoneName=genericNameForZone(zone),city=(zone.split("/").at(-1)||zone).replace(/_/g," ");
+    const multi=code&&countryCounts[code]>1;
+    const label=country?(multi?`${country} — ${zoneName} · ${city}`:`${country} — ${zoneName}`):`${zoneName} — ${city}`;
+    return {zone,code,country,zoneName,city,label,search:normalizeZoneSearch(`${country} ${zoneName} ${city} ${zone}`)};
+  }).sort((a,b)=>a.label.localeCompare(b.label,"ar"));
+  return timeZoneCatalogCache;
+}
+function timeZoneEntry(zone){return timeZoneCatalog().find(item=>item.zone===zone)||null}
+function timeZoneShortLabel(zone){
+  const entry=timeZoneEntry(zone);if(!entry)return zone||"";
+  if(!entry.country)return entry.zoneName;
+  const count=timeZoneCatalog().filter(item=>item.code&&item.code===entry.code).length;
+  return count>1?`${entry.country} · ${entry.zoneName.replace(/^توقيت\s*/,"")}`:entry.country;
+}
+function resolveTimeZoneText(value){
+  const raw=String(value||"").trim();if(!raw)return {entry:null,ambiguous:false,matches:[]};
+  const catalog=timeZoneCatalog(),exactZone=catalog.find(item=>item.zone.toLowerCase()===raw.toLowerCase()),exactLabel=catalog.find(item=>item.label===raw);
+  if(exactZone||exactLabel)return {entry:exactZone||exactLabel,ambiguous:false,matches:[exactZone||exactLabel]};
+  const query=normalizeZoneSearch(raw),countryExact=catalog.filter(item=>normalizeZoneSearch(item.country)===query);
+  if(countryExact.length===1)return {entry:countryExact[0],ambiguous:false,matches:countryExact};
+  if(countryExact.length>1)return {entry:null,ambiguous:true,matches:countryExact.slice(0,12)};
+  const matches=catalog.filter(item=>item.search.includes(query)).slice(0,12);
+  return {entry:matches.length===1?matches[0]:null,ambiguous:matches.length>1,matches};
+}
+function populateTimeZoneDatalist(id){
+  const list=document.getElementById(id);if(!list)return;
+  list.innerHTML="";const fragment=document.createDocumentFragment();
+  timeZoneCatalog().forEach(entry=>{const option=document.createElement("option");option.value=entry.label;option.label=entry.zone;fragment.appendChild(option)});list.appendChild(fragment);
+}
+function setTimeZoneInput(input,zone){
+  if(!input)return;const entry=timeZoneEntry(zone);
+  input.value=entry?.label||"";input.dataset.zone=entry?.zone||"";input.dataset.zoneLabel=input.value;
+}
+function resolvedZoneFromInput(input){
+  if(!input)return {entry:null,ambiguous:false,matches:[]};
+  if(input.dataset.zone&&input.value===input.dataset.zoneLabel&&validTimeZone(input.dataset.zone))return {entry:timeZoneEntry(input.dataset.zone)||{zone:input.dataset.zone,label:input.value},ambiguous:false,matches:[]};
+  const result=resolveTimeZoneText(input.value);
+  if(result.entry){input.dataset.zone=result.entry.zone;input.dataset.zoneLabel=result.entry.label;input.value=result.entry.label}
+  return result;
+}
+function zonedParts(date,zone){
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(date).filter(part=>part.type!=="literal").map(part=>[part.type,part.value]));
+  return {year:Number(parts.year),month:Number(parts.month),day:Number(parts.day),hour:Number(parts.hour),minute:Number(parts.minute),second:Number(parts.second)};
+}
+function zoneOffsetMinutes(date,zone){
+  const p=zonedParts(date,zone),rounded=Math.floor(date.getTime()/1000)*1000;
+  return Math.round((Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-rounded)/60000);
+}
+function wallTimeToInstant(dateKey,time,zone=SCHEDULE_TIMEZONE){
+  if(!validDateKey(dateKey)||!TIME_RE.test(String(time))||!validTimeZone(zone))return null;
+  const [year,month,day]=dateKey.split("-").map(Number),[hour,minute]=String(time).split(":").map(Number),target=Date.UTC(year,month-1,day,hour,minute,0);
+  let stamp=target;
+  for(let i=0;i<5;i++){
+    const next=target-zoneOffsetMinutes(new Date(stamp),zone)*60000;
+    if(Math.abs(next-stamp)<1000){stamp=next;break}stamp=next;
+  }
+  const date=new Date(stamp);return Number.isFinite(date.getTime())?date:null;
+}
+function dateKeyInZone(date,zone){const p=zonedParts(date,zone);return `${p.year}-${String(p.month).padStart(2,"0")}-${String(p.day).padStart(2,"0")}`}
+function timeKeyInZone(date,zone){const p=zonedParts(date,zone);return `${String(p.hour).padStart(2,"0")}:${String(p.minute).padStart(2,"0")}`}
+function formattedTimeInZone(date,zone){return fmt(timeKeyInZone(date,zone))}
+function dayShiftLabel(sourceDate,targetDate){return targetDate===sourceDate?"":targetDate>sourceDate?" · اليوم التالي":" · اليوم السابق"}
+function studentTimeInfo(occurrence){
+  const zone=occurrence?.lesson?.studentTimeZone;if(!zone||!validTimeZone(zone)||!validDateKey(occurrence?.date)||!TIME_RE.test(occurrence?.time))return null;
+  const instant=wallTimeToInstant(occurrence.date,occurrence.time,SCHEDULE_TIMEZONE);if(!instant)return null;
+  const targetDate=dateKeyInZone(instant,zone),targetTime=timeKeyInZone(instant,zone),hour=Number(targetTime.slice(0,2));
+  return {zone,label:timeZoneShortLabel(zone),time:fmt(targetTime),date:targetDate,shift:dayShiftLabel(occurrence.date,targetDate),odd:hour<6||hour>=23};
+}
+function studentTimeInline(occurrence){const info=studentTimeInfo(occurrence);return info?`🌍 ${info.time} · ${info.label}${info.shift}`:""}
+function worldOffsetText(date,zone){
+  const diff=zoneOffsetMinutes(date,zone)-zoneOffsetMinutes(date,SCHEDULE_TIMEZONE);if(!diff)return "نفس توقيت مصر";
+  const sign=diff>0?"+":"−",abs=Math.abs(diff),hours=Math.floor(abs/60),minutes=abs%60;
+  return `${sign}${hours}${minutes?`:${String(minutes).padStart(2,"0")}`:""} عن مصر`;
+}
 function todayName(){return dayNameForDateKey(currentDateKey())}
 function currentDateKey(date=new Date()){
   try{
@@ -2794,7 +2970,7 @@ function renderHeader(){
       <div class="label">الحصة القادمة</div>
       <div class="time">${fmt(next.time)}</div>
       <div class="name">${esc(l.name||"بدون اسم")}</div>
-      <div class="meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة</div>
+      <div class="meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة${studentTimeInline(next)?" · "+esc(studentTimeInline(next)):""}</div>
 `;
     card.onclick=()=>openEdit(l.id);
     card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit(l.id)}};
@@ -2843,6 +3019,7 @@ function renderTimeline(){
             <span class="pill ${l.type}">${l.type==="teach"?"أُدرِّس":"أدرس"}</span>
             <span class="pill">${people}</span>
             <span class="pill">${src}</span>
+            ${studentTimeInline(o)?`<span class="pill student-time-pill">${esc(studentTimeInline(o))}</span>`:""}
             ${sessionStatusButtonMarkup(o)}
           </div>
         </div>
@@ -2984,6 +3161,7 @@ function renderWeek(){
           </div>
           <div class="week-name">${esc(l.name||"بدون اسم")}</div>
           <div class="week-meta">${details}</div>
+          ${studentTimeInline(o)?`<div class="week-student-time">${esc(studentTimeInline(o))}</div>`:""}
           <div class="week-status-row"><div class="week-source"><i class="source-line" aria-hidden="true"></i>${esc(src)}</div>${sessionStatusButtonMarkup(o)}</div>`;
         const moveContext={lessonId:l.id,date:o.date,time:o.time,day:o.day,kind:o.kind||"base",recordId:o.recordId||""};
         card.onclick=()=>openEdit(l.id);
@@ -3388,8 +3566,8 @@ function scheduleRowHTML(day="الاثنين",time="18:00"){
   const safeTime=TIME_RE.test(String(time))?String(time):"18:00";
   const opts=days.map(d=>`<option ${d===safeDay?"selected":""}>${d}</option>`).join("");
   return `<div class="row">
-    <select class="schedule-day" aria-label="يوم الحصة">${opts}</select>
-    <input class="schedule-time" type="time" value="${safeTime}" aria-label="وقت الحصة" required>
+    <select class="schedule-day" aria-label="يوم الحصة" onchange="updateStudentTimeZoneHint()">${opts}</select>
+    <input class="schedule-time" type="time" value="${safeTime}" aria-label="وقت الحصة" required oninput="updateStudentTimeZoneHint()">
     <button type="button" class="small-btn remove" onclick="removeScheduleRow(this)">حذف</button>
   </div>`;
 }
@@ -3596,6 +3774,7 @@ function openNew(){
   document.getElementById("copyBtn").style.display="none";
   document.getElementById("deleteBtn").style.display="none";
   ["name","subject","platform","notes","groupStudents","centerName"].forEach(id=>document.getElementById(id).value="");
+  setLessonTimeZoneField("");
   document.getElementById("type").value="teach";
   document.getElementById("studentType").value="individual";
   document.getElementById("lessonSource").value="private";
@@ -3713,6 +3892,7 @@ function openEdit(id){
   document.getElementById("lessonSource").value=l.lessonSource||"private";
   document.getElementById("name").value=l.name||"";
   document.getElementById("groupStudents").value=Array.isArray(l.groupStudents)?l.groupStudents.join("\n"):"";
+  setLessonTimeZoneField(l.studentTimeZone||"");
   document.getElementById("centerName").value=l.centerName||"";
   document.getElementById("subject").value=l.subject||"";
   document.getElementById("duration").value=l.duration||60;
@@ -3763,6 +3943,7 @@ async function saveLesson(){
     studentType:st,lessonSource:src,
     name:document.getElementById("name").value.trim(),
     groupStudents,
+    studentTimeZone:readLessonTimeZone(),
     centerName:document.getElementById("centerName").value.trim(),
     subject:document.getElementById("subject").value.trim(),
     duration,
@@ -3774,6 +3955,7 @@ async function saveLesson(){
     schedules:readSchedules(),
     notes:document.getElementById("notes").value.trim()
   };
+  if(document.getElementById("studentTimeZoneInput").value.trim()&&!lesson.studentTimeZone){alert("اختر بلد/منطقة الطالب من الاقتراحات. وإذا كانت الدولة فيها أكثر من توقيت، اختر المدينة أو المنطقة.");return}
   if(!Number.isFinite(duration)||duration<15||duration>720){alert("اكتب مدة صحيحة بين 15 و720 دقيقة.");return}
   if(reminderMode==="custom"&&!reminderLeads.length){alert("اختر موعد تنبيه واحدًا على الأقل لهذه الحصة.");return}
   if(reminderMode==="custom"&&reminderLeads.length>MAX_NOTIFICATION_LEADS){alert("يمكن اختيار ثلاثة تنبيهات بحد أقصى للحصة.");return}

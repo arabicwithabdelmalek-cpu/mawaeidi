@@ -1132,6 +1132,20 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 @media(max-width:560px){.finance-simple-v29{gap:10px}.fin29-head{padding:15px}.fin29-head h2{font-size:20px}.fin29-month-nav{grid-template-columns:31px minmax(0,1fr) 31px;padding:7px;gap:5px}.fin29-month-tabs{gap:5px}.fin29-month-tab{padding:7px 4px;min-height:49px}.fin29-month-tab strong{font-size:9.5px}.fin29-account-list,.fin29-summary-list{padding:9px}.fin29-account-main{padding:11px}.fin29-month-value{align-items:flex-start;flex-direction:column;gap:3px}.fin29-head-actions{grid-template-columns:1fr}.fin29-summary-grid{grid-template-columns:1fr}.fin29-summary-metric{border-inline-end:0!important;border-bottom:1px solid #E4EAEE!important}.fin29-summary-metric:last-child{border-bottom:0!important}.fin29-due-line{align-items:stretch;flex-direction:column}.fin29-due-line button{width:100%}}
 </style>
 
+
+<style id="finance-fix-v30">
+/* Finance v30 — keep selected-month data separate from current collection status */
+.fin29-ready-shell{overflow:hidden;border:1px solid #E4D5B4;border-radius:12px;background:#FFFCF7;box-shadow:0 5px 16px rgba(87,65,25,.045)}
+.fin29-ready-shell .fin29-section-head{background:#FFF9ED;border-bottom-color:#EEDFC1}
+.fin30-ready-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:12px;background:#FFFCF7}
+.fin30-ready-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px;border:1px solid #E8D9B9;border-radius:10px;background:#fff}
+.fin30-ready-copy{min-width:0}.fin30-ready-copy small{display:block;color:#8A7449;font-size:7.5px;font-weight:800}.fin30-ready-copy strong{display:block;margin-top:2px;color:#2A4150;font-size:12px;font-weight:900}.fin30-ready-copy span{display:block;margin-top:3px;color:#75633C;font-size:8px;font-weight:800}
+.fin30-ready-money{display:flex;align-items:center;gap:9px;flex:0 0 auto}.fin30-ready-money strong{color:#6E5320;font-size:12px;font-weight:900;direction:ltr}.fin30-ready-money button{min-height:32px;padding:6px 9px;border:1px solid #B98B38;border-radius:8px;background:#B98B38;color:#fff;font:inherit;font-size:8px;font-weight:900;cursor:pointer}
+.fin30-ready-empty{grid-column:1/-1;padding:17px 12px;text-align:center;color:#8A7A59;font-size:9px}.fin30-ready-empty strong{display:block;margin-bottom:2px;color:#6E6044;font-size:10px}
+@media(max-width:850px){.fin30-ready-list{grid-template-columns:1fr}}
+@media(max-width:560px){.fin30-ready-card{align-items:stretch;flex-direction:column}.fin30-ready-money{justify-content:space-between}.fin30-ready-money button{min-width:112px}}
+</style>
+
 </head>
 <body class="auth-pending">
 
@@ -1361,6 +1375,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
           <span class="fin29-count" id="financeSimpleAccountCount">0</span>
         </div>
         <div class="fin29-account-list" id="financeSimpleAccounts"></div>
+      </section>
+
+      <section class="fin29-ready-shell" aria-labelledby="financeSimpleReadyHeading">
+        <div class="fin29-section-head">
+          <div>
+            <span>الوضع الحالي</span>
+            <h3 id="financeSimpleReadyHeading">جاهز للقبض الآن</h3>
+          </div>
+        </div>
+        <div class="fin30-ready-list" id="financeSimpleReadyList"></div>
       </section>
 
       <section class="fin29-summary-shell" aria-labelledby="financeSimpleSummaryHeading">
@@ -4937,18 +4961,15 @@ function financeSimpleAccountCard(agreement,row,period){
   let packageBlock='';
   if(agreement.billingModel==='package'&&cycle){
     const progress=Math.min(cycle.targetSessions,cycleSessionCount(agreement,cycle)),remaining=Math.max(0,cycle.targetSessions-progress),pct=cycle.targetSessions?Math.min(100,progress/cycle.targetSessions*100):0,parts=financeSimpleCycleMonths(agreement,cycle);
-    packageBlock=`<div class="fin29-package"><div class="fin29-package-head"><span>الباقة: <strong>${cycle.targetSessions} حصة = ${esc(formatMoney(cycle.amount,agreement.currency))}</strong></span><span>${progress} / ${cycle.targetSessions}</span></div><div class="fin29-progress"><i style="width:${pct}%"></i></div>${parts.length?`<div class="fin29-package-months">${parts.map(part=>`<span>${esc(monthLabel(part.period))}: ${part.count} حصة</span>`).join('')}</div>`:''}${!dues.length&&remaining>0?`<div class="fin29-status wait">باقي <strong>${remaining} حصة</strong> حتى يصبح الحساب جاهزًا للقبض.</div>`:''}</div>`;
+    packageBlock=`<div class="fin29-package"><div class="fin29-package-head"><span>الباقة: <strong>${cycle.targetSessions} حصة = ${esc(formatMoney(cycle.amount,agreement.currency))}</strong></span><span>${progress} / ${cycle.targetSessions}</span></div><div class="fin29-progress"><i style="width:${pct}%"></i></div>${parts.length?`<div class="fin29-package-months">${parts.map(part=>`<span>${esc(monthLabel(part.period))}: ${part.count} حصة</span>`).join('')}</div>`:''}${remaining>0?`<div class="fin29-status wait">باقي <strong>${remaining} حصة</strong> حتى يصبح الحساب جاهزًا للقبض.</div>`:''}</div>`;
   }
   let status='';
-  if(!dues.length){
-    if(future)status=`<div class="fin29-status future">هذه أرقام متوقعة حسب جدول ${esc(monthLabel(period))}.</div>`;
-    else if(value>0&&row.settledValue>=value-.01)status=`<div class="fin29-status paid">✓ تم قبض حساب حصص ${esc(monthLabel(period))}.</div>`;
-    else if(value>0&&row.settledValue>0)status=`<div class="fin29-status">تم قبض <strong>${esc(formatMoney(row.settledValue,agreement.currency))}</strong> من قيمة حصص الشهر.</div>`;
-    else if(agreement.billingModel==='monthly')status=`<div class="fin29-status wait">${agreement.paymentTiming==='advance'?'الحساب مقدم؛ يظهر زر القبض عند استحقاق الشهر.':'الحساب مؤخر؛ سيصبح جاهزًا للقبض عند نهاية الشهر.'}</div>`;
-  }
-  const dueBlock=dues.length?`<div class="fin29-dues">${dues.slice(0,3).map(target=>`<div class="fin29-due-line"><div class="fin29-due-copy"><small>جاهز للقبض الآن · ${esc(financeSimpleTargetLabel(target))}</small><strong>${esc(formatMoney(target.remaining,agreement.currency))}</strong></div><button type="button" onclick="openSimpleFinancePayment('${agreement.id}','${target.targetType}','${target.targetKey}')">سجل أني قبضت</button></div>`).join('')}${dues.length>3?`<div class="fin29-status">يوجد ${dues.length-3} حسابات أخرى جاهزة للقبض.</div>`:''}</div>`:'';
+  if(future)status=`<div class="fin29-status future">هذه أرقام متوقعة حسب جدول ${esc(monthLabel(period))}.</div>`;
+  else if(value>0&&row.settledValue>=value-.01)status=`<div class="fin29-status paid">✓ تم قبض حساب حصص ${esc(monthLabel(period))}.</div>`;
+  else if(value>0&&row.settledValue>0)status=`<div class="fin29-status">تم قبض <strong>${esc(formatMoney(row.settledValue,agreement.currency))}</strong> من قيمة حصص هذا الشهر.</div>`;
+  else if(agreement.billingModel==='monthly'&&mode==='current')status=`<div class="fin29-status wait">${agreement.paymentTiming==='advance'?'حساب هذا الشهر مقدم.':'حساب هذا الشهر مؤخر.'}</div>`;
   const canStart=agreement.billingModel==='package'&&cycle&&cycleSessionCount(agreement,cycle)>=cycle.targetSessions;
-  return `<article class="fin29-account" style="--fin29-source:${color}"><div class="fin29-account-main"><div class="fin29-account-top"><div><div class="fin29-name">${esc(agreement.name||'بدون اسم')}</div><div class="fin29-type">${esc(partyTypeLabel(agreement.partyType))}${linked.length?` · ${linked.length} حصة مرتبطة بالجدول`:''}</div></div><button class="fin29-edit" type="button" onclick="openFinanceAgreement('${agreement.id}')">تعديل</button></div><div class="fin29-month-value"><span>${countLabel} في ${esc(monthLabel(period))}</span><strong>${esc(formatMoney(value,agreement.currency))}</strong></div>${future&&row.actualCount===0?`<div class="fin29-preview">${valueLabel} · ${esc(formatMoney(rate,agreement.currency))} للحصة تقريبًا</div>`:`<div class="fin29-preview">${valueLabel}${rate?` · ${esc(formatMoney(rate,agreement.currency))} للحصة`:''}</div>`}${packageBlock}${status}<div class="fin29-card-actions">${agreement.billingModel==='monthly'?`<button type="button" onclick="openMonthCount('${agreement.id}')">مراجعة عدد الحصص</button>`:`<button type="button" onclick="openPackageCount('${agreement.id}')">مراجعة عدد الحصص</button>`}${canStart?`<button type="button" class="next" onclick="startNewPackageCycle('${agreement.id}')">بدء الباقة التالية</button>`:''}</div></div>${dueBlock}</article>`;
+  return `<article class="fin29-account" style="--fin29-source:${color}"><div class="fin29-account-main"><div class="fin29-account-top"><div><div class="fin29-name">${esc(agreement.name||'بدون اسم')}</div><div class="fin29-type">${esc(partyTypeLabel(agreement.partyType))}${linked.length?' · مرتبط بالجدول':''}</div></div><button class="fin29-edit" type="button" onclick="openFinanceAgreement('${agreement.id}')">تعديل</button></div><div class="fin29-month-value"><span>${countLabel} في ${esc(monthLabel(period))}</span><strong>${esc(formatMoney(value,agreement.currency))}</strong></div>${future&&row.actualCount===0?`<div class="fin29-preview">${valueLabel} · ${esc(formatMoney(rate,agreement.currency))} للحصة تقريبًا</div>`:`<div class="fin29-preview">${valueLabel}${rate?` · ${esc(formatMoney(rate,agreement.currency))} للحصة`:''}</div>`}${packageBlock}${status}<div class="fin29-card-actions">${agreement.billingModel==='monthly'?`<button type="button" onclick="openMonthCount('${agreement.id}')">مراجعة عدد الحصص</button>`:`<button type="button" onclick="openPackageCount('${agreement.id}')">مراجعة عدد الحصص</button>`}${canStart?`<button type="button" class="next" onclick="startNewPackageCycle('${agreement.id}')">بدء الباقة التالية</button>`:''}</div></div></article>`;
 }
 function financeSimpleRenderTabs(){
   const box=document.getElementById('financeSimpleMonthTabs');if(!box)return;
@@ -4961,12 +4982,19 @@ function financeSimpleSummaryRows(rows,period){
   finance.payments.filter(payment=>payment.date.slice(0,7)===period).forEach(payment=>{const agreement=finance.agreements.find(item=>item.id===payment.agreementId);if(agreement?.direction==='income')ensure(payment.currency).cash+=payment.amount});
   return [...currencies.values()].map(item=>({...item,open:Math.max(0,item.value-item.received)}));
 }
+
+function financeSimpleRenderReady(){
+  const box=document.getElementById('financeSimpleReadyList'),count=document.getElementById('financeSimpleReadyCount');if(!box)return;
+  const items=finance.agreements.filter(item=>item.direction==='income'&&item.active).flatMap(agreement=>financeSimpleDueTargets(agreement));
+  const accounts=new Set(items.map(item=>item.agreement.id)).size;
+  if(count){count.textContent=accounts?`${accounts} حساب`:'لا يوجد';count.classList.toggle('has-due',items.length>0)}
+  if(!items.length){box.innerHTML='<div class="fin30-ready-empty"><strong>لا يوجد شيء جاهز للقبض الآن</strong>عندما تكتمل باقة أو يحين موعد حساب شهري سيظهر هنا، بغض النظر عن الشهر المفتوح بالأعلى.</div>';return}
+  box.innerHTML=items.map(target=>`<article class="fin30-ready-card"><div class="fin30-ready-copy"><small>${esc(financeSimpleTargetLabel(target))}</small><strong>${esc(target.agreement.name||'بدون اسم')}</strong><span>هذا حساب جاهز للقبض الآن، وليس جزءًا من عرض الشهر المختار.</span></div><div class="fin30-ready-money"><strong>${esc(formatMoney(target.remaining,target.agreement.currency))}</strong><button type="button" onclick="openSimpleFinancePayment('${target.agreement.id}','${target.targetType}','${target.targetKey}')">سجل أني قبضت</button></div></article>`).join('');
+}
+
 function financeSimpleRenderSummary(rows,period){
-  const box=document.getElementById('financeSimpleSummary'),heading=document.getElementById('financeSimpleSummaryHeading'),ready=document.getElementById('financeSimpleReadyCount');if(!box)return;
+  const box=document.getElementById('financeSimpleSummary'),heading=document.getElementById('financeSimpleSummaryHeading');if(!box)return;
   if(heading)heading.textContent=monthLabel(period);
-  const allDues=finance.agreements.filter(item=>item.direction==='income'&&item.active).flatMap(agreement=>financeSimpleDueTargets(agreement));
-  const readyAccounts=new Set(allDues.map(item=>item.agreement.id)).size;
-  if(ready){ready.textContent=readyAccounts?`${readyAccounts} حساب جاهز للقبض`:'لا يوجد حساب جاهز للقبض';ready.classList.toggle('has-due',readyAccounts>0)}
   const summaries=financeSimpleSummaryRows(rows,period),future=financeSimpleMonthMode(period)==='future';
   if(!summaries.length){box.innerHTML='<div class="fin29-empty"><strong>لا توجد أرقام لهذا الشهر</strong>أضف حسابًا ماليًا واربطه بالحصة.</div>';return}
   box.innerHTML=summaries.map(item=>`<article class="fin29-summary-card"><div class="fin29-summary-card-head"><strong>${esc(currencyLabel(item.currency))}</strong><span class="fin29-summary-code">${esc(item.currency)}</span></div><div class="fin29-summary-grid"><div class="fin29-summary-metric"><small>${future?'المتوقع حسب الجدول':'قيمة حصص الشهر'}</small><strong>${esc(formatMoney(item.value,item.currency))}</strong></div><div class="fin29-summary-metric received"><small>${future?'مقبوض مقدمًا':'تم قبض حسابها'}</small><strong>${esc(formatMoney(item.received,item.currency))}</strong></div><div class="fin29-summary-metric open"><small>${future?'غير مقبوض مقدمًا':'لسه ما اتحصلش'}</small><strong>${esc(formatMoney(item.open,item.currency))}</strong></div><div class="fin29-summary-metric cash"><small>قبضته خلال الشهر</small><strong>${esc(formatMoney(item.cash,item.currency))}</strong></div></div></article>`).join('');
@@ -4976,12 +5004,13 @@ function renderFinance(){
   const current=currentDateKey().slice(0,7);if(!validMonthKey(selectedFinanceMonth))selectedFinanceMonth=current;monthInput.value=selectedFinanceMonth;
   financeSimpleRenderTabs();
   const period=selectedFinanceMonth,bounds=monthBounds(period),accounts=finance.agreements.filter(item=>item.direction==='income'&&item.startDate<=bounds.end).sort((a,b)=>a.name.localeCompare(b.name,'ar')),rows=accounts.map(agreement=>financeAgreementMonthData(agreement,period));
-  const shown=rows.filter(row=>row.actualCount>0||row.plannedCount>0||financeSimpleDueTargets(row.agreement).length||row.settledValue>0);
+  const shown=rows.filter(row=>row.actualCount>0||row.plannedCount>0||row.workValue>0||row.expectedValue>0||row.settledValue>0);
   const eyebrow=document.getElementById('financeSimpleMonthEyebrow'),title=document.getElementById('financeSimpleAccountsHeading'),count=document.getElementById('financeSimpleAccountCount'),box=document.getElementById('financeSimpleAccounts');
   if(eyebrow)eyebrow.textContent=financeSimpleMonthMode(period)==='current'?'الشهر الحالي':financeSimpleMonthMode(period)==='past'?'شهر سابق':'شهر قادم';
   if(title)title.textContent=`حصص ${monthLabel(period)}`;
   if(count)count.textContent=`${shown.length} حساب`;
   if(box)box.innerHTML=shown.length?shown.map(row=>financeSimpleAccountCard(row.agreement,row,period)).join(''):'<div class="fin29-empty"><strong>لا توجد حصص مالية في هذا الشهر</strong>يمكنك الانتقال إلى شهر آخر أو إعداد حساب مالي للحصة.</div>';
+  financeSimpleRenderReady();
   financeSimpleRenderSummary(rows,period);
 }
 function openSimpleFinancePayment(agreementId='',targetType='',targetKey=''){

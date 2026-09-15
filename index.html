@@ -294,12 +294,16 @@ body.auth-pending .app{visibility:hidden}
 .week-navigation button{min-width:54px;padding:7px 9px;border:0;border-radius:6px;background:transparent;color:#60727F;font-size:10px;font-weight:800}
 .week-navigation button:hover,.week-navigation button:focus-visible{background:#fff;color:var(--primary);outline:none;box-shadow:0 2px 8px rgba(17,42,64,.08)}
 .week-navigation .week-current{border:1px solid #B9CAD5;background:#fff;color:var(--primary)}
+.week-smart-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:11px 16px;border-bottom:1px solid var(--line);background:#F7F9FA}
+.week-summary-card{min-width:0;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;box-shadow:0 2px 8px rgba(17,42,64,.035)}
+.week-summary-card small{display:block;color:var(--muted);font-size:9px;font-weight:700}.week-summary-card strong{display:block;margin-top:4px;color:var(--primary);font-size:15px;font-weight:800;line-height:1.35}.week-summary-card span{display:block;margin-top:2px;color:#72838F;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .week-time-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:#fff}
 .week-time-toolbar-copy{display:grid;gap:2px}.week-time-toolbar-copy strong{color:var(--ink);font-size:11px}.week-time-toolbar-copy span{color:var(--muted);font-size:9px;line-height:1.55}
-.week-time-switch{display:flex;align-items:center;gap:4px;padding:3px;border:1px solid var(--line);border-radius:8px;background:#F4F7F9}
-.week-time-switch button{min-height:32px;padding:6px 11px;border:0;border-radius:6px;background:transparent;color:#667985;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer}
-.week-time-switch button:hover,.week-time-switch button:focus-visible{background:#fff;color:var(--primary);outline:none}
-.week-time-switch button.active{background:var(--primary);color:#fff;box-shadow:0 3px 9px rgba(35,75,110,.14)}
+.week-view-controls{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.week-time-switch,.week-density-switch{display:flex;align-items:center;gap:4px;padding:3px;border:1px solid var(--line);border-radius:8px;background:#F4F7F9}
+.week-time-switch button,.week-density-switch button{min-height:32px;padding:6px 11px;border:0;border-radius:6px;background:transparent;color:#667985;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer}
+.week-time-switch button:hover,.week-time-switch button:focus-visible,.week-density-switch button:hover,.week-density-switch button:focus-visible{background:#fff;color:var(--primary);outline:none}
+.week-time-switch button.active,.week-density-switch button.active{background:var(--primary);color:#fff;box-shadow:0 3px 9px rgba(35,75,110,.14)}
 .week-legend{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px 18px;padding:11px 16px;border-bottom:1px solid var(--line);background:#F5F8FA}
 .legend-types,.source-legend{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
 .legend-title{margin-inline-end:2px;color:var(--muted);font-size:11px;font-weight:700}
@@ -312,7 +316,7 @@ body.auth-pending .app{visibility:hidden}
 .week-table-wrap{max-width:100%;overflow:auto;padding:14px;direction:rtl;scrollbar-color:#AEBCC6 #E8EEF2;scrollbar-width:thin}
 .week-table-wrap:focus-visible{outline:3px solid rgba(35,75,110,.2);outline-offset:-4px}
 .week-grid{
-  display:grid;grid-template-columns:78px repeat(7,minmax(158px,1fr));min-width:1185px;
+  position:relative;display:grid;grid-template-columns:78px repeat(7,minmax(158px,1fr));min-width:1185px;
   border:1px solid var(--line);border-radius:11px;background:#fff;direction:rtl
 }
 .week-grid-row{display:contents}
@@ -335,6 +339,24 @@ body.auth-pending .app{visibility:hidden}
 .week-gap-control button:hover,.week-gap-control button:focus-visible{border-color:#799AB0;color:var(--primary);outline:none;box-shadow:0 3px 10px rgba(17,42,64,.08);transform:translateY(-1px)}
 .week-grid.full-day .week-time-label,.week-grid.full-day .week-slot{min-height:82px}
 .week-grid.full-day .quick-add-slot{min-height:64px}
+.week-grid.density-compact .week-time-label,.week-grid.density-compact .week-slot{min-height:76px}
+.week-grid.density-compact .quick-add-slot{min-height:58px}.week-grid.density-compact .week-card{min-height:66px;padding:7px 8px}.week-grid.density-compact .week-meta{display:none}.week-grid.density-compact .week-name{margin-top:5px;font-size:12px}.week-grid.density-compact .week-status-row{margin-top:5px}
+.week-grid.density-comfortable .week-time-label,.week-grid.density-comfortable .week-slot{min-height:132px}.week-grid.density-comfortable .quick-add-slot{min-height:112px}.week-grid.density-comfortable .week-card{min-height:112px;padding:12px 13px}.week-grid.density-comfortable .week-name{font-size:14px}
+.week-grid.full-day.density-compact .week-time-label,.week-grid.full-day.density-compact .week-slot{min-height:62px}.week-grid.full-day.density-compact .quick-add-slot{min-height:46px}
+.week-grid.full-day.density-comfortable .week-time-label,.week-grid.full-day.density-comfortable .week-slot{min-height:108px}.week-grid.full-day.density-comfortable .quick-add-slot{min-height:88px}
+.week-slot{position:relative;display:flex;flex-direction:column;gap:7px;min-height:108px;padding:8px;background:#FBFCFD;transition:background .14s ease,box-shadow .14s ease}
+.week-slot.drag-over{background:#EAF5F1;box-shadow:inset 0 0 0 2px #6AA493}
+.week-current-time{position:absolute;left:0;right:0;z-index:6;height:0;border-top:2px solid #C65151;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(198,81,81,.15))}
+.week-current-time::before{content:"";position:absolute;right:73px;top:-5px;width:8px;height:8px;border-radius:50%;background:#C65151;box-shadow:0 0 0 3px rgba(198,81,81,.14)}
+.week-current-time span{position:absolute;left:8px;top:-12px;padding:2px 7px;border-radius:999px;background:#C65151;color:#fff;font-size:8px;font-weight:800;direction:rtl;white-space:nowrap}
+.week-card.dragging{opacity:.48;transform:scale(.985);box-shadow:none}
+.week-card-tools{display:flex;align-items:center;gap:4px}
+.week-move-btn{cursor:grab}.week-move-btn:active{cursor:grabbing}
+.quick-add-form,.week-move-form{display:grid;gap:12px}.quick-add-grid,.week-move-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.quick-add-grid .full,.week-move-grid .full{grid-column:1/-1}
+.quick-conflict,.week-move-conflict{display:none;padding:9px 10px;border:1px solid #E7BDBD;border-radius:8px;background:var(--danger-bg);color:var(--danger);font-size:10px;line-height:1.65}.quick-conflict.show,.week-move-conflict.show{display:block}
+.quick-add-note{padding:9px 10px;border-radius:8px;background:#EEF3F6;color:#60727E;font-size:10px;line-height:1.65}
+.quick-actions{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:7px}.quick-actions button{min-height:38px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:#596A76;font-size:11px;font-weight:800}.quick-actions .save{border-color:var(--primary);background:var(--primary);color:#fff}
+.move-scope{display:grid;grid-template-columns:1fr 1fr;gap:7px}.move-scope label{cursor:pointer}.move-scope input{position:absolute;opacity:0;pointer-events:none}.move-scope span{display:block;height:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:#5D6F7C;font-size:10px;line-height:1.5}.move-scope input:checked+span{border-color:#87A8BE;background:#EDF5FA;color:var(--primary);box-shadow:0 0 0 2px rgba(35,75,110,.08)}.move-scope input:disabled+span{opacity:.5;cursor:not-allowed}
 .week-slot{display:flex;flex-direction:column;gap:7px;min-height:108px;padding:8px;background:#FBFCFD}
 .week-slot.today{background:#F0F6FA}
 .week-slot.is-empty{background-image:linear-gradient(135deg,rgba(211,221,229,.14) 25%,transparent 25%,transparent 50%,rgba(211,221,229,.14) 50%,rgba(211,221,229,.14) 75%,transparent 75%,transparent);background-size:16px 16px}
@@ -556,11 +578,18 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .grid,.lesson-finance-grid{grid-template-columns:1fr}.field.full,.lesson-finance-grid .full{grid-column:auto}.row{grid-template-columns:1fr 1fr auto}
   .week-view .panel-head{align-items:stretch;flex-direction:column}.week-panel-title{gap:3px}.week-panel-title span{max-width:none;line-height:1.55;text-align:right}
   .week-navigation{align-self:stretch;justify-content:space-between}.week-navigation button{flex:1}
-  .week-time-toolbar{align-items:stretch;flex-direction:column;padding:10px 11px}.week-time-switch{width:100%}.week-time-switch button{flex:1}
+  .week-smart-summary{grid-template-columns:1fr 1fr;padding:9px 11px}.week-summary-card{padding:9px 10px}
+  .week-time-toolbar{align-items:stretch;flex-direction:column;padding:10px 11px}.week-view-controls{width:100%;display:grid;grid-template-columns:1fr}.week-time-switch,.week-density-switch{width:100%}.week-time-switch button,.week-density-switch button{flex:1}
   .week-legend{align-items:flex-start;padding:10px 11px}.source-legend{width:100%}
   .week-table-wrap{padding:10px}.week-grid{grid-template-columns:66px repeat(7,minmax(145px,1fr));min-width:1080px}
   .week-time-label,.week-slot{min-height:102px}.week-time-label{padding-inline:4px}.week-slot{padding:6px}
   .week-grid.full-day .week-time-label,.week-grid.full-day .week-slot{min-height:76px}.week-grid.full-day .quick-add-slot{min-height:60px}
+  .week-grid.density-compact .week-time-label,.week-grid.density-compact .week-slot{min-height:72px}.week-grid.density-compact .quick-add-slot{min-height:54px}
+  .week-grid.density-comfortable .week-time-label,.week-grid.density-comfortable .week-slot{min-height:126px}.week-grid.density-comfortable .quick-add-slot{min-height:106px}
+  .week-grid.full-day.density-compact .week-time-label,.week-grid.full-day.density-compact .week-slot{min-height:58px}.week-grid.full-day.density-compact .quick-add-slot{min-height:42px}
+  .week-grid.full-day.density-comfortable .week-time-label,.week-grid.full-day.density-comfortable .week-slot{min-height:102px}.week-grid.full-day.density-comfortable .quick-add-slot{min-height:82px}
+  .week-current-time::before{right:61px}.week-current-time span{left:5px}
+  .quick-add-grid,.week-move-grid,.move-scope{grid-template-columns:1fr}
   .week-gap-control{min-height:31px}.week-gap-control button{height:25px}
   .week-card{min-height:88px;padding:9px}.week-name{font-size:12px}
   .quick-add-slot{min-height:88px;opacity:.68}
@@ -739,14 +768,22 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
           <button type="button" onclick="changeScheduleWeek(1)" aria-label="عرض الأسبوع التالي">التالي</button>
         </nav>
       </div>
+      <div class="week-smart-summary" id="weekSmartSummary" aria-live="polite"></div>
       <div class="week-time-toolbar" aria-label="طريقة عرض أوقات الأسبوع">
         <div class="week-time-toolbar-copy">
           <strong>عرض الأوقات</strong>
           <span id="weekTimeModeHint">اعرض المواعيد الموجودة فقط، وافتح ساعة فارغة عند الحاجة.</span>
         </div>
-        <div class="week-time-switch" role="group" aria-label="طريقة عرض ساعات الجدول">
-          <button type="button" id="weekCompactTimeMode" class="active" aria-pressed="true" onclick="setWeekTimeMode('compact')">المواعيد فقط</button>
-          <button type="button" id="weekFullTimeMode" aria-pressed="false" onclick="setWeekTimeMode('full')">24 ساعة</button>
+        <div class="week-view-controls">
+          <div class="week-time-switch" role="group" aria-label="طريقة عرض ساعات الجدول">
+            <button type="button" id="weekCompactTimeMode" class="active" aria-pressed="true" onclick="setWeekTimeMode('compact')">المواعيد فقط</button>
+            <button type="button" id="weekFullTimeMode" aria-pressed="false" onclick="setWeekTimeMode('full')">24 ساعة</button>
+          </div>
+          <div class="week-density-switch" role="group" aria-label="كثافة عرض الجدول">
+            <button type="button" id="weekDensityCompact" aria-pressed="false" onclick="setWeekDensity('compact')">مضغوط</button>
+            <button type="button" id="weekDensityNormal" class="active" aria-pressed="true" onclick="setWeekDensity('normal')">عادي</button>
+            <button type="button" id="weekDensityComfortable" aria-pressed="false" onclick="setWeekDensity('comfortable')">مريح</button>
+          </div>
         </div>
       </div>
       <div class="week-legend" aria-label="دليل ألوان الجدول">
@@ -1059,6 +1096,7 @@ const MAX_NOTIFICATION_LEADS=3;
 const NOTIFICATION_LEAD_KEY="mawaeidi-notification-lead-v1";
 const NOTIFICATION_LEADS_KEY="mawaeidi-notification-leads-v2";
 const WEEK_TIME_MODE_KEY="mawaeidi-week-time-mode-v1";
+const WEEK_DENSITY_KEY="mawaeidi-week-density-v1";
 const SCHEDULE_TIMEZONE="Africa/Cairo";
 const FINANCE_VERSION=1;
 const FINANCE_CURRENCIES=["EGP","USD","EUR","GBP","SAR","AED"];
@@ -1290,7 +1328,10 @@ let currentFilter="all";
 let currentView="today";
 let selectedWeekOffset=0;
 let weekTimeMode=savedWeekTimeMode();
+let weekDensity=savedWeekDensity();
 let expandedWeekTimes=new Set();
+let draggedWeekContext=null;
+let activeWeekMoveContext=null;
 let currentSection="schedule";
 let selectedFinanceMonth=currentDateKey().slice(0,7);
 let editingId=null;
@@ -1374,6 +1415,7 @@ function closeToolDialog(event){
   backdrop.setAttribute("aria-hidden","true");
   document.body.classList.remove("drawer-open");
   activeSessionContext=null;
+  activeWeekMoveContext=null;
   if(toolReturnFocus?.focus)toolReturnFocus.focus();
   toolReturnFocus=null;
   setTimeout(flushPendingRemote,0);
@@ -2655,6 +2697,23 @@ function savedWeekTimeMode(){
 function rememberWeekTimeMode(mode){
   try{localStorage.setItem(WEEK_TIME_MODE_KEY,mode)}catch{}
 }
+function savedWeekDensity(){
+  try{
+    const value=localStorage.getItem(WEEK_DENSITY_KEY);
+    return ["compact","normal","comfortable"].includes(value)?value:"normal";
+  }catch{return "normal"}
+}
+function rememberWeekDensity(value){try{localStorage.setItem(WEEK_DENSITY_KEY,value)}catch{}}
+function setWeekDensity(value){
+  weekDensity=["compact","comfortable"].includes(value)?value:"normal";
+  rememberWeekDensity(weekDensity);renderWeek();
+}
+function renderWeekDensityChrome(){
+  [["weekDensityCompact","compact"],["weekDensityNormal","normal"],["weekDensityComfortable","comfortable"]].forEach(([id,value])=>{
+    const button=document.getElementById(id),active=weekDensity===value;
+    if(button){button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active))}
+  });
+}
 function shiftedWeekTime(time,deltaMinutes){
   const base=mins(time),total=base+Number(deltaMinutes||0);
   if(!Number.isFinite(base)||total<0||total>=1440)return null;
@@ -2820,6 +2879,23 @@ function renderWeekBars(){
     </div>`).join("");
 }
 
+function weekHoursText(minutes){
+  const hours=Math.round((Math.max(0,minutes)/60)*10)/10;
+  return `${new Intl.NumberFormat("ar-EG",{maximumFractionDigits:1}).format(hours)} س`;
+}
+function renderWeekSmartSummary(occurrences){
+  const box=document.getElementById("weekSmartSummary");if(!box)return;
+  const active=(occurrences||[]).filter(item=>!occurrenceIsInactive(item));
+  const teachMinutes=active.filter(item=>item.lesson.type==="teach").reduce((sum,item)=>sum+Number(item.lesson.duration||60),0);
+  const learnMinutes=active.filter(item=>item.lesson.type==="learn").reduce((sum,item)=>sum+Number(item.lesson.duration||60),0);
+  const dayCounts=days.map(day=>({day,count:active.filter(item=>item.day===day).length})).sort((a,b)=>b.count-a.count||days.indexOf(a.day)-days.indexOf(b.day));
+  const busiest=dayCounts[0]||{day:"—",count:0};
+  box.innerHTML=`
+    <div class="week-summary-card"><small>حصص الأسبوع</small><strong>${active.length}</strong><span>${active.length?"المواعيد الفعلية في هذا الأسبوع":"لا توجد حصص"}</span></div>
+    <div class="week-summary-card"><small>وقت التدريس</small><strong>${weekHoursText(teachMinutes)}</strong><span>${active.filter(item=>item.lesson.type==="teach").length} حصة أُدرِّس</span></div>
+    <div class="week-summary-card"><small>وقت الدراسة</small><strong>${weekHoursText(learnMinutes)}</strong><span>${active.filter(item=>item.lesson.type==="learn").length} حصة أدرس</span></div>
+    <div class="week-summary-card"><small>الأكثر ازدحامًا</small><strong>${busiest.count?esc(busiest.day):"—"}</strong><span>${busiest.count?`${busiest.count} حصة`:"الأسبوع هادئ"}</span></div>`;
+}
 function appendWeekGapControl(grid,time){
   if(!time)return;
   const gap=document.createElement("div"),button=document.createElement("button");
@@ -2832,8 +2908,9 @@ function renderWeek(){
   const list=filtered(),grid=document.getElementById("weekGrid"),legend=document.getElementById("sourceLegend"),layout=getWeekLayout(list),occ=layout.occurrences,tn=todayName();
   const rangeLabel=document.getElementById("weekRangeLabel"),isCurrentWeek=selectedWeekOffset===0;
   if(rangeLabel)rangeLabel.textContent=`${selectedWeekRangeLabel()}${isCurrentWeek?" · الأسبوع الحالي":""}`;
-  renderWeekTimeModeChrome();
+  renderWeekTimeModeChrome();renderWeekDensityChrome();renderWeekSmartSummary(occ);
   grid.innerHTML="";grid.classList.toggle("full-day",weekTimeMode==="full");
+  grid.classList.remove("density-compact","density-normal","density-comfortable");grid.classList.add(`density-${weekDensity}`);
   const sourceNames=[...new Set(list.map(sourceLabel))].sort((a,b)=>a.localeCompare(b,"ar"));
   legend.innerHTML=sourceNames.length
     ?`<span class="legend-title">الجهة</span>${sourceNames.map(name=>`<span class="source-chip" style="--source-color:${sourceColorFromLabel(name)}"><i class="source-line" aria-hidden="true"></i>${esc(name)}</span>`).join("")}`
@@ -2873,14 +2950,18 @@ function renderWeek(){
     const row=document.createElement("div");
     row.className="week-grid-row";row.setAttribute("role","row");row.dataset.weekTime=time;
     const timeCell=document.createElement("div");
-    timeCell.className="week-time-label";timeCell.setAttribute("role","rowheader");timeCell.textContent=fmt(time);
+    timeCell.className="week-time-label";timeCell.setAttribute("role","rowheader");timeCell.dataset.weekTime=time;timeCell.textContent=fmt(time);
     row.appendChild(timeCell);
     days.forEach(day=>{
       const items=layout.slots.get(`${time}|${day}`)||[];
       const slot=document.createElement("div");
       slot.className="week-slot"+(isCurrentWeek&&day===tn?" today":"")+(items.length?"":" is-empty");
+      slot.dataset.weekDay=day;slot.dataset.weekTime=time;slot.dataset.weekDate=weekDateForDay(day);
       slot.setAttribute("role","cell");
       slot.setAttribute("aria-label",items.length?`${day}، ${fmt(time)}، ${items.length} حصة`:`${day}، ${fmt(time)}، فارغ`);
+      slot.ondragover=e=>{if(!draggedWeekContext)return;e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="move";slot.classList.add("drag-over")};
+      slot.ondragleave=e=>{if(!slot.contains(e.relatedTarget))slot.classList.remove("drag-over")};
+      slot.ondrop=e=>{e.preventDefault();slot.classList.remove("drag-over");if(draggedWeekContext)openWeekMoveDialog(draggedWeekContext,day,time)};
       if(!items.length){
         const add=document.createElement("button");
         add.type="button";
@@ -2900,14 +2981,24 @@ function renderWeek(){
         card.innerHTML=`
           <div class="week-card-top">
             <span class="week-kind ${l.type}">${kind}</span>
-            <button type="button" class="icon-btn" title="نسخ" aria-label="نسخ الحصة">⧉</button>
+            <div class="week-card-tools">
+              <button type="button" class="icon-btn week-move-btn" title="نقل الموعد" aria-label="نقل الموعد">↔</button>
+              <button type="button" class="icon-btn week-copy-btn" title="نسخ" aria-label="نسخ الحصة">⧉</button>
+            </div>
           </div>
           <div class="week-name">${esc(l.name||"بدون اسم")}</div>
           <div class="week-meta">${details}</div>
           <div class="week-status-row"><div class="week-source"><i class="source-line" aria-hidden="true"></i>${esc(src)}</div>${sessionStatusButtonMarkup(o)}</div>`;
+        const moveContext={lessonId:l.id,date:o.date,time:o.time,day:o.day,kind:o.kind||"base",recordId:o.recordId||""};
         card.onclick=()=>openEdit(l.id);
         card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit(l.id)}};
-        card.querySelector(".icon-btn").onclick=e=>{e.stopPropagation();copyLessonById(l.id)};
+        if(!occurrenceIsInactive(o)){
+          card.draggable=true;card.setAttribute("aria-grabbed","false");
+          card.ondragstart=e=>{draggedWeekContext=moveContext;card.classList.add("dragging");card.setAttribute("aria-grabbed","true");if(e.dataTransfer){e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",JSON.stringify(moveContext))}};
+          card.ondragend=()=>{draggedWeekContext=null;card.classList.remove("dragging");card.setAttribute("aria-grabbed","false");document.querySelectorAll(".week-slot.drag-over").forEach(item=>item.classList.remove("drag-over"))};
+        }
+        card.querySelector(".week-copy-btn").onclick=e=>{e.stopPropagation();copyLessonById(l.id)};
+        card.querySelector(".week-move-btn").onclick=e=>{e.stopPropagation();openWeekMoveDialog(moveContext,o.day,o.time)};
         slot.appendChild(card);
       });
       row.appendChild(slot);
@@ -2918,6 +3009,29 @@ function renderWeek(){
       if(candidate&&(!nextTime||mins(candidate)<mins(nextTime)))appendWeekGapControl(grid,candidate);
     }
   });
+  requestAnimationFrame(updateCurrentTimeIndicator);
+}
+
+function updateCurrentTimeIndicator(){
+  const grid=document.getElementById("weekGrid");if(!grid)return;
+  grid.querySelector(".week-current-time")?.remove();
+  if(currentView!=="week"||selectedWeekOffset!==0||!grid.children.length)return;
+  const cells=[...grid.querySelectorAll(".week-time-label[data-week-time]")].sort((a,b)=>mins(a.dataset.weekTime)-mins(b.dataset.weekTime));
+  if(!cells.length)return;
+  const now=currentTimeKey(),nowMinutes=mins(now),firstMinutes=mins(cells[0].dataset.weekTime),lastMinutes=mins(cells.at(-1).dataset.weekTime);
+  if(nowMinutes<firstMinutes-60||nowMinutes>lastMinutes+60)return;
+  let top=null;
+  for(let i=0;i<cells.length;i++){
+    const cell=cells[i],start=mins(cell.dataset.weekTime),next=cells[i+1],nextMinutes=next?mins(next.dataset.weekTime):start+60;
+    if(nowMinutes>=start&&nowMinutes<=nextMinutes){
+      const startTop=cell.offsetTop,nextTop=next?next.offsetTop:cell.offsetTop+cell.offsetHeight,ratio=Math.max(0,Math.min(1,(nowMinutes-start)/Math.max(1,nextMinutes-start)));
+      top=startTop+(nextTop-startTop)*ratio;break;
+    }
+  }
+  if(top===null&&nowMinutes<firstMinutes)top=Math.max(cells[0].offsetTop-cells[0].offsetHeight*(firstMinutes-nowMinutes)/60,58);
+  if(top===null&&nowMinutes>lastMinutes)top=cells.at(-1).offsetTop+cells.at(-1).offsetHeight*Math.min(1,(nowMinutes-lastMinutes)/60);
+  if(top===null)return;
+  const line=document.createElement("div");line.className="week-current-time";line.style.top=`${Math.round(top)}px`;line.innerHTML=`<span>الآن · ${esc(fmt(now))}</span>`;grid.appendChild(line);
 }
 
 function financeSummaryData(period){
@@ -3518,13 +3632,101 @@ function openNew(){
   setLessonReminderFields("default",[DEFAULT_NOTIFICATION_LEAD]);
   toggleFields();setLessonFinanceFields();openDrawer();
 }
+function quickAddCandidate(){
+  const day=document.getElementById("quickDay")?.value||"الاثنين",time=document.getElementById("quickTime")?.value||"18:00",duration=Number(document.getElementById("quickDuration")?.value||60);
+  return normalizeLesson({id:"quick-preview",type:document.getElementById("quickType")?.value==="learn"?"learn":"teach",studentType:"individual",lessonSource:"private",name:document.getElementById("quickName")?.value.trim()||"حصة جديدة",duration,repeat:"أسبوعيًا",reminderMode:"default",reminderLeads:[DEFAULT_NOTIFICATION_LEAD],sessionRecords:[],schedules:[{day,time}]});
+}
+function quickAddConflictList(){
+  const candidate=quickAddCandidate(),basic=conflicts(candidate),schedule=candidate.schedules[0],date=weekDateForDay(schedule.day),start=mins(schedule.time),end=start+candidate.duration;
+  const dated=datedOccurrencesForDate(date,lessons).filter(item=>!occurrenceIsInactive(item)).filter(item=>start<mins(item.time)+Number(item.lesson.duration||60)&&end>mins(item.time)).map(item=>({day:schedule.day,time:schedule.time,name:item.lesson.name||"حصة أخرى",exTime:item.time}));
+  const seen=new Set();return [...basic,...dated].filter(item=>{const key=`${item.day}|${item.exTime}|${item.name}`;if(seen.has(key))return false;seen.add(key);return true});
+}
+function updateQuickAddConflict(){
+  const box=document.getElementById("quickConflict");if(!box)return;
+  const list=quickAddConflictList();box.classList.toggle("show",Boolean(list.length));
+  box.innerHTML=list.length?`<strong>هذا الوقت غير متاح.</strong><br>${list.map(item=>`${esc(item.name)} · ${esc(fmt(item.exTime))}`).join("<br>")}`:"";
+}
 function openQuickAdd(day,time){
-  const safeDay=days.includes(day)?day:"الاثنين";
-  const safeTime=TIME_RE.test(String(time))?String(time):"18:00";
-  openNew();
-  setScheduleRows([{day:safeDay,time:safeTime}]);
-  document.getElementById("drawerSub").textContent=`تم اختيار ${safeDay} الساعة ${fmt(safeTime)} من الجدول.`;
-  setTimeout(()=>document.getElementById("name").focus(),0);
+  const safeDay=days.includes(day)?day:"الاثنين",safeTime=TIME_RE.test(String(time))?String(time):"18:00";
+  const content=`<div class="quick-add-form">
+    <div class="quick-add-grid">
+      <div class="field full"><label for="quickName">اسم الطالب / عنوان الحصة</label><input id="quickName" maxlength="160" placeholder="مثلاً: أحمد" autocomplete="off"></div>
+      <div class="field"><label for="quickType">نوع الحصة</label><select id="quickType"><option value="teach">أُدرِّس</option><option value="learn">أدرس</option></select></div>
+      <div class="field"><label for="quickDuration">المدة</label><select id="quickDuration" onchange="updateQuickAddConflict()"><option value="30">30 دقيقة</option><option value="45">45 دقيقة</option><option value="60" selected>60 دقيقة</option><option value="90">90 دقيقة</option><option value="120">120 دقيقة</option></select></div>
+      <div class="field"><label for="quickDay">اليوم</label><select id="quickDay" onchange="updateQuickAddConflict()">${days.map(item=>`<option value="${item}" ${item===safeDay?"selected":""}>${item}</option>`).join("")}</select></div>
+      <div class="field"><label for="quickTime">الوقت</label><input id="quickTime" type="time" value="${safeTime}" oninput="updateQuickAddConflict()"></div>
+    </div>
+    <div class="quick-conflict" id="quickConflict" role="alert"></div>
+    <div class="quick-add-note">الحفظ السريع ينشئ موعدًا أسبوعيًا ببيانات أساسية. للحساب المالي أو المركز أو المنصة استخدم «تفاصيل أكثر».</div>
+    <div class="quick-actions"><button type="button" class="save" onclick="saveQuickAdd(this)">حفظ سريع</button><button type="button" onclick="expandQuickAddToDrawer()">تفاصيل أكثر</button><button type="button" onclick="closeToolDialog()">إلغاء</button></div>
+  </div>`;
+  openToolDialog("إضافة سريعة",`${safeDay} · ${fmt(safeTime)}`,content);setTimeout(()=>{document.getElementById("quickName")?.focus();updateQuickAddConflict()},0);
+}
+async function saveQuickAdd(button){
+  const name=document.getElementById("quickName")?.value.trim()||"",candidate=quickAddCandidate();
+  if(!name){alert("اكتب اسم الطالب أو عنوان الحصة.");document.getElementById("quickName")?.focus();return}
+  if(!Number.isFinite(candidate.duration)||candidate.duration<15||candidate.duration>720){alert("اختر مدة صحيحة.");return}
+  const list=quickAddConflictList();if(list.length){updateQuickAddConflict();return}
+  const lesson=normalizeLesson({...candidate,id:makeId(),name});
+  const previous=lessons;button.disabled=true;lessons=[...lessons,lesson];
+  if(!await persist()){lessons=previous;button.disabled=false;return}
+  render();closeToolDialog();
+}
+function expandQuickAddToDrawer(){
+  const name=document.getElementById("quickName")?.value.trim()||"",type=document.getElementById("quickType")?.value||"teach",duration=Number(document.getElementById("quickDuration")?.value||60),day=document.getElementById("quickDay")?.value||"الاثنين",time=document.getElementById("quickTime")?.value||"18:00";
+  closeToolDialog();openNew();document.getElementById("name").value=name;document.getElementById("type").value=type;document.getElementById("duration").value=duration;setScheduleRows([{day,time}]);refreshLessonFinanceForLessonFields();
+}
+function weeklyMoveCandidate(context,targetDay,targetTime){
+  const lesson=lessons.find(item=>item.id===context.lessonId);if(!lesson)return null;
+  const schedules=(lesson.schedules||[]).map(item=>item.day===context.day&&item.time===context.time?{day:targetDay,time:targetTime}:{...item});
+  if(!schedules.some(item=>item.day===targetDay&&item.time===targetTime)&&!(lesson.schedules||[]).some(item=>item.day===context.day&&item.time===context.time))return null;
+  return normalizeLesson({...lesson,schedules});
+}
+function weekMoveConflict(context,targetDay,targetTime,scope){
+  if(!context||!days.includes(targetDay)||!TIME_RE.test(targetTime))return {message:"اختر يومًا ووقتًا صحيحين."};
+  const targetDate=weekDateForDay(targetDay);
+  if(scope==="single"){
+    if(targetDate===context.date&&targetTime===context.time)return {message:"هذا هو الموعد الحالي بالفعل."};
+    const conflict=rescheduleConflict(context,targetDate,targetTime);return conflict?{message:`يتعارض مع ${conflict.lesson.name||"حصة أخرى"} · ${fmt(conflict.time)}`} : null;
+  }
+  if(context.kind==="replacement")return {message:"الموعد البديل يمكن نقله لهذه الحصة فقط."};
+  if(targetDay===context.day&&targetTime===context.time)return {message:"هذا هو الموعد الأسبوعي الحالي بالفعل."};
+  const candidate=weeklyMoveCandidate(context,targetDay,targetTime);if(!candidate)return {message:"تعذّر العثور على الموعد الأسبوعي الأصلي."};
+  const recurring=conflicts(candidate)[0];if(recurring)return {message:`يتعارض أسبوعيًا مع ${recurring.name} · ${fmt(recurring.exTime)}`};
+  const dated=rescheduleConflict(context,targetDate,targetTime);return dated?{message:`يتعارض في هذا الأسبوع مع ${dated.lesson.name||"حصة أخرى"} · ${fmt(dated.time)}`} : null;
+}
+function updateWeekMoveConflict(){
+  const box=document.getElementById("weekMoveConflict");if(!box||!activeWeekMoveContext)return;
+  const day=document.getElementById("weekMoveDay")?.value,time=document.getElementById("weekMoveTime")?.value,scope=document.querySelector('input[name="weekMoveScope"]:checked')?.value||"single",conflict=weekMoveConflict(activeWeekMoveContext,day,time,scope);
+  box.classList.toggle("show",Boolean(conflict));box.innerHTML=conflict?`<strong>لا يمكن النقل:</strong> ${esc(conflict.message)}`:"";
+}
+function openWeekMoveDialog(context,presetDay,presetTime){
+  if(!context)return;activeWeekMoveContext={...context};
+  const targetDay=days.includes(presetDay)?presetDay:context.day,targetTime=TIME_RE.test(String(presetTime))?String(presetTime):context.time,lesson=lessons.find(item=>item.id===context.lessonId);if(!lesson)return;
+  const weeklyDisabled=context.kind==="replacement";
+  const content=`<div class="week-move-form">
+    <div class="week-move-grid"><div class="field"><label for="weekMoveDay">اليوم الجديد</label><select id="weekMoveDay" onchange="updateWeekMoveConflict()">${days.map(item=>`<option value="${item}" ${item===targetDay?"selected":""}>${item}</option>`).join("")}</select></div><div class="field"><label for="weekMoveTime">الوقت الجديد</label><input id="weekMoveTime" type="time" value="${targetTime}" oninput="updateWeekMoveConflict()"></div></div>
+    <div class="move-scope"><label><input type="radio" name="weekMoveScope" value="single" checked onchange="updateWeekMoveConflict()"><span><strong>هذه الحصة فقط</strong><br>ينقل موعد هذا الأسبوع دون تغيير الجدول الأساسي.</span></label><label><input type="radio" name="weekMoveScope" value="weekly" ${weeklyDisabled?"disabled":""} onchange="updateWeekMoveConflict()"><span><strong>الموعد الأسبوعي</strong><br>يغيّر هذا الموعد في الأسابيع القادمة كلها.</span></label></div>
+    <div class="week-move-conflict" id="weekMoveConflict" role="alert"></div>
+    <div class="quick-actions"><button type="button" class="save" onclick="saveWeekMove(this)">نقل الموعد</button><button type="button" onclick="closeToolDialog()">إلغاء</button></div>
+  </div>`;
+  openToolDialog("نقل الموعد",`${lesson.name||"بدون اسم"} · ${formatSessionDate(context.date)} · ${fmt(context.time)}`,content);activeWeekMoveContext={...context};setTimeout(updateWeekMoveConflict,0);
+}
+async function saveWeekMove(button){
+  const context=activeWeekMoveContext;if(!context)return;
+  const targetDay=document.getElementById("weekMoveDay")?.value,targetTime=document.getElementById("weekMoveTime")?.value,scope=document.querySelector('input[name="weekMoveScope"]:checked')?.value||"single",conflict=weekMoveConflict(context,targetDay,targetTime,scope);
+  if(conflict){updateWeekMoveConflict();return}
+  const index=lessons.findIndex(item=>item.id===context.lessonId);if(index<0)return;
+  const previous=lessons;button.disabled=true;
+  if(scope==="weekly"){
+    const candidate=weeklyMoveCandidate(context,targetDay,targetTime);if(!candidate){button.disabled=false;return}
+    lessons=lessons.map((item,itemIndex)=>itemIndex===index?candidate:item);
+  }else{
+    const targetDate=weekDateForDay(targetDay),updated=lessonWithSessionStatus(lessons[index],context,"rescheduled",targetDate,targetTime);
+    lessons=lessons.map((item,itemIndex)=>itemIndex===index?updated:item);
+  }
+  if(!await persist()){lessons=previous;button.disabled=false;return}
+  render();closeToolDialog();
 }
 function openEdit(id){
   const l=lessons.find(x=>x.id===id);if(!l)return;
@@ -3683,6 +3885,7 @@ async function initApp(){
   refreshInstallAction();
   registerAppWorker();
   render();
+  setInterval(()=>{if(currentView==="week")updateCurrentTimeIndicator()},30000);
   if(!cloud){
     showAuth();
     setAuthMessage("تعذّر تحميل خدمة الحساب. تحقق من اتصال الإنترنت ثم حدّث الصفحة.",true);

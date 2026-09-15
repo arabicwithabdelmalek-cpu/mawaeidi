@@ -1,0 +1,349 @@
+name: Add world timezone tools
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-world-timezones.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add lesson timezones and world clock
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, re
+
+          path=Path('index.html')
+          text=path.read_text(encoding='utf-8')
+
+          def replace_once(old,new,label):
+              global text
+              count=text.count(old)
+              if count!=1:
+                  raise SystemExit(f'{label}: expected one match, found {count}')
+              text=text.replace(old,new,1)
+
+          # Build an offline zone -> country-code map from the runner's IANA tzdata.
+          tzmap={}
+          zone_tab=Path('/usr/share/zoneinfo/zone.tab')
+          if zone_tab.exists():
+              for line in zone_tab.read_text(encoding='utf-8').splitlines():
+                  if not line or line.startswith('#'): continue
+                  parts=line.split('\t')
+                  if len(parts)>=3:
+                      tzmap[parts[2]]=parts[0]
+          tzmap.setdefault('Africa/Cairo','EG')
+          tzmap_js=json.dumps(tzmap,ensure_ascii=False,separators=(',',':'))
+
+          replace_once(
+          'const WEEK_DENSITY_KEY="mawaeidi-week-density-v1";\nconst SCHEDULE_TIMEZONE="Africa/Cairo";',
+          'const WEEK_DENSITY_KEY="mawaeidi-week-density-v1";\nconst WORLD_CLOCK_ZONES_KEY="mawaeidi-world-clock-zones-v1";\nconst SCHEDULE_TIMEZONE="Africa/Cairo";',
+          'world clock storage key')
+
+          replace_once(
+          'const SESSION_RECORD_STATUSES=["default","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"];\nconst cloud=',
+          f'const SESSION_RECORD_STATUSES=["default","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"];\nconst TIMEZONE_COUNTRY_MAP={tzmap_js};\nconst cloud=',
+          'timezone country map')
+
+          replace_once(
+          'function textValue(value){return typeof value==="string"?value:""}\nfunction normalizeNotificationLeads',
+          '''function textValue(value){return typeof value==="string"?value:""}\nfunction validTimeZone(value){\n  const zone=textValue(value).trim();if(!zone)return false;\n  try{new Intl.DateTimeFormat("en",{timeZone:zone}).format(new Date());return true}catch{return false}\n}\nfunction normalizeNotificationLeads''',
+          'timezone validator')
+
+          replace_once(
+          '''    groupStudents:Array.isArray(item.groupStudents)?item.groupStudents.filter(x=>typeof x==="string"&&x.trim()).map(x=>x.trim()):[],\n    centerName:textValue(item.centerName),''',
+          '''    groupStudents:Array.isArray(item.groupStudents)?item.groupStudents.filter(x=>typeof x==="string"&&x.trim()).map(x=>x.trim()):[],\n    studentTimeZone:validTimeZone(item.studentTimeZone)?textValue(item.studentTimeZone).trim():"",\n    centerName:textValue(item.centerName),''',
+          'normalize lesson timezone')
+
+          replace_once(
+          '<summary aria-label="فتح أدوات البيانات">البيانات</summary>\n          <div class="data-popover">',
+          '''<summary aria-label="فتح أدوات مواعيدي">الأدوات</summary>\n          <div class="data-popover">\n            <button type="button" class="data-action" onclick="openWorldClock()">\n              <strong>الساعة العالمية</strong>\n              <small>اعرف وقت الطالب وحوّل المواعيد بين الدول</small>\n            </button>\n            <div class="data-separator" aria-hidden="true"></div>''',
+          'world clock menu action')
+
+          replace_once(
+          '''        <div class="field full" id="groupField" style="display:none">\n          <label for="groupStudents">طلاب المجموعة</label>\n          <textarea id="groupStudents" placeholder="كل اسم في سطر أو افصل بينهم بفاصلة"></textarea>\n        </div>''',
+          '''        <div class="field full" id="groupField" style="display:none">\n          <label for="groupStudents">طلاب المجموعة</label>\n          <textarea id="groupStudents" placeholder="كل اسم في سطر أو افصل بينهم بفاصلة"></textarea>\n        </div>\n        <div class="field full lesson-timezone-field">\n          <label for="studentTimeZoneInput">بلد الطالب / المنطقة الزمنية</label>\n          <input id="studentTimeZoneInput" list="lessonTimeZoneOptions" placeholder="مثلاً: أذربيجان أو باكو" autocomplete="off" oninput="lessonTimeZoneInputChanged()" onchange="updateStudentTimeZoneHint()">\n          <datalist id="lessonTimeZoneOptions"></datalist>\n          <div class="timezone-field-hint" id="studentTimeZoneHint">اختياري — سيظهر وقت الطالب بجانب موعد مصر، ويتغير تلقائيًا مع التوقيت الصيفي.</div>\n        </div>''',
+          'lesson timezone field')
+
+          replace_once(
+          'let activeSessionContext=null;\n',
+          'let activeSessionContext=null;\nlet worldClockInterval=null;\nlet timeZoneCatalogCache=null;\n',
+          'world clock state')
+
+          replace_once(
+          '''  activeSessionContext=null;\n  activeWeekMoveContext=null;\n  if(toolReturnFocus?.focus)toolReturnFocus.focus();''',
+          '''  activeSessionContext=null;\n  activeWeekMoveContext=null;\n  if(worldClockInterval){clearInterval(worldClockInterval);worldClockInterval=null}\n  if(toolReturnFocus?.focus)toolReturnFocus.focus();''',
+          'clear world clock interval')
+
+          timezone_utils=r'''function normalizeZoneSearch(value){
+  return String(value||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[إأآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/[_/().,-]+/g," ").replace(/\s+/g," ").trim();
+}
+function countryNameForZone(zone){
+  const code=TIMEZONE_COUNTRY_MAP[zone];if(!code)return "";
+  try{return new Intl.DisplayNames(["ar-EG"],{type:"region"}).of(code)||code}catch{return code}
+}
+function genericNameForZone(zone,date=new Date()){
+  try{return new Intl.DateTimeFormat("ar-EG",{timeZone:zone,timeZoneName:"longGeneric"}).formatToParts(date).find(part=>part.type==="timeZoneName")?.value||zone}catch{return zone}
+}
+function timeZoneCatalog(){
+  if(timeZoneCatalogCache)return timeZoneCatalogCache;
+  let zones=[];
+  try{zones=typeof Intl.supportedValuesOf==="function"?Intl.supportedValuesOf("timeZone"):Object.keys(TIMEZONE_COUNTRY_MAP)}catch{zones=Object.keys(TIMEZONE_COUNTRY_MAP)}
+  if(!zones.includes(SCHEDULE_TIMEZONE))zones.push(SCHEDULE_TIMEZONE);
+  const countryCounts={};zones.forEach(zone=>{const code=TIMEZONE_COUNTRY_MAP[zone];if(code)countryCounts[code]=(countryCounts[code]||0)+1});
+  timeZoneCatalogCache=[...new Set(zones)].filter(validTimeZone).map(zone=>{
+    const code=TIMEZONE_COUNTRY_MAP[zone]||"",country=countryNameForZone(zone),zoneName=genericNameForZone(zone),city=(zone.split("/").at(-1)||zone).replace(/_/g," ");
+    const multi=code&&countryCounts[code]>1;
+    const label=country?(multi?`${country} — ${zoneName} · ${city}`:`${country} — ${zoneName}`):`${zoneName} — ${city}`;
+    return {zone,code,country,zoneName,city,label,search:normalizeZoneSearch(`${country} ${zoneName} ${city} ${zone}`)};
+  }).sort((a,b)=>a.label.localeCompare(b.label,"ar"));
+  return timeZoneCatalogCache;
+}
+function timeZoneEntry(zone){return timeZoneCatalog().find(item=>item.zone===zone)||null}
+function timeZoneShortLabel(zone){
+  const entry=timeZoneEntry(zone);if(!entry)return zone||"";
+  if(!entry.country)return entry.zoneName;
+  const sameCountry=timeZoneCatalog().filter(item=>item.code&&item.code===entry.code).length;
+  return sameCountry>1?`${entry.country} · ${entry.zoneName.replace(/^توقيت\s*/,"")}`:entry.country;
+}
+function resolveTimeZoneText(value){
+  const raw=String(value||"").trim();if(!raw)return {entry:null,ambiguous:false,matches:[]};
+  const catalog=timeZoneCatalog(),exactZone=catalog.find(item=>item.zone.toLowerCase()===raw.toLowerCase()),exactLabel=catalog.find(item=>item.label===raw);
+  if(exactZone||exactLabel)return {entry:exactZone||exactLabel,ambiguous:false,matches:[exactZone||exactLabel]};
+  const query=normalizeZoneSearch(raw),countryExact=catalog.filter(item=>normalizeZoneSearch(item.country)===query);
+  if(countryExact.length===1)return {entry:countryExact[0],ambiguous:false,matches:countryExact};
+  if(countryExact.length>1)return {entry:null,ambiguous:true,matches:countryExact.slice(0,12)};
+  const matches=catalog.filter(item=>item.search.includes(query)).slice(0,12);
+  return {entry:matches.length===1?matches[0]:null,ambiguous:matches.length>1,matches};
+}
+function populateTimeZoneDatalist(id){
+  const list=document.getElementById(id);if(!list)return;
+  list.innerHTML="";const fragment=document.createDocumentFragment();
+  timeZoneCatalog().forEach(entry=>{const option=document.createElement("option");option.value=entry.label;option.label=entry.zone;fragment.appendChild(option)});list.appendChild(fragment);
+}
+function setTimeZoneInput(input,zone){
+  if(!input)return;const entry=timeZoneEntry(zone);
+  input.value=entry?.label||"";input.dataset.zone=entry?.zone||"";input.dataset.zoneLabel=input.value;
+}
+function resolvedZoneFromInput(input){
+  if(!input)return {entry:null,ambiguous:false,matches:[]};
+  if(input.dataset.zone&&input.value===input.dataset.zoneLabel&&validTimeZone(input.dataset.zone))return {entry:timeZoneEntry(input.dataset.zone)||{zone:input.dataset.zone,label:input.value},ambiguous:false,matches:[]};
+  const result=resolveTimeZoneText(input.value);
+  if(result.entry){input.dataset.zone=result.entry.zone;input.dataset.zoneLabel=result.entry.label;input.value=result.entry.label}
+  return result;
+}
+function zonedParts(date,zone){
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(date).filter(part=>part.type!=="literal").map(part=>[part.type,part.value]));
+  return {year:Number(parts.year),month:Number(parts.month),day:Number(parts.day),hour:Number(parts.hour),minute:Number(parts.minute),second:Number(parts.second)};
+}
+function zoneOffsetMinutes(date,zone){
+  const p=zonedParts(date,zone),rounded=Math.floor(date.getTime()/1000)*1000;
+  return Math.round((Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-rounded)/60000);
+}
+function wallTimeToInstant(dateKey,time,zone=SCHEDULE_TIMEZONE){
+  if(!validDateKey(dateKey)||!TIME_RE.test(String(time))||!validTimeZone(zone))return null;
+  const [year,month,day]=dateKey.split("-").map(Number),[hour,minute]=String(time).split(":").map(Number),target=Date.UTC(year,month-1,day,hour,minute,0);
+  let stamp=target;
+  for(let i=0;i<5;i++){
+    const next=target-zoneOffsetMinutes(new Date(stamp),zone)*60000;
+    if(Math.abs(next-stamp)<1000){stamp=next;break}stamp=next;
+  }
+  const date=new Date(stamp);return Number.isFinite(date.getTime())?date:null;
+}
+function dateKeyInZone(date,zone){
+  const p=zonedParts(date,zone);return `${p.year}-${String(p.month).padStart(2,"0")}-${String(p.day).padStart(2,"0")}`;
+}
+function timeKeyInZone(date,zone){
+  const p=zonedParts(date,zone);return `${String(p.hour).padStart(2,"0")}:${String(p.minute).padStart(2,"0")}`;
+}
+function formattedTimeInZone(date,zone){return fmt(timeKeyInZone(date,zone))}
+function dayShiftLabel(sourceDate,targetDate){return targetDate===sourceDate?"":targetDate>sourceDate?" · اليوم التالي":" · اليوم السابق"}
+function studentTimeInfo(occurrence){
+  const zone=occurrence?.lesson?.studentTimeZone;if(!zone||!validTimeZone(zone)||!validDateKey(occurrence?.date)||!TIME_RE.test(occurrence?.time))return null;
+  const instant=wallTimeToInstant(occurrence.date,occurrence.time,SCHEDULE_TIMEZONE);if(!instant)return null;
+  const targetDate=dateKeyInZone(instant,zone),targetTime=timeKeyInZone(instant,zone),hour=Number(targetTime.slice(0,2));
+  return {zone,label:timeZoneShortLabel(zone),time:fmt(targetTime),date:targetDate,shift:dayShiftLabel(occurrence.date,targetDate),odd:hour<6||hour>=23};
+}
+function studentTimeInline(occurrence){
+  const info=studentTimeInfo(occurrence);return info?`🌍 ${info.time} · ${info.label}${info.shift}`:"";
+}
+function worldOffsetText(date,zone){
+  const diff=zoneOffsetMinutes(date,zone)-zoneOffsetMinutes(date,SCHEDULE_TIMEZONE);if(!diff)return "نفس توقيت مصر";
+  const sign=diff>0?"+":"−",abs=Math.abs(diff),hours=Math.floor(abs/60),minutes=abs%60;
+  return `${sign}${hours}${minutes?`:${String(minutes).padStart(2,"0")}`:""} عن مصر`;
+}
+'''
+          replace_once(
+          'function mins(t){const value=TIME_RE.test(String(t))?String(t):"00:00";const[h,m]=value.split(":").map(Number);return h*60+m}\nfunction todayName()',
+          'function mins(t){const value=TIME_RE.test(String(t))?String(t):"00:00";const[h,m]=value.split(":").map(Number);return h*60+m}\n'+timezone_utils+'function todayName()',
+          'timezone utilities')
+
+          world_clock=r'''function savedWorldClockZones(){
+  try{
+    const stored=JSON.parse(localStorage.getItem(WORLD_CLOCK_ZONES_KEY)||"[]"),zones=(Array.isArray(stored)?stored:[]).filter(validTimeZone);
+    return [...new Set([SCHEDULE_TIMEZONE,...zones])].slice(0,10);
+  }catch{return [SCHEDULE_TIMEZONE,"Asia/Baku"].filter(validTimeZone)}
+}
+function rememberWorldClockZones(zones){try{localStorage.setItem(WORLD_CLOCK_ZONES_KEY,JSON.stringify([...new Set(zones.filter(validTimeZone).filter(zone=>zone!==SCHEDULE_TIMEZONE))].slice(0,9)))}catch{}}
+function renderWorldClockCards(){
+  const box=document.getElementById("worldClockCards");if(!box)return;const now=new Date(),zones=savedWorldClockZones();
+  box.innerHTML=zones.map(zone=>{
+    const entry=timeZoneEntry(zone),dateKey=dateKeyInZone(now,zone),dateText=new Date(`${dateKey}T12:00:00Z`).toLocaleDateString("ar-EG",{weekday:"long",day:"numeric",month:"short",timeZone:"UTC"});
+    return `<article class="world-clock-card${zone===SCHEDULE_TIMEZONE?" home":""}"><div><small>${zone===SCHEDULE_TIMEZONE?"التوقيت الأساسي":"الوقت الآن"}</small><strong>${esc(entry?.label||zone)}</strong><span>${esc(dateText)} · ${esc(worldOffsetText(now,zone))}</span></div><div class="world-clock-time">${esc(formattedTimeInZone(now,zone))}</div>${zone===SCHEDULE_TIMEZONE?"":`<button type="button" class="world-remove" aria-label="إزالة ${esc(entry?.label||zone)}" onclick="removeWorldClockZone('${esc(zone)}')">×</button>`}</article>`;
+  }).join("");
+}
+function addWorldClockZone(){
+  const input=document.getElementById("worldZoneSearch"),result=resolvedZoneFromInput(input);if(!input)return;
+  if(!input.value.trim())return;
+  if(!result.entry){
+    const hint=document.getElementById("worldZoneSearchHint");if(hint)hint.textContent=result.ambiguous?"هذه الدولة فيها أكثر من منطقة زمنية؛ اختر المدينة/المنطقة من الاقتراحات.":"لم أتعرف على المنطقة. اختر نتيجة من القائمة.";return;
+  }
+  const zones=savedWorldClockZones();if(!zones.includes(result.entry.zone))zones.push(result.entry.zone);rememberWorldClockZones(zones);input.value="";input.dataset.zone="";input.dataset.zoneLabel="";document.getElementById("worldZoneSearchHint").textContent="اكتب اسم الدولة بالعربي أو المدينة، ثم اختر النتيجة.";renderWorldClockCards();
+}
+function removeWorldClockZone(zone){rememberWorldClockZones(savedWorldClockZones().filter(item=>item!==zone));renderWorldClockCards()}
+function worldZoneInputChanged(input){if(input.value!==input.dataset.zoneLabel){input.dataset.zone="";input.dataset.zoneLabel=""}}
+function convertWorldTime(){
+  const date=document.getElementById("worldConvertDate")?.value,time=document.getElementById("worldConvertTime")?.value,fromResult=resolvedZoneFromInput(document.getElementById("worldFromZone")),toResult=resolvedZoneFromInput(document.getElementById("worldToZone")),box=document.getElementById("worldConvertResult");if(!box)return;
+  if(!validDateKey(date)||!TIME_RE.test(time)){box.className="world-convert-result error";box.textContent="اختر تاريخًا ووقتًا صحيحين.";return}
+  if(!fromResult.entry||!toResult.entry){box.className="world-convert-result error";box.textContent="اختر منطقتين زمنيتين واضحتين من الاقتراحات؛ الدول متعددة التوقيت تحتاج تحديد المنطقة.";return}
+  const instant=wallTimeToInstant(date,time,fromResult.entry.zone);if(!instant){box.className="world-convert-result error";box.textContent="تعذّر تحويل هذا الموعد.";return}
+  const targetDate=dateKeyInZone(instant,toResult.entry.zone),targetTime=formattedTimeInZone(instant,toResult.entry.zone),dateText=new Date(`${targetDate}T12:00:00Z`).toLocaleDateString("ar-EG",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});
+  box.className="world-convert-result";box.innerHTML=`<small>${esc(fromResult.entry.label)}</small><strong>${esc(fmt(time))} ← ${esc(targetTime)}</strong><span>${esc(toResult.entry.label)} · ${esc(dateText)}${esc(dayShiftLabel(date,targetDate))}</span>`;
+}
+function swapWorldConverter(){
+  const from=document.getElementById("worldFromZone"),to=document.getElementById("worldToZone");if(!from||!to)return;
+  const a={value:from.value,zone:from.dataset.zone,label:from.dataset.zoneLabel};from.value=to.value;from.dataset.zone=to.dataset.zone||"";from.dataset.zoneLabel=to.dataset.zoneLabel||"";to.value=a.value;to.dataset.zone=a.zone||"";to.dataset.zoneLabel=a.label||"";convertWorldTime();
+}
+function openWorldClock(){
+  closeDataMenu();
+  const content=`<div class="world-clock-tool">
+    <section class="world-clock-section"><header><div><h3>الوقت الآن</h3><p>أضف البلاد التي تتعامل معها وسيظل الوقت محدثًا تلقائيًا.</p></div></header><div class="world-zone-add"><input id="worldZoneSearch" list="worldTimeZoneOptions" placeholder="اكتب: أذربيجان، روسيا، باكو…" autocomplete="off" oninput="worldZoneInputChanged(this)"><button type="button" onclick="addWorldClockZone()">＋ إضافة</button></div><div class="world-search-hint" id="worldZoneSearchHint">اكتب اسم الدولة بالعربي أو المدينة، ثم اختر النتيجة.</div><datalist id="worldTimeZoneOptions"></datalist><div class="world-clock-cards" id="worldClockCards"></div></section>
+    <section class="world-clock-section"><header><div><h3>تحويل موعد</h3><p>حوّل أي ساعة بين مصر وأي بلد، أو بين بلدين مباشرة.</p></div></header><div class="world-convert-grid"><div class="field"><label for="worldConvertDate">التاريخ</label><input id="worldConvertDate" type="date" value="${currentDateKey()}" onchange="convertWorldTime()"></div><div class="field"><label for="worldConvertTime">الساعة</label><input id="worldConvertTime" type="time" value="${currentTimeKey()}" oninput="convertWorldTime()"></div><div class="field"><label for="worldFromZone">من توقيت</label><input id="worldFromZone" list="worldTimeZoneOptions" autocomplete="off" oninput="worldZoneInputChanged(this)" onchange="convertWorldTime()"></div><div class="field"><label for="worldToZone">إلى توقيت</label><input id="worldToZone" list="worldTimeZoneOptions" autocomplete="off" oninput="worldZoneInputChanged(this)" onchange="convertWorldTime()"></div></div><div class="world-convert-actions"><button type="button" onclick="convertWorldTime()">تحويل</button><button type="button" class="secondary" onclick="swapWorldConverter()">⇄ عكس الاتجاه</button></div><div class="world-convert-result" id="worldConvertResult" aria-live="polite"></div></section>
+  </div>`;
+  openToolDialog("الساعة العالمية","المواعيد محسوبة بالمناطق الزمنية الحقيقية، وليس بفرق ساعات ثابت.",content);populateTimeZoneDatalist("worldTimeZoneOptions");
+  const target=savedWorldClockZones().find(zone=>zone!==SCHEDULE_TIMEZONE)||"Asia/Baku";setTimeZoneInput(document.getElementById("worldFromZone"),SCHEDULE_TIMEZONE);setTimeZoneInput(document.getElementById("worldToZone"),validTimeZone(target)?target:SCHEDULE_TIMEZONE);renderWorldClockCards();convertWorldTime();
+  if(worldClockInterval)clearInterval(worldClockInterval);worldClockInterval=setInterval(renderWorldClockCards,30000);
+}
+function lessonTimeZoneInputChanged(){
+  const input=document.getElementById("studentTimeZoneInput");if(input&&input.value!==input.dataset.zoneLabel){input.dataset.zone="";input.dataset.zoneLabel=""}updateStudentTimeZoneHint();
+}
+function readLessonTimeZone(){
+  const input=document.getElementById("studentTimeZoneInput");if(!input||!input.value.trim())return "";return resolvedZoneFromInput(input).entry?.zone||"";
+}
+function setLessonTimeZoneField(zone=""){
+  populateTimeZoneDatalist("lessonTimeZoneOptions");const input=document.getElementById("studentTimeZoneInput");if(!input)return;
+  if(validTimeZone(zone))setTimeZoneInput(input,zone);else{input.value="";input.dataset.zone="";input.dataset.zoneLabel=""}updateStudentTimeZoneHint();
+}
+function updateStudentTimeZoneHint(){
+  const input=document.getElementById("studentTimeZoneInput"),hint=document.getElementById("studentTimeZoneHint");if(!input||!hint)return;
+  hint.classList.remove("warn","error");if(!input.value.trim()){hint.textContent="اختياري — سيظهر وقت الطالب بجانب موعد مصر، ويتغير تلقائيًا مع التوقيت الصيفي.";return}
+  const result=resolveTimeZoneText(input.value);if(!result.entry){hint.classList.add(result.ambiguous?"warn":"error");hint.textContent=result.ambiguous?"هذه الدولة فيها أكثر من منطقة زمنية؛ اختر المدينة أو المنطقة من الاقتراحات.":"اختر منطقة زمنية صحيحة من الاقتراحات.";return}
+  input.dataset.zone=result.entry.zone;input.dataset.zoneLabel=result.entry.label;
+  const schedules=readSchedules();if(!schedules.length){hint.textContent=`تم اختيار ${result.entry.label}.`;return}
+  const first=schedules[0];let date=weekDateForDay(first.day,currentDateKey());if(date<currentDateKey()||(date===currentDateKey()&&mins(first.time)<mins(currentTimeKey())))date=addDaysToDateKey(date,7);
+  const info=studentTimeInfo({lesson:{studentTimeZone:result.entry.zone},date,time:first.time});if(!info){hint.textContent=`تم اختيار ${result.entry.label}.`;return}
+  hint.classList.toggle("warn",info.odd);hint.textContent=`${first.day} ${fmt(first.time)} في مصر = ${info.time} لدى الطالب (${info.label})${info.shift}.${info.odd?" هذا وقت متأخر/مبكر لدى الطالب.":""}`;
+}
+'''
+          replace_once(
+          'function urlBase64ToUint8Array(value){',
+          world_clock+'function urlBase64ToUint8Array(value){',
+          'world clock functions')
+
+          # Schedule fields update the timezone preview too.
+          replace_once(
+          '<select class="schedule-day" aria-label="يوم الحصة">${opts}</select>\n    <input class="schedule-time" type="time" value="${safeTime}" aria-label="وقت الحصة" required>',
+          '<select class="schedule-day" aria-label="يوم الحصة" onchange="updateStudentTimeZoneHint()">${opts}</select>\n    <input class="schedule-time" type="time" value="${safeTime}" aria-label="وقت الحصة" required oninput="updateStudentTimeZoneHint()">',
+          'schedule timezone preview hooks')
+
+          # New/edit lesson state.
+          replace_once(
+          '  ["name","subject","platform","notes","groupStudents","centerName"].forEach(id=>document.getElementById(id).value="");',
+          '  ["name","subject","platform","notes","groupStudents","centerName"].forEach(id=>document.getElementById(id).value="");\n  setLessonTimeZoneField("");',
+          'new lesson timezone reset')
+
+          replace_once(
+          '  document.getElementById("groupStudents").value=Array.isArray(l.groupStudents)?l.groupStudents.join("\\n"):"";\n  document.getElementById("centerName").value=l.centerName||"";',
+          '  document.getElementById("groupStudents").value=Array.isArray(l.groupStudents)?l.groupStudents.join("\\n"):"";\n  setLessonTimeZoneField(l.studentTimeZone||"");\n  document.getElementById("centerName").value=l.centerName||"";',
+          'edit lesson timezone')
+
+          replace_once(
+          '''    name:document.getElementById("name").value.trim(),\n    groupStudents,\n    centerName:document.getElementById("centerName").value.trim(),''',
+          '''    name:document.getElementById("name").value.trim(),\n    groupStudents,\n    studentTimeZone:readLessonTimeZone(),\n    centerName:document.getElementById("centerName").value.trim(),''',
+          'save lesson timezone')
+
+          replace_once(
+          '  if(!Number.isFinite(duration)||duration<15||duration>720){alert("اكتب مدة صحيحة بين 15 و720 دقيقة.");return}\n',
+          '  if(document.getElementById("studentTimeZoneInput").value.trim()&&!lesson.studentTimeZone){alert("اختر بلد/منطقة الطالب من الاقتراحات. وإذا كانت الدولة فيها أكثر من توقيت، اختر المدينة أو المنطقة.");return}\n  if(!Number.isFinite(duration)||duration<15||duration>720){alert("اكتب مدة صحيحة بين 15 و720 دقيقة.");return}\n',
+          'lesson timezone validation')
+
+          # Add student-local time to next card, today list, and week cards.
+          replace_once(
+          '      <div class="meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة</div>\n`;',
+          '      <div class="meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة${studentTimeInline(next)?" · "+esc(studentTimeInline(next)):""}</div>\n`;',
+          'next card local time')
+
+          replace_once(
+          '''            <span class="pill">${src}</span>\n            ${sessionStatusButtonMarkup(o)}''',
+          '''            <span class="pill">${src}</span>\n            ${studentTimeInline(o)?`<span class="pill student-time-pill">${esc(studentTimeInline(o))}</span>`:""}\n            ${sessionStatusButtonMarkup(o)}''',
+          'timeline local time')
+
+          replace_once(
+          '''          <div class="week-name">${esc(l.name||"بدون اسم")}</div>\n          <div class="week-meta">${details}</div>\n          <div class="week-status-row">''',
+          '''          <div class="week-name">${esc(l.name||"بدون اسم")}</div>\n          <div class="week-meta">${details}</div>\n          ${studentTimeInline(o)?`<div class="week-student-time">${esc(studentTimeInline(o))}</div>`:""}\n          <div class="week-status-row">''',
+          'week card local time')
+
+          # World clock + timezone visual styles.
+          style_block=r'''
+.timezone-field-hint{margin-top:2px;padding:8px 9px;border-radius:7px;background:#F3F6F8;color:#667984;font-size:10px;line-height:1.65}.timezone-field-hint.warn{background:#FFF6E8;color:#94621F}.timezone-field-hint.error{background:var(--danger-bg);color:var(--danger)}
+.student-time-pill{border-color:#BFD0DB!important;background:#F1F6F9!important;color:#3F6279!important}.week-student-time{margin-top:6px;padding:5px 7px;border-radius:6px;background:rgba(255,255,255,.72);color:#48697F;font-size:9px;font-weight:800;line-height:1.45}
+.world-clock-tool{display:grid;gap:12px}.world-clock-section{padding:13px;border:1px solid var(--line);border-radius:10px;background:#fff}.world-clock-section>header{display:flex;align-items:start;justify-content:space-between;gap:10px;margin-bottom:11px}.world-clock-section h3{margin:0;color:var(--primary);font-size:15px}.world-clock-section p{margin:3px 0 0;color:var(--muted);font-size:10px;line-height:1.6}.world-zone-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.world-zone-add button,.world-convert-actions button{min-height:39px;padding:8px 12px;border:0;border-radius:8px;background:var(--primary);color:#fff;font-size:11px;font-weight:800}.world-search-hint{margin:5px 2px 9px;color:#7A8993;font-size:9px;line-height:1.55}.world-clock-cards{display:grid;gap:7px}.world-clock-card{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-inline-start:4px solid #7A9BB0;border-radius:9px;background:#F8FAFB}.world-clock-card.home{border-inline-start-color:var(--primary);background:#EEF4F7}.world-clock-card small,.world-clock-card span{display:block;color:var(--muted);font-size:9px}.world-clock-card strong{display:block;margin:2px 0;color:var(--ink);font-size:11px;line-height:1.5}.world-clock-time{padding-inline-end:22px;color:var(--primary);font-size:19px;font-weight:800;direction:ltr;white-space:nowrap}.world-remove{position:absolute;top:6px;left:6px;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:transparent;color:#85959F;font-size:17px}.world-remove:hover{background:#fff;color:var(--danger)}.world-convert-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.world-convert-actions{display:flex;gap:7px;margin-top:10px}.world-convert-actions .secondary{border:1px solid var(--line);background:#fff;color:var(--primary)}.world-convert-result{display:grid;gap:3px;margin-top:10px;padding:11px;border-inline-start:4px solid var(--primary);border-radius:8px;background:#EEF4F7}.world-convert-result small,.world-convert-result span{color:#667984;font-size:10px;line-height:1.55}.world-convert-result strong{color:var(--primary);font-size:18px;direction:ltr;text-align:right}.world-convert-result.error{border-inline-start-color:var(--danger);background:var(--danger-bg);color:var(--danger);font-size:11px}
+'''
+          replace_once(
+          '.install-help{margin-top:9px;padding:10px;border-radius:8px;background:#EEF3F6;color:#536977;font-size:11px;line-height:1.75}\n\n.backdrop{',
+          '.install-help{margin-top:9px;padding:10px;border-radius:8px;background:#EEF3F6;color:#536977;font-size:11px;line-height:1.75}\n'+style_block+'\n.backdrop{',
+          'timezone styles')
+
+          replace_once(
+          '  .notification-leads,.session-status-options{grid-template-columns:repeat(2,1fr)}',
+          '  .world-convert-grid{grid-template-columns:1fr}.world-clock-time{font-size:17px}.world-zone-add{grid-template-columns:1fr}.world-zone-add button{width:100%}\n  .notification-leads,.session-status-options{grid-template-columns:repeat(2,1fr)}',
+          'mobile world clock styles')
+
+          path.write_text(text,encoding='utf-8')
+
+          sw=Path('sw.js')
+          sw_text=sw.read_text(encoding='utf-8')
+          sw_text=re.sub(r'mawaeidi-shell-v\d+','mawaeidi-shell-v14',sw_text,count=1)
+          sw.write_text(sw_text,encoding='utf-8')
+          PY
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess, tempfile
+          text=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S)
+          app=max(scripts,key=len)
+          with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:
+              f.write(app);name=f.name
+          subprocess.run(['node','--check',name],check=True)
+          required=['openWorldClock','studentTimeZone','worldClockCards','TIMEZONE_COUNTRY_MAP','readLessonTimeZone']
+          for token in required:
+              if token not in text: raise SystemExit(f'missing {token}')
+          if 'mawaeidi-shell-v14' not in Path('sw.js').read_text(encoding='utf-8'): raise SystemExit('cache version not updated')
+          PY
+
+          git rm .github/workflows/add-world-timezones.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Add world clock and student timezones'
+          git push

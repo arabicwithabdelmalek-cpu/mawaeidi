@@ -1,0 +1,48 @@
+name: Redesign world clock
+
+on:
+  push:
+    paths:
+      - '.github/workflows/redesign-world-clock.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Redesign world clock
+        run: python3 scripts/redesign_world_clock.py
+      - name: Validate JavaScript and app shell
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess, tempfile
+          text=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S)
+          app=max(scripts,key=len)
+          with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:
+              f.write(app)
+              name=f.name
+          subprocess.run(['node','--check',name],check=True)
+          required=['world-clock-hero','worldAnalogClock','renderWorldTimeline','worldTimeline','world-dashboard-grid']
+          for token in required:
+              if token not in text:
+                  raise SystemExit(f'missing {token}')
+          if 'mawaeidi-shell-v15' not in Path('sw.js').read_text(encoding='utf-8'):
+              raise SystemExit('cache v15 missing')
+          PY
+      - name: Commit redesign
+        shell: bash
+        run: |
+          git rm .github/workflows/redesign-world-clock.yml scripts/redesign_world_clock.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          git commit -m 'Redesign world clock dashboard'
+          git push

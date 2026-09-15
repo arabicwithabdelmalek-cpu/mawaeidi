@@ -1,10 +1,9 @@
-const CACHE_NAME="mawaeidi-shell-v19";
+const CACHE_NAME="mawaeidi-shell-v20";
 const APP_SHELL=[
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icons/icon.svg",
-  "./icons/world-map.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"

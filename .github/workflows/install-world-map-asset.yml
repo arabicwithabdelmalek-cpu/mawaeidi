@@ -1,0 +1,58 @@
+name: Install professional world map asset
+
+on:
+  push:
+    paths:
+      - '.github/workflows/install-world-map-asset.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download public-domain world map SVG
+        shell: bash
+        run: |
+          mkdir -p icons
+          curl -L --fail --retry 3 -A 'Mawaeidi/1.0' \
+            'https://commons.wikimedia.org/wiki/Special:Redirect/file/BlankMap-World.svg' \
+            -o icons/world-map.svg
+          test -s icons/world-map.svg
+          grep -qi '<svg' icons/world-map.svg
+      - name: Replace hand-drawn map with asset
+        run: python3 scripts/install_world_map_asset.py
+      - name: Validate app
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess, tempfile
+          text=Path('index.html').read_text(encoding='utf-8')
+          if '<div class="world-map-art" aria-hidden="true"><img src="./icons/world-map.svg"' not in text:
+              raise SystemExit('local map asset not mounted')
+          if '<div class="world-map-art" aria-hidden="true"><svg' in text:
+              raise SystemExit('old hand-drawn map still present')
+          if 'mawaeidi-shell-v18' not in Path('sw.js').read_text(encoding='utf-8'):
+              raise SystemExit('PWA cache not bumped')
+          if '"./icons/world-map.svg"' not in Path('sw.js').read_text(encoding='utf-8'):
+              raise SystemExit('map asset missing from app shell')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S)
+          app=max(scripts,key=len)
+          with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:
+              f.write(app); name=f.name
+          subprocess.run(['node','--check',name],check=True)
+          PY
+      - name: Commit update
+        shell: bash
+        run: |
+          git rm .github/workflows/install-world-map-asset.yml scripts/install_world_map_asset.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js icons/world-map.svg
+          git commit -m 'Use professional world map SVG'
+          git push

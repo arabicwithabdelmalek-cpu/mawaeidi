@@ -1,0 +1,40 @@
+name: Refresh weekday editor asset
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/refresh-day-order-v2.yml
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Upgrade editor asset reference and offline cache
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          page=Path('index.html')
+          content=page.read_text(encoding='utf-8')
+          old='<script src="./day-order.js?v=1" defer></script>'
+          new='<script src="./day-order.js?v=2" defer></script>'
+          assert content.count(old)==1 or content.count(new)==1, 'Missing editor script tag'
+          if old in content: page.write_text(content.replace(old,new,1),encoding='utf-8')
+          worker=Path('sw.js')
+          script=worker.read_text(encoding='utf-8')
+          script=script.replace('mawaeidi-shell-v32','mawaeidi-shell-v34').replace('"./day-order.js",','"./day-order.js?v=2",').replace('"./day-order.js?v=1",','"./day-order.js?v=2",')
+          assert '"./day-order.js?v=2"' in script
+          worker.write_text(script,encoding='utf-8')
+          PY
+      - name: Publish update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html sw.js
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refresh weekday ordering in lesson forms and PWA'
+            git push origin HEAD:main
+          fi

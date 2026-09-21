@@ -1,4 +1,4 @@
-/* Mawaeidi weekday display order: no lesson data or actual dates are changed. */
+/* Mawaeidi: custom weekday display order, shared by the weekly grid and lesson forms. Actual dates and lesson data stay unchanged. */
 (()=>{
 'use strict';
 const DAYS=['الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت','الأحد'];
@@ -19,20 +19,43 @@ function arrange(){
    if(byDay.size===7)row.replaceChildren(cells[0],...arrangement.map(day=>byDay.get(day)));
  });
 }
+/* Reorder existing DOM nodes, never regenerate rows: unsaved day/time edits are preserved. */
+function arrangeDaySelect(select,arrangement){
+ if(!select)return;
+ const options=new Map([...select.options].map(option=>[option.value,option]));
+ if(!DAYS.every(day=>options.has(day)))return;
+ const chosen=select.value;
+ select.replaceChildren(...arrangement.map(day=>options.get(day)));
+ select.value=chosen;
+}
+function arrangeScheduleRows(){
+ const container=document.getElementById('scheduleRows');if(!container)return;
+ const arrangement=order(),rank=new Map(arrangement.map((day,index)=>[day,index]));
+ const rows=[...container.children].filter(row=>row.classList.contains('row')&&row.querySelector('.schedule-day'));
+ rows.forEach(row=>arrangeDaySelect(row.querySelector('.schedule-day'),arrangement));
+ rows.map((row,index)=>({row,index}))
+   .sort((a,b)=>(rank.get(a.row.querySelector('.schedule-day').value)??7)-(rank.get(b.row.querySelector('.schedule-day').value)??7)||a.index-b.index)
+   .forEach(({row})=>container.appendChild(row));
+}
+function arrangeDayDialogs(){
+ const arrangement=order();
+ ['quickDay','weekMoveDay'].forEach(id=>arrangeDaySelect(document.getElementById(id),arrangement));
+}
+function arrangeEverywhere(){arrange();arrangeScheduleRows();arrangeDayDialogs()}
 function save(a){
  if(!valid(a))return false;
  try{localStorage.setItem(storageKey(),JSON.stringify(a))}catch{return false}
- arrange();return true;
+ arrangeEverywhere();return true;
 }
 let draft=[];
 function listHTML(){return draft.map((day,i)=>`<div class="day-order-row" data-day="${day}" draggable="true"><button type="button" class="day-order-grip" title="اسحب لتغيير موضع اليوم" aria-label="اسحب ${day}">⠿</button><span class="day-order-number">${i+1}</span><strong>${day}</strong><span class="day-order-arrows"><button type="button" data-move="up" aria-label="تحريك ${day} لأعلى" ${i===0?'disabled':''}>↑</button><button type="button" data-move="down" aria-label="تحريك ${day} لأسفل" ${i===6?'disabled':''}>↓</button></span></div>`).join('')}
 function paint(){const node=document.getElementById('dayOrderList');if(node)node.innerHTML=listHTML()}
 function message(value){const node=document.getElementById('dayOrderStatus');if(node)node.textContent=value}
-function store(){message(save(draft)?'تم حفظ الترتيب على هذا الجهاز.':'تعذّر حفظ الترتيب في المتصفح.');paint()}
+function store(){message(save(draft)?'تم حفظ ترتيب الأيام على هذا الجهاز، وفي نموذج إضافة الحصص أيضًا.':'تعذّر حفظ الترتيب في المتصفح.');paint()}
 function move(from,to){if(!draft.includes(from)||!draft.includes(to)||from===to)return;draft.splice(draft.indexOf(from),1);draft.splice(draft.indexOf(to),0,from);store()}
 function openEditor(){
  draft=order();
- openToolDialog('ترتيب أيام الأسبوع','اسحب الأيام أو استخدم السهمين. يتغير ترتيب العرض فقط، من غير نقل أي حصة أو تعديل تاريخها.',`<div id="dayOrderList" class="day-order-list" aria-label="الأيام بالترتيب"></div><div id="dayOrderStatus" class="day-order-status" role="status" aria-live="polite"></div><div class="day-order-footer"><button type="button" id="dayOrderReset" class="day-order-reset">الترتيب الأصلي</button><button type="button" id="dayOrderDone" class="day-order-done">تم</button></div>`);
+ openToolDialog('ترتيب أيام الأسبوع','اسحب الأيام أو استخدم السهمين. ينعكس ترتيب العرض على الجدول ونموذج الحصص، من غير نقل أي حصة أو تعديل تاريخها.',`<div id="dayOrderList" class="day-order-list" aria-label="الأيام بالترتيب"></div><div id="dayOrderStatus" class="day-order-status" role="status" aria-live="polite"></div><div class="day-order-footer"><button type="button" id="dayOrderReset" class="day-order-reset">الترتيب الأصلي</button><button type="button" id="dayOrderDone" class="day-order-done">تم</button></div>`);
  paint();const list=document.getElementById('dayOrderList');
  list.addEventListener('click',e=>{const btn=e.target.closest('button[data-move]');if(!btn)return;const from=btn.closest('[data-day]')?.dataset.day,i=draft.indexOf(from),n=i+(btn.dataset.move==='up'?-1:1);if(i>=0&&n>=0&&n<7)move(from,draft[n])});
  let dragging=null;
@@ -41,7 +64,6 @@ function openEditor(){
  list.addEventListener('dragover',e=>{if(!dragging)return;const row=e.target.closest('.day-order-row');if(!row)return;e.preventDefault();clear();row.classList.add('day-order-target')});
  list.addEventListener('drop',e=>{if(!dragging)return;e.preventDefault();const to=e.target.closest('.day-order-row')?.dataset.day;const from=dragging;dragging=null;clear();if(to)move(from,to)});
  list.addEventListener('dragend',()=>{dragging=null;clear()});
- // Pointer gestures work on touchscreens; arrows remain available for accessibility.
  let touch=null;
  list.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;const grip=e.target.closest('.day-order-grip');if(!grip)return;touch={id:e.pointerId,from:grip.closest('.day-order-row').dataset.day,to:null};grip.setPointerCapture?.(e.pointerId)});
  list.addEventListener('pointermove',e=>{if(!touch||touch.id!==e.pointerId)return;const row=document.elementFromPoint(e.clientX,e.clientY)?.closest('.day-order-row');clear();if(row&&list.contains(row)){row.classList.add('day-order-target');touch.to=row.dataset.day}});
@@ -59,8 +81,16 @@ function setup(){
 `;document.head.appendChild(style);
  const btn=document.createElement('button');btn.id='dayOrderOpen';btn.type='button';btn.className='day-order-open';btn.textContent='☷ ترتيب الأيام';btn.setAttribute('aria-label','تغيير ترتيب أعمدة أيام الجدول');btn.addEventListener('click',openEditor);nav.appendChild(btn);
 }
-// Keep the canonical days array intact: date arithmetic and individual lesson drag/drop are untouched.
-const original=window.renderWeek;
-if(typeof original==='function')window.renderWeek=function(...args){const result=original.apply(this,args);setup();arrange();return result};
-setup();arrange();
+// Keep canonical DAYS and `days` intact: date arithmetic, notifications and lesson data are untouched.
+const originalRender=window.renderWeek;
+if(typeof originalRender==='function')window.renderWeek=function(...args){const result=originalRender.apply(this,args);setup();arrange();return result};
+const originalSetRows=window.setScheduleRows;
+if(typeof originalSetRows==='function')window.setScheduleRows=function(...args){const result=originalSetRows.apply(this,args);arrangeScheduleRows();return result};
+const originalAddRow=window.addScheduleRow;
+if(typeof originalAddRow==='function')window.addScheduleRow=function(...args){const result=originalAddRow.apply(this,args);arrangeScheduleRows();return result};
+const originalQuickAdd=window.openQuickAdd;
+if(typeof originalQuickAdd==='function')window.openQuickAdd=function(...args){const result=originalQuickAdd.apply(this,args);arrangeDayDialogs();return result};
+const originalWeekMove=window.openWeekMoveDialog;
+if(typeof originalWeekMove==='function')window.openWeekMoveDialog=function(...args){const result=originalWeekMove.apply(this,args);arrangeDayDialogs();return result};
+setup();arrangeEverywhere();
 })();

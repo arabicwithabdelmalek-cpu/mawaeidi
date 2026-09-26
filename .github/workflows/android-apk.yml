@@ -10,6 +10,15 @@ on:
       - "www/**"
       - "icons/**"
       - ".github/workflows/android-apk.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "package.json"
+      - "capacitor.config.json"
+      - "www/**"
+      - "icons/**"
+      - ".github/workflows/android-apk.yml"
   workflow_dispatch:
 
 permissions:

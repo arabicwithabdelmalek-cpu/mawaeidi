@@ -1,0 +1,15 @@
+{
+  "appId": "com.abdelmalek.mawaeidi",
+  "appName": "مواعيدي",
+  "webDir": "www",
+  "server": {
+    "url": "https://arabicwithabdelmalek-cpu.github.io/mawaeidi/",
+    "cleartext": false,
+    "allowNavigation": [
+      "arabicwithabdelmalek-cpu.github.io"
+    ]
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

@@ -3,6 +3,7 @@ name: Build Mawaeidi Android APK
 on:
   push:
     branches:
+      - main
       - mobile-app
     paths:
       - "package.json"

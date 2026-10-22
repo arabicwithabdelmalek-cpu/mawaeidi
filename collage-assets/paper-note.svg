@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 400" width="620" height="400" role="img" aria-label="Blank layered paper collage">
+<defs>
+<filter id="s" x="-20%" y="-20%" width="150%" height="150%"><feDropShadow dx="2" dy="9" stdDeviation="7" flood-color="#473b2d" flood-opacity=".16"/></filter>
+<filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".26" numOctaves="3" seed="4" stitchTiles="stitch" result="n"/><feColorMatrix in="n" type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".085"/></feComponentTransfer></filter>
+<pattern id="lines" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M0 17H18" stroke="#6c8c92" stroke-opacity=".09"/></pattern>
+</defs>
+<path d="M40 69L133 56 197 65 270 42 370 60 482 36 583 72 571 164 593 240 553 322 451 345 372 328 283 356 203 336 111 356 55 323 43 236 28 178Z" fill="#9DB9C0" filter="url(#s)"/>
+<path d="M28 51 137 67 217 42 298 66 390 51 480 65 591 61 578 129 591 211 574 304 490 359 390 343 302 358 194 347 111 359 22 322 34 248 20 156Z" fill="#DAC7A9" filter="url(#s)"/>
+<path d="M47 43 129 54 223 35 314 46 401 42 486 45 576 41 576 105 584 152 566 226 587 297 547 329 450 325 372 343 280 330 192 343 107 330 51 315 42 262 47 189 34 104Z" fill="#FFF9EA" stroke="#E5D7C2" stroke-width="2" filter="url(#s)"/>
+<path d="M47 43 129 54 223 35 314 46 401 42 486 45 576 41 576 105 584 152 566 226 587 297 547 329 450 325 372 343 280 330 192 343 107 330 51 315 42 262 47 189 34 104Z" fill="url(#lines)" opacity=".32"/>
+<path d="M47 43 129 54 223 35 314 46 401 42 486 45 576 41 576 105 584 152 566 226 587 297 547 329 450 325 372 343 280 330 192 343 107 330 51 315 42 262 47 189 34 104Z" fill="#B6AD9F" filter="url(#grain)" opacity=".38"/>
+<path d="M80 36 170 27 174 61 76 70Z" fill="#D9BE92" opacity=".67" stroke="#C3A979" stroke-opacity=".35"/>
+<path d="M479 325 560 302 567 335 492 353Z" fill="#C4DCE0" opacity=".62"/>
+</svg>

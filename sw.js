@@ -1,12 +1,8 @@
-const CACHE_NAME="mawaeidi-shell-v38";
+const CACHE_NAME="mawaeidi-shell-v39";
 const APP_SHELL=[
   "./",
   "./index.html",
   "./day-order.js?v=2",
-  "./account.js?v=1",
-  "./account-page.js?v=2",
-  "./dashboard-v1.css?v=1",
-  "./dashboard-v1.js?v=1",
   "./manifest.webmanifest",
   "./icons/icon.svg",
   "./icons/icon-192.png",

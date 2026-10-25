@@ -4,6 +4,7 @@
   "private": true,
   "description": "Android app shell for مواعيدي",
   "scripts": {
+    "test:students": "node development/tests/student-registry.test.cjs",
     "android:add": "cap add android",
     "android:sync": "cap sync android",
     "android:build": "cd android && ./gradlew assembleDebug"

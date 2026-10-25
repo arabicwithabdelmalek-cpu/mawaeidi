@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex,nofollow">
-  <title>إدارة الطلاب | مواعيدي — بيئة التطوير</title>
+  <title>الطلاب | مواعيدي — بيئة التطوير</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -49,8 +49,8 @@
   <main class="shell" id="app" hidden>
     <header class="mast">
       <div>
-        <div class="brand">مواعيدي <span>/ إدارة الطلاب</span></div>
-        <p>سجل مستقل لحفظ بيانات الطلاب وملاحظاتك التعليمية</p>
+        <div class="brand">مواعيدي <span>/ الطلاب</span></div>
+        <p>بيانات طلابك فقط، بعيدًا عن المواعيد والحسابات</p>
       </div>
       <div class="mast-actions">
         <a class="header-button header-link" href="../index.html">العودة إلى مواعيدي</a>
@@ -64,42 +64,34 @@
       لا تستخدم بيانات طلاب حقيقية هنا. جميع عمليات السحابة تتجه إلى مشروع <b>Mawaeidi Development</b> فقط.
     </div>
 
-    <section class="page-heading">
-      <div>
-        <span class="eyebrow">ملف واحد لكل طالب</span>
-        <h1>سجل الطلاب</h1>
-        <p>اعثر على بيانات الطالب بسرعة، وعدّلها من مكان واحد، واستوردها أو صدّرها عند الحاجة.</p>
-      </div>
-      <div class="page-actions">
-        <button class="btn primary" id="addStudent" type="button">＋ إضافة طالب</button>
-        <details class="data-actions">
-          <summary class="btn">أدوات البيانات</summary>
-          <div class="data-actions-menu">
-            <button class="btn" id="refreshData" type="button">تحديث البيانات</button>
-            <button class="btn" id="exportCsv" type="button">تصدير CSV</button>
-            <button class="btn" id="importCsv" type="button">استيراد CSV</button>
-          </div>
-        </details>
-        <input id="csvFile" type="file" accept=".csv,text/csv" hidden>
-      </div>
-    </section>
-
-    <section class="panel registry-panel" aria-labelledby="registryHeading">
-      <header class="panel-head">
+    <section class="registry-panel" aria-labelledby="registryHeading">
+      <header class="registry-head">
         <div>
-          <h2 id="registryHeading">قائمة الطلاب</h2>
-          <p id="resultsCount">0 نتيجة</p>
+          <span class="eyebrow">سجل مستقل</span>
+          <h1 id="registryHeading">الطلاب</h1>
+          <p><span id="resultsCount">0 طالب</span> · اضغط على الطالب لعرض كل بياناته.</p>
         </div>
-        <button class="filters-toggle" id="clearFilters" type="button">مسح الفلاتر</button>
+        <div class="page-actions">
+          <button class="btn primary" id="addStudent" type="button">＋ طالب جديد</button>
+          <details class="data-actions">
+            <summary class="btn" aria-label="فتح أدوات البيانات">•••</summary>
+            <div class="data-actions-menu">
+              <button class="btn" id="refreshData" type="button">تحديث البيانات</button>
+              <button class="btn" id="exportCsv" type="button">تصدير CSV</button>
+              <button class="btn" id="importCsv" type="button">استيراد CSV</button>
+            </div>
+          </details>
+          <input id="csvFile" type="file" accept=".csv,text/csv" hidden>
+        </div>
       </header>
 
       <div class="filters" aria-label="البحث والفلاتر">
         <div class="field search-field">
-          <label for="search">بحث شامل</label>
-          <input class="control" id="search" type="search" placeholder="الاسم، المستخدم، الدولة، الجهة، البريد، الكتاب…">
+          <label class="sr-only" for="search">البحث في الطلاب</label>
+          <input class="control" id="search" type="search" placeholder="ابحث باسم الطالب أو المستخدم أو الدولة…">
         </div>
         <div class="field">
-          <label for="statusFilter">الحالة</label>
+          <label class="sr-only" for="statusFilter">حالة الطالب</label>
           <select class="control" id="statusFilter"><option value="">كل الحالات</option></select>
         </div>
         <details class="more-filters">
@@ -128,14 +120,12 @@
             </div>
           </div>
         </details>
+        <button class="filters-toggle" id="clearFilters" type="button">مسح التصفية</button>
       </div>
 
       <div class="loading-state" id="loadingState" hidden><span></span> جارٍ تحميل البيانات…</div>
-      <div class="table-wrap" id="tableWrap">
-        <table>
-          <thead><tr><th>الطالب</th><th>اسم المستخدم</th><th>الدولة</th><th>الحالة</th><th>المستوى</th><th>الخيارات</th></tr></thead>
-          <tbody id="studentRows"></tbody>
-        </table>
+      <div class="student-list-wrap" id="tableWrap">
+        <div class="student-list" id="studentRows" role="list"></div>
       </div>
       <div class="empty-state" id="emptyState" hidden>
         <strong>لا توجد نتائج مطابقة</strong>
@@ -149,11 +139,11 @@
   <dialog id="studentEditor">
     <form id="studentForm">
       <header class="dialog-head">
-        <div><span class="eyebrow">البيانات الأساسية</span><h2 id="studentEditorTitle">إضافة طالب</h2></div>
+        <div><span class="eyebrow">ملف الطالب</span><h2 id="studentEditorTitle">إضافة طالب</h2></div>
         <button class="icon-button" data-close="studentEditor" type="button" aria-label="إغلاق">×</button>
       </header>
       <div class="dialog-body">
-        <div class="form-grid" id="studentFields"></div>
+        <div class="student-form-sections" id="studentFields"></div>
         <p class="form-message" id="studentFormMessage" role="alert"></p>
       </div>
       <footer class="dialog-foot">
@@ -170,33 +160,9 @@
     </header>
     <div class="dialog-body" id="profileContent"></div>
     <footer class="dialog-foot split">
-      <div><button class="btn primary" id="addProgress" type="button">＋ إضافة متابعة</button><button class="btn" id="editFromProfile" type="button">تعديل البيانات</button></div>
+      <button class="btn primary" id="editFromProfile" type="button">تعديل البيانات</button>
       <button class="btn danger" id="deleteStudent" type="button">حذف الطالب</button>
     </footer>
-  </dialog>
-
-  <dialog id="progressEditor">
-    <form id="progressForm">
-      <header class="dialog-head">
-        <div><span class="eyebrow">التقدم التعليمي</span><h2 id="progressEditorTitle">إضافة متابعة</h2></div>
-        <button class="icon-button" data-close="progressEditor" type="button" aria-label="إغلاق">×</button>
-      </header>
-      <div class="dialog-body">
-        <div class="form-grid progress-grid">
-          <div class="field"><label for="progressDate">التاريخ</label><input class="control" id="progressDate" type="date" required></div>
-          <div class="field"><label for="progressCategory">المهارة / النوع</label><select class="control" id="progressCategory" required></select></div>
-          <div class="field span-2"><label for="progressTitle">عنوان المتابعة</label><input class="control" id="progressTitle" maxlength="160" required placeholder="مثلاً: تحسن في المحادثة اليومية"></div>
-          <div class="field"><label for="progressScore">التقييم من 100 <span>(اختياري)</span></label><input class="control" id="progressScore" type="number" min="0" max="100" inputmode="numeric"></div>
-          <div class="field span-2"><label for="progressNotes">الملاحظات</label><textarea class="control" id="progressNotes" maxlength="5000" placeholder="ما الذي أتقنه الطالب؟ وما الذي يحتاج إلى مراجعة؟"></textarea></div>
-          <div class="field span-2"><label for="progressNextStep">الخطوة التالية</label><textarea class="control compact" id="progressNextStep" maxlength="1000" placeholder="المهمة أو الهدف القادم"></textarea></div>
-        </div>
-        <p class="form-message" id="progressFormMessage" role="alert"></p>
-      </div>
-      <footer class="dialog-foot">
-        <button class="btn primary" id="saveProgress" type="submit">حفظ المتابعة</button>
-        <button class="btn" data-close="progressEditor" type="button">إلغاء</button>
-      </footer>
-    </form>
   </dialog>
 
   <dialog id="importPreview">

@@ -3,25 +3,12 @@
 const SUPABASE_URL="https://eixeazkkexgfndvfowxa.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_9HtNRmLYbR2IU4jcTPumjw_XJ1ziGpM";
 const STUDENTS_TABLE="mawaeidi_students";
-const PROGRESS_TABLE="mawaeidi_student_progress";
 const MAX_IMPORT_BYTES=2*1024*1024;
 const MAX_IMPORT_ROWS=2000;
 
 const STATUS_OPTIONS=["حالي","سابق","متوقف مؤقتًا","جديد","غير محدد"];
 const LEVEL_OPTIONS=["مبتدئ","متوسط","متقدم","غير محدد"];
 const STUDY_TYPE_OPTIONS=["فردي","مجموعة","غير محدد"];
-const PROGRESS_CATEGORIES={
-  general:"عام",
-  vocabulary:"المفردات",
-  speaking:"المحادثة",
-  listening:"الاستماع",
-  reading:"القراءة",
-  writing:"الكتابة",
-  grammar:"القواعد",
-  pronunciation:"النطق",
-  assessment:"تقييم",
-  homework:"واجب"
-};
 
 const STUDENT_FIELDS=[
   {key:"username",label:"اسم المستخدم على الموقع",required:true,max:120},
@@ -42,6 +29,12 @@ const STUDENT_FIELDS=[
   {key:"educational_notes",label:"ملاحظات تعليمية",textarea:true,max:20000,span:3},
   {key:"student_account_url",label:"رابط حساب الطالب",type:"url",max:2048,span:2}
 ];
+const STUDENT_FIELD_GROUPS=[
+  {title:"البيانات الأساسية",hint:"الاسم والحالة والمكان",keys:["first_name","last_name","username","country","status"]},
+  {title:"بيانات الدراسة",hint:"المستوى والكتاب والجهة",keys:["current_level","study_type","course_book","institute","study_group","joined_on"]},
+  {title:"التواصل والحساب",hint:"وسائل الوصول إلى الطالب",keys:["whatsapp","email","communication_language","student_account_url"]},
+  {title:"ملاحظاتك",hint:"معلومات تساعدك على تذكّر الطالب",keys:["distinguishing_mark","educational_notes"]}
+];
 const CSV_HEADERS=STUDENT_FIELDS.map(field=>field.label);
 const CSV_KEY_BY_HEADER=Object.fromEntries(STUDENT_FIELDS.map(field=>[field.label,field.key]));
 
@@ -53,11 +46,9 @@ let mode="gate";
 let currentUser=null;
 let authMode="signin";
 let students=[];
-let progressEntries=[];
 let filteredStudents=[];
 let editingStudentId=null;
 let activeStudentId=null;
-let editingProgressId=null;
 let importPlan=null;
 let toastTimer=null;
 let initialRouteHandled=false;
@@ -67,12 +58,6 @@ const DEMO_STUDENTS=[
   {id:"22222222-2222-4222-8222-222222222222",username:"demo_learner_2",first_name:"طالبة",last_name:"تجريبية ٢",country:"تركيا",status:"جديد",institute:"مركز لغات",study_group:"المجموعة أ",distinguishing_mark:"",email:"",whatsapp:"",current_level:"مبتدئ",study_type:"مجموعة",course_book:"العربية بين يديك ١",communication_language:"التركية",joined_on:"2026-10-03",educational_notes:"بدأت دراسة الحروف والمحادثات القصيرة.",student_account_url:"",created_at:"2026-10-03T08:00:00Z",updated_at:"2026-10-20T08:00:00Z"},
   {id:"33333333-3333-4333-8333-333333333333",username:"demo_learner_3",first_name:"طالب",last_name:"تجريبي ٣",country:"المملكة المتحدة",status:"متوقف مؤقتًا",institute:"",study_group:"",distinguishing_mark:"",email:"learner3@example.test",whatsapp:"",current_level:"متقدم",study_type:"فردي",course_book:"محادثة متقدمة",communication_language:"الإنجليزية",joined_on:"2026-05-14",educational_notes:"توقف مؤقتًا بسبب ضغط العمل.",student_account_url:"https://example.test/student/demo_3",created_at:"2026-05-14T08:00:00Z",updated_at:"2026-09-28T08:00:00Z"},
   {id:"44444444-4444-4444-8444-444444444444",username:"demo_learner_4",first_name:"طالبة",last_name:"تجريبية ٤",country:"ألمانيا",status:"سابق",institute:"مركز لغات",study_group:"المجموعة ب",distinguishing_mark:"",email:"",whatsapp:"",current_level:"متوسط",study_type:"مجموعة",course_book:"النحو الوظيفي",communication_language:"الألمانية",joined_on:"2026-02-01",educational_notes:"أنهت المستوى المتفق عليه.",student_account_url:"",created_at:"2026-02-01T08:00:00Z",updated_at:"2026-07-30T08:00:00Z"}
-];
-
-const DEMO_PROGRESS=[
-  {id:"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",student_id:DEMO_STUDENTS[0].id,recorded_on:"2026-10-21",category:"speaking",title:"محادثة عن السفر",notes:"استخدم تراكيب السؤال بصورة أفضل، ويحتاج إلى ضبط التذكير والتأنيث.",score:82,next_step:"تسجيل دقيقة واحدة عن رحلة سابقة.",created_at:"2026-10-21T18:00:00Z",updated_at:"2026-10-21T18:00:00Z"},
-  {id:"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",student_id:DEMO_STUDENTS[0].id,recorded_on:"2026-10-14",category:"vocabulary",title:"مفردات وسائل الاتصال",notes:"أتقن معظم المفردات الجديدة.",score:88,next_step:"كتابة خمس جمل بالمفردات.",created_at:"2026-10-14T18:00:00Z",updated_at:"2026-10-14T18:00:00Z"},
-  {id:"cccccccc-cccc-4ccc-8ccc-cccccccccccc",student_id:DEMO_STUDENTS[1].id,recorded_on:"2026-10-19",category:"reading",title:"قراءة كلمات قصيرة",notes:"تميّز بين الحركات القصيرة بصورة جيدة.",score:null,next_step:"مراجعة المدود الثلاثة.",created_at:"2026-10-19T18:00:00Z",updated_at:"2026-10-19T18:00:00Z"}
 ];
 
 function byId(id){return document.getElementById(id)}
@@ -123,21 +108,6 @@ function normalizeStudent(value={}){
   result.updated_at=clean(value.updated_at,50)||result.created_at;
   return result;
 }
-function normalizeProgress(value={}){
-  const score=value.score===""||value.score===null||value.score===undefined?null:Number(value.score);
-  return {
-    id:clean(value.id,80)||makeId(),
-    student_id:clean(value.student_id,80),
-    recorded_on:/^\d{4}-\d{2}-\d{2}$/.test(text(value.recorded_on))?value.recorded_on:todayKey(),
-    category:Object.hasOwn(PROGRESS_CATEGORIES,value.category)?value.category:"general",
-    title:clean(value.title,160),
-    notes:clean(value.notes,5000),
-    score:Number.isInteger(score)&&score>=0&&score<=100?score:null,
-    next_step:clean(value.next_step,1000),
-    created_at:clean(value.created_at,50)||new Date().toISOString(),
-    updated_at:clean(value.updated_at,50)||new Date().toISOString()
-  };
-}
 function setBusy(button,busy,busyText="جارٍ الحفظ…"){
   if(!button)return;
   if(busy){button.dataset.label=button.textContent;button.textContent=busyText;button.disabled=true}
@@ -166,35 +136,51 @@ function closeDialog(id){const dialog=byId(id);if(dialog?.open)dialog.close()}
 function buildStudentForm(){
   const target=byId("studentFields");
   target.replaceChildren();
-  for(const field of STUDENT_FIELDS){
-    const wrapper=document.createElement("div");
-    wrapper.className=`field${field.span?` span-${field.span}`:""}`;
-    const label=document.createElement("label");
-    label.htmlFor=`student_${field.key}`;
-    label.textContent=field.label+(field.required?" *":"");
-    let input;
-    if(field.textarea){
-      input=document.createElement("textarea");
-    }else if(field.options){
-      input=document.createElement("select");
-      for(const optionValue of field.options){
-        const option=document.createElement("option");
-        option.value=optionValue;
-        option.textContent=optionValue;
-        input.append(option);
+  const fieldsByKey=new Map(STUDENT_FIELDS.map(field=>[field.key,field]));
+  for(const group of STUDENT_FIELD_GROUPS){
+    const section=document.createElement("section");
+    section.className="form-section";
+    const heading=document.createElement("header");
+    heading.className="form-section-head";
+    const title=document.createElement("h3");title.textContent=group.title;
+    const hint=document.createElement("p");hint.textContent=group.hint;
+    heading.append(title,hint);
+    const grid=document.createElement("div");
+    grid.className="form-grid";
+    for(const key of group.keys){
+      const field=fieldsByKey.get(key);
+      if(!field)continue;
+      const wrapper=document.createElement("div");
+      wrapper.className=`field${field.span?` span-${field.span}`:""}`;
+      const label=document.createElement("label");
+      label.htmlFor=`student_${field.key}`;
+      label.textContent=field.label+(field.required?" *":"");
+      let input;
+      if(field.textarea){
+        input=document.createElement("textarea");
+      }else if(field.options){
+        input=document.createElement("select");
+        for(const optionValue of field.options){
+          const option=document.createElement("option");
+          option.value=optionValue;
+          option.textContent=optionValue;
+          input.append(option);
+        }
+      }else{
+        input=document.createElement("input");
+        input.type=field.type||"text";
+        if(field.max)input.maxLength=field.max;
       }
-    }else{
-      input=document.createElement("input");
-      input.type=field.type||"text";
-      if(field.max)input.maxLength=field.max;
+      input.id=`student_${field.key}`;
+      input.name=field.key;
+      input.className="control";
+      input.required=Boolean(field.required);
+      if(field.key==="whatsapp")input.inputMode="tel";
+      wrapper.append(label,input);
+      grid.append(wrapper);
     }
-    input.id=`student_${field.key}`;
-    input.name=field.key;
-    input.className="control";
-    input.required=Boolean(field.required);
-    if(field.key==="whatsapp")input.inputMode="tel";
-    wrapper.append(label,input);
-    target.append(wrapper);
+    section.append(heading,grid);
+    target.append(section);
   }
 }
 function populateStaticOptions(){
@@ -210,11 +196,6 @@ function populateStaticOptions(){
       option.value=value;option.textContent=value;select.append(option);
     }
   }
-  const progressSelect=byId("progressCategory");
-  for(const [value,label] of Object.entries(PROGRESS_CATEGORIES)){
-    const option=document.createElement("option");
-    option.value=value;option.textContent=label;progressSelect.append(option);
-  }
 }
 function refreshCountryFilter(){
   const select=byId("countryFilter");
@@ -227,7 +208,6 @@ function refreshCountryFilter(){
 function statusChipClass(value){
   return value==="حالي"?"current":value==="جديد"?"new":value==="متوقف مؤقتًا"?"paused":value==="سابق"?"previous":"";
 }
-function levelChipClass(value){return value==="متوسط"?"intermediate":value==="متقدم"?"advanced":""}
 function currentFilters(){
   return {
     query:normalizeKey(byId("search").value),
@@ -265,31 +245,39 @@ function makeButton(label,action,id,danger=false){
   button.dataset.id=id;
   return button;
 }
+function studentInitials(student){
+  return [student.first_name,student.last_name].filter(Boolean).map(value=>text(value).trim().charAt(0)).join("").slice(0,2)||"ط";
+}
 function renderStudents(){
   refreshCountryFilter();
   filteredStudents=filterAndSortStudents();
-  byId("resultsCount").textContent=`${filteredStudents.length} نتيجة من ${students.length}`;
+  byId("resultsCount").textContent=filteredStudents.length===students.length?`${students.length} طلاب`:`${filteredStudents.length} من ${students.length} طلاب`;
   const body=byId("studentRows");
   body.replaceChildren();
   for(const student of filteredStudents){
-    const row=document.createElement("tr");
-    const nameCell=document.createElement("td");
-    const name=document.createElement("div");name.className="student-name";name.textContent=studentName(student);
-    const course=document.createElement("div");course.className="student-sub";course.textContent=student.course_book||"من دون دورة محددة";
-    nameCell.append(name,course);
-    row.append(nameCell);
+    const row=document.createElement("article");
+    row.className="student-row";
+    row.setAttribute("role","listitem");
 
-    for(const value of [student.username,student.country]){
-      const cell=document.createElement("td");cell.textContent=value||"—";row.append(cell);
-    }
-    const statusCell=document.createElement("td");
-    const status=document.createElement("span");status.className=`chip ${statusChipClass(student.status)}`;status.textContent=student.status;statusCell.append(status);row.append(statusCell);
-    const levelCell=document.createElement("td");
-    const level=document.createElement("span");level.className=`chip ${levelChipClass(student.current_level)}`;level.textContent=student.current_level;levelCell.append(level);row.append(levelCell);
-    const actions=document.createElement("td");
+    const open=document.createElement("button");
+    open.type="button";open.className="student-open";open.dataset.action="view";open.dataset.id=student.id;
+    open.setAttribute("aria-label",`عرض بيانات ${studentName(student)}`);
+    const avatar=document.createElement("span");avatar.className="student-avatar";avatar.textContent=studentInitials(student);
+    const identity=document.createElement("span");identity.className="student-identity";
+    const name=document.createElement("strong");name.className="student-name";name.textContent=studentName(student);
+    const username=document.createElement("span");username.className="student-sub";username.textContent=student.username?`@${student.username}`:"من دون اسم مستخدم";
+    identity.append(name,username);
+    const study=document.createElement("span");study.className="student-study";
+    const course=document.createElement("strong");course.textContent=student.course_book||"لا توجد دورة مسجلة";
+    const details=document.createElement("span");details.textContent=[student.country,student.current_level].filter(Boolean).join(" · ")||"لا توجد تفاصيل إضافية";
+    study.append(course,details);
+    const status=document.createElement("span");status.className=`chip ${statusChipClass(student.status)}`;status.textContent=student.status||"غير محدد";
+    open.append(avatar,identity,study,status);
+
     const actionWrap=document.createElement("div");actionWrap.className="row-actions";
-    actionWrap.append(makeButton("فتح الملف","view",student.id),makeButton("تعديل","edit",student.id));
-    actions.append(actionWrap);row.append(actions);
+    const edit=makeButton("تعديل","edit",student.id);edit.classList.add("edit-student");
+    actionWrap.append(edit);
+    row.append(open,actionWrap);
     body.append(row);
   }
   const empty=!filteredStudents.length;
@@ -298,22 +286,8 @@ function renderStudents(){
 }
 function renderAll(){renderStudents()}
 
-function profileDetails(student){
-  const rows=[
-    ["اسم المستخدم",student.username],
-    ["الدولة",student.country],
-    ["الحالة",student.status],
-    ["المستوى الحالي",student.current_level],
-    ["نوع الدراسة",student.study_type],
-    ["الجهة / المعهد",student.institute],
-    ["المجموعة الدراسية",student.study_group],
-    ["الدورة / الكتاب",student.course_book],
-    ["لغة التواصل",student.communication_language],
-    ["تاريخ الانضمام",student.joined_on?dateLabel(student.joined_on):""],
-    ["علامة مميزة",student.distinguishing_mark],
-    ["ملاحظات تعليمية",student.educational_notes]
-  ];
-  return rows.map(([label,value])=>`<div class="detail-item${label==="ملاحظات تعليمية"?" wide":""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value||"—")}</strong></div>`).join("");
+function profileDetails(rows){
+  return rows.map(([label,value,wide=false])=>`<div class="detail-item${wide?" wide":""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value||"—")}</strong></div>`).join("");
 }
 function profileContacts(student){
   const rows=[];
@@ -322,41 +296,49 @@ function profileContacts(student){
   if(digits)rows.push(`<div class="contact-row"><span>واتساب</span><strong>${escapeHtml(student.whatsapp)}</strong><a href="https://wa.me/${digits}" target="_blank" rel="noopener">فتح واتساب</a></div>`);
   const account=safeUrl(student.student_account_url);
   if(account)rows.push(`<div class="contact-row"><span>رابط حساب الطالب</span><strong>${escapeHtml(student.student_account_url)}</strong><a href="${escapeHtml(account)}" target="_blank" rel="noopener">فتح الحساب</a></div>`);
-  return rows.length?rows.join(""):'<div class="progress-empty">لا توجد وسائل اتصال مسجّلة.</div>';
-}
-function profileProgress(studentId){
-  const list=progressEntries.filter(item=>item.student_id===studentId).sort((a,b)=>b.recorded_on.localeCompare(a.recorded_on)||b.created_at.localeCompare(a.created_at));
-  if(!list.length)return '<div class="progress-empty">لم تُضف متابعة تعليمية لهذا الطالب بعد.</div>';
-  return list.map(item=>`<article class="progress-entry">
-    <div class="progress-top">
-      <div><div class="progress-title">${escapeHtml(item.title)}</div><div class="progress-meta">${escapeHtml(PROGRESS_CATEGORIES[item.category]||"عام")} · ${escapeHtml(dateLabel(item.recorded_on))}</div></div>
-      ${item.score===null?"":`<span class="progress-score">${item.score}/100</span>`}
-    </div>
-    ${item.notes?`<div class="progress-copy">${escapeHtml(item.notes)}</div>`:""}
-    ${item.next_step?`<div class="progress-next"><strong>الخطوة التالية:</strong> ${escapeHtml(item.next_step)}</div>`:""}
-    <div class="progress-entry-actions"><button class="btn small" type="button" data-progress-action="edit" data-id="${item.id}">تعديل</button><button class="btn small danger" type="button" data-progress-action="delete" data-id="${item.id}">حذف</button></div>
-  </article>`).join("");
+  return rows.length?rows.join(""):'<div class="empty-mini">لا توجد وسائل اتصال مسجّلة.</div>';
 }
 function renderProfile(){
   const student=students.find(item=>item.id===activeStudentId);
   if(!student){closeDialog("studentProfile");return}
-  const entries=progressEntries.filter(item=>item.student_id===student.id);
   byId("profileTitle").textContent=studentName(student);
-  byId("profileSubtitle").textContent=`@${student.username} · ${student.country||"الدولة غير محددة"} · ${student.status} · ${student.current_level}`;
+  byId("profileSubtitle").textContent=`@${student.username} · ${student.country||"الدولة غير محددة"}`;
+  const basic=[
+    ["اسم المستخدم",student.username],
+    ["الدولة",student.country],
+    ["الحالة",student.status],
+    ["تاريخ الانضمام",student.joined_on?dateLabel(student.joined_on):""]
+  ];
+  const study=[
+    ["المستوى الحالي",student.current_level],
+    ["نوع الدراسة",student.study_type],
+    ["الدورة / الكتاب",student.course_book,true],
+    ["الجهة / المعهد",student.institute],
+    ["المجموعة الدراسية",student.study_group],
+    ["لغة التواصل",student.communication_language]
+  ];
+  const notes=[
+    ["علامة مميزة",student.distinguishing_mark],
+    ["ملاحظات تعليمية",student.educational_notes,true]
+  ];
   byId("profileContent").innerHTML=`
     <div class="profile-layout">
       <section class="profile-section">
-        <header class="profile-section-head"><h3>بيانات الطالب</h3><span>المعلومات المسجلة</span></header>
-        <div class="detail-grid">${profileDetails(student)}</div>
+        <header class="profile-section-head"><h3>بيانات أساسية</h3><span>المعلومات المسجلة</span></header>
+        <div class="detail-grid">${profileDetails(basic)}</div>
+      </section>
+      <section class="profile-section">
+        <header class="profile-section-head"><h3>بيانات الدراسة</h3><span>التفاصيل التعليمية</span></header>
+        <div class="detail-grid">${profileDetails(study)}</div>
       </section>
       <section class="profile-section">
         <header class="profile-section-head"><h3>التواصل والحساب</h3><span>روابط سريعة</span></header>
         <div class="contact-actions">${profileContacts(student)}</div>
       </section>
-      <details class="profile-section wide progress-disclosure">
-        <summary><span>المتابعة التعليمية</span><span>${entries.length}</span></summary>
-        <div class="progress-list">${profileProgress(student.id)}</div>
-      </details>
+      <section class="profile-section">
+        <header class="profile-section-head"><h3>ملاحظاتك</h3><span>للتذكّر السريع</span></header>
+        <div class="detail-grid">${profileDetails(notes)}</div>
+      </section>
     </div>`;
 }
 function openProfile(id){
@@ -437,7 +419,7 @@ async function saveStudentRecord(event){
 async function deleteActiveStudent(){
   const student=students.find(item=>item.id===activeStudentId);
   if(!student)return;
-  if(!confirm(`حذف ملف ${studentName(student)}؟ سيُحذف سجل تقدمه التجريبي أيضًا.`))return;
+  if(!confirm(`حذف ملف ${studentName(student)}؟`))return;
   const button=byId("deleteStudent");
   setBusy(button,true,"جارٍ الحذف…");
   try{
@@ -446,7 +428,6 @@ async function deleteActiveStudent(){
       if(error)throw error;
     }
     students=students.filter(item=>item.id!==student.id);
-    progressEntries=progressEntries.filter(item=>item.student_id!==student.id);
     closeDialog("studentProfile");
     activeStudentId=null;
     renderAll();
@@ -455,90 +436,6 @@ async function deleteActiveStudent(){
     console.error("Student delete failed.",error);
     showToast("تعذّر حذف الطالب من قاعدة التطوير.",true);
   }finally{setBusy(button,false)}
-}
-
-function openProgressEditor(entry=null){
-  if(!activeStudentId)return;
-  editingProgressId=entry?.id||null;
-  byId("progressEditorTitle").textContent=entry?"تعديل المتابعة":"إضافة متابعة تعليمية";
-  byId("progressDate").value=entry?.recorded_on||todayKey();
-  byId("progressCategory").value=entry?.category||"general";
-  byId("progressTitle").value=entry?.title||"";
-  byId("progressScore").value=entry?.score??"";
-  byId("progressNotes").value=entry?.notes||"";
-  byId("progressNextStep").value=entry?.next_step||"";
-  setMessage("progressFormMessage","");
-  openDialog("progressEditor");
-  setTimeout(()=>byId("progressTitle").focus(),0);
-}
-async function saveProgressRecord(event){
-  event.preventDefault();
-  if(!activeStudentId)return;
-  const rawScore=byId("progressScore").value.trim();
-  const draft=normalizeProgress({
-    id:editingProgressId||makeId(),
-    student_id:activeStudentId,
-    recorded_on:byId("progressDate").value,
-    category:byId("progressCategory").value,
-    title:byId("progressTitle").value,
-    score:rawScore===""?null:Number(rawScore),
-    notes:byId("progressNotes").value,
-    next_step:byId("progressNextStep").value
-  });
-  if(!draft.title){setMessage("progressFormMessage","عنوان المتابعة مطلوب.");return}
-  if(rawScore!==""&&(!Number.isInteger(Number(rawScore))||Number(rawScore)<0||Number(rawScore)>100)){setMessage("progressFormMessage","التقييم يجب أن يكون عددًا صحيحًا من 0 إلى 100.");return}
-  const button=byId("saveProgress");
-  setBusy(button,true);
-  try{
-    if(mode==="demo"){
-      const now=new Date().toISOString();
-      const existing=progressEntries.findIndex(item=>item.id===editingProgressId);
-      const value=normalizeProgress({...draft,created_at:existing>=0?progressEntries[existing].created_at:now,updated_at:now});
-      if(existing>=0)progressEntries[existing]=value;else progressEntries.unshift(value);
-    }else{
-      const payload={
-        user_id:currentUser.id,
-        student_id:draft.student_id,
-        recorded_on:draft.recorded_on,
-        category:draft.category,
-        title:draft.title,
-        notes:draft.notes,
-        score:draft.score,
-        next_step:draft.next_step
-      };
-      let response;
-      if(editingProgressId)response=await cloud.from(PROGRESS_TABLE).update(payload).eq("id",editingProgressId).select("*").single();
-      else response=await cloud.from(PROGRESS_TABLE).insert(payload).select("*").single();
-      if(response.error)throw response.error;
-      const saved=normalizeProgress(response.data);
-      const index=progressEntries.findIndex(item=>item.id===saved.id);
-      if(index>=0)progressEntries[index]=saved;else progressEntries.unshift(saved);
-    }
-    closeDialog("progressEditor");
-    renderAll();
-    renderProfile();
-    showToast(editingProgressId?"تم تحديث المتابعة.":"تمت إضافة المتابعة.");
-  }catch(error){
-    console.error("Progress save failed.",error);
-    setMessage("progressFormMessage","تعذّر حفظ المتابعة في قاعدة التطوير.");
-  }finally{setBusy(button,false)}
-}
-async function deleteProgress(id){
-  const entry=progressEntries.find(item=>item.id===id);
-  if(!entry||!confirm("حذف هذه المتابعة التعليمية؟"))return;
-  try{
-    if(mode==="cloud"){
-      const {error}=await cloud.from(PROGRESS_TABLE).delete().eq("id",id);
-      if(error)throw error;
-    }
-    progressEntries=progressEntries.filter(item=>item.id!==id);
-    renderAll();
-    renderProfile();
-    showToast("تم حذف المتابعة.");
-  }catch(error){
-    console.error("Progress delete failed.",error);
-    showToast("تعذّر حذف المتابعة.",true);
-  }
 }
 
 function setLoading(loading){
@@ -551,14 +448,9 @@ async function loadCloudData(showSuccess=false){
   if(!cloud||!currentUser)return;
   setLoading(true);
   try{
-    const [studentsResponse,progressResponse]=await Promise.all([
-      cloud.from(STUDENTS_TABLE).select("*").order("created_at",{ascending:false}),
-      cloud.from(PROGRESS_TABLE).select("*").order("recorded_on",{ascending:false}).order("created_at",{ascending:false})
-    ]);
+    const studentsResponse=await cloud.from(STUDENTS_TABLE).select("*").order("created_at",{ascending:false});
     if(studentsResponse.error)throw studentsResponse.error;
-    if(progressResponse.error)throw progressResponse.error;
     students=(studentsResponse.data||[]).map(normalizeStudent);
-    progressEntries=(progressResponse.data||[]).map(normalizeProgress);
     refreshCountryFilter();
     renderAll();
     applyInitialRoute();
@@ -578,6 +470,7 @@ function enterApp(selectedMode){
   byId("modeBadge").textContent=demo?"عرض محلي وهمي":"متصل بقاعدة التطوير";
   byId("modeBadge").classList.toggle("demo",demo);
   byId("exitMode").textContent=demo?"إغلاق العرض":"تسجيل الخروج";
+  byId("environmentNotice").hidden=demo;
   byId("environmentNotice").classList.toggle("demo",demo);
   byId("environmentNotice").innerHTML=demo
     ?"<strong>عرض محلي آمن:</strong> البيانات وهمية وتختفي عند إغلاق الصفحة، ولا يُرسل أي تغيير إلى Supabase."
@@ -597,7 +490,6 @@ function applyInitialRoute(){
 function startDemo(){
   currentUser=null;
   students=clone(DEMO_STUDENTS).map(normalizeStudent);
-  progressEntries=clone(DEMO_PROGRESS).map(normalizeProgress);
   enterApp("demo");
   refreshCountryFilter();
   renderAll();
@@ -613,7 +505,7 @@ async function exitCurrentMode(){
   const wasCloud=mode==="cloud";
   closeAllDialogs();
   if(wasCloud&&cloud)await cloud.auth.signOut();
-  mode="gate";currentUser=null;students=[];progressEntries=[];activeStudentId=null;initialRouteHandled=false;
+  mode="gate";currentUser=null;students=[];activeStudentId=null;initialRouteHandled=false;
   byId("app").hidden=true;
   byId("authGate").hidden=false;
   setAuthMode("signin");
@@ -824,14 +716,6 @@ function handleRowAction(event){
   if(button.dataset.action==="view")openProfile(student.id);
   if(button.dataset.action==="edit")openStudentEditor(student);
 }
-function handleProgressAction(event){
-  const button=event.target.closest("button[data-progress-action]");
-  if(!button)return;
-  const entry=progressEntries.find(item=>item.id===button.dataset.id);
-  if(!entry)return;
-  if(button.dataset.progressAction==="edit")openProgressEditor(entry);
-  if(button.dataset.progressAction==="delete")deleteProgress(entry.id);
-}
 function bindEvents(){
   byId("authForm").addEventListener("submit",submitAuth);
   byId("authModeToggle").addEventListener("click",()=>setAuthMode(authMode==="signin"?"signup":"signin"));
@@ -841,10 +725,7 @@ function bindEvents(){
   byId("refreshData").addEventListener("click",()=>mode==="cloud"?loadCloudData(true):(renderAll(),showToast("تم تحديث العرض المحلي.")));
   byId("addStudent").addEventListener("click",()=>openStudentEditor());
   byId("studentForm").addEventListener("submit",saveStudentRecord);
-  byId("progressForm").addEventListener("submit",saveProgressRecord);
   byId("studentRows").addEventListener("click",handleRowAction);
-  byId("profileContent").addEventListener("click",handleProgressAction);
-  byId("addProgress").addEventListener("click",()=>openProgressEditor());
   byId("editFromProfile").addEventListener("click",()=>{const student=students.find(item=>item.id===activeStudentId);if(student)openStudentEditor(student)});
   byId("deleteStudent").addEventListener("click",deleteActiveStudent);
   byId("clearFilters").addEventListener("click",clearFilters);
@@ -869,7 +750,7 @@ async function init(){
   }
   cloud.auth.onAuthStateChange((event,session)=>{
     if(event==="SIGNED_OUT"&&mode==="cloud"){
-      mode="gate";currentUser=null;students=[];progressEntries=[];initialRouteHandled=false;
+      mode="gate";currentUser=null;students=[];initialRouteHandled=false;
       byId("app").hidden=true;byId("authGate").hidden=false;
     }
     if(event==="SIGNED_IN"&&session?.user&&mode==="gate")setTimeout(()=>enterCloud(session.user),0);

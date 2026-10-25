@@ -7,6 +7,7 @@ const vm=require("node:vm");
 
 const root=path.resolve(__dirname,"../..");
 const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
+const registryHtml=fs.readFileSync(path.join(root,"development/student-registry.html"),"utf8");
 const registry=fs.readFileSync(path.join(root,"development/student-registry.js"),"utf8");
 const migration=fs.readFileSync(path.join(root,"supabase/migrations/20261025064000_development_core_integration.sql"),"utf8");
 
@@ -18,6 +19,8 @@ assert.doesNotMatch(html,/id="lessonStudentIds"/,"Student records must stay inde
 assert.doesNotMatch(html,/studentIds:/,"Lessons must not store student-registry links");
 assert.doesNotMatch(registry,/profileIntegration|linkedLessonsForStudent|mawaeidi_data/,"Student profiles must not read schedule or finance data");
 assert.match(registry,/المعلومات المسجلة/);
+assert.doesNotMatch(registryHtml,/id="(?:addProgress|progressForm|progressEditor)"/,"The student registry UI must stay focused on stored profile data");
+assert.doesNotMatch(registry,/PROGRESS_TABLE|loadCloudProgress|saveProgressRecord/,"The student screen must not load or edit progress records");
 
 for(const table of ["mawaeidi_data","mawaeidi_history","mawaeidi_push_subscriptions","mawaeidi_notification_log"]){
   assert.match(migration,new RegExp(`public\\.${table}`),`Migration is missing ${table}`);

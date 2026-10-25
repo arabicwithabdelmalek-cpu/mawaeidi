@@ -20,7 +20,7 @@ assert.deepEqual(missingIds,[],`Missing HTML IDs: ${missingIds.join(", ")}`);
 
 source=source.replace(
   /\ninit\(\);\s*$/,
-  "\nthis.__studentRegistryTest={normalizeStudent,normalizeProgress,parseCsv,csvEscape,validateImportedStudent,normalizeKey};"
+  "\nthis.__studentRegistryTest={normalizeStudent,parseCsv,csvEscape,validateImportedStudent,normalizeKey,STUDENT_FIELD_GROUPS};"
 );
 
 const context={
@@ -49,8 +49,12 @@ assert.equal(rows.length,2);
 assert.equal(rows[1][1],'قال "مرحبًا"');
 assert.match(api.csvEscape("+994 50"),/^"'\+994/,"CSV export must protect formula-like values");
 
-const progress=api.normalizeProgress({student_id:"student",title:" درس ",score:101});
-assert.equal(progress.title,"درس");
-assert.equal(progress.score,null);
+const groupedKeys=api.STUDENT_FIELD_GROUPS.flatMap(group=>group.keys);
+assert.equal(new Set(groupedKeys).size,17,"Each student field must appear once in the grouped form");
+assert.deepEqual(new Set(groupedKeys),new Set([
+  "username","first_name","last_name","country","status","institute","study_group","distinguishing_mark",
+  "email","whatsapp","current_level","study_type","course_book","communication_language","joined_on",
+  "educational_notes","student_account_url"
+]));
 
 console.log("Student registry checks passed.");

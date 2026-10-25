@@ -20,7 +20,7 @@ assert.deepEqual(missingIds,[],`Missing HTML IDs: ${missingIds.join(", ")}`);
 
 source=source.replace(
   /\ninit\(\);\s*$/,
-  "\nthis.__studentRegistryTest={normalizeStudent,normalizeProgress,normalizeMawaeidiData,linkedLessonsForStudent,studentIntegrationSummary,parseCsv,csvEscape,validateImportedStudent,normalizeKey};"
+  "\nthis.__studentRegistryTest={normalizeStudent,normalizeProgress,parseCsv,csvEscape,validateImportedStudent,normalizeKey};"
 );
 
 const context={
@@ -52,17 +52,5 @@ assert.match(api.csvEscape("+994 50"),/^"'\+994/,"CSV export must protect formul
 const progress=api.normalizeProgress({student_id:"student",title:" درس ",score:101});
 assert.equal(progress.title,"درس");
 assert.equal(progress.score,null);
-
-const integration=api.studentIntegrationSummary("student-1",api.normalizeMawaeidiData({
-  lessons:[
-    {id:"lesson-1",studentIds:["student-1"],sessionRecords:[{status:"completed"}]},
-    {id:"lesson-2",studentIds:["student-2"],sessionRecords:[{status:"cancelled_unpaid"}]}
-  ],
-  finance:{agreements:[{id:"agreement-1",lessonIds:["lesson-1"]}],payments:[{id:"payment-1",agreementId:"agreement-1",amount:25}]}
-}));
-assert.equal(integration.lessons.length,1,"Only explicitly linked lessons belong to a student");
-assert.equal(integration.statusCounts.completed,1);
-assert.equal(integration.agreements.length,1);
-assert.equal(integration.payments.length,1);
 
 console.log("Student registry checks passed.");

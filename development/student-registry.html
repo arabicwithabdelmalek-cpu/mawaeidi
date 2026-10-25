@@ -50,7 +50,7 @@
     <header class="mast">
       <div>
         <div class="brand">مواعيدي <span>/ إدارة الطلاب</span></div>
-        <p>ملفات الطلاب والتقدم وربط المواعيد والحضور والمالية — المرحلة الثانية</p>
+        <p>سجل مستقل لحفظ بيانات الطلاب وملاحظاتك التعليمية</p>
       </div>
       <div class="mast-actions">
         <a class="header-button header-link" href="../index.html">العودة إلى مواعيدي</a>
@@ -68,22 +68,20 @@
       <div>
         <span class="eyebrow">ملف واحد لكل طالب</span>
         <h1>سجل الطلاب</h1>
-        <p>بحث وإدارة وتقدم تعليمي، مع استيراد وتصدير متوافقين مع Google Sheets.</p>
+        <p>اعثر على بيانات الطالب بسرعة، وعدّلها من مكان واحد، واستوردها أو صدّرها عند الحاجة.</p>
       </div>
       <div class="page-actions">
-        <button class="btn" id="refreshData" type="button">تحديث</button>
-        <button class="btn" id="exportCsv" type="button">تصدير النتائج CSV</button>
-        <button class="btn" id="importCsv" type="button">استيراد CSV</button>
         <button class="btn primary" id="addStudent" type="button">＋ إضافة طالب</button>
+        <details class="data-actions">
+          <summary class="btn">أدوات البيانات</summary>
+          <div class="data-actions-menu">
+            <button class="btn" id="refreshData" type="button">تحديث البيانات</button>
+            <button class="btn" id="exportCsv" type="button">تصدير CSV</button>
+            <button class="btn" id="importCsv" type="button">استيراد CSV</button>
+          </div>
+        </details>
         <input id="csvFile" type="file" accept=".csv,text/csv" hidden>
       </div>
-    </section>
-
-    <section class="metrics" aria-label="مؤشرات الطلاب">
-      <article class="metric"><span>إجمالي الطلاب</span><strong id="totalStudents">0</strong><small>كل الملفات</small></article>
-      <article class="metric"><span>الطلاب الحاليون</span><strong id="activeStudents">0</strong><small>الحالة: حالي</small></article>
-      <article class="metric"><span>الدول</span><strong id="countriesCount">0</strong><small>في السجل الحالي</small></article>
-      <article class="metric"><span>سجلات التقدم</span><strong id="progressCount">0</strong><small>ملاحظات وتقييمات</small></article>
     </section>
 
     <section class="panel registry-panel" aria-labelledby="registryHeading">
@@ -104,33 +102,38 @@
           <label for="statusFilter">الحالة</label>
           <select class="control" id="statusFilter"><option value="">كل الحالات</option></select>
         </div>
-        <div class="field">
-          <label for="levelFilter">المستوى</label>
-          <select class="control" id="levelFilter"><option value="">كل المستويات</option></select>
-        </div>
-        <div class="field">
-          <label for="typeFilter">نوع الدراسة</label>
-          <select class="control" id="typeFilter"><option value="">كل الأنواع</option></select>
-        </div>
-        <div class="field">
-          <label for="countryFilter">الدولة</label>
-          <select class="control" id="countryFilter"><option value="">كل الدول</option></select>
-        </div>
-        <div class="field">
-          <label for="sortStudents">الترتيب</label>
-          <select class="control" id="sortStudents">
-            <option value="newest">الأحدث إضافة</option>
-            <option value="name">الاسم أبجديًا</option>
-            <option value="joined">الأحدث انضمامًا</option>
-            <option value="status">الحالة</option>
-          </select>
-        </div>
+        <details class="more-filters">
+          <summary>فلاتر إضافية</summary>
+          <div class="filters-extra">
+            <div class="field">
+              <label for="levelFilter">المستوى</label>
+              <select class="control" id="levelFilter"><option value="">كل المستويات</option></select>
+            </div>
+            <div class="field">
+              <label for="typeFilter">نوع الدراسة</label>
+              <select class="control" id="typeFilter"><option value="">كل الأنواع</option></select>
+            </div>
+            <div class="field">
+              <label for="countryFilter">الدولة</label>
+              <select class="control" id="countryFilter"><option value="">كل الدول</option></select>
+            </div>
+            <div class="field">
+              <label for="sortStudents">الترتيب</label>
+              <select class="control" id="sortStudents">
+                <option value="newest">الأحدث إضافة</option>
+                <option value="name">الاسم أبجديًا</option>
+                <option value="joined">الأحدث انضمامًا</option>
+                <option value="status">الحالة</option>
+              </select>
+            </div>
+          </div>
+        </details>
       </div>
 
       <div class="loading-state" id="loadingState" hidden><span></span> جارٍ تحميل البيانات…</div>
       <div class="table-wrap" id="tableWrap">
         <table>
-          <thead><tr><th>الطالب</th><th>اسم المستخدم</th><th>الدولة</th><th>الحالة</th><th>المستوى</th><th>نوع الدراسة</th><th>الجهة / المعهد</th><th>آخر متابعة</th><th>الخيارات</th></tr></thead>
+          <thead><tr><th>الطالب</th><th>اسم المستخدم</th><th>الدولة</th><th>الحالة</th><th>المستوى</th><th>الخيارات</th></tr></thead>
           <tbody id="studentRows"></tbody>
         </table>
       </div>

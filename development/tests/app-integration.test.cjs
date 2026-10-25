@@ -13,11 +13,11 @@ const migration=fs.readFileSync(path.join(root,"supabase/migrations/202610250640
 assert.match(html,/https:\/\/eixeazkkexgfndvfowxa\.supabase\.co/,"Development app must use the development Supabase project");
 assert.doesNotMatch(html,/https:\/\/nvefdkkjkyalpsrgoffj\.supabase\.co/,"Development branch must not point at production Supabase");
 assert.match(html,/id="studentsSectionButton"/);
-assert.match(html,/id="lessonStudentIds"/);
-assert.match(html,/studentIds:\[\.\.\.new Set/,"Lesson normalization must retain explicit student links");
-assert.match(html,/studentIds:readLessonStudentIds\(\)/,"Lesson saves must include selected student IDs");
-assert.match(registry,/function profileIntegration\(/);
-assert.doesNotMatch(registry,/سيظهر هنا جدول الطالب وحضوره واتفاقاته/,"Phase-one placeholder must be removed");
+assert.match(html,/id="studentsQuickSearch"/);
+assert.doesNotMatch(html,/id="lessonStudentIds"/,"Student records must stay independent from lesson forms");
+assert.doesNotMatch(html,/studentIds:/,"Lessons must not store student-registry links");
+assert.doesNotMatch(registry,/profileIntegration|linkedLessonsForStudent|mawaeidi_data/,"Student profiles must not read schedule or finance data");
+assert.match(registry,/المعلومات المسجلة/);
 
 for(const table of ["mawaeidi_data","mawaeidi_history","mawaeidi_push_subscriptions","mawaeidi_notification_log"]){
   assert.match(migration,new RegExp(`public\\.${table}`),`Migration is missing ${table}`);

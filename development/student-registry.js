@@ -4,7 +4,6 @@ const SUPABASE_URL="https://eixeazkkexgfndvfowxa.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_9HtNRmLYbR2IU4jcTPumjw_XJ1ziGpM";
 const STUDENTS_TABLE="mawaeidi_students";
 const PROGRESS_TABLE="mawaeidi_student_progress";
-const DATA_TABLE="mawaeidi_data";
 const MAX_IMPORT_BYTES=2*1024*1024;
 const MAX_IMPORT_ROWS=2000;
 
@@ -61,7 +60,6 @@ let activeStudentId=null;
 let editingProgressId=null;
 let importPlan=null;
 let toastTimer=null;
-let mawaeidiData={lessons:[],finance:{version:1,agreements:[],cycles:[],payments:[],monthCounts:[]}};
 let initialRouteHandled=false;
 
 const DEMO_STUDENTS=[
@@ -76,18 +74,6 @@ const DEMO_PROGRESS=[
   {id:"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",student_id:DEMO_STUDENTS[0].id,recorded_on:"2026-10-14",category:"vocabulary",title:"مفردات وسائل الاتصال",notes:"أتقن معظم المفردات الجديدة.",score:88,next_step:"كتابة خمس جمل بالمفردات.",created_at:"2026-10-14T18:00:00Z",updated_at:"2026-10-14T18:00:00Z"},
   {id:"cccccccc-cccc-4ccc-8ccc-cccccccccccc",student_id:DEMO_STUDENTS[1].id,recorded_on:"2026-10-19",category:"reading",title:"قراءة كلمات قصيرة",notes:"تميّز بين الحركات القصيرة بصورة جيدة.",score:null,next_step:"مراجعة المدود الثلاثة.",created_at:"2026-10-19T18:00:00Z",updated_at:"2026-10-19T18:00:00Z"}
 ];
-
-const DEMO_MAWAEIDI_DATA={
-  lessons:[
-    {id:"demo-lesson-1",type:"teach",studentType:"individual",studentIds:[DEMO_STUDENTS[0].id],lessonSource:"private",name:"طالب تجريبي ١",subject:"محادثة عربية",duration:60,platform:"Zoom",schedules:[{day:"الاثنين",time:"18:00"}],sessionRecords:[{id:"base-2026-10-19-1800",kind:"base",date:"2026-10-19",time:"18:00",status:"completed",updatedAt:"2026-10-19T19:05:00Z"}]},
-    {id:"demo-lesson-2",type:"teach",studentType:"group",studentIds:[DEMO_STUDENTS[1].id,DEMO_STUDENTS[3].id],lessonSource:"center",centerName:"مركز لغات",name:"المجموعة أ",subject:"العربية بين يديك",duration:90,platform:"Google Meet",schedules:[{day:"الخميس",time:"16:00"}],sessionRecords:[{id:"base-2026-10-22-1600",kind:"base",date:"2026-10-22",time:"16:00",status:"completed",updatedAt:"2026-10-22T17:35:00Z"}]},
-    {id:"demo-lesson-3",type:"teach",studentType:"individual",studentIds:[DEMO_STUDENTS[2].id],lessonSource:"private",name:"طالب تجريبي ٣",subject:"محادثة متقدمة",duration:60,platform:"Zoom",schedules:[{day:"الأربعاء",time:"20:00"}],sessionRecords:[{id:"base-2026-09-23-2000",kind:"base",date:"2026-09-23",time:"20:00",status:"cancelled_unpaid",updatedAt:"2026-09-23T18:00:00Z"}]}
-  ],
-  finance:{version:1,agreements:[
-    {id:"demo-agreement-1",direction:"income",partyType:"private",name:"حساب طالب تجريبي ١",billingModel:"package",paymentTiming:"advance",amount:160,currency:"USD",packageSize:8,paymentMethod:"paypal",lessonIds:["demo-lesson-1"],startDate:"2026-10-01",active:true,notes:"اتفاق تجريبي"},
-    {id:"demo-agreement-2",direction:"income",partyType:"center",name:"حساب المجموعة أ",billingModel:"monthly",paymentTiming:"arrears",amount:12,currency:"EUR",packageSize:1,paymentMethod:"bank",lessonIds:["demo-lesson-2"],startDate:"2026-10-01",active:true,notes:"اتفاق تجريبي للمجموعة"}
-  ],cycles:[{id:"demo-cycle-1",agreementId:"demo-agreement-1",startDate:"2026-10-01",endDate:null,targetSessions:8,amount:160,countOverride:null}],payments:[{id:"demo-payment-1",agreementId:"demo-agreement-1",targetType:"cycle",targetKey:"demo-cycle-1",amount:160,currency:"USD",date:"2026-10-01",method:"paypal",note:"دفعة وهمية"}],monthCounts:[]}
-};
 
 function byId(id){return document.getElementById(id)}
 function text(value){return value===null||value===undefined?"":String(value)}
@@ -151,62 +137,6 @@ function normalizeProgress(value={}){
     created_at:clean(value.created_at,50)||new Date().toISOString(),
     updated_at:clean(value.updated_at,50)||new Date().toISOString()
   };
-}
-function normalizeMawaeidiData(value={}){
-  const source=value&&typeof value==="object"?value:{};
-  const finance=source.finance&&typeof source.finance==="object"?source.finance:{};
-  return {
-    lessons:Array.isArray(source.lessons)?source.lessons.filter(item=>item&&typeof item==="object"):[],
-    finance:{
-      version:Number(finance.version)||1,
-      agreements:Array.isArray(finance.agreements)?finance.agreements.filter(item=>item&&typeof item==="object"):[],
-      cycles:Array.isArray(finance.cycles)?finance.cycles.filter(item=>item&&typeof item==="object"):[],
-      payments:Array.isArray(finance.payments)?finance.payments.filter(item=>item&&typeof item==="object"):[],
-      monthCounts:Array.isArray(finance.monthCounts)?finance.monthCounts.filter(item=>item&&typeof item==="object"):[]
-    }
-  };
-}
-function linkedLessonsForStudent(studentId,data=mawaeidiData){
-  return (data.lessons||[]).filter(lesson=>Array.isArray(lesson.studentIds)&&lesson.studentIds.includes(studentId));
-}
-function studentIntegrationSummary(studentId,data=mawaeidiData){
-  const lessons=linkedLessonsForStudent(studentId,data);
-  const lessonIds=new Set(lessons.map(lesson=>lesson.id));
-  const records=lessons.flatMap(lesson=>(Array.isArray(lesson.sessionRecords)?lesson.sessionRecords:[]).map(record=>({...record,lessonId:lesson.id,lessonName:lesson.name||"حصة"})));
-  const agreements=(data.finance?.agreements||[]).filter(agreement=>(agreement.lessonIds||[]).some(id=>lessonIds.has(id)));
-  const agreementIds=new Set(agreements.map(agreement=>agreement.id));
-  const payments=(data.finance?.payments||[]).filter(payment=>agreementIds.has(payment.agreementId));
-  const statusCounts={};
-  for(const record of records)statusCounts[record.status]=(statusCounts[record.status]||0)+1;
-  return {lessons,records,agreements,payments,statusCounts};
-}
-function sessionStatusLabel(status){
-  return ({completed:"حضور مكتمل",cancelled_unpaid:"ملغاة غير محسوبة",cancelled_counted:"ملغاة محسوبة",free:"حصة مجانية",rescheduled:"مؤجلة",default:"تلقائية"})[status]||"حالة أخرى";
-}
-function lessonScheduleLabel(lesson){
-  const schedules=Array.isArray(lesson.schedules)?lesson.schedules:[];
-  return schedules.length?schedules.map(item=>`${text(item.day)} ${text(item.time)}`).join("، "):"لا يوجد موعد أسبوعي";
-}
-function moneyLabel(value,currency){
-  const amount=Number(value)||0;
-  try{return new Intl.NumberFormat("ar-EG",{style:"currency",currency:currency||"USD",maximumFractionDigits:2}).format(amount)}catch{return `${amount} ${currency||""}`.trim()}
-}
-function profileIntegration(studentId){
-  const summary=studentIntegrationSummary(studentId);
-  const completed=summary.statusCounts.completed||0;
-  const changed=(summary.statusCounts.cancelled_unpaid||0)+(summary.statusCounts.cancelled_counted||0)+(summary.statusCounts.rescheduled||0);
-  const registryUrl=mode==="demo"?"../index.html?demo=1":"../index.html";
-  const lessonMarkup=summary.lessons.length?summary.lessons.map(lesson=>{
-    const records=summary.records.filter(record=>record.lessonId===lesson.id);
-    return `<article class="integration-card"><div class="integration-card-top"><div><strong>${escapeHtml(lesson.name||"حصة دون اسم")}</strong><span>${escapeHtml(lesson.subject||"من دون مادة")} · ${escapeHtml(lesson.platform||"المنصة غير محددة")}</span></div><span class="chip">${lesson.studentType==="group"?"مجموعة":"فردي"}</span></div><div class="integration-schedule">${escapeHtml(lessonScheduleLabel(lesson))}</div><div class="integration-tags"><span>${Number(lesson.duration)||60} دقيقة</span><span>${records.filter(record=>record.status==="completed").length} حضور</span><span>${records.length} حالة مسجلة</span></div></article>`;
-  }).join(""):'<div class="progress-empty">لم يُربط هذا الطالب بأي حصة بعد. افتح «مواعيدي» واربط ملفه من نموذج الحصة.</div>';
-  const statusMarkup=summary.records.length?Object.entries(summary.statusCounts).map(([status,count])=>`<span>${escapeHtml(sessionStatusLabel(status))}: <strong>${count}</strong></span>`).join(""):'<span>لا توجد حالات حضور أو إلغاء مسجلة بعد.</span>';
-  const financeMarkup=summary.agreements.length?summary.agreements.map(agreement=>{
-    const payments=summary.payments.filter(payment=>payment.agreementId===agreement.id),paid=payments.reduce((total,payment)=>total+(Number(payment.amount)||0),0);
-    const model=agreement.billingModel==="monthly"?"شهري بالحصة":`باقة ${Number(agreement.packageSize)||0} حصة`;
-    return `<article class="integration-card finance"><div class="integration-card-top"><div><strong>${escapeHtml(agreement.name||"اتفاق مالي")}</strong><span>${escapeHtml(model)} · ${agreement.paymentTiming==="arrears"?"دفع مؤخر":"دفع مقدم"}</span></div><span class="chip ${agreement.active===false?"previous":"current"}">${agreement.active===false?"مؤرشف":"نشط"}</span></div><div class="integration-money"><span>قيمة الاتفاق <strong>${escapeHtml(moneyLabel(agreement.amount,agreement.currency))}</strong></span><span>مدفوعات مسجلة <strong>${escapeHtml(moneyLabel(paid,agreement.currency))}</strong></span></div></article>`;
-  }).join(""):'<div class="progress-empty">لا يوجد اتفاق مالي مرتبط بحصص هذا الطالب.</div>';
-  return `<div class="integration-overview"><article><span>الحصص المرتبطة</span><strong>${summary.lessons.length}</strong></article><article><span>الحضور المكتمل</span><strong>${completed}</strong></article><article><span>إلغاء / تأجيل</span><strong>${changed}</strong></article><article><span>الاتفاقات المالية</span><strong>${summary.agreements.length}</strong></article></div><div class="integration-block"><div class="integration-block-head"><strong>المواعيد والحضور</strong><span>مشتقة من سجل الحصص الحالي</span></div><div class="integration-list">${lessonMarkup}</div><div class="integration-statuses">${statusMarkup}</div></div><div class="integration-block"><div class="integration-block-head"><strong>الاتفاقات والمدفوعات</strong><span>مشتقة من النظام المالي من دون تكرار</span></div><div class="integration-list">${financeMarkup}</div></div><a class="integration-open-app" href="${registryUrl}">فتح مواعيدي وربط الحصص</a>`;
 }
 function setBusy(button,busy,busyText="جارٍ الحفظ…"){
   if(!button)return;
@@ -294,9 +224,6 @@ function refreshCountryFilter(){
   for(const country of countries)select.append(new Option(country,country));
   select.value=countries.includes(previous)?previous:"";
 }
-function latestProgress(studentId){
-  return progressEntries.filter(item=>item.student_id===studentId).sort((a,b)=>b.recorded_on.localeCompare(a.recorded_on)||b.created_at.localeCompare(a.created_at))[0]||null;
-}
 function statusChipClass(value){
   return value==="حالي"?"current":value==="جديد"?"new":value==="متوقف مؤقتًا"?"paused":value==="سابق"?"previous":"";
 }
@@ -329,12 +256,6 @@ function filterAndSortStudents(){
   });
   return list;
 }
-function renderMetrics(){
-  byId("totalStudents").textContent=students.length;
-  byId("activeStudents").textContent=students.filter(student=>student.status==="حالي").length;
-  byId("countriesCount").textContent=new Set(students.map(student=>student.country).filter(Boolean)).size;
-  byId("progressCount").textContent=progressEntries.length;
-}
 function makeButton(label,action,id,danger=false){
   const button=document.createElement("button");
   button.type="button";
@@ -345,7 +266,6 @@ function makeButton(label,action,id,danger=false){
   return button;
 }
 function renderStudents(){
-  renderMetrics();
   refreshCountryFilter();
   filteredStudents=filterAndSortStudents();
   byId("resultsCount").textContent=`${filteredStudents.length} نتيجة من ${students.length}`;
@@ -366,11 +286,6 @@ function renderStudents(){
     const status=document.createElement("span");status.className=`chip ${statusChipClass(student.status)}`;status.textContent=student.status;statusCell.append(status);row.append(statusCell);
     const levelCell=document.createElement("td");
     const level=document.createElement("span");level.className=`chip ${levelChipClass(student.current_level)}`;level.textContent=student.current_level;levelCell.append(level);row.append(levelCell);
-    const typeCell=document.createElement("td");
-    const type=document.createElement("span");type.className="chip";type.textContent=student.study_type;typeCell.append(type);row.append(typeCell);
-    const institute=document.createElement("td");institute.textContent=student.institute||"—";row.append(institute);
-    const latest=document.createElement("td");const last=latestProgress(student.id);latest.textContent=last?dateLabel(last.recorded_on):"لا توجد";row.append(latest);
-
     const actions=document.createElement("td");
     const actionWrap=document.createElement("div");actionWrap.className="row-actions";
     actionWrap.append(makeButton("فتح الملف","view",student.id),makeButton("تعديل","edit",student.id));
@@ -401,13 +316,13 @@ function profileDetails(student){
   return rows.map(([label,value])=>`<div class="detail-item${label==="ملاحظات تعليمية"?" wide":""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value||"—")}</strong></div>`).join("");
 }
 function profileContacts(student){
-  const links=[];
-  if(student.email)links.push(`<a href="mailto:${encodeURIComponent(student.email)}">إرسال بريد</a>`);
+  const rows=[];
+  if(student.email)rows.push(`<div class="contact-row"><span>البريد الإلكتروني</span><strong>${escapeHtml(student.email)}</strong><a href="mailto:${encodeURIComponent(student.email)}">إرسال بريد</a></div>`);
   const digits=student.whatsapp.replace(/\D/g,"");
-  if(digits)links.push(`<a href="https://wa.me/${digits}" target="_blank" rel="noopener">فتح واتساب</a>`);
+  if(digits)rows.push(`<div class="contact-row"><span>واتساب</span><strong>${escapeHtml(student.whatsapp)}</strong><a href="https://wa.me/${digits}" target="_blank" rel="noopener">فتح واتساب</a></div>`);
   const account=safeUrl(student.student_account_url);
-  if(account)links.push(`<a href="${escapeHtml(account)}" target="_blank" rel="noopener">فتح حساب الطالب</a>`);
-  return links.length?links.join(""):'<span class="student-sub">لا توجد وسائل اتصال مسجّلة.</span>';
+  if(account)rows.push(`<div class="contact-row"><span>رابط حساب الطالب</span><strong>${escapeHtml(student.student_account_url)}</strong><a href="${escapeHtml(account)}" target="_blank" rel="noopener">فتح الحساب</a></div>`);
+  return rows.length?rows.join(""):'<div class="progress-empty">لا توجد وسائل اتصال مسجّلة.</div>';
 }
 function profileProgress(studentId){
   const list=progressEntries.filter(item=>item.student_id===studentId).sort((a,b)=>b.recorded_on.localeCompare(a.recorded_on)||b.created_at.localeCompare(a.created_at));
@@ -426,31 +341,22 @@ function renderProfile(){
   const student=students.find(item=>item.id===activeStudentId);
   if(!student){closeDialog("studentProfile");return}
   const entries=progressEntries.filter(item=>item.student_id===student.id);
-  const latest=latestProgress(student.id);
   byId("profileTitle").textContent=studentName(student);
-  byId("profileSubtitle").textContent=`@${student.username} · ${student.country||"الدولة غير محددة"}`;
+  byId("profileSubtitle").textContent=`@${student.username} · ${student.country||"الدولة غير محددة"} · ${student.status} · ${student.current_level}`;
   byId("profileContent").innerHTML=`
-    <section class="profile-summary">
-      <article class="profile-stat"><span>الحالة</span><strong>${escapeHtml(student.status)}</strong></article>
-      <article class="profile-stat"><span>المستوى</span><strong>${escapeHtml(student.current_level)}</strong></article>
-      <article class="profile-stat"><span>سجلات التقدم</span><strong>${entries.length}</strong></article>
-      <article class="profile-stat"><span>آخر متابعة</span><strong>${latest?escapeHtml(dateLabel(latest.recorded_on)):"—"}</strong></article>
-    </section>
     <div class="profile-layout">
       <section class="profile-section">
-        <header class="profile-section-head"><h3>بيانات الطالب</h3><span>الحقول الأساسية</span></header>
+        <header class="profile-section-head"><h3>بيانات الطالب</h3><span>المعلومات المسجلة</span></header>
         <div class="detail-grid">${profileDetails(student)}</div>
       </section>
       <section class="profile-section">
         <header class="profile-section-head"><h3>التواصل والحساب</h3><span>روابط سريعة</span></header>
         <div class="contact-actions">${profileContacts(student)}</div>
-        <header class="profile-section-head"><h3>المواعيد والحضور والمالية</h3><span>ربط حيّ بلا تكرار</span></header>
-        <div class="profile-integration">${profileIntegration(student.id)}</div>
       </section>
-      <section class="profile-section wide">
-        <header class="profile-section-head"><h3>التقدم التعليمي</h3><span>${entries.length} متابعة</span></header>
+      <details class="profile-section wide progress-disclosure">
+        <summary><span>المتابعة التعليمية</span><span>${entries.length}</span></summary>
         <div class="progress-list">${profileProgress(student.id)}</div>
-      </section>
+      </details>
     </div>`;
 }
 function openProfile(id){
@@ -531,8 +437,6 @@ async function saveStudentRecord(event){
 async function deleteActiveStudent(){
   const student=students.find(item=>item.id===activeStudentId);
   if(!student)return;
-  const linked=linkedLessonsForStudent(student.id);
-  if(linked.length){showToast(`لا يمكن حذف الملف قبل إزالة ربطه من ${linked.length} حصة.`,true);return}
   if(!confirm(`حذف ملف ${studentName(student)}؟ سيُحذف سجل تقدمه التجريبي أيضًا.`))return;
   const button=byId("deleteStudent");
   setBusy(button,true,"جارٍ الحذف…");
@@ -647,21 +551,18 @@ async function loadCloudData(showSuccess=false){
   if(!cloud||!currentUser)return;
   setLoading(true);
   try{
-    const [studentsResponse,progressResponse,dataResponse]=await Promise.all([
+    const [studentsResponse,progressResponse]=await Promise.all([
       cloud.from(STUDENTS_TABLE).select("*").order("created_at",{ascending:false}),
-      cloud.from(PROGRESS_TABLE).select("*").order("recorded_on",{ascending:false}).order("created_at",{ascending:false}),
-      cloud.from(DATA_TABLE).select("lessons,finance").eq("user_id",currentUser.id).maybeSingle()
+      cloud.from(PROGRESS_TABLE).select("*").order("recorded_on",{ascending:false}).order("created_at",{ascending:false})
     ]);
     if(studentsResponse.error)throw studentsResponse.error;
     if(progressResponse.error)throw progressResponse.error;
-    if(dataResponse.error)throw dataResponse.error;
     students=(studentsResponse.data||[]).map(normalizeStudent);
     progressEntries=(progressResponse.data||[]).map(normalizeProgress);
-    mawaeidiData=normalizeMawaeidiData(dataResponse.data||{});
     refreshCountryFilter();
     renderAll();
     applyInitialRoute();
-    if(showSuccess)showToast("تم تحديث بيانات الطلاب والمواعيد المرتبطة.");
+    if(showSuccess)showToast("تم تحديث بيانات الطلاب.");
   }catch(error){
     console.error("Cloud load failed.",error);
     showToast("تعذّر تحميل بيانات قاعدة التطوير.",true);
@@ -697,7 +598,6 @@ function startDemo(){
   currentUser=null;
   students=clone(DEMO_STUDENTS).map(normalizeStudent);
   progressEntries=clone(DEMO_PROGRESS).map(normalizeProgress);
-  mawaeidiData=normalizeMawaeidiData(clone(DEMO_MAWAEIDI_DATA));
   enterApp("demo");
   refreshCountryFilter();
   renderAll();
@@ -713,7 +613,7 @@ async function exitCurrentMode(){
   const wasCloud=mode==="cloud";
   closeAllDialogs();
   if(wasCloud&&cloud)await cloud.auth.signOut();
-  mode="gate";currentUser=null;students=[];progressEntries=[];mawaeidiData=normalizeMawaeidiData();activeStudentId=null;initialRouteHandled=false;
+  mode="gate";currentUser=null;students=[];progressEntries=[];activeStudentId=null;initialRouteHandled=false;
   byId("app").hidden=true;
   byId("authGate").hidden=false;
   setAuthMode("signin");
@@ -969,7 +869,7 @@ async function init(){
   }
   cloud.auth.onAuthStateChange((event,session)=>{
     if(event==="SIGNED_OUT"&&mode==="cloud"){
-      mode="gate";currentUser=null;students=[];progressEntries=[];mawaeidiData=normalizeMawaeidiData();initialRouteHandled=false;
+      mode="gate";currentUser=null;students=[];progressEntries=[];initialRouteHandled=false;
       byId("app").hidden=true;byId("authGate").hidden=false;
     }
     if(event==="SIGNED_IN"&&session?.user&&mode==="gate")setTimeout(()=>enterCloud(session.user),0);

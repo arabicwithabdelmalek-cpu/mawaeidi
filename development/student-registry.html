@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>إدارة الطلاب | مواعيدي — نسخة تطوير</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
+:root{--paper:#EAF0F4;--white:#fff;--ink:#192733;--muted:#697886;--primary:#234B6E;--primary2:#112A40;--accent:#A78352;--line:#D3DDE5;--green:#176C63;--greenbg:#E3F2EE;--gold:#8A5526;--goldbg:#F9EAD7;--red:#984545;--redbg:#FFF0F0;--purple:#62538A;--purplebg:#F1EEFA;--shadow:0 16px 44px rgba(17,42,64,.09);--font:"Cairo",Tahoma,Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font)}button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}
+.shell{max-width:1360px;margin:auto;padding:24px 24px 70px}.mast{border-radius:22px;padding:21px 28px;background:linear-gradient(118deg,#18384F,#234B6E 65%,#315978);color:#fff;display:flex;align-items:center;gap:20px;justify-content:space-between;box-shadow:var(--shadow);position:relative;overflow:hidden}.mast:after{content:"";position:absolute;width:340px;height:340px;border:1px solid rgba(255,255,255,.09);border-radius:50%;left:-95px;top:-185px;box-shadow:0 0 0 40px rgba(255,255,255,.025),0 0 0 100px rgba(255,255,255,.018);pointer-events:none}.brand{font-weight:800;font-size:24px;letter-spacing:-.04em}.mast p{margin:2px 0 0;color:#dce6ee;font-size:13px}.devtag{font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.4);border-radius:100px;padding:8px 14px;background:rgba(255,255,255,.08)}
+.notice{margin:16px 0 20px;background:#FFF8EB;border:1px solid #E7D6B2;color:#775928;border-radius:14px;padding:10px 16px;font-size:12px;line-height:1.9}
+.heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:26px 0 15px}.heading h1{font-size:25px;margin:0;font-weight:800}.heading p{margin:4px 0 0;font-size:13px;color:var(--muted)}.actions{display:flex;gap:9px;flex-wrap:wrap}.btn{border-radius:11px;padding:10px 16px;border:1px solid var(--line);background:#fff;color:var(--primary);font-weight:700;transition:transform .15s,background .15s}.btn:hover{transform:translateY(-1px);background:#F5F8FB}.btn.primary{color:#fff;background:var(--primary);border-color:var(--primary)}.btn.primary:hover{background:var(--primary2)}.btn.danger{border-color:#ECC9C9;color:var(--red);background:#FFF5F4}.btn.small{padding:5px 10px;font-size:11px}.btn:focus-visible,.control:focus-visible{outline:3px solid #B9D8EE;outline-offset:2px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}.metric{background:#fff;border:1px solid var(--line);border-radius:17px;padding:18px 19px;box-shadow:0 5px 13px rgba(17,42,64,.03);position:relative}.metric:before{content:"";width:26px;height:4px;background:var(--accent);border-radius:2px;position:absolute;top:0;right:20px}.metric .label{font-size:13px;color:var(--muted)}.metric strong{font-size:30px;color:var(--primary);display:block;line-height:1.7}.metric .sub{font-size:11px;color:var(--muted)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:19px;box-shadow:0 7px 20px rgba(17,42,64,.035);margin-top:19px;overflow:hidden}.panelhead{padding:17px 19px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}.panelhead h2{font-size:16px;margin:0;font-weight:800}.count{font-size:12px;color:var(--muted)}
+.filters{display:grid;grid-template-columns:minmax(250px,2fr) repeat(3,minmax(130px,1fr));gap:12px;padding:16px 19px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;color:var(--muted);font-weight:700}.control{width:100%;background:#F8FAFC;border:1px solid var(--line);border-radius:11px;min-height:43px;padding:8px 11px;color:var(--ink)}textarea.control{min-height:84px;resize:vertical}.tablewrap{overflow:auto}table{width:100%;min-width:880px;border-collapse:collapse;text-align:right}th{background:#F3F7FA;color:#4D6171;font-size:12px;font-weight:700;padding:13px 14px;white-space:nowrap}td{border-top:1px solid #EDF1F5;padding:14px;font-size:13px;vertical-align:middle}tbody tr:hover{background:#F8FBFD}.name{font-weight:800}.secondary{color:var(--muted);font-size:11px}.chip{display:inline-flex;align-items:center;justify-content:center;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:800;white-space:nowrap;background:#F0F3F5;color:#637586}.chip.current{background:var(--greenbg);color:var(--green)}.chip.previous{background:#EFF1F3;color:#607181}.chip.paused{background:var(--goldbg);color:var(--gold)}.chip.new{background:#EAF1FE;color:#2C6096}.chip.mid{background:var(--purplebg);color:var(--purple)}.chip.high{background:#E5EEF8;color:var(--primary)}
+.inline-actions{display:flex;gap:6px}.empty{text-align:center;padding:55px 22px;color:var(--muted)}.empty b{font-size:17px;color:var(--ink);display:block;margin-bottom:7px}.footer{font-size:11px;text-align:center;color:var(--muted);margin-top:18px}
+dialog{width:min(820px,calc(100vw - 28px));max-height:91vh;overflow:auto;border:0;border-radius:20px;padding:0;box-shadow:0 35px 95px rgba(15,28,38,.32);color:var(--ink)}dialog::backdrop{background:rgba(16,35,50,.58)}.modalhead{display:flex;align-items:center;justify-content:space-between;padding:20px 23px;border-bottom:1px solid var(--line)}.modalhead h2{margin:0;font-size:19px}.modalbody{padding:20px 23px}.formgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.span2{grid-column:span 2}.span3{grid-column:span 3}.modalfoot{border-top:1px solid var(--line);padding:15px 23px;display:flex;gap:9px;justify-content:flex-start}.error{color:var(--red);font-size:12px;min-height:17px}.detailgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.detail{padding:10px 12px;background:#F6F9FC;border:1px solid #ECF0F4;border-radius:12px}.detail span{display:block;color:var(--muted);font-size:11px}.detail strong{font-weight:600;font-size:13px;overflow-wrap:anywhere}.detail.wide{grid-column:span 2}
+@media(max-width:920px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.span3{grid-column:span 2}}@media(max-width:560px){.shell{padding:12px 12px 45px}.mast{padding:18px 16px}.brand{font-size:21px}.mast p{font-size:11px}.heading{align-items:flex-start;flex-direction:column}.heading h1{font-size:22px}.metrics{gap:8px}.metric{padding:13px}.metric strong{font-size:25px}.filters{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.span2,.span3{grid-column:span 1}.detailgrid{grid-template-columns:1fr}.detail.wide{grid-column:span 1}.devtag{font-size:10px;padding:6px 8px}}
+</style>
+</head>
+<body>
+<main class="shell">
+<header class="mast"><div><div class="brand">مواعيدي <span style="font-size:14px;font-weight:500;color:#E7DBC9">/ إدارة الطلاب</span></div><p>منظومة متابعة الطلاب والحصص — نسخة التطوير</p></div><span class="devtag">بيئة تجريبية · Development</span></header>
+<div class="notice"><strong>نسخة اختبار فقط:</strong> لا تتصل بقاعدة بيانات «مواعيدي» أو Google Sheets، ولا تغيّر الموقع المنشور. تُحفظ بيانات الاختبار محليًا في هذا المتصفح فقط. لا تُدخل بيانات طلاب حقيقية في النموذج.</div>
+<div class="heading"><div><h1>سجل الطلاب</h1><p>إضافة الطلاب، وتنظيم ملفاتهم، والبحث عنهم في مكان واحد.</p></div><div class="actions"><button type="button" id="reset" class="btn">استعادة الأمثلة</button><button type="button" id="add" class="btn primary">+ إضافة طالب</button></div></div>
+<section class="metrics" aria-label="مؤشرات الطلاب"><div class="metric"><div class="label">إجمالي الطلاب</div><strong id="total">0</strong><div class="sub">في النسخة التجريبية</div></div><div class="metric"><div class="label">الطلاب الحاليون</div><strong id="active">0</strong><div class="sub">الحالة: حالي</div></div><div class="metric"><div class="label">عدد الدول</div><strong id="countries">0</strong><div class="sub">دول الطلاب المسجّلة</div></div><div class="metric"><div class="label">الدراسة الجماعية</div><strong id="groups">0</strong><div class="sub">الطلاب المسجلون ضمن مجموعة</div></div></section>
+<section class="panel"><div class="panelhead"><h2>قائمة الطلاب</h2><div class="count" id="matches">0 نتيجة</div></div><div class="filters">
+<div class="field"><label for="search">بحث شامل</label><input id="search" class="control" type="search" placeholder="اسم الطالب، اسم المستخدم، الدولة، الجهة، البريد..."></div>
+<div class="field"><label for="statusFilter">حالة الطالب</label><select id="statusFilter" class="control"><option value="">كل الحالات</option><option>حالي</option><option>سابق</option><option>متوقف مؤقتًا</option><option>جديد</option><option>غير محدد</option></select></div>
+<div class="field"><label for="levelFilter">المستوى الحالي</label><select id="levelFilter" class="control"><option value="">كل المستويات</option><option>مبتدئ</option><option>متوسط</option><option>متقدم</option><option>غير محدد</option></select></div>
+<div class="field"><label for="typeFilter">نوع الدراسة</label><select id="typeFilter" class="control"><option value="">كل الأنواع</option><option>فردي</option><option>مجموعة</option><option>غير محدد</option></select></div>
+</div><div class="tablewrap"><table><thead><tr><th>الطالب</th><th>اسم المستخدم</th><th>الدولة</th><th>الحالة</th><th>المستوى</th><th>نوع الدراسة</th><th>الجهة / المعهد</th><th>الخيارات</th></tr></thead><tbody id="rows"></tbody></table></div><div class="empty" id="empty" hidden><b>لا توجد نتائج مطابقة</b>جرّب تغيير البحث أو الفلاتر، أو أضف طالبًا تجريبيًا.</div></section>
+<div class="footer">مواعيدي · نموذج أولي مستقل · غير متصل بأي خادم · يُراجع قبل النشر</div>
+</main>
+<dialog id="editor"><form method="dialog" id="studentForm"><div class="modalhead"><h2 id="editorTitle">إضافة طالب</h2><button type="button" class="btn small" id="closeEditor" aria-label="إغلاق">×</button></div><div class="modalbody"><div class="formgrid" id="formFields"></div><p class="error" id="formError" role="alert"></p></div><div class="modalfoot"><button type="submit" class="btn primary">حفظ بيانات الطالب</button><button type="button" class="btn" id="cancelEditor">إلغاء</button></div></form></dialog>
+<dialog id="viewer"><div class="modalhead"><h2>ملف الطالب</h2><button type="button" class="btn small" id="closeViewer" aria-label="إغلاق">×</button></div><div class="modalbody"><div class="detailgrid" id="details"></div></div><div class="modalfoot"><button type="button" class="btn" id="closeViewer2">إغلاق</button></div></dialog>
+<script>
+"use strict";
+(function(){
+var KEY="mawaeidi-development-students-demo-v1";
+var labels={username:"اسم المستخدم على الموقع",firstName:"الاسم الأول",lastName:"اسم العائلة",country:"الدولة",status:"حالة الطالب",institute:"الجهة / المعهد",group:"المجموعة الدراسية",marker:"علامة مميزة",email:"البريد الإلكتروني",whatsapp:"واتساب",level:"المستوى الحالي",studyType:"نوع الدراسة",course:"الدورة / الكتاب",language:"لغة التواصل",joined:"تاريخ الانضمام",notes:"ملاحظات تعليمية",accountUrl:"رابط حساب الطالب"};
+var fields=Object.keys(labels);
+var selectOptions={status:["حالي","سابق","متوقف مؤقتًا","جديد","غير محدد"],level:["مبتدئ","متوسط","متقدم","غير محدد"],studyType:["فردي","مجموعة","غير محدد"]};
+var examples=[
+{id:"demo-1",username:"demo_learner_1",firstName:"طالب",lastName:"تجريبي ١",country:"أذربيجان",status:"حالي",institute:"درس خاص",group:"",marker:"",email:"",whatsapp:"",level:"متوسط",studyType:"فردي",course:"العربية بين يديك ٢",language:"الأذرية",joined:"2026-10-01",notes:"بيانات افتراضية للمعاينة",accountUrl:""},
+{id:"demo-2",username:"demo_learner_2",firstName:"طالبة",lastName:"تجريبية ٢",country:"تركيا",status:"جديد",institute:"",group:"المجموعة أ",marker:"",email:"",whatsapp:"",level:"مبتدئ",studyType:"مجموعة",course:"العربية بين يديك ١",language:"التركية",joined:"2026-10-03",notes:"بيانات افتراضية للمعاينة",accountUrl:""},
+{id:"demo-3",username:"demo_learner_3",firstName:"طالب",lastName:"تجريبي ٣",country:"المملكة المتحدة",status:"متوقف مؤقتًا",institute:"",group:"",marker:"",email:"",whatsapp:"",level:"متقدم",studyType:"فردي",course:"محادثة",language:"الإنجليزية",joined:"2026-10-04",notes:"بيانات افتراضية للمعاينة",accountUrl:""},
+{id:"demo-4",username:"demo_learner_4",firstName:"طالبة",lastName:"تجريبية ٤",country:"ألمانيا",status:"سابق",institute:"مركز لغات",group:"المجموعة ب",marker:"",email:"",whatsapp:"",level:"متوسط",studyType:"مجموعة",course:"النحو",language:"الألمانية",joined:"2026-10-05",notes:"بيانات افتراضية للمعاينة",accountUrl:""}
+];
+var students=[],editingId=null;
+var byId=function(id){return document.getElementById(id)};
+function cloneExamples(){return JSON.parse(JSON.stringify(examples))}
+function load(){try{var raw=localStorage.getItem(KEY);if(raw===null)return cloneExamples();var data=JSON.parse(raw);return Array.isArray(data)?data.filter(function(x){return x&&typeof x==="object"&&typeof x.id==="string"}):cloneExamples()}catch(e){return cloneExamples()}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(students))}catch(e){alert("تعذّر حفظ التغييرات محليًا. تأكد من إتاحة تخزين المتصفح.")}}
+function el(tag,className,text){var x=document.createElement(tag);if(className)x.className=className;if(text!==undefined)x.textContent=String(text);return x}
+function chipClass(key,value){if(value==="حالي")return "current";if(value==="سابق")return "previous";if(value==="متوقف مؤقتًا")return "paused";if(value==="جديد")return "new";if(key==="level"&&value==="متوسط")return "mid";if(key==="level"&&value==="متقدم")return "high";return ""}
+function studentName(s){return [s.firstName,s.lastName].filter(Boolean).join(" ")||"دون اسم"}
+function render(){
+byId("total").textContent=students.length;
+byId("active").textContent=students.filter(function(s){return s.status==="حالي"}).length;
+byId("countries").textContent=new Set(students.map(function(s){return (s.country||"").trim()}).filter(Boolean)).size;
+byId("groups").textContent=students.filter(function(s){return s.studyType==="مجموعة"}).length;
+var search=byId("search").value.trim().toLocaleLowerCase(),status=byId("statusFilter").value,level=byId("levelFilter").value,type=byId("typeFilter").value;
+var list=students.filter(function(s){
+var hay=[studentName(s),s.username,s.country,s.institute,s.group,s.email,s.course,s.marker].join(" ").toLocaleLowerCase();
+return(!search||hay.includes(search))&&(!status||s.status===status)&&(!level||s.level===level)&&(!type||s.studyType===type)
+});
+byId("matches").textContent=list.length+" نتيجة";
+var body=byId("rows");body.replaceChildren();
+byId("empty").hidden=list.length>0;
+list.forEach(function(s){
+var tr=el("tr");
+var name=el("td"),strong=el("div","name",studentName(s)),sub=el("div","secondary",s.course||"—");name.append(strong,sub);tr.append(name);
+tr.append(el("td","",s.username||"—"),el("td","",s.country||"—"));
+["status","level","studyType"].forEach(function(k){var td=el("td");td.append(el("span","chip "+chipClass(k,s[k]),s[k]||"غير محدد"));tr.append(td)});
+tr.append(el("td","",s.institute||"—"));
+var buttons=el("td"),wrap=el("div","inline-actions");
+[["عرض","view"],["تعديل","edit"],["حذف","delete"]].forEach(function(spec){
+var btn=el("button","btn small"+(spec[1]==="delete"?" danger":""),spec[0]);btn.type="button";btn.addEventListener("click",function(){action(spec[1],s.id)});wrap.append(btn)
+});
+buttons.append(wrap);tr.append(buttons);body.append(tr)
+})
+}
+function action(type,id){
+var s=students.find(function(x){return x.id===id});if(!s)return;
+if(type==="view"){var d=byId("details");d.replaceChildren();fields.forEach(function(k){var v=el("div","detail"+(k==="notes"?" wide":""));v.append(el("span","",labels[k]),el("strong","",s[k]||"—"));d.append(v)});byId("viewer").showModal()}
+else if(type==="edit")openEditor(s);
+else if(type==="delete"&&confirm("هل تريد حذف هذا الطالب من بيانات النسخة التجريبية فقط؟")){students=students.filter(function(x){return x.id!==id});save();render()}
+}
+function makeForm(){
+var container=byId("formFields");container.replaceChildren();
+fields.forEach(function(k){
+var w=el("div","field"+(k==="notes"?" span3":k==="accountUrl"||k==="course"?" span2":""));
+var label=el("label","",labels[k]);label.htmlFor="field_"+k;w.append(label);
+var input;
+if(k==="notes"){input=document.createElement("textarea")}
+else if(selectOptions[k]){input=document.createElement("select");selectOptions[k].forEach(function(value){var opt=document.createElement("option");opt.value=value;opt.textContent=value;input.append(opt)})}
+else {input=document.createElement("input");input.type=k==="email"?"email":k==="joined"?"date":k==="accountUrl"?"url": "text";if(k==="whatsapp")input.setAttribute("inputmode","tel")}
+input.id="field_"+k;input.name=k;input.className="control";if(k==="username"||k==="firstName")input.required=true;
+w.append(input);container.append(w)
+})
+}
+function openEditor(s){
+editingId=s?s.id:null;byId("editorTitle").textContent=s?"تعديل بيانات الطالب":"إضافة طالب جديد";
+fields.forEach(function(k){byId("field_"+k).value=s?(s[k]||""):(selectOptions[k]?"غير محدد":"")});
+byId("formError").textContent="";byId("editor").showModal();byId("field_username").focus()
+}
+byId("studentForm").addEventListener("submit",function(ev){
+ev.preventDefault();var data={};fields.forEach(function(k){data[k]=byId("field_"+k).value.trim()});
+if(!data.username||!data.firstName){byId("formError").textContent="اسم المستخدم والاسم الأول مطلوبان.";return}
+if(students.some(function(s){return s.id!==editingId&&s.username.toLocaleLowerCase()===data.username.toLocaleLowerCase()})){byId("formError").textContent="اسم المستخدم موجود بالفعل في السجل التجريبي.";return}
+if(!Object.keys(selectOptions).every(function(k){return selectOptions[k].includes(data[k])})){byId("formError").textContent="اختيار غير معتمد في الحالة أو المستوى أو نوع الدراسة.";return}
+if(editingId){var index=students.findIndex(function(s){return s.id===editingId});if(index<0)return;data.id=editingId;students[index]=data}
+else{data.id=(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():"demo-"+Date.now()+"-"+Math.floor(Math.random()*10000);students.unshift(data)}
+save();byId("editor").close();render()
+});
+byId("add").addEventListener("click",function(){openEditor(null)});
+byId("reset").addEventListener("click",function(){if(confirm("استعادة بيانات الأمثلة؟ سيؤدي ذلك لمسح التعديلات التجريبية على هذا المتصفح فقط.")){students=cloneExamples();save();render()}});
+["search","statusFilter","levelFilter","typeFilter"].forEach(function(id){byId(id).addEventListener("input",render)});
+["closeEditor","cancelEditor"].forEach(function(id){byId(id).addEventListener("click",function(){byId("editor").close()})});
+["closeViewer","closeViewer2"].forEach(function(id){byId(id).addEventListener("click",function(){byId("viewer").close()})});
+makeForm();students=load();render()
+})();
+</script>
+</body>
+</html>

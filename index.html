@@ -858,6 +858,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 #scheduleWorkspace[hidden],
 #worldClockView[hidden]{display:none!important}
 </style>
+<style id="student-integration-v1">
+#studentsView[hidden]{display:none!important}
+.students-view{margin-top:16px;animation:page-in .35s ease both}
+.students-directory{overflow:hidden;border:1px solid #D8E2E7;border-radius:12px;background:#fff;box-shadow:0 7px 22px rgba(17,42,64,.04)}
+.students-directory-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 18px 14px;border-bottom:1px solid #E5EBEF;background:#FAFCFD}
+.students-directory-title h2{margin:4px 0 1px;color:var(--primary);font-size:21px}.students-directory-title p{margin:0;color:var(--muted);font-size:9px;line-height:1.7}.students-directory-title p span{color:#38586E;font-weight:900}
+.students-registry-link{display:flex;align-items:center;justify-content:center;min-height:35px;padding:6px 10px;border:1px solid #C4D1D9;border-radius:8px;background:#fff;color:var(--primary);font-size:8.5px;font-weight:900;text-decoration:none;white-space:nowrap}
+.students-directory-tools{padding:10px 13px;border-bottom:1px solid #E9EEF1;background:#fff}.students-search{width:100%;min-height:38px;padding:7px 11px;border:1px solid #C8D5DD;border-radius:8px;background:#F8FAFB;color:var(--ink);font:inherit;font-size:9.5px}.students-search:focus{outline:3px solid rgba(71,137,180,.18);border-color:var(--primary);background:#fff}
+.students-directory-list{display:grid;padding:4px 13px 11px}.student-directory-card{display:grid;grid-template-columns:minmax(230px,1.35fr) minmax(170px,.9fr) auto auto;align-items:center;gap:12px;padding:12px 5px;border-top:1px solid #EDF1F3}.student-directory-card:first-child{border-top:0}.student-directory-card:hover{background:#FBFCFD}.student-directory-identity{display:grid;grid-template-columns:38px minmax(0,1fr);align-items:center;gap:10px;min-width:0}.student-directory-avatar{position:relative;display:grid;width:38px;height:38px;overflow:hidden;place-items:center;border-radius:11px;background:#EAF0F4;color:var(--primary);font-size:10px;font-weight:900}.student-directory-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.student-directory-name{overflow:hidden;font-size:11px;font-weight:900;text-overflow:ellipsis;white-space:nowrap}.student-directory-meta,.student-directory-info{margin-top:2px;color:var(--muted);font-size:8.5px;line-height:1.65}.student-directory-meta{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.student-directory-info{margin:0}.student-directory-status{padding:4px 8px;border-radius:999px;background:#EEF3F5;color:#59707E;font-size:8px;font-weight:900;white-space:nowrap}.student-directory-status.current{background:#E8F4EE;color:#3D735C}.student-directory-status.new{background:#EAF2FA;color:#2C6096}.student-directory-status.paused{background:#FBF1DB;color:#866421}.student-directory-card a{padding:6px 9px;border:1px solid #C2D0D8;border-radius:7px;background:#fff;color:var(--primary);font-size:8px;font-weight:900;text-decoration:none;white-space:nowrap}.students-empty{padding:28px 15px;text-align:center;color:var(--muted);font-size:10px;line-height:1.8}.students-empty strong{display:block;color:var(--ink);font-size:12px}
+@media(max-width:820px){.student-directory-card{grid-template-columns:minmax(0,1fr) auto}.student-directory-info{grid-column:1/2}.student-directory-card a{grid-column:2;grid-row:1/3}.student-directory-status{justify-self:start}}
+@media(max-width:520px){.students-directory-head{align-items:stretch;flex-direction:column}.students-registry-link{width:100%}.student-directory-card{grid-template-columns:1fr}.student-directory-card a{grid-column:auto;grid-row:auto;justify-self:start}}
+.students-kicker{color:var(--muted);font-size:9px;font-weight:800}
+</style>
 </head>
 <body class="auth-pending">
 
@@ -954,6 +967,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     <nav class="workspace-switch" aria-label="أقسام مواعيدي">
       <button type="button" id="scheduleSectionButton" class="active" aria-pressed="true" aria-controls="scheduleWorkspace" onclick="setSection('schedule',this)">المواعيد</button>
       <button type="button" id="worldClockSectionButton" aria-pressed="false" aria-controls="worldClockView" onclick="setSection('world',this)">الساعة العالمية</button>
+      <button type="button" id="studentsSectionButton" aria-pressed="false" aria-controls="studentsView" onclick="setSection('students')">الطلاب</button>
     </nav>
 
     <div class="workspace" id="scheduleWorkspace">
@@ -1057,6 +1071,22 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
       <div id="worldClockPageMount"></div>
     </section>
 
+    <section id="studentsView" class="students-view" aria-labelledby="studentsHeading" hidden>
+      <section class="students-directory">
+        <header class="students-directory-head">
+          <div class="students-directory-title">
+            <span class="students-kicker">سجل مستقل</span>
+            <h2 id="studentsHeading">الطلاب</h2>
+            <p><span id="studentsDirectoryCount">0 طالب</span> · معلومات طلابك ووسائل التواصل وملاحظاتك في مكان واحد.</p>
+          </div>
+          <a class="students-registry-link" id="openStudentRegistry" href="./students/index.html">إدارة السجل</a>
+        </header>
+        <div class="students-directory-tools">
+          <input class="students-search" id="studentsQuickSearch" type="search" placeholder="ابحث بالاسم أو المستخدم أو الدولة…" aria-label="البحث في الطلاب" oninput="renderStudentsDirectory()">
+        </div>
+        <div class="students-directory-list" id="studentsDirectory"></div>
+      </section>
+    </section>
   </div>
 </div>
 
@@ -1214,6 +1244,9 @@ const LEGACY_STORAGE_KEY="mawaeidi_arabic_v7";
 const MIGRATION_KEY_PREFIX="mawaeidi_cloud_migration_";
 const SUPABASE_URL="https://nvefdkkjkyalpsrgoffj.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_t0pqtkV0-3Wj0htl-eGR9w_BsifiUDE";
+const STUDENTS_TABLE="mawaeidi_students";
+const STUDENT_PHOTO_BUCKET="mawaeidi-student-photos";
+const STUDENT_PHOTO_SIGNED_SECONDS=60*60;
 const TIME_RE=/^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const SOURCE_COLORS=["#A7445A","#6555A4","#28769B","#B76D28","#3F7B4A","#8B4E87","#3E708D","#98623F"];
 const PRIVATE_SOURCE_COLOR="#9B7449";
@@ -1347,7 +1380,7 @@ let weekDensity=savedWeekDensity();
 let expandedWeekTimes=new Set();
 let draggedWeekContext=null;
 let activeWeekMoveContext=null;
-let currentSection="schedule";
+let currentSection=new URLSearchParams(location.search).get("section")==="students"?"students":"schedule";
 let editingId=null;
 let currentUser=null;
 let cloudReady=false;
@@ -1370,6 +1403,9 @@ let historySnapshots=new Map();
 let activeSessionContext=null;
 let worldClockInterval=null;
 let timeZoneCatalogCache=null;
+let studentDirectoryRecords=[];
+let studentDirectoryLoadSequence=0;
+let studentDirectoryState="idle";
 
 function closeDataMenu(){document.getElementById("dataMenu")?.removeAttribute("open")}
 function isStandalone(){return window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone===true}
@@ -2132,6 +2168,7 @@ function startRealtime(user){
     });
 }
 async function refreshFromCloud(silent=false){
+  if(currentSection==="students"&&currentUser&&cloudReady)return loadStudentsDirectory();
   if(!cloud||!currentUser||!cloudReady){
     if(!silent)alert("لم يكتمل الاتصال بحسابك بعد.");
     return false;
@@ -2270,6 +2307,7 @@ async function activateSession(user){
   lastCloudUpdatedAt=null;
   loadingUserId=user.id;
   const sequence=++sessionSequence;
+  resetStudentDirectory();
   currentUser=user;
   cloudReady=false;
   setAuthMessage("جارٍ تحميل جدولك…");
@@ -2303,6 +2341,7 @@ async function activateSession(user){
     setSync("saved","محفوظ سحابيًا");
     startRealtime(user);
     refreshNotificationMenuStatus();
+    if(currentSection==="students")await loadStudentsDirectory();
   }catch(error){
     console.error("تعذّر تحميل جدول مواعيدي.",error);
     cloudReady=false;
@@ -2322,6 +2361,7 @@ async function logout(){
   if(error){alert("تعذّر تسجيل الخروج. حاول مرة أخرى.");return}
   stopRealtime();
   sessionSequence++;
+  resetStudentDirectory();
   loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;lastCloudUpdatedAt=null;
   closeDrawer();closeToolDialog();render();showAuth();
   setAuthMessage("تم تسجيل الخروج.");
@@ -2707,22 +2747,108 @@ async function saveSessionStatus(button){
   if(!await persist()){lessons=previous;if(button)button.disabled=false;return}
   closeToolDialog();render();
 }
-function handlePrimaryAction(){if(currentSection==="schedule")openNew()}
+function studentDisplayName(student){return [student?.first_name,student?.last_name].filter(Boolean).join(" ")||student?.username||"طالب"}
+function studentDirectoryInitials(student){return [student?.first_name,student?.last_name].filter(Boolean).map(value=>String(value).trim().charAt(0)).join("").slice(0,2)||"ط"}
+function safeStudentDirectoryPhotoUrl(value){
+  try{
+    const url=new URL(String(value||""));
+    return ["http:","https:"].includes(url.protocol)?url.href:"";
+  }catch{return ""}
+}
+async function hydrateStudentDirectoryPhotos(records){
+  const list=(records||[]).map(student=>({...student,photo_url:""}));
+  if(!cloud||!currentUser)return list;
+  const paths=[...new Set(list.map(student=>String(student.photo_path||"").trim()).filter(Boolean))];
+  if(!paths.length)return list;
+  const {data,error}=await cloud.storage.from(STUDENT_PHOTO_BUCKET).createSignedUrls(paths,STUDENT_PHOTO_SIGNED_SECONDS);
+  if(error){console.warn("تعذّر تحميل صور الطلاب.",error);return list}
+  const urls=new Map((data||[]).map(item=>[item.path,safeStudentDirectoryPhotoUrl(item.signedUrl)]));
+  return list.map(student=>({...student,photo_url:urls.get(student.photo_path)||""}));
+}
+function studentDirectoryPhotoMarkup(student){
+  const url=safeStudentDirectoryPhotoUrl(student?.photo_url);
+  return `<span class="student-directory-avatar" aria-hidden="true">${esc(studentDirectoryInitials(student))}${url?`<img src="${esc(url)}" alt="">`:""}</span>`;
+}
+function studentStatusClass(status){return status==="حالي"?"current":status==="جديد"?"new":status==="متوقف مؤقتًا"?"paused":""}
+function studentRegistryUrl(studentId="",newStudent=false){
+  const params=new URLSearchParams();
+  if(studentId)params.set("student",studentId);
+  if(newStudent)params.set("new","1");
+  const query=params.toString();
+  return `./students/index.html${query?`?${query}`:""}`;
+}
+function renderStudentsDirectory(){
+  const directory=document.getElementById("studentsDirectory"),count=document.getElementById("studentsDirectoryCount"),search=document.getElementById("studentsQuickSearch");
+  if(!directory||!count)return;
+  const query=normalizeZoneSearch(search?.value||"");
+  const visible=studentDirectoryRecords.filter(student=>{
+    if(!query)return true;
+    return normalizeZoneSearch([studentDisplayName(student),student.username,student.country,student.status,student.current_level,student.study_type,student.course_book].join(" ")).includes(query);
+  });
+  count.textContent=query?`${visible.length} من ${studentDirectoryRecords.length} طالب`:`${studentDirectoryRecords.length} طالب`;
+  document.getElementById("openStudentRegistry").href=studentRegistryUrl();
+  if(studentDirectoryState==="loading"&&!studentDirectoryRecords.length){directory.innerHTML='<div class="students-empty" role="status">جارٍ تحميل الطلاب…</div>';return}
+  if(studentDirectoryState==="error"){directory.innerHTML='<div class="students-empty" role="alert"><strong>تعذّر تحميل سجل الطلاب</strong>تحقق من الاتصال ثم <button type="button" onclick="loadStudentsDirectory()">حاول مرة أخرى</button>.</div>';return}
+  if(!visible.length){directory.innerHTML=`<div class="students-empty"><strong>${studentDirectoryRecords.length?"لا توجد نتائج مطابقة":"لا يوجد طلاب في السجل بعد"}</strong>${studentDirectoryRecords.length?"جرّب اسمًا أو دولة أخرى.":"أضف أول طالب واحفظ بياناته الأساسية."}</div>`;return}
+  directory.innerHTML=visible.map(student=>{
+    const details=[student.country||"الدولة غير محددة",student.current_level||"المستوى غير محدد",student.study_type||"نوع الدراسة غير محدد"].join(" · ");
+    return `<article class="student-directory-card"><div class="student-directory-identity">${studentDirectoryPhotoMarkup(student)}<div><div class="student-directory-name">${esc(studentDisplayName(student))}</div><div class="student-directory-meta">@${esc(student.username||"—")} · ${esc(student.course_book||"الدورة غير محددة")}</div></div></div><div class="student-directory-info">${esc(details)}</div><span class="student-directory-status ${studentStatusClass(student.status)}">${esc(student.status||"غير محدد")}</span><a href="${esc(studentRegistryUrl(student.id))}">عرض البيانات</a></article>`;
+  }).join("");
+  directory.querySelectorAll(".student-directory-avatar img").forEach(image=>image.addEventListener("error",()=>image.remove(),{once:true}));
+}
+async function loadStudentsDirectory(){
+  if(!cloud||!currentUser||!cloudReady)return false;
+  const userId=currentUser.id,sequence=++studentDirectoryLoadSequence;
+  studentDirectoryState="loading";
+  renderStudentsDirectory();
+  try{
+    const {data,error}=await cloud.from(STUDENTS_TABLE)
+      .select("id,username,first_name,last_name,country,status,current_level,study_type,course_book,photo_path")
+      .eq("user_id",userId).order("first_name",{ascending:true});
+    if(error)throw error;
+    if(currentUser?.id!==userId||sequence!==studentDirectoryLoadSequence)return false;
+    const records=await hydrateStudentDirectoryPhotos(data||[]);
+    if(currentUser?.id!==userId||sequence!==studentDirectoryLoadSequence)return false;
+    studentDirectoryRecords=records;
+    studentDirectoryState="ready";
+    renderStudentsDirectory();
+    return true;
+  }catch(error){
+    if(currentUser?.id!==userId||sequence!==studentDirectoryLoadSequence)return false;
+    console.error("تعذّر تحميل سجل الطلاب.",error);
+    studentDirectoryState="error";
+    renderStudentsDirectory();
+    return false;
+  }
+}
+function resetStudentDirectory(){
+  studentDirectoryLoadSequence++;
+  studentDirectoryRecords=[];
+  studentDirectoryState="idle";
+  const search=document.getElementById("studentsQuickSearch");
+  if(search)search.value="";
+}
+function handlePrimaryAction(){
+  if(currentSection==="students")location.href=studentRegistryUrl("",true);
+  else if(currentSection==="schedule")openNew();
+}
 function updateSectionChrome(){
  document.getElementById("scheduleWorkspace").hidden=currentSection!=="schedule";
  document.getElementById("worldClockView").hidden=currentSection!=="world";
+ document.getElementById("studentsView").hidden=currentSection!=="students";
  document.querySelectorAll(".workspace-switch button").forEach(button=>{
-  const active=(currentSection==="schedule"&&button.id==="scheduleSectionButton")||(currentSection==="world"&&button.id==="worldClockSectionButton");
+  const active=(currentSection==="schedule"&&button.id==="scheduleSectionButton")||(currentSection==="world"&&button.id==="worldClockSectionButton")||(currentSection==="students"&&button.id==="studentsSectionButton");
   button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active));
  });
  const btn=document.getElementById("primaryActionButton");btn.hidden=currentSection==="world";
- if(currentSection!=="world")btn.textContent="＋ إضافة حصة";
+ if(currentSection!=="world")btn.textContent=currentSection==="students"?"＋ إضافة طالب":"＋ إضافة حصة";
  if(currentSection!=="world"&&worldClockInterval){clearInterval(worldClockInterval);worldClockInterval=null}
 }
 function setSection(section){
- currentSection=["schedule","world"].includes(section)?section:"schedule";
+ currentSection=["schedule","world","students"].includes(section)?section:"schedule";
  updateSectionChrome();
  if(currentSection==="world")openWorldClock();
+ if(currentSection==="students")loadStudentsDirectory();
 }
 function filtered(){return lessons.filter(l=>l&&(currentFilter==="all"||l.type===currentFilter))}
 function savedWeekTimeMode(){
@@ -2810,6 +2936,7 @@ function render(){
   renderSummary();
   renderWeekBars();
   renderWeek();
+  renderStudentsDirectory();
 }
 
 function renderHeader(){
@@ -3391,6 +3518,7 @@ async function initApp(){
     }else if(event==="SIGNED_OUT"){
       setTimeout(()=>{
         stopRealtime();
+        resetStudentDirectory();
         sessionSequence++;loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;
         recoveryUser=null;lastCloudUpdatedAt=null;setAuthMode("signin");closeDrawer();closeToolDialog();updateNotificationMenuStatus(false);render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
       },0);
@@ -3421,3 +3549,4 @@ initApp();
 <script src="./day-order.js?v=2" defer></script>
 </body>
 </html>
+

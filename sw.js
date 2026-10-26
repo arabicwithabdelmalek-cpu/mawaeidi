@@ -1,7 +1,12 @@
-const CACHE_NAME="mawaeidi-shell-v39";
+const CACHE_NAME="mawaeidi-shell-v40";
 const APP_SHELL=[
   "./",
   "./index.html",
+  "./students/index.html",
+  "./students/student-registry.css?v=1",
+  "./students/student-registry.js?v=1",
+  "./account.js?v=1",
+  "./account-page.js?v=2",
   "./day-order.js?v=2",
   "./manifest.webmanifest",
   "./icons/icon.svg",
@@ -30,11 +35,13 @@ self.addEventListener("fetch",event=>{
   if(url.origin!==self.location.origin)return;
 
   if(request.mode==="navigate"){
+    const pagePath=url.pathname.replace(/\/$/,"/index.html");
+    const fallback=pagePath.endsWith("/students/index.html")?"./students/index.html":"./index.html";
     const fetched=fetch(request).then(response=>({response,copy:response.clone()}));
-    event.respondWith(fetched.then(({response})=>response).catch(()=>caches.match("./index.html")));
+    event.respondWith(fetched.then(({response})=>response).catch(()=>caches.match(fallback)));
     event.waitUntil(
       fetched
-        .then(({copy})=>caches.open(CACHE_NAME).then(cache=>cache.put("./index.html",copy)))
+        .then(({copy})=>caches.open(CACHE_NAME).then(cache=>cache.put(fallback,copy)))
         .catch(()=>undefined)
     );
     return;
@@ -89,3 +96,4 @@ self.addEventListener("notificationclick",event=>{
     })
   );
 });
+

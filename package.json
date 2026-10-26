@@ -6,7 +6,8 @@
   "scripts": {
     "android:add": "cap add android",
     "android:sync": "cap sync android",
-    "android:build": "cd android && ./gradlew assembleDebug"
+    "android:build": "cd android && ./gradlew assembleDebug",
+    "test:students": "node students/tests/student-registry.test.cjs && node students/tests/production-integration.test.cjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.2",

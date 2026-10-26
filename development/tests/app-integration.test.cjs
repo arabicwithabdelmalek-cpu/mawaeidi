@@ -10,6 +10,7 @@ const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
 const registryHtml=fs.readFileSync(path.join(root,"development/student-registry.html"),"utf8");
 const registry=fs.readFileSync(path.join(root,"development/student-registry.js"),"utf8");
 const migration=fs.readFileSync(path.join(root,"supabase/migrations/20261025064000_development_core_integration.sql"),"utf8");
+const photoMigration=fs.readFileSync(path.join(root,"supabase/migrations/20261026080000_add_student_photos.sql"),"utf8");
 
 assert.match(html,/https:\/\/eixeazkkexgfndvfowxa\.supabase\.co/,"Development app must use the development Supabase project");
 assert.doesNotMatch(html,/https:\/\/nvefdkkjkyalpsrgoffj\.supabase\.co/,"Development branch must not point at production Supabase");
@@ -21,6 +22,18 @@ assert.doesNotMatch(registry,/profileIntegration|linkedLessonsForStudent|mawaeid
 assert.match(registry,/المعلومات المسجلة/);
 assert.doesNotMatch(registryHtml,/id="(?:addProgress|progressForm|progressEditor)"/,"The student registry UI must stay focused on stored profile data");
 assert.doesNotMatch(registry,/PROGRESS_TABLE|loadCloudProgress|saveProgressRecord/,"The student screen must not load or edit progress records");
+assert.match(registryHtml,/id="studentPhotoInput"/);
+assert.match(registry,/createSignedUrls\(paths/);
+assert.match(html,/course_book,photo_path/);
+assert.match(html,/student-directory-avatar/);
+
+assert.match(photoMigration,/add column if not exists photo_path text/);
+assert.match(photoMigration,/mawaeidi-student-photos/);
+assert.match(photoMigration,/public, file_size_limit, allowed_mime_types/);
+assert.match(photoMigration,/false,\s*5242880/);
+assert.equal((photoMigration.match(/create policy mawaeidi_student_photos_/g)||[]).length,4);
+assert.match(photoMigration,/storage\.foldername\(name\)/);
+assert.match(photoMigration,/auth\.uid\(\)/);
 
 for(const table of ["mawaeidi_data","mawaeidi_history","mawaeidi_push_subscriptions","mawaeidi_notification_log"]){
   assert.match(migration,new RegExp(`public\\.${table}`),`Migration is missing ${table}`);

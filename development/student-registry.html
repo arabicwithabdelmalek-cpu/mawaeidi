@@ -143,6 +143,24 @@
         <button class="icon-button" data-close="studentEditor" type="button" aria-label="إغلاق">×</button>
       </header>
       <div class="dialog-body">
+        <section class="photo-editor" aria-labelledby="studentPhotoHeading">
+          <span class="photo-preview" id="studentPhotoPreview" aria-hidden="true">
+            <img id="studentPhotoImage" alt="" hidden>
+            <span id="studentPhotoInitials">ط</span>
+          </span>
+          <div class="photo-editor-content">
+            <div>
+              <h3 id="studentPhotoHeading">صورة الطالب <span>اختيارية</span></h3>
+              <p>تُقصّ الصورة تلقائيًا إلى مربع خفيف وواضح، ويمكنك تغييرها أو حذفها في أي وقت.</p>
+            </div>
+            <div class="photo-actions">
+              <label class="btn small photo-picker" id="studentPhotoPicker" for="studentPhotoInput">اختيار صورة</label>
+              <button class="btn small danger" id="removeStudentPhoto" type="button" hidden>إزالة الصورة</button>
+              <input id="studentPhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+            </div>
+            <span class="photo-meta" id="studentPhotoMeta">JPG أو PNG أو WebP · بحد أقصى 10 ميجابايت قبل المعالجة</span>
+          </div>
+        </section>
         <div class="student-form-sections" id="studentFields"></div>
         <p class="form-message" id="studentFormMessage" role="alert"></p>
       </div>
@@ -155,7 +173,10 @@
 
   <dialog class="profile-dialog" id="studentProfile">
     <header class="dialog-head profile-head">
-      <div><span class="eyebrow">ملف الطالب</span><h2 id="profileTitle">—</h2><p id="profileSubtitle">—</p></div>
+      <div class="profile-identity">
+        <span class="profile-avatar" id="profileAvatar" aria-hidden="true"><span>ط</span></span>
+        <div><span class="eyebrow">ملف الطالب</span><h2 id="profileTitle">—</h2><p id="profileSubtitle">—</p></div>
+      </div>
       <button class="icon-button" data-close="studentProfile" type="button" aria-label="إغلاق">×</button>
     </header>
     <div class="dialog-body" id="profileContent"></div>

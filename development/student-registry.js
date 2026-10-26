@@ -3,6 +3,12 @@
 const SUPABASE_URL="https://eixeazkkexgfndvfowxa.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_9HtNRmLYbR2IU4jcTPumjw_XJ1ziGpM";
 const STUDENTS_TABLE="mawaeidi_students";
+const STUDENT_PHOTO_BUCKET="mawaeidi-student-photos";
+const STUDENT_PHOTO_SIGNED_SECONDS=60*60;
+const MAX_STUDENT_PHOTO_SOURCE_BYTES=10*1024*1024;
+const MAX_STUDENT_PHOTO_STORED_BYTES=5*1024*1024;
+const STUDENT_PHOTO_SIZE=512;
+const STUDENT_PHOTO_TYPES=new Set(["image/jpeg","image/png","image/webp"]);
 const MAX_IMPORT_BYTES=2*1024*1024;
 const MAX_IMPORT_ROWS=2000;
 
@@ -52,6 +58,11 @@ let activeStudentId=null;
 let importPlan=null;
 let toastTimer=null;
 let initialRouteHandled=false;
+let pendingStudentPhoto=null;
+let removeStudentPhotoRequested=false;
+let originalStudentPhotoPath="";
+let originalStudentPhotoUrl="";
+let photoSelectionSequence=0;
 
 const DEMO_STUDENTS=[
   {id:"11111111-1111-4111-8111-111111111111",username:"demo_learner_1",first_name:"طالب",last_name:"تجريبي ١",country:"أذربيجان",status:"حالي",institute:"درس خاص",study_group:"",distinguishing_mark:"يحب المحادثة",email:"learner1@example.test",whatsapp:"+994 50 000 00 01",current_level:"متوسط",study_type:"فردي",course_book:"العربية بين يديك ٢",communication_language:"الأذرية",joined_on:"2026-08-10",educational_notes:"يحتاج إلى توسيع المفردات اليومية.",student_account_url:"",created_at:"2026-08-10T08:00:00Z",updated_at:"2026-10-22T08:00:00Z"},
@@ -87,6 +98,14 @@ function safeUrl(value){
     return ["http:","https:"].includes(url.protocol)?url.href:"";
   }catch{return ""}
 }
+function safePhotoUrl(value){
+  const candidate=text(value).trim();
+  if(/^data:image\/(?:jpeg|png|webp);base64,/i.test(candidate))return candidate;
+  try{
+    const url=new URL(candidate);
+    return ["http:","https:","blob:"].includes(url.protocol)?url.href:"";
+  }catch{return ""}
+}
 function escapeHtml(value){
   return text(value).replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char]));
 }
@@ -104,6 +123,8 @@ function normalizeStudent(value={}){
   if(!LEVEL_OPTIONS.includes(result.current_level))result.current_level="غير محدد";
   if(!STUDY_TYPE_OPTIONS.includes(result.study_type))result.study_type="غير محدد";
   result.id=clean(value.id,80)||makeId();
+  result.photo_path=clean(value.photo_path,1024);
+  result.photo_url=safePhotoUrl(value.photo_url);
   result.created_at=clean(value.created_at,50)||new Date().toISOString();
   result.updated_at=clean(value.updated_at,50)||result.created_at;
   return result;
@@ -131,7 +152,17 @@ function openDialog(id){
   if(dialog.open)dialog.close();
   dialog.showModal();
 }
-function closeDialog(id){const dialog=byId(id);if(dialog?.open)dialog.close()}
+function closeDialog(id){
+  const dialog=byId(id);
+  if(dialog?.open)dialog.close();
+  if(id==="studentEditor"){
+    photoSelectionSequence++;
+    pendingStudentPhoto=null;
+    removeStudentPhotoRequested=false;
+    originalStudentPhotoPath="";
+    originalStudentPhotoUrl="";
+  }
+}
 
 function buildStudentForm(){
   const target=byId("studentFields");
@@ -248,6 +279,132 @@ function makeButton(label,action,id,danger=false){
 function studentInitials(student){
   return [student.first_name,student.last_name].filter(Boolean).map(value=>text(value).trim().charAt(0)).join("").slice(0,2)||"ط";
 }
+function setAvatarContent(element,student,url=student?.photo_url){
+  element.replaceChildren();
+  const photoUrl=safePhotoUrl(url);
+  const fallback=()=>{
+    const initials=document.createElement("span");
+    initials.textContent=studentInitials(student||{});
+    element.replaceChildren(initials);
+  };
+  if(!photoUrl){fallback();return}
+  const image=document.createElement("img");
+  image.src=photoUrl;
+  image.alt="";
+  image.addEventListener("error",fallback,{once:true});
+  element.append(image);
+}
+function validateStudentPhotoFile(file){
+  if(!file)return "اختر صورة أولًا.";
+  if(!STUDENT_PHOTO_TYPES.has(text(file.type).toLowerCase()))return "الصورة يجب أن تكون JPG أو PNG أو WebP.";
+  if(!Number.isFinite(Number(file.size))||Number(file.size)<=0)return "ملف الصورة غير صالح.";
+  if(Number(file.size)>MAX_STUDENT_PHOTO_SOURCE_BYTES)return "حجم الصورة أكبر من 10 ميجابايت.";
+  return "";
+}
+async function decodeStudentPhoto(file){
+  if(typeof window.createImageBitmap==="function"){
+    try{
+      const bitmap=await window.createImageBitmap(file,{imageOrientation:"from-image"});
+      return {image:bitmap,width:bitmap.width,height:bitmap.height,release:()=>bitmap.close?.()};
+    }catch{
+      const bitmap=await window.createImageBitmap(file);
+      return {image:bitmap,width:bitmap.width,height:bitmap.height,release:()=>bitmap.close?.()};
+    }
+  }
+  const objectUrl=URL.createObjectURL(file);
+  return new Promise((resolve,reject)=>{
+    const image=new Image();
+    image.onload=()=>resolve({image,width:image.naturalWidth,height:image.naturalHeight,release:()=>URL.revokeObjectURL(objectUrl)});
+    image.onerror=()=>{URL.revokeObjectURL(objectUrl);reject(new Error("decode_failed"))};
+    image.src=objectUrl;
+  });
+}
+function blobDataUrl(blob){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(text(reader.result));
+    reader.onerror=()=>reject(reader.error||new Error("preview_failed"));
+    reader.readAsDataURL(blob);
+  });
+}
+async function prepareStudentPhoto(file){
+  const validation=validateStudentPhotoFile(file);
+  if(validation)throw new Error(validation);
+  const decoded=await decodeStudentPhoto(file);
+  try{
+    if(!decoded.width||!decoded.height)throw new Error("تعذّر قراءة أبعاد الصورة.");
+    const canvas=document.createElement("canvas");
+    canvas.width=STUDENT_PHOTO_SIZE;
+    canvas.height=STUDENT_PHOTO_SIZE;
+    const context=canvas.getContext("2d",{alpha:false});
+    if(!context)throw new Error("تعذّرت معالجة الصورة في هذا المتصفح.");
+    const side=Math.min(decoded.width,decoded.height);
+    const sourceX=(decoded.width-side)/2;
+    const sourceY=(decoded.height-side)/2;
+    context.fillStyle="#eef3f5";
+    context.fillRect(0,0,STUDENT_PHOTO_SIZE,STUDENT_PHOTO_SIZE);
+    context.drawImage(decoded.image,sourceX,sourceY,side,side,0,0,STUDENT_PHOTO_SIZE,STUDENT_PHOTO_SIZE);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/webp",.84));
+    if(!blob)throw new Error("تعذّر تجهيز الصورة. جرّب صورة أخرى.");
+    if(blob.size>MAX_STUDENT_PHOTO_STORED_BYTES)throw new Error("تعذّر ضغط الصورة إلى الحجم المناسب.");
+    const type=STUDENT_PHOTO_TYPES.has(blob.type)?blob.type:"image/webp";
+    const extension=type==="image/png"?"png":type==="image/jpeg"?"jpg":"webp";
+    return {blob,previewUrl:await blobDataUrl(blob),type,extension,sourceName:clean(file.name,180)};
+  }finally{decoded.release()}
+}
+function updateStudentPhotoEditor(){
+  const firstName=byId("student_first_name")?.value||"";
+  const lastName=byId("student_last_name")?.value||"";
+  const fallbackStudent={first_name:firstName,last_name:lastName};
+  const previewUrl=pendingStudentPhoto?.previewUrl||(!removeStudentPhotoRequested?originalStudentPhotoUrl:"");
+  const safePreview=safePhotoUrl(previewUrl);
+  const image=byId("studentPhotoImage"),initials=byId("studentPhotoInitials");
+  image.hidden=!safePreview;
+  initials.hidden=Boolean(safePreview);
+  initials.textContent=studentInitials(fallbackStudent);
+  image.src=safePreview||"";
+  image.onerror=()=>{image.hidden=true;initials.hidden=false};
+  const hasPhoto=Boolean(pendingStudentPhoto||(!removeStudentPhotoRequested&&(originalStudentPhotoPath||originalStudentPhotoUrl)));
+  byId("studentPhotoPicker").textContent=hasPhoto?"تغيير الصورة":"اختيار صورة";
+  byId("removeStudentPhoto").hidden=!hasPhoto;
+  const meta=byId("studentPhotoMeta");
+  meta.classList.remove("error");
+  meta.textContent=pendingStudentPhoto
+    ?"الصورة جاهزة وستُحفظ مع بيانات الطالب."
+    :hasPhoto?"الصورة الحالية محفوظة بصورة خاصة.":"JPG أو PNG أو WebP · بحد أقصى 10 ميجابايت قبل المعالجة";
+}
+async function handleStudentPhotoSelection(file){
+  const input=byId("studentPhotoInput");
+  const validation=validateStudentPhotoFile(file);
+  if(validation){
+    const meta=byId("studentPhotoMeta");meta.textContent=validation;meta.classList.add("error");
+    input.value="";
+    return;
+  }
+  const sequence=++photoSelectionSequence;
+  const picker=byId("studentPhotoPicker");
+  picker.classList.add("is-busy");picker.textContent="جارٍ تجهيز الصورة…";
+  try{
+    const prepared=await prepareStudentPhoto(file);
+    if(sequence!==photoSelectionSequence)return;
+    pendingStudentPhoto=prepared;
+    removeStudentPhotoRequested=false;
+    updateStudentPhotoEditor();
+  }catch(error){
+    console.error("Student photo preparation failed.",error);
+    const meta=byId("studentPhotoMeta");meta.textContent=error?.message||"تعذّر تجهيز الصورة.";meta.classList.add("error");
+  }finally{
+    if(sequence===photoSelectionSequence)picker.classList.remove("is-busy");
+    input.value="";
+  }
+}
+function removeStudentPhotoFromEditor(){
+  photoSelectionSequence++;
+  pendingStudentPhoto=null;
+  removeStudentPhotoRequested=Boolean(originalStudentPhotoPath||originalStudentPhotoUrl);
+  updateStudentPhotoEditor();
+  byId("studentPhotoMeta").textContent=removeStudentPhotoRequested?"ستُحذف الصورة عند حفظ التعديلات.":"لم تُضف صورة لهذا الطالب.";
+}
 function renderStudents(){
   refreshCountryFilter();
   filteredStudents=filterAndSortStudents();
@@ -262,7 +419,7 @@ function renderStudents(){
     const open=document.createElement("button");
     open.type="button";open.className="student-open";open.dataset.action="view";open.dataset.id=student.id;
     open.setAttribute("aria-label",`عرض بيانات ${studentName(student)}`);
-    const avatar=document.createElement("span");avatar.className="student-avatar";avatar.textContent=studentInitials(student);
+    const avatar=document.createElement("span");avatar.className="student-avatar";avatar.setAttribute("aria-hidden","true");setAvatarContent(avatar,student);
     const identity=document.createElement("span");identity.className="student-identity";
     const name=document.createElement("strong");name.className="student-name";name.textContent=studentName(student);
     const username=document.createElement("span");username.className="student-sub";username.textContent=student.username?`@${student.username}`:"من دون اسم مستخدم";
@@ -301,6 +458,7 @@ function profileContacts(student){
 function renderProfile(){
   const student=students.find(item=>item.id===activeStudentId);
   if(!student){closeDialog("studentProfile");return}
+  setAvatarContent(byId("profileAvatar"),student);
   byId("profileTitle").textContent=studentName(student);
   byId("profileSubtitle").textContent=`@${student.username} · ${student.country||"الدولة غير محددة"}`;
   const basic=[
@@ -351,11 +509,18 @@ function openProfile(id){
 
 function openStudentEditor(student=null){
   editingStudentId=student?.id||null;
+  photoSelectionSequence++;
+  pendingStudentPhoto=null;
+  removeStudentPhotoRequested=false;
+  originalStudentPhotoPath=clean(student?.photo_path,1024);
+  originalStudentPhotoUrl=safePhotoUrl(student?.photo_url);
+  byId("studentPhotoInput").value="";
   byId("studentEditorTitle").textContent=student?"تعديل بيانات الطالب":"إضافة طالب جديد";
   for(const field of STUDENT_FIELDS){
     const input=byId(`student_${field.key}`);
     input.value=student?.[field.key]??(field.options?"غير محدد":"");
   }
+  updateStudentPhotoEditor();
   setMessage("studentFormMessage","");
   closeDialog("studentProfile");
   openDialog("studentEditor");
@@ -378,23 +543,82 @@ function validateStudent(student){
   if(student.joined_on&&!/^\d{4}-\d{2}-\d{2}$/.test(student.joined_on))return "تاريخ الانضمام غير صحيح.";
   return "";
 }
+function photoPathBelongsToCurrentUser(path){
+  return Boolean(currentUser?.id)&&clean(path,1024).startsWith(`${currentUser.id}/`);
+}
+function createStudentPhotoPath(studentId,extension="webp"){
+  const token=makeId();
+  return `${currentUser.id}/${studentId}/${Date.now()}-${token}.${extension}`;
+}
+async function signStudentPhoto(path){
+  if(!cloud||!path)return "";
+  const {data,error}=await cloud.storage.from(STUDENT_PHOTO_BUCKET).createSignedUrl(path,STUDENT_PHOTO_SIGNED_SECONDS);
+  if(error){console.warn("Student photo signing failed.",error);return ""}
+  return safePhotoUrl(data?.signedUrl);
+}
+async function hydrateStudentPhotos(records){
+  const normalized=(records||[]).map(normalizeStudent);
+  if(!cloud||!currentUser||mode!=="cloud")return normalized;
+  const paths=[...new Set(normalized.map(student=>student.photo_path).filter(Boolean))];
+  if(!paths.length)return normalized;
+  const {data,error}=await cloud.storage.from(STUDENT_PHOTO_BUCKET).createSignedUrls(paths,STUDENT_PHOTO_SIGNED_SECONDS);
+  if(error){console.warn("Student photos could not be signed.",error);return normalized}
+  const urls=new Map((data||[]).map(item=>[item.path,safePhotoUrl(item.signedUrl)]));
+  return normalized.map(student=>normalizeStudent({...student,photo_url:urls.get(student.photo_path)||""}));
+}
+async function applyCloudStudentPhoto(savedStudent,previousStudent){
+  let saved=normalizeStudent({...savedStudent,photo_url:previousStudent?.photo_url||""});
+  const previousPath=originalStudentPhotoPath||clean(previousStudent?.photo_path,1024);
+  let cleanupWarning=false;
+  if(pendingStudentPhoto){
+    const nextPath=createStudentPhotoPath(saved.id,pendingStudentPhoto.extension);
+    const bucket=cloud.storage.from(STUDENT_PHOTO_BUCKET);
+    const upload=await bucket.upload(nextPath,pendingStudentPhoto.blob,{
+      contentType:pendingStudentPhoto.blob.type||pendingStudentPhoto.type,
+      cacheControl:"3600",
+      upsert:false
+    });
+    if(upload.error)throw upload.error;
+    const response=await cloud.from(STUDENTS_TABLE).update({photo_path:nextPath}).eq("id",saved.id).select("*").single();
+    if(response.error){
+      await bucket.remove([nextPath]);
+      throw response.error;
+    }
+    saved=normalizeStudent({...response.data,photo_url:await signStudentPhoto(nextPath)});
+    if(previousPath&&previousPath!==nextPath&&photoPathBelongsToCurrentUser(previousPath)){
+      const cleanup=await bucket.remove([previousPath]);
+      if(cleanup.error){cleanupWarning=true;console.warn("Old student photo cleanup failed.",cleanup.error)}
+    }
+  }else if(removeStudentPhotoRequested&&previousPath){
+    if(!photoPathBelongsToCurrentUser(previousPath))throw new Error("invalid_photo_path");
+    const bucket=cloud.storage.from(STUDENT_PHOTO_BUCKET);
+    const removal=await bucket.remove([previousPath]);
+    if(removal.error)throw removal.error;
+    const response=await cloud.from(STUDENTS_TABLE).update({photo_path:null}).eq("id",saved.id).select("*").single();
+    if(response.error)throw response.error;
+    saved=normalizeStudent({...response.data,photo_path:"",photo_url:""});
+  }
+  return {saved,cleanupWarning};
+}
 async function saveStudentRecord(event){
   event.preventDefault();
   const draft=readStudentForm();
   const validation=validateStudent(draft);
   if(validation){setMessage("studentFormMessage",validation);return}
+  const wasEditing=Boolean(editingStudentId);
+  const previousStudent=students.find(item=>item.id===editingStudentId)||null;
   const button=byId("saveStudent");
   setBusy(button,true);
   setMessage("studentFormMessage","");
   try{
+    let saved,cleanupWarning=false;
     if(mode==="demo"){
       const now=new Date().toISOString();
-      if(editingStudentId){
-        const index=students.findIndex(item=>item.id===editingStudentId);
-        students[index]=normalizeStudent({...students[index],...draft,updated_at:now});
-      }else{
-        students.unshift(normalizeStudent({...draft,id:makeId(),created_at:now,updated_at:now}));
-      }
+      saved=normalizeStudent(previousStudent
+        ?{...previousStudent,...draft,updated_at:now}
+        :{...draft,id:makeId(),created_at:now,updated_at:now});
+      if(pendingStudentPhoto)saved=normalizeStudent({...saved,photo_path:`demo/${saved.id}/profile.webp`,photo_url:pendingStudentPhoto.previewUrl});
+      else if(removeStudentPhotoRequested)saved=normalizeStudent({...saved,photo_path:"",photo_url:""});
     }else{
       if(!cloud||!currentUser)throw new Error("missing_session");
       const payload={...draft,user_id:currentUser.id,joined_on:draft.joined_on||null};
@@ -402,14 +626,30 @@ async function saveStudentRecord(event){
       if(editingStudentId)response=await cloud.from(STUDENTS_TABLE).update(payload).eq("id",editingStudentId).select("*").single();
       else response=await cloud.from(STUDENTS_TABLE).insert(payload).select("*").single();
       if(response.error)throw response.error;
-      const saved=normalizeStudent(response.data);
+      saved=normalizeStudent({...response.data,photo_url:previousStudent?.photo_url||""});
+      try{
+        const photoResult=await applyCloudStudentPhoto(saved,previousStudent);
+        saved=photoResult.saved;
+        cleanupWarning=photoResult.cleanupWarning;
+      }catch(photoError){
+        console.error("Student photo save failed.",photoError);
+        const index=students.findIndex(item=>item.id===saved.id);
+        if(index>=0)students[index]=saved;else students.unshift(saved);
+        editingStudentId=saved.id;
+        refreshCountryFilter();
+        renderAll();
+        setMessage("studentFormMessage","تم حفظ بيانات الطالب، لكن تعذّر حفظ الصورة. جرّب اختيارها مرة أخرى.");
+        return;
+      }
+    }
+    {
       const index=students.findIndex(item=>item.id===saved.id);
       if(index>=0)students[index]=saved;else students.unshift(saved);
     }
     closeDialog("studentEditor");
     refreshCountryFilter();
     renderAll();
-    showToast(editingStudentId?"تم تحديث ملف الطالب.":"تم إنشاء ملف الطالب.");
+    showToast(cleanupWarning?"تم حفظ الملف والصورة، لكن تعذّر تنظيف نسخة الصورة القديمة.":wasEditing?"تم تحديث ملف الطالب.":"تم إنشاء ملف الطالب.",cleanupWarning);
   }catch(error){
     console.error("Student save failed.",error);
     const duplicate=error?.code==="23505";
@@ -424,6 +664,11 @@ async function deleteActiveStudent(){
   setBusy(button,true,"جارٍ الحذف…");
   try{
     if(mode==="cloud"){
+      if(student.photo_path){
+        if(!photoPathBelongsToCurrentUser(student.photo_path))throw new Error("invalid_photo_path");
+        const removal=await cloud.storage.from(STUDENT_PHOTO_BUCKET).remove([student.photo_path]);
+        if(removal.error)throw removal.error;
+      }
       const {error}=await cloud.from(STUDENTS_TABLE).delete().eq("id",student.id);
       if(error)throw error;
     }
@@ -450,7 +695,7 @@ async function loadCloudData(showSuccess=false){
   try{
     const studentsResponse=await cloud.from(STUDENTS_TABLE).select("*").order("created_at",{ascending:false});
     if(studentsResponse.error)throw studentsResponse.error;
-    students=(studentsResponse.data||[]).map(normalizeStudent);
+    students=await hydrateStudentPhotos(studentsResponse.data||[]);
     refreshCountryFilter();
     renderAll();
     applyInitialRoute();
@@ -725,6 +970,9 @@ function bindEvents(){
   byId("refreshData").addEventListener("click",()=>mode==="cloud"?loadCloudData(true):(renderAll(),showToast("تم تحديث العرض المحلي.")));
   byId("addStudent").addEventListener("click",()=>openStudentEditor());
   byId("studentForm").addEventListener("submit",saveStudentRecord);
+  byId("studentPhotoInput").addEventListener("change",event=>handleStudentPhotoSelection(event.target.files?.[0]));
+  byId("removeStudentPhoto").addEventListener("click",removeStudentPhotoFromEditor);
+  for(const id of ["student_first_name","student_last_name"])byId(id).addEventListener("input",updateStudentPhotoEditor);
   byId("studentRows").addEventListener("click",handleRowAction);
   byId("editFromProfile").addEventListener("click",()=>{const student=students.find(item=>item.id===activeStudentId);if(student)openStudentEditor(student)});
   byId("deleteStudent").addEventListener("click",deleteActiveStudent);
@@ -735,7 +983,7 @@ function bindEvents(){
   byId("csvFile").addEventListener("change",event=>prepareCsvImport(event.target.files?.[0]));
   byId("confirmImport").addEventListener("click",confirmCsvImport);
   document.querySelectorAll("[data-close]").forEach(button=>button.addEventListener("click",()=>closeDialog(button.dataset.close)));
-  document.addEventListener("keydown",event=>{if(event.key==="Escape")document.querySelectorAll("dialog[open]").forEach(dialog=>dialog.close())});
+  document.addEventListener("keydown",event=>{if(event.key==="Escape")document.querySelectorAll("dialog[open]").forEach(dialog=>closeDialog(dialog.id))});
 }
 
 async function init(){

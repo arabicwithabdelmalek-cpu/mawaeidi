@@ -20,5 +20,7 @@ assert.doesNotMatch(main,/location\.href=studentRegistryUrl/);
 assert.doesNotMatch(main,/<iframe/i);
 assert.match(legacy,/target\.searchParams\.set\("section","students"\)/);
 assert.match(legacy,/\["student","new"\]/);
-assert.match(sw,/mawaeidi-shell-v41/);
+assert.match(main,/student-registry\.js\?v=3/);
+assert.match(sw,/mawaeidi-shell-v42/);
+assert.match(sw,/student-registry\.js\?v=3/);
 console.log("student production integration checks passed");

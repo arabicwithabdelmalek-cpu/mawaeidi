@@ -682,7 +682,7 @@ function setLoading(loading){
   byId("loadingState").hidden=!loading;
   byId("tableWrap").hidden=loading||!filteredStudents.length;
   byId("emptyState").hidden=loading||Boolean(filteredStudents.length);
-  for(const id of ["refreshData","addStudent","importCsv","exportCsv"])byId(id).disabled=loading;
+  for(const id of ["refreshData","addStudent","backupStudents","importCsv","exportCsv"])byId(id).disabled=loading;
 }
 async function loadCloudData(showSuccess=false){
   if(!cloud||!currentUser)return false;
@@ -787,19 +787,226 @@ function csvEscape(value){
   if(/^[=+\-@]/.test(output))output="'"+output;
   return `"${output.replace(/"/g,'""')}"`;
 }
-function exportFilteredCsv(){
-  const list=filteredStudents.length?filteredStudents:[];
-  if(!list.length){showToast("لا توجد نتائج لتصديرها.",true);return}
+function buildStudentsCsv(list){
   const rows=[CSV_HEADERS.map(csvEscape).join(",")];
   for(const student of list)rows.push(STUDENT_FIELDS.map(field=>csvEscape(student[field.key]||"")).join(","));
-  const blob=new Blob(["\uFEFF",rows.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  return "\uFEFF"+rows.join("\r\n");
+}
+function downloadBlob(blob,filename){
   const url=URL.createObjectURL(blob);
   const link=document.createElement("a");
   link.href=url;
-  link.download=`mawaeidi-students-${todayKey()}.csv`;
-  document.body.append(link);link.click();link.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  link.download=filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+function exportFilteredCsv(){
+  const list=filteredStudents.length?filteredStudents:[];
+  if(!list.length){showToast("لا توجد نتائج لتصديرها.",true);return}
+  const blob=new Blob([buildStudentsCsv(list)],{type:"text/csv;charset=utf-8"});
+  downloadBlob(blob,`mawaeidi-students-${todayKey()}.csv`);
   showToast(`تم تصدير ${list.length} ملف طالب.`);
+}
+
+const ZIP_CRC_TABLE=(()=>{
+  const table=new Uint32Array(256);
+  for(let index=0;index<256;index++){
+    let value=index;
+    for(let bit=0;bit<8;bit++)value=(value&1)?(0xedb88320^(value>>>1)):(value>>>1);
+    table[index]=value>>>0;
+  }
+  return table;
+})();
+function zipCrc32(bytes){
+  let crc=0xffffffff;
+  for(const byte of bytes)crc=ZIP_CRC_TABLE[(crc^byte)&0xff]^(crc>>>8);
+  return (crc^0xffffffff)>>>0;
+}
+function zipDateTime(date=new Date()){
+  const year=Math.max(1980,date.getFullYear());
+  return {
+    time:((date.getHours()&31)<<11)|((date.getMinutes()&63)<<5)|((Math.floor(date.getSeconds()/2))&31),
+    date:(((year-1980)&127)<<9)|(((date.getMonth()+1)&15)<<5)|(date.getDate()&31)
+  };
+}
+function concatBytes(parts){
+  const total=parts.reduce((sum,part)=>sum+part.length,0);
+  const output=new Uint8Array(total);
+  let offset=0;
+  for(const part of parts){output.set(part,offset);offset+=part.length}
+  return output;
+}
+async function zipBytes(value){
+  if(typeof value==="string")return new TextEncoder().encode(value);
+  if(value instanceof Uint8Array)return value;
+  if(value instanceof ArrayBuffer)return new Uint8Array(value);
+  if(value instanceof Blob)return new Uint8Array(await value.arrayBuffer());
+  throw new Error("unsupported_zip_value");
+}
+async function createStoredZip(files){
+  if(files.length>65535)throw new Error("too_many_zip_files");
+  const localParts=[],centralParts=[];
+  let localOffset=0;
+  for(const file of files){
+    const nameBytes=new TextEncoder().encode(file.name);
+    const data=await zipBytes(file.data);
+    if(nameBytes.length>65535||data.length>0xffffffff)throw new Error("zip_file_too_large");
+    const checksum=zipCrc32(data);
+    const stamp=zipDateTime(file.modifiedAt||new Date());
+
+    const localHeader=new Uint8Array(30+nameBytes.length);
+    const localView=new DataView(localHeader.buffer);
+    localView.setUint32(0,0x04034b50,true);
+    localView.setUint16(4,20,true);
+    localView.setUint16(6,0x0800,true);
+    localView.setUint16(8,0,true);
+    localView.setUint16(10,stamp.time,true);
+    localView.setUint16(12,stamp.date,true);
+    localView.setUint32(14,checksum,true);
+    localView.setUint32(18,data.length,true);
+    localView.setUint32(22,data.length,true);
+    localView.setUint16(26,nameBytes.length,true);
+    localView.setUint16(28,0,true);
+    localHeader.set(nameBytes,30);
+    localParts.push(localHeader,data);
+
+    const centralHeader=new Uint8Array(46+nameBytes.length);
+    const centralView=new DataView(centralHeader.buffer);
+    centralView.setUint32(0,0x02014b50,true);
+    centralView.setUint16(4,20,true);
+    centralView.setUint16(6,20,true);
+    centralView.setUint16(8,0x0800,true);
+    centralView.setUint16(10,0,true);
+    centralView.setUint16(12,stamp.time,true);
+    centralView.setUint16(14,stamp.date,true);
+    centralView.setUint32(16,checksum,true);
+    centralView.setUint32(20,data.length,true);
+    centralView.setUint32(24,data.length,true);
+    centralView.setUint16(28,nameBytes.length,true);
+    centralView.setUint16(30,0,true);
+    centralView.setUint16(32,0,true);
+    centralView.setUint16(34,0,true);
+    centralView.setUint16(36,0,true);
+    centralView.setUint32(38,0,true);
+    centralView.setUint32(42,localOffset,true);
+    centralHeader.set(nameBytes,46);
+    centralParts.push(centralHeader);
+    localOffset+=localHeader.length+data.length;
+  }
+  const centralDirectory=concatBytes(centralParts);
+  const endRecord=new Uint8Array(22);
+  const endView=new DataView(endRecord.buffer);
+  endView.setUint32(0,0x06054b50,true);
+  endView.setUint16(4,0,true);
+  endView.setUint16(6,0,true);
+  endView.setUint16(8,files.length,true);
+  endView.setUint16(10,files.length,true);
+  endView.setUint32(12,centralDirectory.length,true);
+  endView.setUint32(16,localOffset,true);
+  endView.setUint16(20,0,true);
+  return new Blob([...localParts,centralDirectory,endRecord],{type:"application/zip"});
+}
+function safeBackupFilePart(value){
+  return clean(value,80).normalize("NFKC").replace(/[^\p{L}\p{N}._-]+/gu,"-").replace(/^-+|-+$/g,"").slice(0,60)||"student";
+}
+function backupPhotoExtension(path,mimeType){
+  const extension=text(path).split(".").pop().toLowerCase();
+  if(["jpg","jpeg","png","webp"].includes(extension))return extension==="jpeg"?"jpg":extension;
+  if(mimeType==="image/png")return "png";
+  if(mimeType==="image/webp")return "webp";
+  return "jpg";
+}
+function backupStudentRecord(student,photoFile=""){
+  const record={
+    id:student.id,
+    created_at:student.created_at||"",
+    updated_at:student.updated_at||"",
+    photo_file:photoFile
+  };
+  for(const field of STUDENT_FIELDS)record[field.key]=student[field.key]||"";
+  return record;
+}
+async function exportStudentsBackup(){
+  if(!cloud||!currentUser||mode!=="cloud"){showToast("سجّل الدخول أولًا لتنزيل النسخة الاحتياطية.",true);return}
+  if(!students.length){showToast("لا يوجد طلاب لإنشاء نسخة احتياطية.",true);return}
+  const button=byId("backupStudents");
+  const operationAccountSequence=accountSequence;
+  const operationUserId=currentUser.id;
+  const snapshot=students.map(student=>clone(student));
+  const zipFiles=[];
+  const photoFiles=new Map();
+  const photoFailures=[];
+  setBusy(button,true,"جارٍ تجهيز النسخة…");
+  try{
+    for(let index=0;index<snapshot.length;index++){
+      const student=snapshot[index];
+      if(!student.photo_path)continue;
+      if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
+      if(!photoPathBelongsToCurrentUser(student.photo_path)){
+        photoFailures.push({id:student.id,username:student.username||"",reason:"invalid_path"});
+        continue;
+      }
+      try{
+        const {data,error}=await cloud.storage.from(STUDENT_PHOTO_BUCKET).download(student.photo_path);
+        if(error||!data)throw error||new Error("missing_photo");
+        if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
+        const extension=backupPhotoExtension(student.photo_path,data.type);
+        const filename=`photos/${student.id}-${safeBackupFilePart(student.username||studentName(student))}.${extension}`;
+        photoFiles.set(student.id,filename);
+        zipFiles.push({name:filename,data});
+      }catch(error){
+        console.warn("Student photo backup failed.",error);
+        photoFailures.push({id:student.id,username:student.username||"",reason:"download_failed"});
+      }
+    }
+
+    const backupRecords=snapshot.map(student=>backupStudentRecord(student,photoFiles.get(student.id)||""));
+    const manifest={
+      format:"mawaeidi-students-backup",
+      version:1,
+      exported_at:new Date().toISOString(),
+      timezone:"Africa/Cairo",
+      student_count:backupRecords.length,
+      photo_count:photoFiles.size,
+      missing_photo_count:photoFailures.length,
+      photo_warnings:photoFailures,
+      students:backupRecords
+    };
+    const readme=[
+      "نسخة احتياطية من سجل طلاب مواعيدي",
+      `تاريخ الإنشاء: ${new Intl.DateTimeFormat("ar-EG",{dateStyle:"long",timeStyle:"short",timeZone:"Africa/Cairo"}).format(new Date())}`,
+      `عدد الطلاب: ${backupRecords.length}`,
+      `عدد الصور المحفوظة: ${photoFiles.size}`,
+      "",
+      "محتويات الملف:",
+      "- students.json: النسخة الكاملة المنظمة.",
+      "- students.csv: نسخة سهلة الفتح في Excel أو Google Sheets.",
+      "- photos: صور الطلاب الاختيارية.",
+      "",
+      "احتفظ بهذا الملف في مكان آمن؛ فقد يتضمن بيانات تواصل وملاحظات خاصة."
+    ].join("\r\n");
+    zipFiles.unshift(
+      {name:"README.txt",data:"\uFEFF"+readme},
+      {name:"students.csv",data:buildStudentsCsv(snapshot)},
+      {name:"students.json",data:JSON.stringify(manifest,null,2)}
+    );
+    const backupBlob=await createStoredZip(zipFiles);
+    if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
+    downloadBlob(backupBlob,`mawaeidi-students-backup-${todayKey()}.zip`);
+    root.querySelector(".data-actions")?.removeAttribute("open");
+    showToast(photoFailures.length
+      ?`تم تنزيل بيانات ${backupRecords.length} طالب، وتعذّر تضمين ${photoFailures.length} صورة.`
+      :`تم تنزيل النسخة الاحتياطية: ${backupRecords.length} طالب و${photoFiles.size} صورة.`,
+      Boolean(photoFailures.length)
+    );
+  }catch(error){
+    console.error("Student backup failed.",error);
+    showToast("تعذّر إنشاء النسخة الاحتياطية. حاول مرة أخرى.",true);
+  }finally{
+    setBusy(button,false);
+  }
 }
 function parseCsv(source){
   const rows=[];let row=[],cell="",quoted=false;
@@ -940,6 +1147,7 @@ function bindEvents(){
   byId("deleteStudent").addEventListener("click",deleteActiveStudent);
   byId("clearFilters").addEventListener("click",clearFilters);
   for(const id of ["search","statusFilter","levelFilter","typeFilter","countryFilter","sortStudents"])byId(id).addEventListener("input",renderStudents);
+  byId("backupStudents").addEventListener("click",exportStudentsBackup);
   byId("exportCsv").addEventListener("click",exportFilteredCsv);
   byId("importCsv").addEventListener("click",()=>byId("csvFile").click());
   byId("csvFile").addEventListener("change",event=>prepareCsvImport(event.target.files?.[0]));

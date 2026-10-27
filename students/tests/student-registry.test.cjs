@@ -12,8 +12,14 @@ assert.match(source,/window\.MawaeidiStudents=Object\.freeze\(\{create\}\)/);
 assert.match(source,/root\.querySelector\(\`#\$\{id\}\`\)/);
 assert.match(source,/return Object\.freeze\(\{[\s\S]*activate,[\s\S]*deactivate,[\s\S]*reset,[\s\S]*openNew/);
 assert.doesNotMatch(source,/createClient\(SUPABASE_URL/);
+assert.match(source,/async function exportStudentsBackup\(\)/);
+assert.match(source,/format:"mawaeidi-students-backup"/);
+assert.match(source,/students\.json/);
+assert.match(source,/students\.csv/);
+assert.match(source,/cloud\.storage\.from\(STUDENT_PHOTO_BUCKET\)\.download/);
 assert.match(main,/id="studentsView"[\s\S]*id="studentEditor"[\s\S]*id="studentProfile"/);
-assert.match(main,/student-registry\.js\?v=2/);
+assert.match(main,/student-registry\.js\?v=3/);
+assert.match(main,/id="backupStudents"[^>]*>نسخة احتياطية للطلاب<\/button>/);
 assert.doesNotMatch(main,/id="openStudentRegistry"/);
 
 const script=new vm.Script(source,{filename:"student-registry.js"});

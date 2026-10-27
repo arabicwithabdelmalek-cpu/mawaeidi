@@ -1072,6 +1072,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
                   <summary class="btn" aria-label="فتح أدوات البيانات">•••</summary>
                   <div class="data-actions-menu">
                     <button class="btn" id="refreshData" type="button">تحديث البيانات</button>
+                    <button class="btn" id="backupStudents" type="button">نسخة احتياطية للطلاب</button>
                     <button class="btn" id="exportCsv" type="button">تصدير CSV</button>
                     <button class="btn" id="importCsv" type="button">استيراد CSV</button>
                   </div>
@@ -1342,7 +1343,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js"></script>
-<script src="./students/student-registry.js?v=2"></script>
+<script src="./students/student-registry.js?v=3"></script>
 <script>
 const days=["الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"];
 const LEGACY_STORAGE_KEY="mawaeidi_arabic_v7";

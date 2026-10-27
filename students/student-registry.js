@@ -1,4 +1,10 @@
+(()=>{
 "use strict";
+
+function create(options={}){
+const root=options.root;
+const cloud=options.cloud;
+if(!root)throw new Error("Student workspace root is required.");
 
 const SUPABASE_URL="https://nvefdkkjkyalpsrgoffj.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_t0pqtkV0-3Wj0htl-eGR9w_BsifiUDE";
@@ -44,11 +50,8 @@ const STUDENT_FIELD_GROUPS=[
 const CSV_HEADERS=STUDENT_FIELDS.map(field=>field.label);
 const CSV_KEY_BY_HEADER=Object.fromEntries(STUDENT_FIELDS.map(field=>[field.label,field.key]));
 
-const cloud=window.supabase?.createClient
-  ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
-  :null;
-
 let mode="gate";
+let accountSequence=0;
 let currentUser=null;
 let students=[];
 let filteredStudents=[];
@@ -65,7 +68,7 @@ let originalStudentPhotoUrl="";
 let photoSelectionSequence=0;
 
 
-function byId(id){return document.getElementById(id)}
+function byId(id){return root.querySelector(`#${id}`)}
 function text(value){return value===null||value===undefined?"":String(value)}
 function clean(value,max=20000){return text(value).trim().slice(0,max)}
 function clone(value){return JSON.parse(JSON.stringify(value))}
@@ -601,6 +604,8 @@ async function saveStudentRecord(event){
   if(validation){setMessage("studentFormMessage",validation);return}
   const wasEditing=Boolean(editingStudentId);
   const previousStudent=students.find(item=>item.id===editingStudentId)||null;
+  const operationAccountSequence=accountSequence;
+  const operationUserId=currentUser?.id;
   const button=byId("saveStudent");
   setBusy(button,true);
   setMessage("studentFormMessage","");
@@ -612,9 +617,11 @@ async function saveStudentRecord(event){
       if(editingStudentId)response=await cloud.from(STUDENTS_TABLE).update(payload).eq("id",editingStudentId).select("*").single();
       else response=await cloud.from(STUDENTS_TABLE).insert(payload).select("*").single();
       if(response.error)throw response.error;
+      if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
       saved=normalizeStudent({...response.data,photo_url:previousStudent?.photo_url||""});
       try{
         const photoResult=await applyCloudStudentPhoto(saved,previousStudent);
+        if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
         saved=photoResult.saved;
         cleanupWarning=photoResult.cleanupWarning;
       }catch(photoError){
@@ -645,6 +652,8 @@ async function deleteActiveStudent(){
   const student=students.find(item=>item.id===activeStudentId);
   if(!student)return;
   if(!confirm(`حذف ملف ${studentName(student)}؟`))return;
+  const operationAccountSequence=accountSequence;
+  const operationUserId=currentUser?.id;
   const button=byId("deleteStudent");
   setBusy(button,true,"جارٍ الحذف…");
   try{
@@ -657,6 +666,7 @@ async function deleteActiveStudent(){
       const {error}=await cloud.from(STUDENTS_TABLE).delete().eq("id",student.id);
       if(error)throw error;
     }
+    if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
     students=students.filter(item=>item.id!==student.id);
     closeDialog("studentProfile");
     activeStudentId=null;
@@ -675,24 +685,26 @@ function setLoading(loading){
   for(const id of ["refreshData","addStudent","importCsv","exportCsv"])byId(id).disabled=loading;
 }
 async function loadCloudData(showSuccess=false){
-  if(!cloud||!currentUser)return;
+  if(!cloud||!currentUser)return false;
   const userId=currentUser.id,sequence=++cloudLoadSequence;
   setLoading(true);
   try{
     const studentsResponse=await cloud.from(STUDENTS_TABLE).select("*").order("created_at",{ascending:false});
     if(studentsResponse.error)throw studentsResponse.error;
-    if(currentUser?.id!==userId||sequence!==cloudLoadSequence)return;
+    if(currentUser?.id!==userId||sequence!==cloudLoadSequence)return false;
     const records=await hydrateStudentPhotos(studentsResponse.data||[]);
-    if(currentUser?.id!==userId||sequence!==cloudLoadSequence)return;
+    if(currentUser?.id!==userId||sequence!==cloudLoadSequence)return false;
     students=records;
     refreshCountryFilter();
     renderAll();
     applyInitialRoute();
     if(showSuccess)showToast("تم تحديث بيانات الطلاب.");
+    return true;
   }catch(error){
-    if(currentUser?.id!==userId||sequence!==cloudLoadSequence)return;
+    if(currentUser?.id!==userId||sequence!==cloudLoadSequence)return false;
     console.error("Cloud load failed.",error);
     showToast("تعذّر تحميل بيانات الطلاب.",true);
+    return false;
   }finally{if(sequence===cloudLoadSequence)setLoading(false)}
 }
 function enterApp(){
@@ -702,7 +714,7 @@ function enterApp(){
   byId("modeBadge").textContent="محفوظ في حسابك";
 }
 function applyInitialRoute(){
-  if(initialRouteHandled)return;
+  if(initialRouteHandled||root.hidden)return;
   const params=new URLSearchParams(location.search);
   const studentId=clean(params.get("student"),80);
   const wantsNew=params.get("new")==="1";
@@ -730,7 +742,7 @@ async function exitCurrentMode(){
   setAuthMode("signin");
   setMessage("authMessage",wasCloud?"تم تسجيل الخروج.":"",false);
 }
-function closeAllDialogs(){document.querySelectorAll("dialog[open]").forEach(dialog=>dialog.close())}
+function closeAllDialogs(){root.querySelectorAll("dialog[open]").forEach(dialog=>dialog.close())}
 
 function setAuthMode(){setMessage("authMessage","")}
 
@@ -870,6 +882,8 @@ async function prepareCsvImport(file){
 }
 async function confirmCsvImport(){
   if(!importPlan||importPlan.errors.length||!importPlan.items.length)return;
+  const operationAccountSequence=accountSequence;
+  const operationUserId=currentUser?.id;
   const button=byId("confirmImport");
   setBusy(button,true,"جارٍ الاستيراد…");
   try{
@@ -886,8 +900,10 @@ async function confirmCsvImport(){
       });
       const {data,error}=await cloud.from(STUDENTS_TABLE).upsert(cloudPayload,{onConflict:"id"}).select("*");
       if(error)throw error;
+      if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
       students=(data||[]).map(normalizeStudent);
       await loadCloudData();
+      if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
     closeDialog("importPreview");
     importPlan=null;
     refreshCountryFilter();
@@ -913,9 +929,6 @@ function handleRowAction(event){
   if(button.dataset.action==="edit")openStudentEditor(student);
 }
 function bindEvents(){
-  byId("authForm").addEventListener("submit",submitAuth);
-  byId("passwordReset").addEventListener("click",resetPassword);
-  byId("exitMode").addEventListener("click",exitCurrentMode);
   byId("refreshData").addEventListener("click",()=>loadCloudData(true));
   byId("addStudent").addEventListener("click",()=>openStudentEditor());
   byId("studentForm").addEventListener("submit",saveStudentRecord);
@@ -931,31 +944,80 @@ function bindEvents(){
   byId("importCsv").addEventListener("click",()=>byId("csvFile").click());
   byId("csvFile").addEventListener("change",event=>prepareCsvImport(event.target.files?.[0]));
   byId("confirmImport").addEventListener("click",confirmCsvImport);
-  document.querySelectorAll("[data-close]").forEach(button=>button.addEventListener("click",()=>closeDialog(button.dataset.close)));
-  document.addEventListener("keydown",event=>{if(event.key==="Escape")document.querySelectorAll("dialog[open]").forEach(dialog=>closeDialog(dialog.id))});
+  root.querySelectorAll("[data-close]").forEach(button=>button.addEventListener("click",()=>closeDialog(button.dataset.close)));
+  root.addEventListener("keydown",event=>{
+    if(event.key==="Escape")root.querySelectorAll("dialog[open]").forEach(dialog=>closeDialog(dialog.id));
+  });
 }
 
-async function init(){
+function deactivate(){
+  cloudLoadSequence++;
+  closeAllDialogs();
+  root.querySelectorAll("details[open]").forEach(details=>details.removeAttribute("open"));
+}
+
+function reset(){
+  accountSequence++;
+  cloudLoadSequence++;
+  photoSelectionSequence++;
+  closeAllDialogs();
+  mode="gate";
+  currentUser=null;
+  students=[];
+  filteredStudents=[];
+  editingStudentId=null;
+  activeStudentId=null;
+  importPlan=null;
+  initialRouteHandled=false;
+  pendingStudentPhoto=null;
+  removeStudentPhotoRequested=false;
+  originalStudentPhotoPath="";
+  originalStudentPhotoUrl="";
+  for(const id of ["search","statusFilter","levelFilter","typeFilter","countryFilter"])byId(id).value="";
+  byId("sortStudents").value="newest";
+  byId("csvFile").value="";
+  byId("studentRows").replaceChildren();
+  byId("toast").className="toast";
+  byId("toast").textContent="";
+  root.querySelectorAll("details[open]").forEach(details=>details.removeAttribute("open"));
+  refreshCountryFilter();
+  renderAll();
+  setLoading(false);
+}
+
+async function activate(user){
+  if(!cloud||!user?.id)return false;
+  if(currentUser?.id!==user.id){
+    reset();
+    currentUser={id:user.id};
+    initialRouteHandled=false;
+  }
+  mode="cloud";
+  return loadCloudData();
+}
+
+function openNew(){
+  if(!currentUser||mode!=="cloud"||root.hidden)return false;
+  openStudentEditor();
+  return true;
+}
+
+function initialize(){
   buildStudentForm();
   populateStaticOptions();
   bindEvents();
-  setAuthMode("signin");
-  if(!cloud){
-    setMessage("authMessage","تعذّر الاتصال. تحقق من الإنترنت وحاول مرة أخرى.",true);
-    return;
-  }
-  cloud.auth.onAuthStateChange((event,session)=>{
-    if(event==="SIGNED_OUT"&&mode==="cloud"){
-      cloudLoadSequence++;closeAllDialogs();
-      mode="gate";currentUser=null;students=[];activeStudentId=null;editingStudentId=null;initialRouteHandled=false;
-      byId("app").hidden=true;byId("authGate").hidden=false;
-    }
-    if(event==="SIGNED_IN"&&session?.user&&mode==="gate")setTimeout(()=>enterCloud(session.user),0);
-  });
-  const {data,error}=await cloud.auth.getSession();
-  if(error){setMessage("authMessage","تعذّر قراءة جلسة حسابك.",true);return}
-  if(data.session?.user)await enterCloud(data.session.user);
+  renderAll();
 }
 
-init();
+initialize();
+return Object.freeze({
+  activate,
+  deactivate,
+  reset,
+  refresh:()=>loadCloudData(),
+  openNew
+});
+}
 
+window.MawaeidiStudents=Object.freeze({create});
+})();

@@ -3,192 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex,nofollow">
   <title>الطلاب | مواعيدي — الوقت أمانة</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./student-registry.css?v=1">
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js"></script>
-  <script defer src="./student-registry.js?v=1"></script>
+  <script>
+    (() => {
+      const source=new URLSearchParams(location.search);
+      const target=new URL("../index.html",location.href);
+      target.searchParams.set("section","students");
+      for(const key of ["student","new"]){
+        const value=source.get(key);
+        if(value)target.searchParams.set(key,value);
+      }
+      target.hash=location.hash;
+      location.replace(target.href);
+    })();
+  </script>
 </head>
 <body>
-  <section class="auth-gate" id="authGate" aria-labelledby="authTitle">
-    <div class="auth-card">
-      <div class="auth-brand">مواعيدي <span>الوقت أمانة</span></div>
-      <h1 id="authTitle">الدخول إلى سجل الطلاب</h1>
-      <p id="authIntro">سجّل الدخول بحساب مواعيدي للوصول إلى بيانات طلابك.</p>
-
-      <form id="authForm" class="auth-form">
-        <div class="field">
-          <label for="authEmail">البريد الإلكتروني</label>
-          <input class="control" id="authEmail" type="email" autocomplete="email" placeholder="name@example.com" required>
-        </div>
-        <div class="field">
-          <label for="authPassword">كلمة المرور</label>
-          <input class="control" id="authPassword" type="password" minlength="6" autocomplete="current-password" placeholder="6 أحرف على الأقل" required>
-        </div>
-        <button class="btn primary wide" id="authSubmit" type="submit">تسجيل الدخول</button>
-      </form>
-
-      <div class="auth-secondary">
-        <button class="link-button" id="passwordReset" type="button">نسيت كلمة المرور؟</button>
-      </div>
-      <p class="form-message" id="authMessage" role="status" aria-live="polite"></p>
-
-    </div>
-  </section>
-
-  <main class="shell" id="app" hidden>
-    <header class="mast">
-      <div>
-        <div class="brand">مواعيدي <span>/ الطلاب</span></div>
-        <p>معلومات طلابك ووسائل التواصل وملاحظاتك</p>
-      </div>
-      <div class="mast-actions">
-        <a class="header-button header-link" href="../index.html?section=students">العودة إلى مواعيدي</a>
-        <span class="mode-badge" id="modeBadge">جارٍ الاتصال…</span>
-        <button class="header-button" id="exitMode" type="button">تسجيل الخروج</button>
-      </div>
-    </header>
-
-
-    <section class="registry-panel" aria-labelledby="registryHeading">
-      <header class="registry-head">
-        <div>
-          <span class="eyebrow">سجل مستقل</span>
-          <h1 id="registryHeading">الطلاب</h1>
-          <p><span id="resultsCount">0 طالب</span> · اضغط على الطالب لعرض كل بياناته.</p>
-        </div>
-        <div class="page-actions">
-          <button class="btn primary" id="addStudent" type="button">＋ طالب جديد</button>
-          <details class="data-actions">
-            <summary class="btn" aria-label="فتح أدوات البيانات">•••</summary>
-            <div class="data-actions-menu">
-              <button class="btn" id="refreshData" type="button">تحديث البيانات</button>
-              <button class="btn" id="exportCsv" type="button">تصدير CSV</button>
-              <button class="btn" id="importCsv" type="button">استيراد CSV</button>
-            </div>
-          </details>
-          <input id="csvFile" type="file" accept=".csv,text/csv" hidden>
-        </div>
-      </header>
-
-      <div class="filters" aria-label="البحث والفلاتر">
-        <div class="field search-field">
-          <label class="sr-only" for="search">البحث في الطلاب</label>
-          <input class="control" id="search" type="search" placeholder="ابحث باسم الطالب أو المستخدم أو الدولة…">
-        </div>
-        <div class="field">
-          <label class="sr-only" for="statusFilter">حالة الطالب</label>
-          <select class="control" id="statusFilter"><option value="">كل الحالات</option></select>
-        </div>
-        <details class="more-filters">
-          <summary>فلاتر إضافية</summary>
-          <div class="filters-extra">
-            <div class="field">
-              <label for="levelFilter">المستوى</label>
-              <select class="control" id="levelFilter"><option value="">كل المستويات</option></select>
-            </div>
-            <div class="field">
-              <label for="typeFilter">نوع الدراسة</label>
-              <select class="control" id="typeFilter"><option value="">كل الأنواع</option></select>
-            </div>
-            <div class="field">
-              <label for="countryFilter">الدولة</label>
-              <select class="control" id="countryFilter"><option value="">كل الدول</option></select>
-            </div>
-            <div class="field">
-              <label for="sortStudents">الترتيب</label>
-              <select class="control" id="sortStudents">
-                <option value="newest">الأحدث إضافة</option>
-                <option value="name">الاسم أبجديًا</option>
-                <option value="joined">الأحدث انضمامًا</option>
-                <option value="status">الحالة</option>
-              </select>
-            </div>
-          </div>
-        </details>
-        <button class="filters-toggle" id="clearFilters" type="button">مسح التصفية</button>
-      </div>
-
-      <div class="loading-state" id="loadingState" hidden><span></span> جارٍ تحميل البيانات…</div>
-      <div class="student-list-wrap" id="tableWrap">
-        <div class="student-list" id="studentRows" role="list"></div>
-      </div>
-      <div class="empty-state" id="emptyState" hidden>
-        <strong>لا توجد نتائج مطابقة</strong>
-        <span>غيّر البحث أو الفلاتر، أو أضف ملف طالب جديدًا.</span>
-      </div>
-    </section>
-
-    <footer>مواعيدي — الوقت أمانة</footer>
-  </main>
-
-  <dialog id="studentEditor">
-    <form id="studentForm">
-      <header class="dialog-head">
-        <div><span class="eyebrow">ملف الطالب</span><h2 id="studentEditorTitle">إضافة طالب</h2></div>
-        <button class="icon-button" data-close="studentEditor" type="button" aria-label="إغلاق">×</button>
-      </header>
-      <div class="dialog-body">
-        <section class="photo-editor" aria-labelledby="studentPhotoHeading">
-          <span class="photo-preview" id="studentPhotoPreview" aria-hidden="true">
-            <img id="studentPhotoImage" alt="" hidden>
-            <span id="studentPhotoInitials">ط</span>
-          </span>
-          <div class="photo-editor-content">
-            <div>
-              <h3 id="studentPhotoHeading">صورة الطالب <span>اختيارية</span></h3>
-              <p>تُقصّ الصورة تلقائيًا إلى مربع خفيف وواضح، ويمكنك تغييرها أو حذفها في أي وقت.</p>
-            </div>
-            <div class="photo-actions">
-              <label class="btn small photo-picker" id="studentPhotoPicker" for="studentPhotoInput">اختيار صورة</label>
-              <button class="btn small danger" id="removeStudentPhoto" type="button" hidden>إزالة الصورة</button>
-              <input id="studentPhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-            </div>
-            <span class="photo-meta" id="studentPhotoMeta">JPG أو PNG أو WebP · بحد أقصى 10 ميجابايت قبل المعالجة</span>
-          </div>
-        </section>
-        <div class="student-form-sections" id="studentFields"></div>
-        <p class="form-message" id="studentFormMessage" role="alert"></p>
-      </div>
-      <footer class="dialog-foot">
-        <button class="btn primary" id="saveStudent" type="submit">حفظ ملف الطالب</button>
-        <button class="btn" data-close="studentEditor" type="button">إلغاء</button>
-      </footer>
-    </form>
-  </dialog>
-
-  <dialog class="profile-dialog" id="studentProfile">
-    <header class="dialog-head profile-head">
-      <div class="profile-identity">
-        <span class="profile-avatar" id="profileAvatar" aria-hidden="true"><span>ط</span></span>
-        <div><span class="eyebrow">ملف الطالب</span><h2 id="profileTitle">—</h2><p id="profileSubtitle">—</p></div>
-      </div>
-      <button class="icon-button" data-close="studentProfile" type="button" aria-label="إغلاق">×</button>
-    </header>
-    <div class="dialog-body" id="profileContent"></div>
-    <footer class="dialog-foot split">
-      <button class="btn primary" id="editFromProfile" type="button">تعديل البيانات</button>
-      <button class="btn danger" id="deleteStudent" type="button">حذف الطالب</button>
-    </footer>
-  </dialog>
-
-  <dialog id="importPreview">
-    <header class="dialog-head">
-      <div><span class="eyebrow">استيراد Google Sheets / CSV</span><h2>مراجعة البيانات قبل الحفظ</h2></div>
-      <button class="icon-button" data-close="importPreview" type="button" aria-label="إغلاق">×</button>
-    </header>
-    <div class="dialog-body" id="importContent"></div>
-    <footer class="dialog-foot">
-      <button class="btn primary" id="confirmImport" type="button">اعتماد الاستيراد</button>
-      <button class="btn" data-close="importPreview" type="button">إلغاء</button>
-    </footer>
-  </dialog>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <p><a id="studentsRedirect" href="../index.html?section=students">فتح قسم الطلاب داخل مواعيدي</a></p>
 </body>
 </html>
-

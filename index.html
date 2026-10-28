@@ -1751,7 +1751,7 @@ async function initializeWorldClockForUser(user,sequence){
   row=initialized.data;
  }else if(legacy&&!legacyOwner){
   try{localStorage.setItem(WORLD_CLOCK_LEGACY_OWNER_KEY,userId)}catch{}
-  const additions=legacy.zones.filter(zone=>zone!==row.base_zone&&!row.zones.includes(zone));
+  const additions=[...new Set([legacy.base,...legacy.zones])].filter(zone=>zone!==row.base_zone&&!row.zones.includes(zone));
   if(additions.length&&confirm(`هناك ${additions.length} مدينة قديمة على هذا الجهاز ليست في حسابك. هل تريد إضافتها إلى الساعة السحابية؟`)){
    const merged=await cloud.rpc("mawaeidi_world_clock_change",{p_action:"merge",p_zones:additions});
    if(merged.error){console.warn("Legacy clock merge skipped.",merged.error);alert("تعذّر دمج المدن القديمة. لم تُحذف بيانات الجهاز ويمكنك إضافتها لاحقًا.")}

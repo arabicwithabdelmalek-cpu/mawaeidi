@@ -27,3 +27,6 @@ assert.doesNotMatch(main,/id="openStudentRegistry"/);
 const script=new vm.Script(source,{filename:"student-registry.js"});
 assert.ok(script);
 console.log("student registry unit checks passed");
+
+assert.match(source,/async function restoreTrashedStudent/);
+assert.match(source,/async function permanentlyDeleteTrashedStudent/);

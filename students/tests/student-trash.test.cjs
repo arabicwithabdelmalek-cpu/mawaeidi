@@ -39,7 +39,7 @@ assert.match(photoPolicy,/and not exists \(/);
 assert.match(photoPolicy,/s\.photo_path=storage\.objects\.name/);
 assert.match(photoPolicy,/after update of photo_path/);
 assert.match(js,/Detached student photo queued for cleanup/);
-assert.match(sw,/mawaeidi-shell-v46/);
+assert.match(sw,/mawaeidi-shell-v47/);
 assert.match(sw,/student-registry\.js\?v=7/);
 const fnText=js.match(/function isTrashExpired\(student\)\{[\s\S]*?\n\}/)[0];
 const expired=new Function("TRASH_RETENTION_MS",fnText+"; return isTrashExpired;")(30*24*60*60*1000);

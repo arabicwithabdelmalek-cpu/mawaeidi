@@ -1089,6 +1089,42 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .world-clock-section { padding: 13px; }
 }
 </style>
+<style id="mawaeidi-medium-screen-ux-review-v1">
+/* Responsive layout safeguard for compact laptop and landscape tablet widths.
+   Does not affect phones (<=760px) or large desktop screens (>=981px). */
+@media (min-width: 761px) and (max-width: 980px) {
+  /* Existing world clock layout reserves 350px for the clock and can
+     squeeze the timezone form into the remaining narrow grid column. */
+  #worldClockView .world-hero-content-v2 {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 18px !important;
+  }
+  #worldClockView .world-hero-copy-v2 {
+    min-width: 0;
+    max-width: 100% !important;
+  }
+  #worldClockView .world-hero-now {
+    justify-self: stretch !important;
+    justify-content: flex-start !important;
+    min-width: 0 !important;
+    width: 100%;
+  }
+  #worldClockView .world-base-control-v2 {
+    max-width: 100% !important;
+  }
+
+  /* Keep the converter usable without narrowing its two timezone inputs. */
+  #worldClockView .world-dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #worldClockView .world-clock-section {
+    min-width: 0;
+  }
+  #worldClockView .world-clock-section > header {
+    flex-wrap: wrap;
+  }
+}
+</style>
 </head>
 <body class="auth-pending">
 

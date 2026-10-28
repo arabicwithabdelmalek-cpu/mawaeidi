@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <title>مواعيدي — الوقت أمانة</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Noto+Kufi+Arabic:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
 
 :root{
   --paper:#EAF0F4;
@@ -72,7 +72,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 body.auth-pending .startup-gate{display:grid}
 body.auth-pending .app{visibility:hidden}
 .startup-mark{display:grid;justify-items:center;gap:10px;text-align:center}
-.startup-name{color:var(--primary);font-family:"Noto Kufi Arabic",var(--font);font-size:29px;font-weight:800}
+.startup-name{color:var(--primary);font-family:var(--font);font-size:29px;font-weight:800}
 .startup-note{color:var(--muted);font-size:12px;font-weight:700}
 .startup-spinner{
   width:28px;height:28px;margin-top:4px;border:3px solid rgba(35,75,110,.16);border-top-color:var(--primary);
@@ -82,7 +82,7 @@ body.auth-pending .app{visibility:hidden}
   width:min(430px,100%);padding:30px;border:1px solid rgba(35,75,110,.16);border-top:4px solid var(--primary);
   border-radius:14px;background:rgba(255,255,255,.97);box-shadow:0 24px 70px rgba(17,42,64,.18)
 }
-.auth-name{color:var(--primary);font-family:"Noto Kufi Arabic",var(--font);font-size:27px;font-weight:800}
+.auth-name{color:var(--primary);font-family:var(--font);font-size:27px;font-weight:800}
 .auth-card h2{margin:20px 0 5px;color:var(--ink);font-size:23px}
 .auth-card>p{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.8}
 .auth-fields{display:grid;gap:12px}
@@ -159,7 +159,7 @@ body.auth-pending .app{visibility:hidden}
 .data-action.logout{color:var(--danger)}
 .brand h1{
   position:relative;display:inline-block;margin:0;color:var(--primary);
-  font-family:"Noto Kufi Arabic",var(--font);font-size:32px;font-weight:800;line-height:1.25;letter-spacing:-1px;
+  font-family:var(--font);font-size:32px;font-weight:800;line-height:1.25;letter-spacing:-1px;
   text-shadow:0 2px 0 rgba(35,75,110,.08)
 }
 .brand h1::after{

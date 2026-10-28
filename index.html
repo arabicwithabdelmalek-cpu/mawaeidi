@@ -858,6 +858,29 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 #scheduleWorkspace[hidden],
 #worldClockView[hidden]{display:none!important}
 </style>  <link rel="stylesheet" href="./students/student-registry.css?v=3">
+
+<style id="mawaeidi-unified-trash-style">
+.unified-trash{display:grid;gap:12px}
+.unified-trash-filters{display:flex;gap:7px;flex-wrap:wrap}
+.unified-trash-filter{min-height:36px;padding:7px 12px;border:1px solid #d8e3e9;border-radius:9px;background:#f7fafc;color:#566c7b;font-size:11px;font-weight:800;cursor:pointer}
+.unified-trash-filter[aria-pressed="true"]{border-color:#264e68;background:#234b66;color:white}
+.unified-trash-info{padding:10px 13px;border-radius:10px;background:#f5f8fa;color:#5b6e78;font-size:11px;line-height:1.8}
+.unified-trash-items{display:grid;gap:8px;max-height:55vh;overflow-y:auto}
+.unified-trash-item{padding:13px;border:1px solid #e0e8ee;border-radius:11px;background:#fff}
+.unified-trash-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.unified-trash-heading strong{color:#233f50;font-size:13px}
+.unified-trash-item p{margin:5px 0;color:#6d7f89;font-size:10px;line-height:1.75}
+.unified-trash-controls{display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap}
+.unified-trash-controls button{padding:7px 12px;border:1px solid #d3dfe6;border-radius:8px;background:#fff;color:#234b66;font-size:11px;font-weight:800;cursor:pointer}
+.unified-trash-controls button.danger{border-color:#f0d9d9;background:#fff7f7;color:#ab4c4c}
+.unified-trash-controls button:disabled{opacity:.55;cursor:wait}
+.unified-trash-empty{padding:36px 14px;text-align:center;color:#60727e;font-size:12px}
+@media(max-width:520px){
+ .unified-trash-filter{flex:1;white-space:nowrap;padding-inline:8px;font-size:10px}
+ .unified-trash-heading{flex-direction:column}
+ .unified-trash-controls button{flex:1}
+}
+</style>
 </head>
 <body class="auth-pending">
 
@@ -929,9 +952,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
               <strong>تنبيهات الحصص <span class="data-state" id="notificationMenuStatus">غير مفعّلة</span></strong>
               <small>تنبيه على هذا الجهاز قبل موعد الحصة</small>
             </button>
-            <button type="button" class="data-action" onclick="openHistory()">
-              <strong>سجل التعديلات والحذف</strong>
-              <small>راجع آخر التغييرات واسترجع أي نسخة سابقة</small>
+            <button type="button" class="data-action" onclick="openUnifiedTrash()">
+              <strong>سلة المحذوفات</strong>
+              <small>استعادة الطلاب والحصص والمدن المحذوفة خلال 30 يومًا</small>
             </button>
             <div class="data-separator" aria-hidden="true"></div>
             <button type="button" class="data-action" onclick="exportBackup()">
@@ -1079,14 +1102,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
                 <input id="csvFile" type="file" accept=".csv,text/csv" hidden>
               </div>
             </header>
-            <div class="registry-view-switch" aria-label="عرض سجل الطلاب">
-              <div class="registry-switch-actions">
-                <button class="registry-switch" id="showActiveStudents" type="button" aria-pressed="true">الطلاب</button>
-                <button class="registry-switch" id="showTrashedStudents" type="button" aria-pressed="false">سلة المحذوفات <span class="trash-counter" id="trashCount">0</span></button>
-              </div>
-              <button class="btn small registry-history-button" id="showStudentHistory" type="button">سجل التعديلات</button>
-            </div>
-            <p class="trash-retention-note" id="trashRetentionNote" hidden>تبقى الملفات المحذوفة وصورها 30 يومًا، ثم تُزال تلقائيًا عند فتح قسم الطلاب وأنت متصل بالإنترنت. الحذف النهائي لا يمكن التراجع عنه.</p>
+
       
             <div class="filters" aria-label="البحث والفلاتر">
               <div class="field search-field">
@@ -1181,20 +1197,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
           <div class="dialog-body" id="profileContent"></div>
           <footer class="dialog-foot split">
             <button class="btn primary" id="editFromProfile" type="button">تعديل البيانات</button>
-            <button class="btn" id="historyFromProfile" type="button">سجل التعديلات</button>
-            <button class="btn danger" id="deleteStudent" type="button">نقل إلى السلة</button>
+            <button class="btn danger" id="deleteStudent" type="button">نقل إلى سلة المحذوفات</button>
           </footer>
         </dialog>
       
-        <dialog id="studentHistory" class="student-history-dialog">
-          <header class="dialog-head">
-            <div><span class="eyebrow">سجل خاص بحسابك</span><h2 id="studentHistoryTitle">سجل تعديلات الطلاب</h2><p>يعرض الإضافات والتغييرات والحذف والاستعادة.</p></div>
-            <button class="icon-button" data-close="studentHistory" type="button" aria-label="إغلاق">×</button>
-          </header>
-          <div class="dialog-body student-history-list" id="studentHistoryContent"></div>
-          <footer class="dialog-foot"><button class="btn" data-close="studentHistory" type="button">إغلاق</button></footer>
-        </dialog>
-
         <dialog id="importPreview">
           <header class="dialog-head">
             <div><span class="eyebrow">استيراد Google Sheets / CSV</span><h2>مراجعة البيانات قبل الحفظ</h2></div>
@@ -1720,7 +1726,29 @@ function addWorldClockZone(){
   if(!result.entry){const hint=document.getElementById("worldZoneSearchHint");if(hint)hint.textContent=result.ambiguous?"هذه الدولة فيها أكثر من منطقة زمنية؛ اختر المدينة/المنطقة من الاقتراحات.":"لم أتعرف على المنطقة. اختر نتيجة من القائمة.";return}
   const zones=savedWorldClockZones();if(!zones.includes(result.entry.zone))zones.push(result.entry.zone);rememberWorldClockZones(zones);input.value="";input.dataset.zone="";input.dataset.zoneLabel="";document.getElementById("worldZoneSearchHint").textContent="اكتب اسم الدولة بالعربي أو المدينة، ثم اختر النتيجة.";renderWorldClockCards();
 }
-function removeWorldClockZone(zone){rememberWorldClockZones(savedWorldClockZones().filter(item=>item!==zone));renderWorldClockCards()}
+async function removeWorldClockZone(zone){
+  if(!validTimeZone(zone)||zone===savedWorldClockBase())return;
+  if(!currentUser||!cloudReady){alert("سجّل الدخول أولًا لحفظ العنصر في سلة المحذوفات.");return}
+  if(!navigator.onLine){alert("يجب الاتصال بالإنترنت لنقل المدينة إلى سلة المحذوفات.");return}
+  const currentZones=savedWorldClockZones();
+  if(!currentZones.includes(zone))return;
+  const entry=timeZoneEntry(zone);
+  if(!confirm(`إزالة ${entry?.label||zone} من الساعة العالمية ونقلها إلى سلة المحذوفات لمدة 30 يومًا؟`))return;
+  const userId=currentUser.id;
+  const {data,error}=await cloud.from("mawaeidi_trash").insert({
+    user_id:userId,entity_kind:"world_zone",item_key:zone,
+    label:entry?.label||timeZoneShortLabel(zone)||zone,payload:{zone}
+  }).select("id").single();
+  if(error){console.error("World clock archive failed.",error);alert("تعذّر نقل المدينة إلى السلة. لم نحذفها.");return}
+  if(currentUser?.id!==userId)return;
+  rememberWorldClockZones(currentZones.filter(item=>item!==zone));
+  if(savedWorldClockZones().includes(zone)){
+    await cloud.from("mawaeidi_trash").delete().eq("id",data.id).eq("user_id",userId);
+    alert("تعذّر حفظ تغيير الساعة على هذا الجهاز. لم نحذف المدينة.");
+    return;
+  }
+  renderWorldClockCards();
+}
 function worldZoneInputChanged(input){if(input.value!==input.dataset.zoneLabel){input.dataset.zone="";input.dataset.zoneLabel=""}}
 function convertWorldTime(){
   const date=document.getElementById("worldConvertDate")?.value,time=document.getElementById("worldConvertTime")?.value,fromResult=resolvedZoneFromInput(document.getElementById("worldFromZone")),toResult=resolvedZoneFromInput(document.getElementById("worldToZone")),box=document.getElementById("worldConvertResult");if(!box)return;
@@ -2163,6 +2191,154 @@ async function restoreHistory(id,button){
  if(!await persist()){lessons=old;if(button)button.disabled=false;return}
  render();await openHistory();
 }
+
+const TRASH_RETENTION_DAYS=30;
+let unifiedTrashItems=[];
+let unifiedTrashFilter="all";
+let unifiedTrashSequence=0;
+function trashCutoff(){return new Date(Date.now()-TRASH_RETENTION_DAYS*86400000).toISOString()}
+function renderUnifiedTrash(){
+  const target=document.getElementById("toolBody");
+  if(!target||!document.getElementById("toolBackdrop").classList.contains("show"))return;
+  const categories=[
+    ["all","الكل"],["lesson","المواعيد"],["student","الطلاب"],["world_zone","الساعة العالمية"]
+  ];
+  const filtered=unifiedTrashItems.filter(item=>unifiedTrashFilter==="all"||item.kind===unifiedTrashFilter);
+  const buttons=categories.map(([kind,label])=>
+    `<button type="button" class="unified-trash-filter" aria-pressed="${unifiedTrashFilter===kind}" onclick="changeUnifiedTrashFilter('${kind}')">${label} (${kind==="all"?unifiedTrashItems.length:unifiedTrashItems.filter(item=>item.kind===kind).length})</button>`
+  ).join("");
+  const rows=filtered.map(item=>{
+    const until=Math.max(0,Math.ceil((Date.parse(item.deletedAt)+TRASH_RETENTION_DAYS*86400000-Date.now())/86400000));
+    const kind={student:"طالب",lesson:"حصة",world_zone:"ساعة عالمية"}[item.kind]||"عنصر";
+    const remaining=until===0?"آخر يوم للاستعادة":`متبقي ${until} يومًا`;
+    return `<article class="unified-trash-item">
+      <div class="unified-trash-heading"><strong>${esc(item.label)}</strong><span class="tool-meta">${esc(kind)}</span></div>
+      <p>${esc(formatHistoryDate(item.deletedAt))} · ${remaining}</p>
+      <div class="unified-trash-controls">
+        <button type="button" onclick="restoreUnifiedTrash('${esc(item.token)}',this)">استعادة</button>
+        <button type="button" class="danger" onclick="permanentlyDeleteUnifiedTrash('${esc(item.token)}',this)">حذف نهائي</button>
+      </div>
+    </article>`;
+  }).join("");
+  target.innerHTML=`<div class="unified-trash">
+    <div class="unified-trash-info">تظل العناصر هنا لمدة 30 يومًا، ثم تنتهي إمكانية استعادتها. تظهر السلة الخاصة بحسابك فقط. المدن المحفوظة في الساعة العالمية تعود إلى الجهاز الذي تستعيدها عليه.</div>
+    <div class="unified-trash-filters">${buttons}</div>
+    <div class="unified-trash-items">${rows||'<div class="unified-trash-empty">لا توجد محذوفات في هذا القسم.</div>'}</div>
+  </div>`;
+}
+function changeUnifiedTrashFilter(kind){
+  if(!["all","lesson","student","world_zone"].includes(kind))return;
+  unifiedTrashFilter=kind;renderUnifiedTrash();
+}
+async function loadUnifiedTrash(){
+  const user=currentUser;
+  if(!user||!cloudReady)throw Error("missing_account");
+  const sequence=++unifiedTrashSequence;
+  // The student workspace safely expires older students and retries detached image cleanup.
+  const active=await studentsWorkspace.activate(user);
+  if(!active)throw Error("students_unavailable");
+  const cutoff=trashCutoff();
+  const cleanup=await cloud.from("mawaeidi_trash").delete().eq("user_id",user.id).lte("deleted_at",cutoff);
+  if(cleanup.error)throw cleanup.error;
+  const [general,archivedStudents]=await Promise.all([
+    cloud.from("mawaeidi_trash").select("id,entity_kind,item_key,label,payload,deleted_at")
+      .eq("user_id",user.id).gt("deleted_at",cutoff).order("deleted_at",{ascending:false}).limit(500),
+    cloud.from(STUDENTS_TABLE).select("id,first_name,last_name,deleted_at")
+      .eq("user_id",user.id).not("deleted_at","is",null).gt("deleted_at",cutoff)
+      .order("deleted_at",{ascending:false}).limit(500)
+  ]);
+  if(general.error||archivedStudents.error)throw general.error||archivedStudents.error;
+  if(sequence!==unifiedTrashSequence||currentUser?.id!==user.id)throw Error("account_changed");
+  unifiedTrashItems=[
+    ...(general.data||[]).map(item=>({
+      token:`archive:${item.id}`,kind:item.entity_kind,recordId:item.id,
+      label:item.label||item.item_key,deletedAt:item.deleted_at,payload:item.payload
+    })),
+    ...(archivedStudents.data||[]).map(student=>({
+      token:`student:${student.id}`,kind:"student",recordId:student.id,
+      label:[student.first_name,student.last_name].filter(Boolean).join(" ")||"طالب",
+      deletedAt:student.deleted_at
+    }))
+  ].sort((a,b)=>Date.parse(b.deletedAt)-Date.parse(a.deletedAt));
+}
+async function openUnifiedTrash(){
+  closeDataMenu();
+  if(!currentUser||!cloudReady){alert("انتظر حتى يكتمل تحميل حسابك ثم أعد المحاولة.");return}
+  unifiedTrashFilter="all";
+  openToolDialog("سلة المحذوفات","الطلاب والمواعيد والساعة العالمية في مكان واحد.",'<div class="tool-status">جارٍ تحميل المحذوفات…</div>');
+  try{await loadUnifiedTrash();renderUnifiedTrash()}
+  catch(error){
+    console.error("Unified trash load failed.",error);
+    if(document.getElementById("toolBackdrop").classList.contains("show"))
+      document.getElementById("toolBody").innerHTML='<div class="tool-status">تعذّر تحميل سلة المحذوفات. تحقق من الاتصال وحاول مرة أخرى.</div>';
+  }
+}
+function findUnifiedTrash(token){return unifiedTrashItems.find(item=>item.token===token)}
+async function restoreUnifiedTrash(token,button){
+  const item=findUnifiedTrash(token);
+  if(!item||!currentUser||!cloudReady)return;
+  if(Date.parse(item.deletedAt)<=Date.now()-TRASH_RETENTION_DAYS*86400000){alert("انتهت مدة استعادة هذا العنصر.");return}
+  const userId=currentUser.id;
+  if(button)button.disabled=true;
+  try{
+    if(item.kind==="student"){
+      const {data,error}=await cloud.from(STUDENTS_TABLE).update({deleted_at:null})
+        .eq("id",item.recordId).eq("user_id",userId)
+        .gt("deleted_at",trashCutoff()).select("id").maybeSingle();
+      if(error||!data)throw error||Error("student_not_restored");
+      await studentsWorkspace.refresh();
+    }else if(item.kind==="lesson"){
+      const {data,error}=await cloud.rpc("mawaeidi_restore_trashed_lesson",{p_trash_id:item.recordId});
+      if(error||!data)throw error||Error("lesson_not_restored");
+      await refreshFromCloud(true);
+    }else if(item.kind==="world_zone"){
+      const zone=item.payload?.zone;
+      if(!validTimeZone(zone)||zone!==item.payload?.zone)throw Error("invalid_zone");
+      const previous=savedWorldClockZones();
+      if(previous.includes(zone))throw Error("zone_exists");
+      if(previous.length>=10)throw Error("zone_limit");
+      rememberWorldClockZones([...previous,zone]);
+      if(!savedWorldClockZones().includes(zone))throw Error("zone_not_saved");
+      const {data,error}=await cloud.from("mawaeidi_trash").delete().eq("id",item.recordId).eq("user_id",userId).select("id");
+      if(error||!data?.length){
+        rememberWorldClockZones(previous);
+        throw error||Error("trash_item_not_deleted");
+      }
+      if(currentSection==="world")renderWorldClockCards();
+    }
+    if(currentUser?.id!==userId)return;
+    await loadUnifiedTrash();renderUnifiedTrash();
+  }catch(error){
+    console.error("Unified trash restore failed.",error);
+    const reason=String(error?.message||"");
+    alert(reason.includes("lesson_time_conflict")?"لا يمكن استعادة الحصة؛ يوجد تعارض مع موعد حالي. غيّر الموعد المتعارض أولًا.":
+      reason.includes("lesson_id_exists")?"الحصة موجودة بالفعل في الجدول.":
+      reason.includes("zone_exists")?"هذه المدينة موجودة بالفعل على ساعتك.":
+      reason.includes("zone_limit")?"الساعة ممتلئة؛ يمكنك حفظ تسع مناطق بجانب التوقيت الأساسي.":
+      "تعذّرت الاستعادة. قد تكون المدة انتهت أو حدث خطأ في الاتصال.");
+  }finally{if(button)button.disabled=false}
+}
+async function permanentlyDeleteUnifiedTrash(token,button){
+  const item=findUnifiedTrash(token);
+  if(!item||!currentUser||!cloudReady)return;
+  if(!confirm(`حذف «${item.label}» نهائيًا من السلة؟ لا يمكن التراجع عن ذلك.`))return;
+  const userId=currentUser.id;
+  if(button)button.disabled=true;
+  try{
+    const table=item.kind==="student"?STUDENTS_TABLE:"mawaeidi_trash";
+    let query=cloud.from(table).delete().eq("id",item.recordId).eq("user_id",userId);
+    if(item.kind==="student")query=query.not("deleted_at","is",null);
+    const {data,error}=await query.select("id");
+    if(error||!data?.length)throw error||Error("trash_item_not_deleted");
+    if(item.kind==="student")await studentsWorkspace.refresh();
+    if(currentUser?.id!==userId)return;
+    await loadUnifiedTrash();renderUnifiedTrash();
+  }catch(error){
+    console.error("Unified trash permanent delete failed.",error);
+    alert("تعذّر الحذف النهائي. لم يتم تغيير بقية المحذوفات.");
+  }finally{if(button)button.disabled=false}
+}
+
 function cloneBackupValue(value){
   return JSON.parse(JSON.stringify(value));
 }
@@ -3785,7 +3961,7 @@ function copyLessonById(id){
 }
 function copyLesson(){if(editingId)copyLessonById(editingId)}
 async function deleteLesson(){
- if(!editingId||!confirm("هل تريد حذف هذه الحصة وكل مواعيدها؟"))return;
+ if(!editingId||!confirm("نقل هذه الحصة وكل مواعيدها إلى سلة المحذوفات لمدة 30 يومًا؟ يمكنك استعادتها لاحقًا."))return;
  const old=lessons;lessons=lessons.filter(l=>l.id!==editingId);
  if(!await persist()){lessons=old;return}
  render();closeDrawer();

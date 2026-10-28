@@ -615,11 +615,14 @@ async function applyCloudStudentPhoto(savedStudent,previousStudent){
   }else if(removeStudentPhotoRequested&&previousPath){
     if(!photoPathBelongsToCurrentUser(previousPath))throw new Error("invalid_photo_path");
     const bucket=cloud.storage.from(STUDENT_PHOTO_BUCKET);
-    const removal=await bucket.remove([previousPath]);
-    if(removal.error)throw removal.error;
     const response=await cloud.from(STUDENTS_TABLE).update({photo_path:null}).eq("id",saved.id).select("*").single();
     if(response.error)throw response.error;
     saved=normalizeStudent({...response.data,photo_path:"",photo_url:""});
+    const removal=await bucket.remove([previousPath]);
+    if(removal.error){
+      cleanupWarning=true;
+      console.warn("Detached student photo queued for cleanup.",removal.error);
+    }
   }
   return {saved,cleanupWarning};
 }

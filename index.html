@@ -1015,6 +1015,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   .world-convert-when input,
   .world-base-control-v2 input { font-size: 16px; }
 
+  /* Keep long account emails inside the profile header on narrow screens. */
+  .account-hero > div { min-width: 0; overflow-wrap: anywhere; }
+  #studentsView dialog { max-height: calc(100dvh - 20px); }
   #studentsView .icon-button { min-width: 40px; min-height: 40px; }
   #studentsView .student-insights > summary { min-height: 44px; }
   #studentsView .data-actions summary { min-height: 44px; }

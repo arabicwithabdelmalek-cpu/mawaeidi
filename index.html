@@ -2472,14 +2472,17 @@ function parseBackupSettings(value){
     worldClockZones:[...new Set([worldClockBase,...worldClockZones])].slice(0,10)
   };
 }
-function applyBackupSettings(settings){
+async function applyBackupSettings(settings){
   if(!settings)return;
+  if(!currentUser||!worldClockSettings||worldClockSettings.userId!==currentUser.id)throw new Error("clock_unavailable");
+  const success=await mutateWorldClock("merge",null,{
+    p_zones:[...new Set([settings.worldClockBase,...settings.worldClockZones])]
+  });
+  if(!success)throw new Error("clock_backup_merge_failed");
   weekTimeMode=settings.weekTimeMode;
   weekDensity=settings.weekDensity;
   rememberWeekTimeMode(weekTimeMode);
   rememberWeekDensity(weekDensity);
-  rememberWorldClockBase(settings.worldClockBase);
-  rememberWorldClockZones(settings.worldClockZones);
   renderWeek();
   if(currentSection==="world")openWorldClock();
 }
@@ -2526,6 +2529,7 @@ async function createFullBackupPackage(){
   if(!window.MawaeidiBackup)throw new Error("backup_tools_unavailable");
   if(!cloudReady||!currentUser)throw new Error("backup_account_required");
   const operationUserId=currentUser.id;
+  if(!worldClockSettings||worldClockSettings.userId!==operationUserId)throw new Error("clock_sync_required_for_backup");
   const scheduleSnapshot=cloneBackupValue(lessons);
   const studentSnapshot=await studentsWorkspace.createBackupSnapshot(currentUser);
   const trashResponse=await cloud.from("mawaeidi_trash")
@@ -2789,7 +2793,7 @@ async function confirmBackupRestore(){
       }
     }
     if(plan.settings){
-      applyBackupSettings(plan.settings);
+      await applyBackupSettings(plan.settings);
       settingsApplied=true;
     }
     if(plan.trashItems)trashAdded=await mergeTrashBackupRows(plan.trashItems);
@@ -2894,12 +2898,21 @@ function startRealtime(user){
       }
       handleRemoteRow(payload.new);
     })
+    .on("postgres_changes",{
+      event:"*",schema:"public",table:WORLD_CLOCK_SETTINGS_TABLE,filter:`user_id=eq.${user.id}`
+    },payload=>{
+      if(payload.eventType==="DELETE"){refreshWorldClockFromCloud();return}
+      if(currentUser?.id===user.id&&cloudReady&&!worldClockBusy){
+        try{setWorldClockServerRow(payload.new,user.id)}catch(error){console.warn("World clock sync payload rejected.",error)}
+      }
+    })
     .subscribe(status=>{
       if(status==="SUBSCRIBED"&&cloudReady&&!saveInFlight&&!refreshInFlight&&!pendingRemoteRow)setSync("saved","متزامن سحابيًا");
       if((status==="CHANNEL_ERROR"||status==="TIMED_OUT")&&currentUser?.id===user.id)setSync("error","اضغط للتحديث");
     });
 }
 async function refreshFromCloud(silent=false){
+  if(currentSection==="world"&&currentUser&&cloudReady)return refreshWorldClockFromCloud();
   if(currentSection==="students"&&currentUser&&cloudReady)return studentsWorkspace.refresh();
   if(!cloud||!currentUser||!cloudReady){
     if(!silent)alert("لم يكتمل الاتصال بحسابك بعد.");
@@ -2941,6 +2954,7 @@ function requestAutoRefresh(){
   if(now-lastAutoRefreshAt<AUTO_REFRESH_THROTTLE_MS)return;
   lastAutoRefreshAt=now;
   refreshFromCloud(true);
+  refreshWorldClockFromCloud();
 }
 function finishAuthBootstrap(){document.body.classList.remove("auth-pending")}
 function showAuth(){
@@ -3034,12 +3048,13 @@ async function submitAuth(){
 async function activateSession(user){
   if(!user||!cloud)return;
   if(loadingUserId===user.id)return;
-  if(currentUser?.id===user.id&&cloudReady){if(!realtimeChannel)startRealtime(user);hideAuth();refreshNotificationMenuStatus();if(currentSection==="students")studentsWorkspace.activate(user);return}
+  if(currentUser?.id===user.id&&cloudReady){if(!realtimeChannel)startRealtime(user);hideAuth();refreshNotificationMenuStatus();if(!worldClockSettings)initializeWorldClockForUser(user,sessionSequence).catch(error=>console.warn("Clock sync retry failed.",error));if(currentSection==="students")studentsWorkspace.activate(user);return}
   stopRealtime();
   lastCloudUpdatedAt=null;
   loadingUserId=user.id;
   const sequence=++sessionSequence;
   resetStudentWorkspace();
+  resetWorldClockSync();
   currentUser=user;
   cloudReady=false;
   setAuthMessage("جارٍ تحميل جدولك…");
@@ -3068,6 +3083,9 @@ async function activateSession(user){
       const saved=await persist(true);
       if(!saved)throw new Error("initial cloud save failed");
     }
+    try{await initializeWorldClockForUser(user,sequence)}
+    catch(error){console.warn("World clock settings could not be loaded.",error)}
+    if(sequence!==sessionSequence||currentUser?.id!==user.id)return;
     render();
     hideAuth();
     setSync("saved","محفوظ سحابيًا");
@@ -3094,6 +3112,7 @@ async function logout(){
   stopRealtime();
   sessionSequence++;
   resetStudentWorkspace();
+  resetWorldClockSync();
   loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;lastCloudUpdatedAt=null;
   closeDrawer();closeToolDialog();render();showAuth();
   setAuthMessage("تم تسجيل الخروج.");
@@ -4170,6 +4189,7 @@ async function initApp(){
       setTimeout(()=>{
         stopRealtime();
         resetStudentWorkspace();
+        resetWorldClockSync();
         sessionSequence++;loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;
         recoveryUser=null;lastCloudUpdatedAt=null;setAuthMode("signin");closeDrawer();closeToolDialog();updateNotificationMenuStatus(false);render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
       },0);

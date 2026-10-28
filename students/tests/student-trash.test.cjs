@@ -8,10 +8,11 @@ const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
 const sql=fs.readFileSync(path.join(root,"supabase/migrations/20261028042000_student_trash_and_history.sql"),"utf8");
 const sw=fs.readFileSync(path.join(root,"sw.js"),"utf8");
 
-for(const id of ["showActiveStudents","showTrashedStudents","trashCount","trashRetentionNote","showStudentHistory","studentHistory","studentHistoryContent","historyFromProfile","emptyStateText"]){
-  assert.match(html,new RegExp('id="'+id+'"'),"missing "+id);
-}
-assert.match(html,/id="deleteStudent"[^>]*>نقل إلى السلة/);
+assert.doesNotMatch(html,/id="showTrashedStudents"/);
+assert.doesNotMatch(html,/id="showStudentHistory"/);
+assert.doesNotMatch(html,/id="historyFromProfile"/);
+assert.match(html,/id="deleteStudent"[^>]*>نقل إلى سلة المحذوفات/);
+assert.match(html,/onclick="openUnifiedTrash\(\)"/);
 assert.match(js,/const TRASH_RETENTION_MS=30\*24\*60\*60\*1000/);
 assert.match(js,/async function restoreTrashedStudent/);
 assert.match(js,/async function permanentlyDeleteTrashedStudent/);
@@ -38,8 +39,8 @@ assert.match(photoPolicy,/and not exists \(/);
 assert.match(photoPolicy,/s\.photo_path=storage\.objects\.name/);
 assert.match(photoPolicy,/after update of photo_path/);
 assert.match(js,/Detached student photo queued for cleanup/);
-assert.match(sw,/mawaeidi-shell-v44/);
-assert.match(sw,/student-registry\.js\?v=5/);
+assert.match(sw,/mawaeidi-shell-v45/);
+assert.match(sw,/student-registry\.js\?v=6/);
 const fnText=js.match(/function isTrashExpired\(student\)\{[\s\S]*?\n\}/)[0];
 const expired=new Function("TRASH_RETENTION_MS",fnText+"; return isTrashExpired;")(30*24*60*60*1000);
 assert.equal(expired({deleted_at:new Date(Date.now()-31*86400000).toISOString()}),true);

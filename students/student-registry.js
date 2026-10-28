@@ -9,6 +9,9 @@ if(!root)throw new Error("Student workspace root is required.");
 const SUPABASE_URL="https://nvefdkkjkyalpsrgoffj.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_t0pqtkV0-3Wj0htl-eGR9w_BsifiUDE";
 const STUDENTS_TABLE="mawaeidi_students";
+const STUDENT_HISTORY_TABLE="mawaeidi_student_history";
+const STUDENT_PHOTO_CLEANUP_TABLE="mawaeidi_student_photo_cleanup";
+const TRASH_RETENTION_MS=30*24*60*60*1000;
 const STUDENT_PHOTO_BUCKET="mawaeidi-student-photos";
 const STUDENT_PHOTO_SIGNED_SECONDS=60*60;
 const MAX_STUDENT_PHOTO_SOURCE_BYTES=10*1024*1024;
@@ -54,6 +57,8 @@ let mode="gate";
 let accountSequence=0;
 let currentUser=null;
 let students=[];
+let trashedStudents=[];
+let listMode="active";
 let filteredStudents=[];
 let editingStudentId=null;
 let activeStudentId=null;
@@ -120,6 +125,7 @@ function normalizeStudent(value={}){
   if(!LEVEL_OPTIONS.includes(result.current_level))result.current_level="غير محدد";
   if(!STUDY_TYPE_OPTIONS.includes(result.study_type))result.study_type="غير محدد";
   result.id=clean(value.id,80)||makeId();
+  result.deleted_at=clean(value.deleted_at,50);
   result.photo_path=clean(value.photo_path,1024);
   result.photo_url=safePhotoUrl(value.photo_url);
   result.created_at=clean(value.created_at,50)||new Date().toISOString();
@@ -228,7 +234,7 @@ function populateStaticOptions(){
 function refreshCountryFilter(){
   const select=byId("countryFilter");
   const previous=select.value;
-  const countries=[...new Set(students.map(student=>student.country).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ar"));
+  const countries=[...new Set((listMode==="trash"?trashedStudents:students).map(student=>student.country).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ar"));
   select.replaceChildren(new Option("كل الدول",""));
   for(const country of countries)select.append(new Option(country,country));
   select.value=countries.includes(previous)?previous:"";
@@ -246,9 +252,9 @@ function currentFilters(){
     sort:byId("sortStudents").value
   };
 }
-function filterAndSortStudents(){
+function filterAndSortStudents(source=students){
   const filters=currentFilters();
-  const list=students.filter(student=>{
+  const list=source.filter(student=>{
     const searchable=normalizeKey(STUDENT_FIELDS.map(field=>student[field.key]).join(" "));
     return (!filters.query||searchable.includes(filters.query))
       &&(!filters.status||student.status===filters.status)
@@ -404,8 +410,17 @@ function removeStudentPhotoFromEditor(){
 }
 function renderStudents(){
   refreshCountryFilter();
-  filteredStudents=filterAndSortStudents();
-  byId("resultsCount").textContent=filteredStudents.length===students.length?`${students.length} طلاب`:`${filteredStudents.length} من ${students.length} طلاب`;
+  const source=listMode==="trash"?trashedStudents:students;
+  filteredStudents=filterAndSortStudents(source);
+  const noun=listMode==="trash"?"ملفًا في السلة":"طالبًا";
+  byId("resultsCount").textContent=filteredStudents.length===source.length?`${source.length} ${noun}`:`${filteredStudents.length} من ${source.length} ${noun}`;
+  byId("trashCount").textContent=trashedStudents.length;
+  byId("showActiveStudents").setAttribute("aria-pressed",String(listMode==="active"));
+  byId("showTrashedStudents").setAttribute("aria-pressed",String(listMode==="trash"));
+  byId("addStudent").hidden=listMode==="trash";
+  byId("studentDataTools").hidden=listMode==="trash";
+  byId("trashRetentionNote").hidden=listMode!=="trash";
+  byId("emptyStateText").textContent=listMode==="trash"?"لا توجد ملفات محذوفة مطابقة.":"غيّر البحث أو الفلاتر، أو أضف ملف طالب جديدًا.";
   const body=byId("studentRows");
   body.replaceChildren();
   for(const student of filteredStudents){
@@ -413,9 +428,12 @@ function renderStudents(){
     row.className="student-row";
     row.setAttribute("role","listitem");
 
-    const open=document.createElement("button");
-    open.type="button";open.className="student-open";open.dataset.action="view";open.dataset.id=student.id;
-    open.setAttribute("aria-label",`عرض بيانات ${studentName(student)}`);
+    const open=document.createElement(listMode==="trash"?"div":"button");
+    open.className="student-open";
+    if(listMode!=="trash"){
+      open.type="button";open.dataset.action="view";open.dataset.id=student.id;
+      open.setAttribute("aria-label",`عرض بيانات ${studentName(student)}`);
+    }
     const avatar=document.createElement("span");avatar.className="student-avatar";avatar.setAttribute("aria-hidden","true");setAvatarContent(avatar,student);
     const identity=document.createElement("span");identity.className="student-identity";
     const name=document.createElement("strong");name.className="student-name";name.textContent=studentName(student);
@@ -423,14 +441,21 @@ function renderStudents(){
     identity.append(name,username);
     const study=document.createElement("span");study.className="student-study";
     const course=document.createElement("strong");course.textContent=student.course_book||"لا توجد دورة مسجلة";
-    const details=document.createElement("span");details.textContent=[student.country,student.current_level].filter(Boolean).join(" · ")||"لا توجد تفاصيل إضافية";
+    const details=document.createElement("span");
+    details.textContent=listMode==="trash"
+      ?`محذوف منذ ${new Intl.DateTimeFormat("ar-EG",{day:"numeric",month:"short",year:"numeric"}).format(new Date(student.deleted_at))} · ${Math.max(0,Math.ceil((Date.parse(student.deleted_at)+TRASH_RETENTION_MS-Date.now())/86400000))} يوم متبقٍ`
+      :[student.country,student.current_level].filter(Boolean).join(" · ")||"لا توجد تفاصيل إضافية";
     study.append(course,details);
     const status=document.createElement("span");status.className=`chip ${statusChipClass(student.status)}`;status.textContent=student.status||"غير محدد";
     open.append(avatar,identity,study,status);
 
     const actionWrap=document.createElement("div");actionWrap.className="row-actions";
-    const edit=makeButton("تعديل","edit",student.id);edit.classList.add("edit-student");
-    actionWrap.append(edit);
+    if(listMode==="trash"){
+      actionWrap.append(makeButton("استعادة","restore",student.id),makeButton("حذف نهائي","purge",student.id,true));
+    }else{
+      const edit=makeButton("تعديل","edit",student.id);edit.classList.add("edit-student");
+      actionWrap.append(edit);
+    }
     row.append(open,actionWrap);
     body.append(row);
   }
@@ -535,6 +560,7 @@ function validateStudent(student){
   if(!student.username)return "اسم المستخدم مطلوب.";
   if(!student.first_name)return "الاسم الأول مطلوب.";
   if(students.some(item=>item.id!==editingStudentId&&normalizeKey(item.username)===normalizeKey(student.username)))return "اسم المستخدم موجود بالفعل.";
+  if(trashedStudents.some(item=>item.id!==editingStudentId&&normalizeKey(item.username)===normalizeKey(student.username)))return "اسم المستخدم موجود في سلة المحذوفات. استعد الطالب أولًا أو احذفه نهائيًا.";
   if(student.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student.email))return "اكتب بريدًا إلكترونيًا صحيحًا أو اتركه فارغًا.";
   if(student.student_account_url&&!safeUrl(student.student_account_url))return "رابط حساب الطالب يجب أن يبدأ بـ http أو https.";
   if(student.joined_on&&!/^\d{4}-\d{2}-\d{2}$/.test(student.joined_on))return "تاريخ الانضمام غير صحيح.";
@@ -589,11 +615,14 @@ async function applyCloudStudentPhoto(savedStudent,previousStudent){
   }else if(removeStudentPhotoRequested&&previousPath){
     if(!photoPathBelongsToCurrentUser(previousPath))throw new Error("invalid_photo_path");
     const bucket=cloud.storage.from(STUDENT_PHOTO_BUCKET);
-    const removal=await bucket.remove([previousPath]);
-    if(removal.error)throw removal.error;
     const response=await cloud.from(STUDENTS_TABLE).update({photo_path:null}).eq("id",saved.id).select("*").single();
     if(response.error)throw response.error;
     saved=normalizeStudent({...response.data,photo_path:"",photo_url:""});
+    const removal=await bucket.remove([previousPath]);
+    if(removal.error){
+      cleanupWarning=true;
+      console.warn("Detached student photo queued for cleanup.",removal.error);
+    }
   }
   return {saved,cleanupWarning};
 }
@@ -650,39 +679,150 @@ async function saveStudentRecord(event){
 }
 async function deleteActiveStudent(){
   const student=students.find(item=>item.id===activeStudentId);
-  if(!student)return;
-  if(!confirm(`حذف ملف ${studentName(student)}؟`))return;
-  const operationAccountSequence=accountSequence;
-  const operationUserId=currentUser?.id;
+  if(!student||!currentUser||mode!=="cloud")return;
+  if(!confirm(`نقل ملف ${studentName(student)} إلى سلة المحذوفات؟ يمكنك استعادته مع صورته خلال 30 يومًا.`))return;
+  const operationAccountSequence=accountSequence,operationUserId=currentUser.id;
   const button=byId("deleteStudent");
-  setBusy(button,true,"جارٍ الحذف…");
+  setBusy(button,true,"جارٍ النقل…");
   try{
-    if(mode==="cloud"){
-      if(student.photo_path){
-        if(!photoPathBelongsToCurrentUser(student.photo_path))throw new Error("invalid_photo_path");
-        const removal=await cloud.storage.from(STUDENT_PHOTO_BUCKET).remove([student.photo_path]);
-        if(removal.error)throw removal.error;
-      }
-      const {error}=await cloud.from(STUDENTS_TABLE).delete().eq("id",student.id);
-      if(error)throw error;
-    }
+    const {data,error}=await cloud.from(STUDENTS_TABLE).update({deleted_at:new Date().toISOString()}).eq("id",student.id).is("deleted_at",null).select("*").single();
+    if(error)throw error;
     if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
     students=students.filter(item=>item.id!==student.id);
+    trashedStudents.unshift(normalizeStudent({...data,photo_url:student.photo_url}));
     closeDialog("studentProfile");
     activeStudentId=null;
     renderAll();
-    showToast("تم حذف ملف الطالب.");
+    showToast("تم نقل الطالب إلى السلة مع الاحتفاظ بصورته.");
   }catch(error){
-    console.error("Student delete failed.",error);
-    showToast("تعذّر حذف الطالب من حسابك.",true);
+    console.error("Student move to trash failed.",error);
+    showToast("تعذّر نقل الطالب إلى سلة المحذوفات.",true);
   }finally{setBusy(button,false)}
+}
+function isTrashExpired(student){
+  const deleted=Date.parse(student?.deleted_at||"");
+  return Number.isFinite(deleted)&&deleted+TRASH_RETENTION_MS<=Date.now();
+}
+function selectListMode(nextMode){
+  listMode=nextMode==="trash"?"trash":"active";
+  clearFilters();
+  renderStudents();
+}
+async function restoreTrashedStudent(id,button=null){
+  const student=trashedStudents.find(item=>item.id===id);
+  if(!student||!currentUser)return;
+  if(isTrashExpired(student)){showToast("انتهت مدة الاستعادة (30 يومًا).",true);return}
+  const sequence=accountSequence,userId=currentUser.id;
+  setBusy(button,true,"جارٍ الاستعادة…");
+  try{
+    const {data,error}=await cloud.from(STUDENTS_TABLE).update({deleted_at:null}).eq("id",id).not("deleted_at","is",null).select("*").single();
+    if(error)throw error;
+    if(sequence!==accountSequence||currentUser?.id!==userId)return;
+    trashedStudents=trashedStudents.filter(item=>item.id!==id);
+    students.unshift(normalizeStudent({...data,photo_url:student.photo_url}));
+    renderAll();
+    showToast(`تمت استعادة ${studentName(student)} مع صورته.`);
+  }catch(error){
+    console.error("Student restore failed.",error);
+    showToast("تعذّرت الاستعادة. قد تكون مدة الاحتفاظ انتهت.",true);
+  }finally{setBusy(button,false)}
+}
+async function cleanupDeletedStudentPhotos(){
+  if(!cloud||!currentUser||mode!=="cloud")return 0;
+  const userId=currentUser.id;
+  const {data,error}=await cloud.from(STUDENT_PHOTO_CLEANUP_TABLE).select("id,photo_path").limit(100);
+  if(error){console.warn("Student photo cleanup queue unavailable.",error);return 1}
+  let failed=0;
+  for(const entry of data||[]){
+    if(currentUser?.id!==userId)break;
+    if(!photoPathBelongsToCurrentUser(entry.photo_path)){failed++;continue}
+    try{
+      const removal=await cloud.storage.from(STUDENT_PHOTO_BUCKET).remove([entry.photo_path]);
+      if(removal.error)throw removal.error;
+      const deleted=await cloud.from(STUDENT_PHOTO_CLEANUP_TABLE).delete().eq("id",entry.id);
+      if(deleted.error)throw deleted.error;
+    }catch(error){failed++;console.warn("Student photo cleanup retry pending.",error)}
+  }
+  return failed;
+}
+async function permanentlyDeleteTrashedStudent(id,button=null,automatic=false){
+  const student=trashedStudents.find(item=>item.id===id);
+  if(!student||!currentUser)return false;
+  if(!automatic&&!confirm(`حذف ${studentName(student)} نهائيًا؟ ستُحذف جميع بياناته ولن يمكن استعادتها.`))return false;
+  const sequence=accountSequence,userId=currentUser.id;
+  setBusy(button,true,"جارٍ الحذف النهائي…");
+  try{
+    const {data,error}=await cloud.from(STUDENTS_TABLE).delete().eq("id",id).not("deleted_at","is",null).select("id");
+    if(error)throw error;
+    if(!data?.length)throw new Error("Student not deleted.");
+    if(sequence!==accountSequence||currentUser?.id!==userId)return false;
+    trashedStudents=trashedStudents.filter(item=>item.id!==id);
+    renderAll();
+    if(!automatic){
+      const pending=await cleanupDeletedStudentPhotos();
+      showToast(pending?"حُذف الملف نهائيًا، وستُعاد محاولة تنظيف الصورة لاحقًا.":"حُذف الملف نهائيًا مع بياناته وصورته.",Boolean(pending));
+    }
+    return true;
+  }catch(error){
+    console.error("Student permanent deletion failed.",error);
+    if(!automatic)showToast("تعذّر الحذف النهائي، وما زال الملف في السلة.",true);
+    return false;
+  }finally{setBusy(button,false)}
+}
+async function purgeExpiredTrash(){
+  if(!trashedStudents.length||!currentUser)return;
+  const expired=trashedStudents.filter(isTrashExpired);
+  for(const student of expired){
+    if(!currentUser)break;
+    await permanentlyDeleteTrashedStudent(student.id,null,true);
+  }
+}
+const HISTORY_ACTION_LABELS={created:"إضافة الطالب",updated:"تعديل البيانات",trashed:"نقل إلى السلة",restored:"استعادة الطالب",purged:"حذف نهائي"};
+const HISTORY_FIELD_LABELS={...Object.fromEntries(STUDENT_FIELDS.map(field=>[field.key,field.label])),photo_path:"صورة الطالب",deleted_at:"سلة المحذوفات"};
+function humanHistoryValue(value,key){
+  if(key==="photo_path")return value?"توجد صورة":"لا توجد صورة";
+  if(key==="deleted_at")return value?"في السلة":"نشط";
+  if(value===null||value===undefined||value==="")return "—";
+  return String(value).slice(0,600);
+}
+async function openStudentHistory(studentId=null){
+  if(!currentUser||mode!=="cloud")return;
+  const sequence=accountSequence,userId=currentUser.id;
+  const all=[...students,...trashedStudents];
+  const selected=studentId?all.find(item=>item.id===studentId):null;
+  byId("studentHistoryTitle").textContent=selected?`سجل تعديلات ${studentName(selected)}`:"سجل تعديلات الطلاب";
+  byId("studentHistoryContent").innerHTML='<div class="empty-mini">جارٍ تحميل سجل التعديلات…</div>';
+  openDialog("studentHistory");
+  try{
+    let query=cloud.from(STUDENT_HISTORY_TABLE).select("student_id,student_name,action,changes,changed_at").order("changed_at",{ascending:false}).limit(studentId?100:150);
+    if(studentId)query=query.eq("student_id",studentId);
+    const {data,error}=await query;
+    if(error)throw error;
+    if(sequence!==accountSequence||currentUser?.id!==userId||!byId("studentHistory").open)return;
+    const items=data||[];
+    byId("studentHistoryContent").innerHTML=items.length?items.map(entry=>{
+      const action=HISTORY_ACTION_LABELS[entry.action]||"تغيير";
+      const date=new Date(entry.changed_at);
+      const when=Number.isFinite(date.getTime())?new Intl.DateTimeFormat("ar-EG",{dateStyle:"medium",timeStyle:"short"}).format(date):"";
+      const details=Object.entries(entry.changes&&typeof entry.changes==="object"?entry.changes:{}).map(([key,values])=>{
+        const label=HISTORY_FIELD_LABELS[key]||key;
+        if(key==="photo_path")return '<li>تم تغيير صورة الطالب</li>';
+        const before=humanHistoryValue(values?.before,key),after=humanHistoryValue(values?.after,key);
+        return `<li><strong>${escapeHtml(label)}:</strong> قبل: ${escapeHtml(before)}، بعد: ${escapeHtml(after)}</li>`;
+      }).join("");
+      return `<article class="student-history-item"><div class="student-history-head"><strong>${escapeHtml(action)}</strong><time>${escapeHtml(when)}</time></div><p>${escapeHtml(entry.student_name||"طالب")}</p>${details?`<ul>${details}</ul>`:""}</article>`;
+    }).join(""):'<div class="empty-mini">لا توجد تعديلات مسجلة حتى الآن.</div>';
+  }catch(error){
+    console.error("Student history load failed.",error);
+    if(sequence===accountSequence&&currentUser?.id===userId)byId("studentHistoryContent").innerHTML='<div class="import-errors">تعذّر تحميل سجل التعديلات.</div>';
+  }
 }
 
 function setLoading(loading){
   byId("loadingState").hidden=!loading;
   byId("tableWrap").hidden=loading||!filteredStudents.length;
   byId("emptyState").hidden=loading||Boolean(filteredStudents.length);
-  for(const id of ["refreshData","addStudent","importCsv","exportCsv"])byId(id).disabled=loading;
+  for(const id of ["refreshData","addStudent","importCsv","exportCsv","showActiveStudents","showTrashedStudents","showStudentHistory"])byId(id).disabled=loading;
 }
 async function loadCloudData(showSuccess=false){
   if(!cloud||!currentUser)return false;
@@ -694,10 +834,13 @@ async function loadCloudData(showSuccess=false){
     if(currentUser?.id!==userId||sequence!==cloudLoadSequence)return false;
     const records=await hydrateStudentPhotos(studentsResponse.data||[]);
     if(currentUser?.id!==userId||sequence!==cloudLoadSequence)return false;
-    students=records;
+    students=records.filter(student=>!student.deleted_at);
+    trashedStudents=records.filter(student=>Boolean(student.deleted_at));
     refreshCountryFilter();
     renderAll();
     applyInitialRoute();
+    await purgeExpiredTrash();
+    if(currentUser?.id===userId&&sequence===cloudLoadSequence)await cleanupDeletedStudentPhotos();
     if(showSuccess)showToast("تم تحديث بيانات الطلاب.");
     return true;
   }catch(error){
@@ -825,6 +968,7 @@ function backupStudentRecord(student,photoFile=""){
     id:student.id,
     created_at:student.created_at||"",
     updated_at:student.updated_at||"",
+    deleted_at:student.deleted_at||"",
     photo_file:photoFile
   };
   for(const field of STUDENT_FIELDS)record[field.key]=student[field.key]||"";
@@ -851,7 +995,7 @@ async function ensureBackupAccount(user,refresh=true){
 }
 async function createBackupSnapshot(user){
   const operation=await ensureBackupAccount(user,true);
-  const snapshot=students.map(student=>clone(student));
+  const snapshot=[...students,...trashedStudents].map(student=>clone(student));
   const files=[];
   const photoFiles=new Map();
   const warnings=[];
@@ -906,8 +1050,8 @@ function inspectBackupSnapshot(payload,entries=new Map()){
   for(const raw of payload.students){
     if(!raw||typeof raw!=="object"||Array.isArray(raw))throw new Error("invalid_student");
     const student=normalizeStudent(raw);
-    const validation=validateStudent(student);
-    if(validation)throw new Error("invalid_student");
+    const validation=validateImportedStudent(student,0);
+    if(validation.length)throw new Error("invalid_student");
     const usernameKey=normalizeKey(student.username);
     if(seenUsernames.has(usernameKey))throw new Error("duplicate_student_username");
     seenUsernames.add(usernameKey);
@@ -940,11 +1084,11 @@ function inspectBackupSnapshot(payload,entries=new Map()){
 async function restoreBackupSnapshot(plan,user){
   if(!plan||!Array.isArray(plan.items)||plan.items.length>MAX_IMPORT_ROWS)throw new Error("invalid_students_restore_plan");
   const operation=await ensureBackupAccount(user,true);
-  const existingByName=new Map(students.map(student=>[normalizeKey(student.username),student]));
+  const existingByName=new Map([...students,...trashedStudents].map(student=>[normalizeKey(student.username),student]));
   const now=new Date().toISOString();
   const prepared=plan.items.map(item=>{
     const student=normalizeStudent(item.student);
-    if(validateStudent(student))throw new Error("invalid_student");
+    if(validateImportedStudent(student,0).length)throw new Error("invalid_student");
     const existing=existingByName.get(normalizeKey(student.username))||null;
     const id=existing?.id||makeId();
     const payload={user_id:operation.userId,id};
@@ -952,11 +1096,13 @@ async function restoreBackupSnapshot(plan,user){
     payload.created_at=existing?.created_at||(Number.isFinite(Date.parse(student.created_at))?student.created_at:now);
     payload.updated_at=now;
     payload.photo_path=existing?.photo_path||null;
+    payload.deleted_at=existing?.deleted_at||student.deleted_at||null;
     return {...item,student,existing,id,payload};
   });
 
-  if(prepared.length){
-    const response=await cloud.from(STUDENTS_TABLE).upsert(prepared.map(item=>item.payload),{onConflict:"id"}).select("*");
+  const writable=prepared.filter(item=>!item.existing?.deleted_at);
+  if(writable.length){
+    const response=await cloud.from(STUDENTS_TABLE).upsert(writable.map(item=>item.payload),{onConflict:"id"}).select("*");
     if(response.error)throw response.error;
   }
   if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
@@ -964,7 +1110,7 @@ async function restoreBackupSnapshot(plan,user){
   let restoredPhotos=0;
   const photoFailures=[];
   for(const item of prepared){
-    if(!item.photoData||!item.photoType)continue;
+    if(item.existing?.deleted_at||!item.photoData||!item.photoType)continue;
     if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
     const path=createStudentPhotoPath(item.id,item.photoType.extension);
     const bucket=cloud.storage.from(STUDENT_PHOTO_BUCKET);
@@ -989,7 +1135,8 @@ async function restoreBackupSnapshot(plan,user){
   if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
   return {
     inserted:prepared.filter(item=>!item.existing).length,
-    updated:prepared.filter(item=>item.existing).length,
+    updated:prepared.filter(item=>item.existing&&!item.existing.deleted_at).length,
+    skippedTrashed:prepared.filter(item=>item.existing?.deleted_at).length,
     restoredPhotos,
     photoFailures,
     refreshed
@@ -1057,6 +1204,8 @@ async function prepareCsvImport(file){
       seen.add(usernameKey);
       items.push(item);
     }
+    const trashedNames=new Set(trashedStudents.map(item=>normalizeKey(item.username)));
+    for(const item of items)if(trashedNames.has(normalizeKey(item.username)))errors.push(`اسم المستخدم ${item.username} موجود في السلة؛ استعده أولًا قبل الاستيراد.`);
     const existingNames=new Set(students.map(item=>normalizeKey(item.username)));
     const updates=items.filter(item=>existingNames.has(normalizeKey(item.username))).length;
     importPlan={items,errors,updates,creates:items.length-updates};
@@ -1117,6 +1266,8 @@ function clearFilters(){
 function handleRowAction(event){
   const button=event.target.closest("button[data-action]");
   if(!button)return;
+  if(button.dataset.action==="restore"){restoreTrashedStudent(button.dataset.id,button);return}
+  if(button.dataset.action==="purge"){permanentlyDeleteTrashedStudent(button.dataset.id,button);return}
   const student=students.find(item=>item.id===button.dataset.id);
   if(!student)return;
   if(button.dataset.action==="view")openProfile(student.id);
@@ -1125,6 +1276,10 @@ function handleRowAction(event){
 function bindEvents(){
   byId("refreshData").addEventListener("click",()=>loadCloudData(true));
   byId("addStudent").addEventListener("click",()=>openStudentEditor());
+  byId("showActiveStudents").addEventListener("click",()=>selectListMode("active"));
+  byId("showTrashedStudents").addEventListener("click",()=>selectListMode("trash"));
+  byId("showStudentHistory").addEventListener("click",()=>openStudentHistory());
+  byId("historyFromProfile").addEventListener("click",()=>openStudentHistory(activeStudentId));
   byId("studentForm").addEventListener("submit",saveStudentRecord);
   byId("studentPhotoInput").addEventListener("change",event=>handleStudentPhotoSelection(event.target.files?.[0]));
   byId("removeStudentPhoto").addEventListener("click",removeStudentPhotoFromEditor);
@@ -1158,6 +1313,8 @@ function reset(){
   mode="gate";
   currentUser=null;
   students=[];
+  trashedStudents=[];
+  listMode="active";
   filteredStudents=[];
   editingStudentId=null;
   activeStudentId=null;
@@ -1170,6 +1327,7 @@ function reset(){
   for(const id of ["search","statusFilter","levelFilter","typeFilter","countryFilter"])byId(id).value="";
   byId("sortStudents").value="newest";
   byId("csvFile").value="";
+  byId("studentHistoryContent").replaceChildren();
   byId("studentRows").replaceChildren();
   byId("toast").className="toast";
   byId("toast").textContent="";

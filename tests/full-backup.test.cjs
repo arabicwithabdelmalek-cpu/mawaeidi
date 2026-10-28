@@ -43,13 +43,13 @@ async function main(){
   assert.match(html,/تنزيل نسخة احتياطية كاملة/);
   assert.match(html,/دمج البيانات دون حذف الموجود/);
   assert.match(html,/backup-manager\.js\?v=1/);
-  assert.match(html,/student-registry\.js\?v=4/);
+  assert.match(html,/student-registry\.js\?v=5/);
   assert.doesNotMatch(html,/id="backupStudents"/);
   assert.match(students,/createBackupSnapshot/);
   assert.match(students,/inspectBackupSnapshot/);
   assert.match(students,/restoreBackupSnapshot/);
   assert.doesNotMatch(students,/exportStudentsBackup/);
-  assert.match(worker,/mawaeidi-shell-v43/);
+  assert.match(worker,/mawaeidi-shell-v44/);
   assert.match(worker,/backup-manager\.js\?v=1/);
 
   console.log("Full backup and restore checks passed.");

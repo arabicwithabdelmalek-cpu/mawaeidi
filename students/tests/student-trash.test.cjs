@@ -1,0 +1,48 @@
+"use strict";
+const assert=require("node:assert/strict");
+const fs=require("node:fs");
+const path=require("node:path");
+const root=path.resolve(__dirname,"../..");
+const js=fs.readFileSync(path.join(root,"students/student-registry.js"),"utf8");
+const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
+const sql=fs.readFileSync(path.join(root,"supabase/migrations/20261028042000_student_trash_and_history.sql"),"utf8");
+const sw=fs.readFileSync(path.join(root,"sw.js"),"utf8");
+
+for(const id of ["showActiveStudents","showTrashedStudents","trashCount","trashRetentionNote","showStudentHistory","studentHistory","studentHistoryContent","historyFromProfile","emptyStateText"]){
+  assert.match(html,new RegExp('id="'+id+'"'),"missing "+id);
+}
+assert.match(html,/id="deleteStudent"[^>]*>نقل إلى السلة/);
+assert.match(js,/const TRASH_RETENTION_MS=30\*24\*60\*60\*1000/);
+assert.match(js,/async function restoreTrashedStudent/);
+assert.match(js,/async function permanentlyDeleteTrashedStudent/);
+assert.match(js,/async function purgeExpiredTrash/);
+assert.match(js,/async function cleanupDeletedStudentPhotos/);
+assert.match(js,/async function openStudentHistory/);
+assert.match(js,/const snapshot=\[\.\.\.students,\.\.\.trashedStudents\]/);
+assert.match(js,/payload\.deleted_at=existing\?\.deleted_at\|\|student\.deleted_at\|\|null/);
+assert.match(js,/const writable=prepared\.filter\(item=>!item\.existing\?\.deleted_at\)/);
+const softDelete=js.slice(js.indexOf("async function deleteActiveStudent(){"),js.indexOf("function isTrashExpired("));
+assert.match(softDelete,/\.update\(\{deleted_at:/);
+assert.doesNotMatch(softDelete,/\.delete\(/);
+assert.doesNotMatch(softDelete,/\.storage\./);
+assert.match(sql,/add column if not exists deleted_at timestamptz/);
+assert.match(sql,/deleted_at is not null/);
+assert.match(sql,/deleted_at > now\(\) - interval '30 days'/);
+assert.match(sql,/create policy "student_history_read_own"/);
+assert.match(sql,/create policy "student_cleanup_read_own"/);
+assert.match(sql,/security definer/);
+assert.match(sql,/delete from public\.mawaeidi_student_history/);
+assert.match(sql,/insert into public\.mawaeidi_student_photo_cleanup/);
+const photoPolicy=fs.readFileSync(path.join(root,"supabase/migrations/20261028043000_protect_student_photos.sql"),"utf8");
+assert.match(photoPolicy,/and not exists \(/);
+assert.match(photoPolicy,/s\.photo_path=storage\.objects\.name/);
+assert.match(photoPolicy,/after update of photo_path/);
+assert.match(js,/Detached student photo queued for cleanup/);
+assert.match(sw,/mawaeidi-shell-v44/);
+assert.match(sw,/student-registry\.js\?v=5/);
+const fnText=js.match(/function isTrashExpired\(student\)\{[\s\S]*?\n\}/)[0];
+const expired=new Function("TRASH_RETENTION_MS",fnText+"; return isTrashExpired;")(30*24*60*60*1000);
+assert.equal(expired({deleted_at:new Date(Date.now()-31*86400000).toISOString()}),true);
+assert.equal(expired({deleted_at:new Date(Date.now()-29*86400000).toISOString()}),false);
+assert.equal(expired({deleted_at:""}),false);
+console.log("student trash and history checks passed");

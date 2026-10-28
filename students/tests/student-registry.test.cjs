@@ -20,10 +20,13 @@ assert.match(source,/cloud\.storage\.from\(STUDENT_PHOTO_BUCKET\)\.download/);
 assert.doesNotMatch(source,/async function exportStudentsBackup/);
 assert.match(main,/id="studentsView"[\s\S]*id="studentEditor"[\s\S]*id="studentProfile"/);
 assert.match(main,/backup-manager\.js\?v=1/);
-assert.match(main,/student-registry\.js\?v=4/);
+assert.match(main,/student-registry\.js\?v=5/);
 assert.doesNotMatch(main,/id="backupStudents"/);
 assert.doesNotMatch(main,/id="openStudentRegistry"/);
 
 const script=new vm.Script(source,{filename:"student-registry.js"});
 assert.ok(script);
 console.log("student registry unit checks passed");
+
+assert.match(source,/async function restoreTrashedStudent/);
+assert.match(source,/async function permanentlyDeleteTrashedStudent/);

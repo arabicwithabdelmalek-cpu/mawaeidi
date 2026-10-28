@@ -24,7 +24,7 @@ assert.match(legacy,/target\.searchParams\.set\("section","students"\)/);
 assert.match(legacy,/\["student","new"\]/);
 assert.match(main,/backup-manager\.js\?v=1/);
 assert.match(main,/student-registry\.js\?v=4/);
-assert.match(sw,/mawaeidi-shell-v43/);
+assert.match(sw,/mawaeidi-shell-v44/);
 assert.match(sw,/backup-manager\.js\?v=1/);
 assert.match(sw,/student-registry\.js\?v=4/);
 console.log("student production integration checks passed");

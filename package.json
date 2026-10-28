@@ -7,7 +7,7 @@
     "android:add": "cap add android",
     "android:sync": "cap sync android",
     "android:build": "cd android && ./gradlew assembleDebug",
-    "test:students": "node students/tests/student-registry.test.cjs && node students/tests/production-integration.test.cjs && node students/tests/workspace.test.cjs && node tests/full-backup.test.cjs && node students/tests/student-trash.test.cjs && node tests/unified-trash.test.cjs && node students/tests/student-summary.test.cjs"
+    "test:students": "node students/tests/student-registry.test.cjs && node students/tests/production-integration.test.cjs && node students/tests/workspace.test.cjs && node tests/full-backup.test.cjs && node students/tests/student-trash.test.cjs && node tests/unified-trash.test.cjs && node students/tests/student-summary.test.cjs && node tests/world-clock-sync.test.cjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.2",

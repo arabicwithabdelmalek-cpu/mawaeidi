@@ -881,10 +881,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
  .unified-trash-controls button{flex:1}
 }
 </style>
-<style id="world-clock-cloud-style">
-.world-cloud-note{padding:9px 14px;border:1px solid #dbe6ec;border-radius:10px;background:#f6f9fa;color:#496c7d;font-size:11px;font-weight:750;line-height:1.8;text-align:right}
-@media(max-width:520px){.world-cloud-note{font-size:10px;padding:9px 11px}}
-</style>
 <style id="mawaeidi-motion-refinement-v1">
 /* Motion-only polish: original colors, typography, and layout stay untouched. */
 @media (prefers-reduced-motion: no-preference) {
@@ -1958,7 +1954,6 @@ function openWorldClock(){
   const ticks=Array.from({length:60},(_,index)=>{const angle=index*6*Math.PI/180,r=index%5===0?45.5:46.5,x=50+r*Math.sin(angle),y=50-r*Math.cos(angle);return `<i class="world-clock-tick${index%5===0?" major":""}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"></i>`}).join("");
   const numbers=Array.from({length:12},(_,index)=>{const number=index+1,angle=number*30*Math.PI/180,r=37.5,x=50+r*Math.sin(angle),y=50-r*Math.cos(angle);return `<span class="world-clock-number" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%">${number}</span>`}).join("");
   const content=`<div class="world-clock-tool world-clock-tool-v2">
-   <div class="world-cloud-note">${worldClockSettings?.userId===currentUser?.id?"✓ المدن والتوقيت الأساسي محفوظان في حسابك ومتزامنان مع أجهزتك":"مزامنة الساعة غير متاحة حاليًا؛ حدّث الصفحة عند الاتصال بالإنترنت."}</div>
     <section class="world-clock-hero world-clock-hero-v2">
       <div class="world-hero-content world-hero-content-v2">
         <div class="world-hero-copy world-hero-copy-v2">

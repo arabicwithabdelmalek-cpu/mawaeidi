@@ -1,0 +1,297 @@
+/* Shared presentation layer. Schedule, students and cloud data remain independent. */
+:root{
+  --paper:#f4f5f3;--paper-2:#fff;--ink:#203444;--muted:#5e7180;
+  --line:#dce4e8;--shadow:0 8px 28px rgba(25,51,69,.045);
+  --shadow-soft:0 4px 16px rgba(25,51,69,.07);
+  --ui-radius:18px;--ui-ease:cubic-bezier(.22,1,.36,1);
+}
+html{scroll-padding-top:100px}
+body{line-height:1.7}
+.shell{overflow:clip;background:radial-gradient(ellipse at 95% 0%,#eaf0f3 0,transparent 42%),var(--paper)}
+.hurufiyat span{opacity:.025}
+.app{max-width:1360px;padding:28px 32px 56px}
+.header{padding:8px 0 22px;animation:none}
+.brand h1{font-size:31px;letter-spacing:-.6px;text-shadow:none}
+.brand h1::after{height:3px;width:28px;background:var(--accent);margin-top:10px}
+.brand small{font-size:12px;color:var(--muted)}
+.header-actions{gap:10px}
+.header .account-menu-trigger{min-height:44px;padding:6px 10px;border-radius:12px}
+.header .sync-status{min-height:44px;font-size:12px}
+.data-menu>summary{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:12px;font-size:12px}
+.data-popover{width:300px;padding:10px;border-radius:16px}
+.data-action{min-height:48px;padding:12px;border-radius:10px}
+.data-action strong{font-size:13px}.data-action small{font-size:12px;line-height:1.7}
+.add-btn{min-height:46px;padding:10px 20px;border-radius:12px;box-shadow:0 4px 12px #234b6e20}
+.workspace-switch{
+  position:sticky;top:12px;z-index:50;width:100%;gap:6px;margin:20px 0 0;padding:7px;
+  border-radius:16px;background:rgba(255,255,255,.96);box-shadow:0 4px 18px #234b6e06;animation:none;
+}
+.workspace-switch button{display:flex;align-items:center;justify-content:center;gap:9px;min-height:46px;min-width:156px;padding:9px 20px;border-radius:10px;font-size:14px}
+.workspace-switch button.active{background:var(--primary);box-shadow:0 3px 10px #234b6e20}
+.nav-icon{width:19px;height:19px;flex:none;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.hero{gap:20px;margin-top:22px;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr)}
+.hero-copy,.next{min-height:174px;border-radius:var(--ui-radius);animation:none}
+.hero-copy{box-shadow:none;background:linear-gradient(125deg,#234b6e,#172f44)}
+.kufi-quote{height:130px;background-size:122% auto}
+.next{padding:20px 25px;background:#fff;border:1px solid var(--line);border-inline-start:4px solid var(--accent);box-shadow:var(--shadow)}
+.next::before{display:none}
+.next .label{padding:0;background:none;color:var(--muted);font-size:12px}
+.next .time{margin-top:4px;font-size:34px;line-height:1.45;font-variant-numeric:tabular-nums}
+.next .name{margin-top:1px;font-size:18px}
+.next .meta{margin-top:4px;font-size:12px;line-height:1.8}
+.controls{margin:20px 0 14px;animation:none}
+.tabs,.filters{border-radius:12px;background:#fff}
+.tab,.filter{min-height:44px;border-radius:8px;padding:8px 17px;font-size:13px}
+.content{gap:20px;grid-template-columns:minmax(0,1.7fr) minmax(290px,.8fr)}
+.panel{border:1px solid var(--line);border-radius:var(--ui-radius);background:#fff;animation:none}
+.panel-head{padding:20px 22px 16px}.panel-head h2{font-size:18px}.panel-head span{font-size:12px}
+.panel.side{padding:20px}.summary{gap:10px}
+.stat{padding:14px;min-height:91px;border:0;border-radius:12px;background:#f3f6f7}
+.stat small{font-size:12px;color:var(--muted)}.stat strong{font-size:26px}
+.bar-row{gap:10px}.bar-row b,.bar-row span{font-size:12px;color:#536b7b}.track{height:7px}.fill{background:var(--primary)}
+.timeline{padding:12px 18px 20px}.timeline-row{gap:12px;padding:7px 0;animation:none}
+.t-time{min-height:44px;font-size:13px;background:#f4f7f9;border-color:#e1e8ec;border-radius:10px;font-variant-numeric:tabular-nums}
+.lesson{gap:12px;padding:16px;border-inline-start-width:4px;border-radius:13px}
+.lesson>div:first-child{min-width:0}.lesson-name{font-size:16px;line-height:1.6;overflow-wrap:anywhere}.lesson-meta{font-size:12px;color:#526777}
+.lesson.teach{background:#f0f8f5}.lesson.learn{background:#fcf5e9}
+.pill{font-size:11px;padding:3px 8px}.actions{gap:6px}.icon-btn{width:40px;height:40px;border-radius:10px;font-size:18px}
+.session-status-chip{min-height:32px;font-size:11px}
+.session-status-current,.session-status-note{font-size:12px}
+.session-status-option b{font-size:13px}.session-status-option small{font-size:12px;line-height:1.7}
+.session-status-option input{min-height:0}
+.empty{padding:48px 16px;color:var(--muted);font-size:14px;line-height:1.9}
+.empty strong,.empty span{display:block}.empty strong{color:var(--ink);font-size:17px;margin-bottom:6px}
+.empty .secondary{margin-top:16px;min-height:44px}
+.week-navigation button,.week-time-switch button,.week-density-switch button{min-height:40px;font-size:12px}
+.week-summary-card{border-radius:12px}.week-summary-card small,.week-summary-card span,.week-time-toolbar-copy span{font-size:12px}
+.week-time-toolbar-copy strong{font-size:13px}.week-name{font-size:14px}.week-meta{font-size:11px}
+.scroll-hint{display:none;margin:0;padding:8px 16px;color:var(--muted);font-size:12px}
+.week-table-wrap,.world-timeline-scroll{overscroll-behavior-x:contain;scrollbar-color:#b6c6d0 #f2f5f7}
+.drawer{height:100dvh;background:#f4f6f7;transition:transform .28s var(--ui-ease)}
+.drawer:not(.show){visibility:hidden;transition:transform .28s var(--ui-ease),visibility .28s}
+.drawer-head{padding:22px}.drawer-head h2{font-size:23px}.drawer-head p{font-size:13px}
+.drawer-body{padding:18px}.section{padding:18px;margin-bottom:14px;border-radius:14px}
+.section-title{font-size:14px;margin-bottom:14px}.grid{gap:14px}
+label{font-size:13px}input:not([type="checkbox"]):not([type="radio"]),select,textarea{min-height:46px;border-radius:10px;font-size:15px;line-height:1.6}
+.hint{font-size:12px;line-height:1.8}.drawer-foot{padding:14px 18px calc(14px + env(safe-area-inset-bottom))}
+.drawer-foot button,.tool-actions button,.tool-primary,.tool-secondary,.small-btn{min-height:44px}
+.close{width:44px;height:44px;flex:none}.tool-dialog{border-radius:20px}.tool-head{padding:20px}.tool-body{padding:20px}
+.tool-backdrop:not(.show){visibility:hidden;transition:opacity .18s ease,visibility .18s}
+.tool-card{border-radius:14px}.tool-card h3{font-size:16px}.tool-card p,.tool-intro,.tool-status{font-size:13px;line-height:1.9}
+.auth-gate{overflow-y:auto;padding:28px 20px;background:radial-gradient(ellipse at 15% 15%,#dfe8ee,transparent 50%),#f4f6f5}
+.auth-card{margin:auto;border-radius:22px;border-top:4px solid var(--accent);box-shadow:0 24px 70px #1b36481a;padding:36px}
+.auth-name{font-size:29px}.auth-card h2{font-size:24px;margin-top:24px}.auth-card>p{font-size:14px;margin-bottom:24px}
+.auth-fields{gap:16px}.auth-field label{font-size:13px}.auth-field input{min-height:50px;font-size:16px}.auth-primary{min-height:50px;border-radius:12px}
+.auth-forgot{min-height:44px;display:flex;align-items:center;font-size:13px}.auth-message{font-size:13px}
+.skip-link{position:fixed;top:12px;right:16px;z-index:250;padding:10px 16px;border-radius:10px;background:var(--primary);color:#fff;transform:translateY(-160%)}
+.skip-link:focus{transform:none}
+button:focus-visible,summary:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid #5791b7;outline-offset:3px}
+
+/* Restore a readable scale in the student workspace. */
+#studentsView{margin-top:22px}
+#studentsView .registry-panel{margin-top:0;border-radius:var(--ui-radius);box-shadow:var(--shadow)}
+#studentsView .registry-head{padding:24px;align-items:center}
+#studentsView .registry-head h2{font-size:25px;margin:2px 0 5px;color:var(--primary)}
+#studentsView .eyebrow{font-size:11px;color:#81663f}
+#studentsView .registry-head p{font-size:13px;line-height:1.8}
+#studentsView .page-actions{align-items:center}
+#studentsView .btn{min-height:44px;font-size:13px;border-radius:10px;padding:9px 14px}
+#studentsView .btn.small{min-height:40px;font-size:12px;padding:7px 12px}
+#studentsView .data-actions summary{width:44px}
+#studentsView .filters{grid-template-columns:minmax(180px,1fr) minmax(140px,180px) auto auto;gap:12px;padding:18px 22px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:#f8fafb}
+#studentsView .control{min-height:46px;padding:10px 12px;background:#fff;font-size:14px}
+#studentsView .field label{font-size:12px}
+#studentsView .more-filters>summary,#studentsView .filters-toggle{min-height:44px;font-size:12px}
+#studentsView .filters-extra{gap:12px}
+#studentsView .student-list-wrap{padding:4px 20px 16px}
+#studentsView .student-open{grid-template-columns:48px minmax(130px,1fr) minmax(150px,1.15fr) auto;gap:14px;padding:17px 8px}
+#studentsView .student-avatar{width:44px;height:44px;font-size:15px;border-radius:13px}
+#studentsView .student-name{font-size:15px}.student-sub{line-height:1.7}
+#studentsView .student-sub,#studentsView .student-study span{font-size:12px}
+#studentsView .student-study strong{font-size:13px;line-height:1.7}
+#studentsView .chip{min-height:28px;font-size:11px;padding:4px 10px}
+#studentsView .registry-view-switch{padding:14px 22px}
+#studentsView .registry-switch{min-height:40px;font-size:12px}
+#studentsView .trash-retention-note{font-size:12px;line-height:1.8}
+#studentsView .student-summary{padding:20px 22px}
+#studentsView .student-summary-heading h3{font-size:16px}
+#studentsView .student-summary-heading p{font-size:12px;color:var(--muted)}
+#studentsView .student-summary-metrics{gap:12px}
+#studentsView .student-summary-metric{border-radius:13px;padding:16px;background:#f3f6f7;border-color:transparent}
+#studentsView .student-summary-metric span{font-size:12px;color:#526777}
+#studentsView .student-summary-metric strong{font-size:29px;line-height:1.5}
+#studentsView .student-summary-metric:nth-child(2){background:#eef6f2}
+#studentsView .student-summary-metric:nth-child(3){background:#fbf5e8}
+#studentsView .student-insights>summary{min-height:44px;font-size:12px;padding:12px 0}
+#studentsView .student-insight-section h4{font-size:14px}
+#studentsView .student-insight-row,#studentsView .student-insight-label,#studentsView .student-insight-count{font-size:12px}
+#studentsView .empty-state{padding:48px 20px;font-size:14px}
+#studentsView .empty-state strong{font-size:18px}
+#studentsView dialog{max-height:90dvh;border-radius:20px}
+#studentsView .dialog-head{padding:20px 24px}
+#studentsView .dialog-head h2{font-size:23px}
+#studentsView .dialog-head p{font-size:12px}
+#studentsView .dialog-body{padding:22px 24px}
+#studentsView .dialog-foot{padding:16px 24px calc(16px + env(safe-area-inset-bottom))}
+#studentsView .icon-button{width:44px;height:44px;flex:none}
+#studentsView .form-section{padding:18px}
+#studentsView .form-section-head h3,#studentsView .photo-editor-content h3,#studentsView .profile-section-head h3{font-size:15px}
+#studentsView .form-section-head p,#studentsView .photo-editor-content p,#studentsView .photo-meta,#studentsView .photo-editor-content h3 span{font-size:12px}
+#studentsView .detail-item span,#studentsView .contact-row span,#studentsView .profile-section-head span{font-size:12px}
+#studentsView .detail-item strong,#studentsView .contact-row strong{font-size:14px}
+#studentsView .contact-row a,#studentsView .form-message{font-size:12px}
+
+/* Time zones use the same spacing and legible controls. */
+.world-clock-page{padding-top:22px}
+.world-cloud-note{font-size:12px;padding:10px 14px}
+.world-clock-section{padding:22px;border-radius:var(--ui-radius)}
+.world-clock-section h3{font-size:18px}.world-clock-section p{font-size:13px;line-height:1.8}
+.world-hero-content-v2{gap:24px!important;padding:26px!important}
+.world-hero-copy-v2>p{font-size:13px!important}
+.world-hero-now .world-home-meta{font-size:12px!important}
+.world-now-label,.world-hero-kicker,.world-base-change{font-size:12px!important}
+.world-base-change{min-height:40px}
+.world-base-control-v2 input{height:44px!important;font-size:14px!important}
+.world-base-control-v2 label{font-size:12px}
+.world-base-control-v2 .world-base-hint{font-size:12px!important}
+.world-section-badge,.world-feature-tag,.world-format-badge{font-size:11px;white-space:normal;text-align:center}
+.world-zone-add button,.world-convert-actions button{min-height:46px;font-size:13px}
+.world-search-hint,.world-timeline-note{font-size:12px;line-height:1.8;color:#5e7180}
+.world-timeline-legend span{font-size:11px}
+.world-timeline-row{grid-template-columns:145px repeat(24,minmax(48px,1fr))!important}
+.world-timeline-label{position:sticky;right:0;z-index:2;border-inline-end:2px solid white}
+.world-timeline-featured .world-timeline-label strong{font-size:12px}
+.world-timeline-label small{font-size:11px}
+.world-timeline-featured .world-hour-cell{height:44px;font-size:11px}
+.world-timeline-axis .world-hour-cell{font-size:11px}
+.world-city-title strong{font-size:15px}.world-city-title small,.world-clock-date,.world-offset-chip{font-size:12px}
+.world-city-clock-card .world-clock-time{font-size:26px}.world-zone-state{font-size:11px!important}
+.world-remove{width:40px;height:40px;font-size:23px;top:6px;left:6px}
+.world-city-title{padding-inline-end:22px}
+.world-zone-picker label,.world-convert-when label{font-size:12px}
+.world-swap-zone{width:44px;height:44px}
+.world-result-head>span,.world-result-head>small,.world-result-time-card small,.world-result-meta,.world-result-warning{font-size:12px}
+.account-page{margin-top:22px}.account-hero,.account-card{border-radius:var(--ui-radius);box-shadow:var(--shadow)}
+
+/* Motion is brief, event-driven, and uses compositor-friendly properties. */
+@keyframes ui-arrive{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes ui-dialog{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:no-preference){
+  #scheduleWorkspace:not([hidden]),#studentsView:not([hidden]),#worldClockView:not([hidden]),#accountView:not([hidden]){animation:ui-arrive .24s var(--ui-ease) both}
+  #studentsView dialog[open]{animation:ui-dialog .22s var(--ui-ease) both}
+  #studentsView dialog[open]::backdrop{animation:ui-arrive .18s ease both}
+  .data-menu[open]>.data-popover,#studentsView .data-actions[open]>.data-actions-menu{animation:ui-arrive .18s var(--ui-ease) both}
+  button,summary,.lesson,.world-city-clock-card{transition:background-color .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s var(--ui-ease)}
+  .add-btn:active,.workspace-switch button:active,#studentsView .btn:active,.account-btn:active{transform:scale(.98)}
+}
+@media(hover:hover) and (pointer:fine){
+  .lesson:hover,.world-city-clock-card:hover{transform:translateY(-2px);box-shadow:0 7px 18px #234b6e0c}
+  .add-btn:hover,#studentsView .btn.primary:hover{transform:translateY(-1px);box-shadow:0 5px 14px #234b6e22}
+}
+@media(max-width:1100px){
+  #studentsView .student-open{grid-template-columns:44px minmax(120px,1fr) minmax(140px,1fr) auto;gap:10px}
+}
+@media(max-width:900px){
+  .content{grid-template-columns:1fr}.hero{grid-template-columns:1fr 1fr}
+  #studentsView .filters{grid-template-columns:minmax(0,1fr) minmax(130px,160px)}
+  #studentsView .filters-extra{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #studentsView .student-open{grid-template-columns:44px minmax(0,1fr) auto}
+  #studentsView .student-study{grid-column:2/4}
+  .world-hero-content-v2{grid-template-columns:1fr!important;gap:18px!important}
+  .world-hero-now{min-width:0!important;justify-content:flex-start!important}
+}
+@media(max-width:760px){
+  html{scroll-padding-top:16px}
+  .app{padding:16px 16px calc(106px + env(safe-area-inset-bottom))}
+  .header{flex-wrap:wrap;gap:17px;padding:7px 0 18px}
+  .identity{width:100%}.brand h1{font-size:27px}.brand small{display:block;font-size:12px;margin-top:4px}
+  .brand h1::after{margin-top:7px}
+  .header-actions{width:100%;gap:8px;min-width:0}
+  .header .account-menu-trigger{padding:6px;min-width:44px;max-width:44px;justify-content:center;flex:none}
+  .header #accountMenuName{display:none}
+  .header .sync-status{width:44px;height:44px;flex:none}
+  .data-menu>summary{min-width:60px;padding:8px 12px}
+  .data-popover{position:fixed;top:auto;right:16px;left:16px;width:auto;max-height:65dvh;overflow:auto;margin-top:8px}
+  .add-btn{margin-inline-start:auto;min-height:44px;padding:9px 14px;font-size:13px;white-space:nowrap}
+  .workspace-switch{position:fixed;top:auto;bottom:calc(12px + env(safe-area-inset-bottom));right:12px;left:12px;width:auto;margin:0;padding:6px;border-radius:18px;box-shadow:0 8px 32px #17344726;gap:3px}
+  .workspace-switch button{flex:1;min-width:0;min-height:58px;gap:3px;flex-direction:column;padding:6px 3px;border-radius:12px;font-size:11px;line-height:1.6}
+  .nav-icon{width:20px;height:20px}
+  .hero{grid-template-columns:1fr;gap:14px;margin-top:18px}
+  .hero-copy{min-height:98px;padding:12px 20px}.kufi-quote{height:74px;background-size:112% auto}
+  .next{min-height:0;padding:17px 20px}.next .time{font-size:31px}.next .name{font-size:17px}
+  .controls{gap:8px;margin-top:18px}.tabs,.filters{gap:2px;padding:3px}.tab,.filter{min-height:44px;padding:7px 8px;font-size:12px}
+  .panel-head{padding:18px 16px}.panel-head h2{font-size:16px}.panel-head span{font-size:12px;white-space:nowrap}
+  .timeline{padding:8px 12px 14px}.timeline-row{grid-template-columns:1fr;gap:6px;padding:10px 0}
+  .t-time{justify-self:start;min-height:32px;margin:0;padding:5px 10px;background:none;border:0;font-size:13px}
+  .lesson{padding:14px;gap:9px}.lesson-name{font-size:15px}.lesson-meta{font-size:12px}
+  .actions{flex-direction:column}.icon-btn{width:44px;height:44px}
+  .pills{gap:5px}.pill{font-size:11px}.session-status-chip{min-height:44px}
+  .panel.side{padding:18px}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .scroll-hint{display:block}
+  .week-navigation button,.week-time-switch button,.week-density-switch button{min-height:44px}
+  .drawer{width:100%;border:0}.drawer-head{padding:18px}.drawer-head p{font-size:12px}
+  .drawer-body{padding:12px}.section{padding:16px}.drawer-head h2{font-size:21px}
+  .drawer input,.drawer select,.drawer textarea,#studentsView .control{font-size:16px}
+  .tool-dialog{max-height:92dvh}.tool-body{max-height:calc(92dvh - 90px);padding:16px}
+  .tool-head{padding:16px}
+  #studentsView{margin-top:18px}
+  #studentsView .registry-head{padding:20px 16px;gap:14px;flex-wrap:wrap}
+  #studentsView .registry-head h2{font-size:23px}
+  #studentsView .registry-head p{font-size:12px}
+  #studentsView .page-actions{display:flex;width:100%;justify-content:space-between}
+  #studentsView .page-actions .btn{width:auto}
+  #studentsView .data-actions-menu{right:auto;left:0;width:200px}
+  #studentsView .student-summary{padding:18px 16px}
+  #studentsView .student-summary-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  #studentsView .student-summary-metric{padding:13px 11px}
+  #studentsView .student-summary-metric strong{font-size:27px}
+  #studentsView .student-summary-heading p{font-size:12px;line-height:1.8}
+  #studentsView .student-insights>summary{font-size:12px}
+  #studentsView .filters{padding:16px;gap:10px;grid-template-columns:1fr 1fr}
+  #studentsView .search-field{grid-column:1/-1}
+  #studentsView .filters-toggle{grid-column:1/-1;justify-self:start;padding:4px}
+  #studentsView .more-filters[open]{grid-column:1/-1}
+  #studentsView .filters-extra{grid-template-columns:1fr}
+  #studentsView .student-list-wrap{padding:4px 12px 14px}
+  #studentsView .student-row{grid-template-columns:1fr;padding-bottom:10px}
+  #studentsView .student-open{grid-template-columns:42px minmax(0,1fr) auto;gap:9px;padding:16px 4px 9px}
+  #studentsView .student-name{font-size:14px}
+  #studentsView .student-sub,#studentsView .student-study span{font-size:12px}
+  #studentsView .student-study strong{font-size:12px;white-space:normal}
+  #studentsView .student-study{grid-column:2/4}
+  #studentsView .row-actions{justify-content:flex-end;padding:0 4px}
+  #studentsView .row-actions .btn{min-height:44px}
+  #studentsView .chip{font-size:10px;padding:4px 7px}
+  #studentsView .registry-view-switch{padding:12px 16px}
+  #studentsView dialog{width:calc(100vw - 20px);max-height:94dvh;border-radius:18px}
+  #studentsView .dialog-head,#studentsView .dialog-body{padding:16px}
+  #studentsView .dialog-head h2{font-size:20px}
+  #studentsView .dialog-foot{padding:14px 16px calc(14px + env(safe-area-inset-bottom))}
+  #studentsView .form-grid{grid-template-columns:1fr}
+  #studentsView .span-2,#studentsView .span-3{grid-column:auto}
+  .world-clock-page{padding-top:18px}
+  .world-clock-section{padding:17px}.world-clock-section h3{font-size:17px}
+  .world-hero-content-v2{padding:20px!important}.world-hero-copy-v2 h3{font-size:25px!important}
+  .world-hero-now{grid-template-columns:95px minmax(0,1fr);min-width:0!important;gap:14px!important}
+  .world-hero-now .world-analog-clock{width:88px!important;height:88px!important;flex-basis:88px!important}
+  .world-hero-now .world-home-time{font-size:30px!important}
+  .world-timeline-row{grid-template-columns:112px repeat(24,minmax(48px,1fr))!important}
+  .world-clock-cards{grid-template-columns:1fr}
+  .world-city-clock-layout{grid-template-columns:76px minmax(0,1fr)}
+  .world-mini-clock{width:72px;height:72px}
+  .world-zone-add input,.world-convert-shell input,.world-base-control-v2 input{font-size:16px!important}
+  .world-result-times{grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr)}
+  .world-result-arrow{transform:none}.world-result-time-card{padding:8px}.world-result-time-card strong{font-size:21px}
+  .auth-card{padding:28px 24px}.auth-card>p{font-size:13px}.auth-gate{padding:20px 16px}
+  .account-hero{align-items:flex-start}.account-hero>div:last-child{min-width:0}.account-hero p{overflow-wrap:anywhere}
+}
+@media(max-width:360px){
+  .app{padding-inline:12px}.header-actions{gap:6px}.data-menu>summary{min-width:52px;padding-inline:8px}.add-btn{padding-inline:10px;font-size:12px}
+  .controls{flex-wrap:wrap}.controls>.filters{flex-basis:100%}.controls>.tabs{flex-basis:100%}
+  #studentsView .student-open{grid-template-columns:38px minmax(0,1fr)}
+  #studentsView .student-open>.chip{grid-column:2;justify-self:start}
+  #studentsView .student-study{grid-column:2}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}

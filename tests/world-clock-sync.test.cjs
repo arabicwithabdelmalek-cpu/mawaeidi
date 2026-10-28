@@ -33,7 +33,7 @@ for(const pattern of [
 
 assert.doesNotMatch(html,/function rememberWorldClockBase/);
 assert.doesNotMatch(html,/function rememberWorldClockZones/);
-assert.match(sw,/mawaeidi-shell-v47/);
+assert.match(sw,/mawaeidi-shell-v48/);
 assert.match(migration,/mawaeidi_world_clock_settings/);
 assert.match(migration,/enable row level security/);
 assert.match(migration,/world_clock_select_own/);

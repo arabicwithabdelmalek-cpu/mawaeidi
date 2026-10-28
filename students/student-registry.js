@@ -805,7 +805,7 @@ async function openStudentHistory(studentId=null){
         const label=HISTORY_FIELD_LABELS[key]||key;
         if(key==="photo_path")return '<li>تم تغيير صورة الطالب</li>';
         const before=humanHistoryValue(values?.before,key),after=humanHistoryValue(values?.after,key);
-        return `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(before)} ← ${escapeHtml(after)}</li>`;
+        return `<li><strong>${escapeHtml(label)}:</strong> قبل: ${escapeHtml(before)}، بعد: ${escapeHtml(after)}</li>`;
       }).join("");
       return `<article class="student-history-item"><div class="student-history-head"><strong>${escapeHtml(action)}</strong><time>${escapeHtml(when)}</time></div><p>${escapeHtml(entry.student_name||"طالب")}</p>${details?`<ul>${details}</ul>`:""}</article>`;
     }).join(""):'<div class="empty-mini">لا توجد تعديلات مسجلة حتى الآن.</div>';
@@ -1047,8 +1047,8 @@ function inspectBackupSnapshot(payload,entries=new Map()){
   for(const raw of payload.students){
     if(!raw||typeof raw!=="object"||Array.isArray(raw))throw new Error("invalid_student");
     const student=normalizeStudent(raw);
-    const validation=validateStudent(student);
-    if(validation)throw new Error("invalid_student");
+    const validation=validateImportedStudent(student,0);
+    if(validation.length)throw new Error("invalid_student");
     const usernameKey=normalizeKey(student.username);
     if(seenUsernames.has(usernameKey))throw new Error("duplicate_student_username");
     seenUsernames.add(usernameKey);
@@ -1085,7 +1085,7 @@ async function restoreBackupSnapshot(plan,user){
   const now=new Date().toISOString();
   const prepared=plan.items.map(item=>{
     const student=normalizeStudent(item.student);
-    if(validateStudent(student))throw new Error("invalid_student");
+    if(validateImportedStudent(student,0).length)throw new Error("invalid_student");
     const existing=existingByName.get(normalizeKey(student.username))||null;
     const id=existing?.id||makeId();
     const payload={user_id:operation.userId,id};
@@ -1097,8 +1097,9 @@ async function restoreBackupSnapshot(plan,user){
     return {...item,student,existing,id,payload};
   });
 
-  if(prepared.length){
-    const response=await cloud.from(STUDENTS_TABLE).upsert(prepared.map(item=>item.payload),{onConflict:"id"}).select("*");
+  const writable=prepared.filter(item=>!item.existing?.deleted_at);
+  if(writable.length){
+    const response=await cloud.from(STUDENTS_TABLE).upsert(writable.map(item=>item.payload),{onConflict:"id"}).select("*");
     if(response.error)throw response.error;
   }
   if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
@@ -1106,7 +1107,7 @@ async function restoreBackupSnapshot(plan,user){
   let restoredPhotos=0;
   const photoFailures=[];
   for(const item of prepared){
-    if(!item.photoData||!item.photoType)continue;
+    if(item.existing?.deleted_at||!item.photoData||!item.photoType)continue;
     if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
     const path=createStudentPhotoPath(item.id,item.photoType.extension);
     const bucket=cloud.storage.from(STUDENT_PHOTO_BUCKET);
@@ -1131,7 +1132,8 @@ async function restoreBackupSnapshot(plan,user){
   if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
   return {
     inserted:prepared.filter(item=>!item.existing).length,
-    updated:prepared.filter(item=>item.existing).length,
+    updated:prepared.filter(item=>item.existing&&!item.existing.deleted_at).length,
+    skippedTrashed:prepared.filter(item=>item.existing?.deleted_at).length,
     restoredPhotos,
     photoFailures,
     refreshed

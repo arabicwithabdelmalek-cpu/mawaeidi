@@ -410,17 +410,8 @@ function removeStudentPhotoFromEditor(){
 }
 function renderStudents(){
   refreshCountryFilter();
-  const source=listMode==="trash"?trashedStudents:students;
-  filteredStudents=filterAndSortStudents(source);
-  const noun=listMode==="trash"?"ملفًا في السلة":"طالبًا";
-  byId("resultsCount").textContent=filteredStudents.length===source.length?`${source.length} ${noun}`:`${filteredStudents.length} من ${source.length} ${noun}`;
-  byId("trashCount").textContent=trashedStudents.length;
-  byId("showActiveStudents").setAttribute("aria-pressed",String(listMode==="active"));
-  byId("showTrashedStudents").setAttribute("aria-pressed",String(listMode==="trash"));
-  byId("addStudent").hidden=listMode==="trash";
-  byId("studentDataTools").hidden=listMode==="trash";
-  byId("trashRetentionNote").hidden=listMode!=="trash";
-  byId("emptyStateText").textContent=listMode==="trash"?"لا توجد ملفات محذوفة مطابقة.":"غيّر البحث أو الفلاتر، أو أضف ملف طالب جديدًا.";
+  filteredStudents=filterAndSortStudents(students);
+  byId("resultsCount").textContent=filteredStudents.length===students.length?`${students.length} طالبًا`:`${filteredStudents.length} من ${students.length} طالبًا`;
   const body=byId("studentRows");
   body.replaceChildren();
   for(const student of filteredStudents){
@@ -822,7 +813,7 @@ function setLoading(loading){
   byId("loadingState").hidden=!loading;
   byId("tableWrap").hidden=loading||!filteredStudents.length;
   byId("emptyState").hidden=loading||Boolean(filteredStudents.length);
-  for(const id of ["refreshData","addStudent","importCsv","exportCsv","showActiveStudents","showTrashedStudents","showStudentHistory"])byId(id).disabled=loading;
+  for(const id of ["refreshData","addStudent","importCsv","exportCsv"])byId(id).disabled=loading;
 }
 async function loadCloudData(showSuccess=false){
   if(!cloud||!currentUser)return false;
@@ -1276,10 +1267,6 @@ function handleRowAction(event){
 function bindEvents(){
   byId("refreshData").addEventListener("click",()=>loadCloudData(true));
   byId("addStudent").addEventListener("click",()=>openStudentEditor());
-  byId("showActiveStudents").addEventListener("click",()=>selectListMode("active"));
-  byId("showTrashedStudents").addEventListener("click",()=>selectListMode("trash"));
-  byId("showStudentHistory").addEventListener("click",()=>openStudentHistory());
-  byId("historyFromProfile").addEventListener("click",()=>openStudentHistory(activeStudentId));
   byId("studentForm").addEventListener("submit",saveStudentRecord);
   byId("studentPhotoInput").addEventListener("change",event=>handleStudentPhotoSelection(event.target.files?.[0]));
   byId("removeStudentPhoto").addEventListener("click",removeStudentPhotoFromEditor);
@@ -1327,7 +1314,6 @@ function reset(){
   for(const id of ["search","statusFilter","levelFilter","typeFilter","countryFilter"])byId(id).value="";
   byId("sortStudents").value="newest";
   byId("csvFile").value="";
-  byId("studentHistoryContent").replaceChildren();
   byId("studentRows").replaceChildren();
   byId("toast").className="toast";
   byId("toast").textContent="";

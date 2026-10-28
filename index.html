@@ -955,6 +955,140 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   }
 }
 </style>
+<style id="mawaeidi-mobile-ux-review-v1">
+/* Phone-only refinements. Existing palette, brand font, and card styling are unchanged. */
+@media (max-width: 760px) {
+  /* Prevent the brand and account/actions from squeezing into a single narrow row. */
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .header .identity { align-self: flex-start; min-width: 0; }
+  .header-actions {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .header-actions .account-menu-trigger {
+    max-width: min(190px, 42vw);
+    min-height: 44px;
+    min-width: 0;
+  }
+  .header-actions #syncStatus { width: 44px; height: 44px; flex: 0 0 44px; }
+  .header-actions .data-menu > summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .header-actions #primaryActionButton { min-height: 44px; }
+
+  /* Keep the existing three workspace tabs, but give them comfortable touch areas. */
+  .workspace-switch button {
+    min-height: 44px;
+    white-space: normal;
+    line-height: 1.45;
+  }
+
+  /* Preserve horizontal timetable comparison instead of squeezing calendar cells. */
+  .week-table-wrap,
+  .world-timeline-scroll {
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .week-navigation button,
+  .week-time-switch button,
+  .week-density-switch button { min-height: 42px; }
+  .world-swap-zone { min-width: 44px; min-height: 44px; }
+
+  /* Inputs remain legible and avoid focus zoom on iOS Safari. */
+  .auth-fields input,
+  .drawer input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .drawer select,
+  .drawer textarea,
+  .account-page .account-field input,
+  #studentsView .control,
+  .world-zone-picker select,
+  .world-convert-when input,
+  .world-base-control-v2 input { font-size: 16px; }
+
+  /* Keep long account emails inside the profile header on narrow screens. */
+  .account-hero > div { min-width: 0; overflow-wrap: anywhere; }
+  #studentsView dialog { max-height: calc(100dvh - 20px); }
+  .world-base-control-v2 input { height: 44px !important; }
+  #studentsView .icon-button { min-width: 40px; min-height: 40px; }
+  #studentsView .student-insights > summary { min-height: 44px; }
+  #studentsView .data-actions summary { min-height: 44px; }
+}
+@media (max-width: 520px) {
+  /* Account, sync and tools on the first action row; add action remains full width. */
+  .header-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px max-content;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-actions .account-menu-trigger {
+    width: 100%;
+    max-width: none !important;
+    justify-content: flex-start;
+  }
+  .header-actions #primaryActionButton {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .workspace-switch {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+  .workspace-switch button {
+    min-width: 0;
+    padding-inline: 6px;
+  }
+
+  /* Filtering and day/week controls no longer compete for the same row. */
+  .controls { flex-wrap: wrap; gap: 9px; }
+  .controls > .filters,
+  .controls > .tabs {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+  .controls .filter,
+  .controls .tab {
+    min-height: 44px;
+    padding-inline: 6px;
+  }
+
+  /* Student actions, dialogs and clock sections keep their existing visual styling. */
+  #studentsView .registry-head { padding: 15px 14px 13px; }
+  #studentsView .page-actions .data-actions > summary {
+    width: 100%;
+    min-height: 44px;
+  }
+  #studentsView .page-actions .btn { min-height: 44px; }
+  #studentsView .student-open { min-height: 44px; }
+  .world-clock-section > header { flex-wrap: wrap; }
+}
+@media (max-width: 390px) {
+  /* Give the current-time text room beside the analog clock on compact phones. */
+  .world-hero-now {
+    grid-template-columns: 90px minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+  .world-hero-now .world-analog-clock {
+    width: 90px !important;
+    height: 90px !important;
+  }
+  .world-hero-now .world-home-time { font-size: 28px !important; }
+  .world-clock-section { padding: 13px; }
+}
+</style>
 </head>
 <body class="auth-pending">
 

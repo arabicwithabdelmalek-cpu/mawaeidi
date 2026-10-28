@@ -682,7 +682,7 @@ function setLoading(loading){
   byId("loadingState").hidden=!loading;
   byId("tableWrap").hidden=loading||!filteredStudents.length;
   byId("emptyState").hidden=loading||Boolean(filteredStudents.length);
-  for(const id of ["refreshData","addStudent","backupStudents","importCsv","exportCsv"])byId(id).disabled=loading;
+  for(const id of ["refreshData","addStudent","importCsv","exportCsv"])byId(id).disabled=loading;
 }
 async function loadCloudData(showSuccess=false){
   if(!cloud||!currentUser)return false;
@@ -810,105 +810,7 @@ function exportFilteredCsv(){
   showToast(`تم تصدير ${list.length} ملف طالب.`);
 }
 
-const ZIP_CRC_TABLE=(()=>{
-  const table=new Uint32Array(256);
-  for(let index=0;index<256;index++){
-    let value=index;
-    for(let bit=0;bit<8;bit++)value=(value&1)?(0xedb88320^(value>>>1)):(value>>>1);
-    table[index]=value>>>0;
-  }
-  return table;
-})();
-function zipCrc32(bytes){
-  let crc=0xffffffff;
-  for(const byte of bytes)crc=ZIP_CRC_TABLE[(crc^byte)&0xff]^(crc>>>8);
-  return (crc^0xffffffff)>>>0;
-}
-function zipDateTime(date=new Date()){
-  const year=Math.max(1980,date.getFullYear());
-  return {
-    time:((date.getHours()&31)<<11)|((date.getMinutes()&63)<<5)|((Math.floor(date.getSeconds()/2))&31),
-    date:(((year-1980)&127)<<9)|(((date.getMonth()+1)&15)<<5)|(date.getDate()&31)
-  };
-}
-function concatBytes(parts){
-  const total=parts.reduce((sum,part)=>sum+part.length,0);
-  const output=new Uint8Array(total);
-  let offset=0;
-  for(const part of parts){output.set(part,offset);offset+=part.length}
-  return output;
-}
-async function zipBytes(value){
-  if(typeof value==="string")return new TextEncoder().encode(value);
-  if(value instanceof Uint8Array)return value;
-  if(value instanceof ArrayBuffer)return new Uint8Array(value);
-  if(value instanceof Blob)return new Uint8Array(await value.arrayBuffer());
-  throw new Error("unsupported_zip_value");
-}
-async function createStoredZip(files){
-  if(files.length>65535)throw new Error("too_many_zip_files");
-  const localParts=[],centralParts=[];
-  let localOffset=0;
-  for(const file of files){
-    const nameBytes=new TextEncoder().encode(file.name);
-    const data=await zipBytes(file.data);
-    if(nameBytes.length>65535||data.length>0xffffffff)throw new Error("zip_file_too_large");
-    const checksum=zipCrc32(data);
-    const stamp=zipDateTime(file.modifiedAt||new Date());
-
-    const localHeader=new Uint8Array(30+nameBytes.length);
-    const localView=new DataView(localHeader.buffer);
-    localView.setUint32(0,0x04034b50,true);
-    localView.setUint16(4,20,true);
-    localView.setUint16(6,0x0800,true);
-    localView.setUint16(8,0,true);
-    localView.setUint16(10,stamp.time,true);
-    localView.setUint16(12,stamp.date,true);
-    localView.setUint32(14,checksum,true);
-    localView.setUint32(18,data.length,true);
-    localView.setUint32(22,data.length,true);
-    localView.setUint16(26,nameBytes.length,true);
-    localView.setUint16(28,0,true);
-    localHeader.set(nameBytes,30);
-    localParts.push(localHeader,data);
-
-    const centralHeader=new Uint8Array(46+nameBytes.length);
-    const centralView=new DataView(centralHeader.buffer);
-    centralView.setUint32(0,0x02014b50,true);
-    centralView.setUint16(4,20,true);
-    centralView.setUint16(6,20,true);
-    centralView.setUint16(8,0x0800,true);
-    centralView.setUint16(10,0,true);
-    centralView.setUint16(12,stamp.time,true);
-    centralView.setUint16(14,stamp.date,true);
-    centralView.setUint32(16,checksum,true);
-    centralView.setUint32(20,data.length,true);
-    centralView.setUint32(24,data.length,true);
-    centralView.setUint16(28,nameBytes.length,true);
-    centralView.setUint16(30,0,true);
-    centralView.setUint16(32,0,true);
-    centralView.setUint16(34,0,true);
-    centralView.setUint16(36,0,true);
-    centralView.setUint32(38,0,true);
-    centralView.setUint32(42,localOffset,true);
-    centralHeader.set(nameBytes,46);
-    centralParts.push(centralHeader);
-    localOffset+=localHeader.length+data.length;
-  }
-  const centralDirectory=concatBytes(centralParts);
-  const endRecord=new Uint8Array(22);
-  const endView=new DataView(endRecord.buffer);
-  endView.setUint32(0,0x06054b50,true);
-  endView.setUint16(4,0,true);
-  endView.setUint16(6,0,true);
-  endView.setUint16(8,files.length,true);
-  endView.setUint16(10,files.length,true);
-  endView.setUint32(12,centralDirectory.length,true);
-  endView.setUint32(16,localOffset,true);
-  endView.setUint16(20,0,true);
-  return new Blob([...localParts,centralDirectory,endRecord],{type:"application/zip"});
-}
-function safeBackupFilePart(value){
+function backupSafeFilePart(value){
   return clean(value,80).normalize("NFKC").replace(/[^\p{L}\p{N}._-]+/gu,"-").replace(/^-+|-+$/g,"").slice(0,60)||"student";
 }
 function backupPhotoExtension(path,mimeType){
@@ -928,85 +830,170 @@ function backupStudentRecord(student,photoFile=""){
   for(const field of STUDENT_FIELDS)record[field.key]=student[field.key]||"";
   return record;
 }
-async function exportStudentsBackup(){
-  if(!cloud||!currentUser||mode!=="cloud"){showToast("سجّل الدخول أولًا لتنزيل النسخة الاحتياطية.",true);return}
-  if(!students.length){showToast("لا يوجد طلاب لإنشاء نسخة احتياطية.",true);return}
-  const button=byId("backupStudents");
-  const operationAccountSequence=accountSequence;
-  const operationUserId=currentUser.id;
+function inspectBackupPhoto(bytes){
+  if(!(bytes instanceof Uint8Array)||!bytes.length||bytes.length>MAX_STUDENT_PHOTO_STORED_BYTES)throw new Error("invalid_backup_photo");
+  if(bytes.length>=3&&bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff)return {mimeType:"image/jpeg",extension:"jpg"};
+  if(bytes.length>=8&&bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a)return {mimeType:"image/png",extension:"png"};
+  if(bytes.length>=12&&bytes[0]===0x52&&bytes[1]===0x49&&bytes[2]===0x46&&bytes[3]===0x46&&bytes[8]===0x57&&bytes[9]===0x45&&bytes[10]===0x42&&bytes[11]===0x50)return {mimeType:"image/webp",extension:"webp"};
+  throw new Error("invalid_backup_photo");
+}
+async function ensureBackupAccount(user,refresh=true){
+  if(!cloud||!user?.id)throw new Error("backup_account_required");
+  if(currentUser?.id!==user.id||mode!=="cloud"){
+    const activated=await activate(user);
+    if(!activated)throw new Error("student_data_unavailable");
+  }else if(refresh){
+    const refreshed=await loadCloudData();
+    if(!refreshed)throw new Error("student_data_unavailable");
+  }
+  if(currentUser?.id!==user.id||mode!=="cloud")throw new Error("backup_account_changed");
+  return {accountSequence,userId:user.id};
+}
+async function createBackupSnapshot(user){
+  const operation=await ensureBackupAccount(user,true);
   const snapshot=students.map(student=>clone(student));
-  const zipFiles=[];
+  const files=[];
   const photoFiles=new Map();
-  const photoFailures=[];
-  setBusy(button,true,"جارٍ تجهيز النسخة…");
-  try{
-    for(let index=0;index<snapshot.length;index++){
-      const student=snapshot[index];
-      if(!student.photo_path)continue;
-      if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
-      if(!photoPathBelongsToCurrentUser(student.photo_path)){
-        photoFailures.push({id:student.id,username:student.username||"",reason:"invalid_path"});
-        continue;
-      }
-      try{
-        const {data,error}=await cloud.storage.from(STUDENT_PHOTO_BUCKET).download(student.photo_path);
-        if(error||!data)throw error||new Error("missing_photo");
-        if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
-        const extension=backupPhotoExtension(student.photo_path,data.type);
-        const filename=`photos/${student.id}-${safeBackupFilePart(student.username||studentName(student))}.${extension}`;
-        photoFiles.set(student.id,filename);
-        zipFiles.push({name:filename,data});
-      }catch(error){
-        console.warn("Student photo backup failed.",error);
-        photoFailures.push({id:student.id,username:student.username||"",reason:"download_failed"});
+  const warnings=[];
+  for(const student of snapshot){
+    if(!student.photo_path)continue;
+    if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
+    if(!photoPathBelongsToCurrentUser(student.photo_path)){
+      warnings.push({id:student.id,username:student.username||"",reason:"invalid_path"});
+      continue;
+    }
+    try{
+      const {data,error}=await cloud.storage.from(STUDENT_PHOTO_BUCKET).download(student.photo_path);
+      if(error||!data)throw error||new Error("missing_photo");
+      if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
+      const extension=backupPhotoExtension(student.photo_path,data.type);
+      const filename=`photos/students/${backupSafeFilePart(student.id)}-${backupSafeFilePart(student.username||studentName(student))}.${extension}`;
+      photoFiles.set(student.id,filename);
+      files.push({name:filename,data});
+    }catch(error){
+      if(error?.message==="backup_account_changed")throw error;
+      console.warn("Student photo backup failed.",error);
+      warnings.push({id:student.id,username:student.username||"",reason:"download_failed"});
+    }
+  }
+  const records=snapshot.map(student=>backupStudentRecord(student,photoFiles.get(student.id)||""));
+  return {
+    manifest:{
+      format:"mawaeidi-students",
+      version:2,
+      student_count:records.length,
+      photo_count:photoFiles.size,
+      missing_photo_count:warnings.length,
+      photo_warnings:warnings,
+      students:records
+    },
+    csv:buildStudentsCsv(snapshot),
+    files,
+    warnings
+  };
+}
+function inspectBackupSnapshot(payload,entries=new Map()){
+  const accepted=payload&&(
+    (payload.format==="mawaeidi-students"&&payload.version===2)||
+    (payload.format==="mawaeidi-students-backup"&&payload.version===1)
+  );
+  if(!accepted||!Array.isArray(payload.students))throw new Error("invalid_students_backup");
+  if(payload.students.length>MAX_IMPORT_ROWS)throw new Error("too_many_students");
+  if(!(entries instanceof Map))throw new Error("invalid_backup_entries");
+  const seenUsernames=new Set();
+  const items=[];
+  let missingPhotoCount=0;
+  for(const raw of payload.students){
+    if(!raw||typeof raw!=="object"||Array.isArray(raw))throw new Error("invalid_student");
+    const student=normalizeStudent(raw);
+    const validation=validateStudent(student);
+    if(validation)throw new Error("invalid_student");
+    const usernameKey=normalizeKey(student.username);
+    if(seenUsernames.has(usernameKey))throw new Error("duplicate_student_username");
+    seenUsernames.add(usernameKey);
+    let photoFile=clean(raw.photo_file,1024);
+    let photoData=null;
+    let photoType=null;
+    if(photoFile){
+      if(!window.MawaeidiBackup)throw new Error("backup_tools_unavailable");
+      window.MawaeidiBackup.safeEntryName(photoFile);
+      if(!photoFile.startsWith("photos/"))throw new Error("invalid_backup_photo_path");
+      if(!entries.has(photoFile)){
+        missingPhotoCount++;
+        photoFile="";
+      }else{
+        photoData=entries.get(photoFile);
+        photoType=inspectBackupPhoto(photoData);
       }
     }
-
-    const backupRecords=snapshot.map(student=>backupStudentRecord(student,photoFiles.get(student.id)||""));
-    const manifest={
-      format:"mawaeidi-students-backup",
-      version:1,
-      exported_at:new Date().toISOString(),
-      timezone:"Africa/Cairo",
-      student_count:backupRecords.length,
-      photo_count:photoFiles.size,
-      missing_photo_count:photoFailures.length,
-      photo_warnings:photoFailures,
-      students:backupRecords
-    };
-    const readme=[
-      "نسخة احتياطية من سجل طلاب مواعيدي",
-      `تاريخ الإنشاء: ${new Intl.DateTimeFormat("ar-EG",{dateStyle:"long",timeStyle:"short",timeZone:"Africa/Cairo"}).format(new Date())}`,
-      `عدد الطلاب: ${backupRecords.length}`,
-      `عدد الصور المحفوظة: ${photoFiles.size}`,
-      "",
-      "محتويات الملف:",
-      "- students.json: النسخة الكاملة المنظمة.",
-      "- students.csv: نسخة سهلة الفتح في Excel أو Google Sheets.",
-      "- photos: صور الطلاب الاختيارية.",
-      "",
-      "احتفظ بهذا الملف في مكان آمن؛ فقد يتضمن بيانات تواصل وملاحظات خاصة."
-    ].join("\r\n");
-    zipFiles.unshift(
-      {name:"README.txt",data:"\uFEFF"+readme},
-      {name:"students.csv",data:buildStudentsCsv(snapshot)},
-      {name:"students.json",data:JSON.stringify(manifest,null,2)}
-    );
-    const backupBlob=await createStoredZip(zipFiles);
-    if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
-    downloadBlob(backupBlob,`mawaeidi-students-backup-${todayKey()}.zip`);
-    root.querySelector(".data-actions")?.removeAttribute("open");
-    showToast(photoFailures.length
-      ?`تم تنزيل بيانات ${backupRecords.length} طالب، وتعذّر تضمين ${photoFailures.length} صورة.`
-      :`تم تنزيل النسخة الاحتياطية: ${backupRecords.length} طالب و${photoFiles.size} صورة.`,
-      Boolean(photoFailures.length)
-    );
-  }catch(error){
-    console.error("Student backup failed.",error);
-    showToast("تعذّر إنشاء النسخة الاحتياطية. حاول مرة أخرى.",true);
-  }finally{
-    setBusy(button,false);
+    items.push({student,photoFile,photoData,photoType});
   }
+  return {
+    format:payload.format,
+    version:payload.version,
+    items,
+    studentCount:items.length,
+    photoCount:items.filter(item=>item.photoData).length,
+    missingPhotoCount
+  };
+}
+async function restoreBackupSnapshot(plan,user){
+  if(!plan||!Array.isArray(plan.items)||plan.items.length>MAX_IMPORT_ROWS)throw new Error("invalid_students_restore_plan");
+  const operation=await ensureBackupAccount(user,true);
+  const existingByName=new Map(students.map(student=>[normalizeKey(student.username),student]));
+  const now=new Date().toISOString();
+  const prepared=plan.items.map(item=>{
+    const student=normalizeStudent(item.student);
+    if(validateStudent(student))throw new Error("invalid_student");
+    const existing=existingByName.get(normalizeKey(student.username))||null;
+    const id=existing?.id||makeId();
+    const payload={user_id:operation.userId,id};
+    for(const field of STUDENT_FIELDS)payload[field.key]=field.key==="joined_on"?(student[field.key]||null):student[field.key];
+    payload.created_at=existing?.created_at||(Number.isFinite(Date.parse(student.created_at))?student.created_at:now);
+    payload.updated_at=now;
+    payload.photo_path=existing?.photo_path||null;
+    return {...item,student,existing,id,payload};
+  });
+
+  if(prepared.length){
+    const response=await cloud.from(STUDENTS_TABLE).upsert(prepared.map(item=>item.payload),{onConflict:"id"}).select("*");
+    if(response.error)throw response.error;
+  }
+  if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
+
+  let restoredPhotos=0;
+  const photoFailures=[];
+  for(const item of prepared){
+    if(!item.photoData||!item.photoType)continue;
+    if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
+    const path=createStudentPhotoPath(item.id,item.photoType.extension);
+    const bucket=cloud.storage.from(STUDENT_PHOTO_BUCKET);
+    try{
+      const blob=new Blob([item.photoData],{type:item.photoType.mimeType});
+      const upload=await bucket.upload(path,blob,{contentType:item.photoType.mimeType,cacheControl:"3600",upsert:false});
+      if(upload.error)throw upload.error;
+      if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
+      const update=await cloud.from(STUDENTS_TABLE).update({photo_path:path,updated_at:now}).eq("id",item.id).select("id").single();
+      if(update.error){
+        await bucket.remove([path]);
+        throw update.error;
+      }
+      restoredPhotos++;
+    }catch(error){
+      if(error?.message==="backup_account_changed")throw error;
+      console.warn("Student photo restore failed.",error);
+      photoFailures.push({username:item.student.username,reason:"upload_failed"});
+    }
+  }
+  const refreshed=await loadCloudData();
+  if(operation.accountSequence!==accountSequence||currentUser?.id!==operation.userId)throw new Error("backup_account_changed");
+  return {
+    inserted:prepared.filter(item=>!item.existing).length,
+    updated:prepared.filter(item=>item.existing).length,
+    restoredPhotos,
+    photoFailures,
+    refreshed
+  };
 }
 function parseCsv(source){
   const rows=[];let row=[],cell="",quoted=false;
@@ -1147,7 +1134,6 @@ function bindEvents(){
   byId("deleteStudent").addEventListener("click",deleteActiveStudent);
   byId("clearFilters").addEventListener("click",clearFilters);
   for(const id of ["search","statusFilter","levelFilter","typeFilter","countryFilter","sortStudents"])byId(id).addEventListener("input",renderStudents);
-  byId("backupStudents").addEventListener("click",exportStudentsBackup);
   byId("exportCsv").addEventListener("click",exportFilteredCsv);
   byId("importCsv").addEventListener("click",()=>byId("csvFile").click());
   byId("csvFile").addEventListener("change",event=>prepareCsvImport(event.target.files?.[0]));
@@ -1223,7 +1209,10 @@ return Object.freeze({
   deactivate,
   reset,
   refresh:()=>loadCloudData(),
-  openNew
+  openNew,
+  createBackupSnapshot,
+  inspectBackupSnapshot,
+  restoreBackupSnapshot
 });
 }
 

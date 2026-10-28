@@ -935,18 +935,18 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
             </button>
             <div class="data-separator" aria-hidden="true"></div>
             <button type="button" class="data-action" onclick="exportBackup()">
-              <strong>تنزيل نسخة احتياطية</strong>
-              <small>حفظ كل المواعيد في ملف على جهازك</small>
+              <strong>تنزيل نسخة احتياطية كاملة</strong>
+              <small>المواعيد والطلاب والصور وإعدادات العرض في ملف واحد</small>
             </button>
             <button type="button" class="data-action" onclick="chooseBackupFile()">
               <strong>استعادة نسخة احتياطية</strong>
-              <small>فحص الملف ثم استبدال البيانات بعد موافقتك</small>
+              <small>فحص الملف ثم دمج البيانات دون حذف الموجود</small>
             </button>
             <div class="data-separator" aria-hidden="true"></div>
             <button type="button" class="data-action logout" onclick="logout()"><strong>تسجيل الخروج</strong></button>
           </div>
         </details>
-        <input id="backupFile" type="file" accept="application/json,.json" onchange="importBackup(event)" hidden>
+        <input id="backupFile" type="file" accept=".zip,application/zip,.json,application/json" onchange="importBackup(event)" hidden>
         <button type="button" class="add-btn" id="primaryActionButton" onclick="handlePrimaryAction()">＋ إضافة حصة</button>
       </div>
     </header>
@@ -1072,7 +1072,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
                   <summary class="btn" aria-label="فتح أدوات البيانات">•••</summary>
                   <div class="data-actions-menu">
                     <button class="btn" id="refreshData" type="button">تحديث البيانات</button>
-                    <button class="btn" id="backupStudents" type="button">نسخة احتياطية للطلاب</button>
                     <button class="btn" id="exportCsv" type="button">تصدير CSV</button>
                     <button class="btn" id="importCsv" type="button">استيراد CSV</button>
                   </div>
@@ -1343,7 +1342,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js"></script>
-<script src="./students/student-registry.js?v=3"></script>
+<script src="./backup-manager.js?v=1"></script>
+<script src="./students/student-registry.js?v=4"></script>
 <script>
 const days=["الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"];
 const LEGACY_STORAGE_KEY="mawaeidi_arabic_v7";
@@ -1358,7 +1358,7 @@ const SOURCE_COLORS=["#A7445A","#6555A4","#28769B","#B76D28","#3F7B4A","#8B4E87"
 const PRIVATE_SOURCE_COLOR="#9B7449";
 const BACKUP_FORMAT="mawaeidi-backup";
 const BACKUP_VERSION=3;
-const MAX_BACKUP_BYTES=5*1024*1024;
+const MAX_BACKUP_BYTES=window.MawaeidiBackup?.limits.maxArchiveBytes||256*1024*1024;
 const MAX_BACKUP_LESSONS=2000;
 const MAX_SESSION_RECORDS=5000;
 const AUTO_REFRESH_THROTTLE_MS=15000;
@@ -1504,6 +1504,7 @@ let realtimeChannel=null;
 let refreshInFlight=false;
 let saveInFlight=false;
 let backupInFlight=false;
+let pendingBackupRestorePlan=null;
 let pendingRemoteRow=null;
 let lastAutoRefreshAt=0;
 let deferredInstallPrompt=null;
@@ -1574,6 +1575,7 @@ function closeToolDialog(event){
   document.body.classList.remove("drawer-open");
   activeSessionContext=null;
   activeWeekMoveContext=null;
+  pendingBackupRestorePlan=null;
   if(worldClockInterval){clearInterval(worldClockInterval);worldClockInterval=null}
   if(toolReturnFocus?.focus)toolReturnFocus.focus();
   toolReturnFocus=null;
@@ -2143,60 +2145,327 @@ async function restoreHistory(id,button){
  if(!await persist()){lessons=old;if(button)button.disabled=false;return}
  render();await openHistory();
 }
-function createBackupPayload(){
- return {format:BACKUP_FORMAT,version:BACKUP_VERSION,exportedAt:new Date().toISOString(),lessonCount:lessons.length,lessons};
+function cloneBackupValue(value){
+  return JSON.parse(JSON.stringify(value));
+}
+function currentBackupSettings(){
+  return {
+    format:"mawaeidi-settings",
+    version:1,
+    week_time_mode:weekTimeMode,
+    week_density:weekDensity,
+    world_clock_base:savedWorldClockBase(),
+    world_clock_zones:savedWorldClockZones()
+  };
+}
+function parseBackupSettings(value){
+  if(!value||value.format!=="mawaeidi-settings"||value.version!==1)throw new Error("invalid_settings_backup");
+  const weekTimeModeValue=value.week_time_mode==="full"?"full":"compact";
+  const weekDensityValue=["compact","normal","comfortable"].includes(value.week_density)?value.week_density:"normal";
+  const worldClockBase=validTimeZone(value.world_clock_base)?value.world_clock_base:SCHEDULE_TIMEZONE;
+  const worldClockZones=[...new Set((Array.isArray(value.world_clock_zones)?value.world_clock_zones:[])
+    .filter(validTimeZone))].slice(0,10);
+  return {
+    weekTimeMode:weekTimeModeValue,
+    weekDensity:weekDensityValue,
+    worldClockBase,
+    worldClockZones:[...new Set([worldClockBase,...worldClockZones])].slice(0,10)
+  };
+}
+function applyBackupSettings(settings){
+  if(!settings)return;
+  weekTimeMode=settings.weekTimeMode;
+  weekDensity=settings.weekDensity;
+  rememberWeekTimeMode(weekTimeMode);
+  rememberWeekDensity(weekDensity);
+  rememberWorldClockBase(settings.worldClockBase);
+  rememberWorldClockZones(settings.worldClockZones);
+  renderWeek();
+  if(currentSection==="world")openWorldClock();
+}
+function parseScheduleBackupObject(obj){
+  let source;
+  if(Array.isArray(obj))source=obj;
+  else if(obj&&obj.format===BACKUP_FORMAT&&[1,2,BACKUP_VERSION].includes(obj.version)&&Array.isArray(obj.lessons))source=obj.lessons;
+  else if(obj&&obj.format==="mawaeidi-schedule"&&obj.version===1&&Array.isArray(obj.lessons))source=obj.lessons;
+  else throw new Error("invalid_schedule_backup");
+  if(source.length>MAX_BACKUP_LESSONS)throw new Error("too_many_lessons");
+  if(source.some(item=>!item||typeof item!=="object"||Array.isArray(item)))throw new Error("invalid_lesson");
+  const normalized=normalizeLessons(source);
+  if(normalized.some(item=>!item.schedules.length))throw new Error("invalid_schedule");
+  return normalized;
 }
 function parseBackupText(rawText){
- const clean=textValue(rawText).replace(/^\uFEFF/,"");
- let obj;try{obj=JSON.parse(clean)}catch{throw new Error("invalid_json")}
- let source;
- if(Array.isArray(obj))source=obj;
- else if(obj&&obj.format===BACKUP_FORMAT&&[1,2,BACKUP_VERSION].includes(obj.version)&&Array.isArray(obj.lessons))source=obj.lessons;
- else throw new Error("invalid_format");
- if(source.length>MAX_BACKUP_LESSONS)throw new Error("too_many_lessons");
- if(source.some(x=>!x||typeof x!=="object"||Array.isArray(x)))throw new Error("invalid_lesson");
- const normalized=normalizeLessons(source);
- if(normalized.some(x=>!x.schedules.length))throw new Error("invalid_schedule");
- return normalized;
+  const clean=textValue(rawText).replace(/^\uFEFF/,"");
+  let obj;
+  try{obj=JSON.parse(clean)}catch{throw new Error("invalid_json")}
+  return parseScheduleBackupObject(obj);
 }
-function exportBackup(){
+function mergeBackupLessons(current,incoming){
+  const merged=normalizeLessons(current);
+  const positions=new Map(merged.map((lesson,index)=>[lesson.id,index]));
+  let added=0;
+  let updated=0;
+  for(const lesson of incoming||[]){
+    if(positions.has(lesson.id)){
+      merged[positions.get(lesson.id)]=cloneBackupValue(lesson);
+      updated++;
+    }else{
+      positions.set(lesson.id,merged.length);
+      merged.push(cloneBackupValue(lesson));
+      added++;
+    }
+  }
+  return {lessons:normalizeLessons(merged),added,updated};
+}
+function fullBackupFilename(prefix="mawaeidi-full-backup"){
+  const stamp=new Date().toISOString().replace(/[:.]/g,"-").slice(0,19);
+  return `${prefix}-${stamp}.zip`;
+}
+async function createFullBackupPackage(){
+  if(!window.MawaeidiBackup)throw new Error("backup_tools_unavailable");
+  if(!cloudReady||!currentUser)throw new Error("backup_account_required");
+  const operationUserId=currentUser.id;
+  const scheduleSnapshot=cloneBackupValue(lessons);
+  const studentSnapshot=await studentsWorkspace.createBackupSnapshot(currentUser);
+  if(!currentUser||currentUser.id!==operationUserId||!cloudReady)throw new Error("backup_account_changed");
+  const exportedAt=new Date().toISOString();
+  const schedulePayload={
+    format:"mawaeidi-schedule",
+    version:1,
+    exported_at:exportedAt,
+    lesson_count:scheduleSnapshot.length,
+    lessons:scheduleSnapshot
+  };
+  const studentsPayload={...studentSnapshot.manifest,exported_at:exportedAt};
+  const settingsPayload=currentBackupSettings();
+  const manifest={
+    format:"mawaeidi-full-backup",
+    version:1,
+    exported_at:exportedAt,
+    contents:{
+      schedule:{file:"schedule.json",count:scheduleSnapshot.length},
+      students:{
+        file:"students.json",
+        csv_file:"students.csv",
+        count:studentsPayload.student_count,
+        photo_count:studentsPayload.photo_count,
+        missing_photo_count:studentsPayload.missing_photo_count
+      },
+      settings:{file:"settings.json"}
+    }
+  };
+  const readme=[
+    "نسخة احتياطية كاملة من مواعيدي",
+    `تاريخ الإنشاء: ${new Intl.DateTimeFormat("ar-EG",{dateStyle:"long",timeStyle:"short",timeZone:SCHEDULE_TIMEZONE}).format(new Date())}`,
+    `عدد المواعيد: ${scheduleSnapshot.length}`,
+    `عدد الطلاب: ${studentsPayload.student_count}`,
+    `عدد صور الطلاب: ${studentsPayload.photo_count}`,
+    "",
+    "تحتوي النسخة على المواعيد، وسجل الطلاب، وصورهم الاختيارية، وإعدادات عرض الجدول والساعة العالمية.",
+    "لا تحتوي النسخة على كلمة المرور أو جلسة تسجيل الدخول أو معرّف الحساب.",
+    "لاستعادتها: سجّل الدخول إلى مواعيدي، ثم افتح الأدوات واختر «استعادة نسخة احتياطية».",
+    "الاستعادة تدمج البيانات مع الموجود ولا تحذف السجلات الحالية.",
+    "",
+    "احتفظ بالملف في مكان آمن لأنه قد يتضمن بيانات تواصل وملاحظات خاصة."
+  ].join("\r\n");
+  const files=[
+    {name:"manifest.json",data:JSON.stringify(manifest,null,2)},
+    {name:"schedule.json",data:JSON.stringify(schedulePayload,null,2)},
+    {name:"students.json",data:JSON.stringify(studentsPayload,null,2)},
+    {name:"students.csv",data:studentSnapshot.csv},
+    {name:"settings.json",data:JSON.stringify(settingsPayload,null,2)},
+    {name:"README.txt",data:"\uFEFF"+readme},
+    ...studentSnapshot.files
+  ];
+  const blob=await window.MawaeidiBackup.createZip(files);
+  return {
+    blob,
+    counts:{
+      lessons:scheduleSnapshot.length,
+      students:studentsPayload.student_count,
+      photos:studentsPayload.photo_count
+    },
+    warnings:studentSnapshot.warnings
+  };
+}
+async function createAndDownloadFullBackup(prefix){
+  const result=await createFullBackupPackage();
+  window.MawaeidiBackup.download(result.blob,fullBackupFilename(prefix));
+  return result;
+}
+async function exportBackup(){
   closeDataMenu();
   if(!cloudReady||!currentUser){alert("انتظر حتى يكتمل تحميل حسابك ثم حاول مرة أخرى.");return}
+  if(backupInFlight)return;
+  backupInFlight=true;
+  setSync("saving","جارٍ تجهيز النسخة الكاملة");
   try{
-    const payload=createBackupPayload();
-    const blob=new Blob(["\uFEFF",JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});
-    const url=URL.createObjectURL(blob);
-    const link=document.createElement("a");
-    link.href=url;
-    link.download=`mawaeidi-backup-${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
-    setSync("saved","تم تنزيل النسخة");
+    const result=await createAndDownloadFullBackup("mawaeidi-full-backup");
+    setSync("saved",result.warnings.length?"تم تنزيل النسخة مع تنبيه صور":"تم تنزيل النسخة الكاملة");
+    if(result.warnings.length)alert(`تم تنزيل البيانات كاملة، لكن تعذّر تضمين ${result.warnings.length} صورة. لم تُحذف أي بيانات من الموقع.`);
   }catch(error){
-    console.error("تعذّر إنشاء النسخة الاحتياطية.",error);
-    alert("تعذّر تنزيل النسخة الاحتياطية. حاول مرة أخرى.");
-  }
+    console.error("تعذّر إنشاء النسخة الاحتياطية الكاملة.",error);
+    setSync("error","تعذّر إنشاء النسخة");
+    alert("تعذّر تنزيل النسخة الاحتياطية الكاملة. تحقق من الإنترنت وحاول مرة أخرى.");
+  }finally{backupInFlight=false}
 }
 function chooseBackupFile(){
   closeDataMenu();
   if(!cloudReady||!currentUser){alert("انتظر حتى يكتمل تحميل حسابك ثم حاول مرة أخرى.");return}
+  if(!window.MawaeidiBackup){alert("أدوات النسخ الاحتياطي لم تكتمل. حدّث الصفحة ثم حاول مرة أخرى.");return}
   document.getElementById("backupFile").click();
 }
+async function parseFullBackupFile(file){
+  if(!file||file.size>MAX_BACKUP_BYTES)throw new Error("backup_too_large");
+  const signature=new Uint8Array(await file.slice(0,4).arrayBuffer());
+  const isZip=signature.length===4&&signature[0]===0x50&&signature[1]===0x4b;
+  if(!isZip){
+    if(file.size>5*1024*1024)throw new Error("legacy_backup_too_large");
+    return {
+      source:"legacy-schedule",
+      scheduleLessons:parseBackupText(await file.text()),
+      studentPlan:null,
+      settings:null
+    };
+  }
+
+  const entries=await window.MawaeidiBackup.readZip(file);
+  if(entries.has("manifest.json")){
+    const manifest=window.MawaeidiBackup.readJson(entries,"manifest.json",1024*1024);
+    if(!manifest||manifest.format!=="mawaeidi-full-backup"||manifest.version!==1)throw new Error("invalid_full_backup");
+    const schedulePayload=window.MawaeidiBackup.readJson(entries,"schedule.json",8*1024*1024);
+    const studentsPayload=window.MawaeidiBackup.readJson(entries,"students.json",64*1024*1024);
+    const settingsPayload=window.MawaeidiBackup.readJson(entries,"settings.json",1024*1024);
+    const scheduleLessons=parseScheduleBackupObject(schedulePayload);
+    const studentPlan=studentsWorkspace.inspectBackupSnapshot(studentsPayload,entries);
+    const settings=parseBackupSettings(settingsPayload);
+    if(Number(manifest.contents?.schedule?.count)!==scheduleLessons.length)throw new Error("schedule_count_mismatch");
+    if(Number(manifest.contents?.students?.count)!==studentPlan.studentCount)throw new Error("student_count_mismatch");
+    if(Number(manifest.contents?.students?.photo_count)!==studentPlan.photoCount||studentPlan.missingPhotoCount)throw new Error("photo_count_mismatch");
+    return {source:"full",scheduleLessons,studentPlan,settings};
+  }
+
+  if(entries.has("students.json")){
+    const studentsPayload=window.MawaeidiBackup.readJson(entries,"students.json",64*1024*1024);
+    return {
+      source:"legacy-students",
+      scheduleLessons:null,
+      studentPlan:studentsWorkspace.inspectBackupSnapshot(studentsPayload,entries),
+      settings:null
+    };
+  }
+  throw new Error("unknown_backup_format");
+}
+function backupRestorePreviewMarkup(plan){
+  const scheduleCount=plan.scheduleLessons?.length??0;
+  const studentCount=plan.studentPlan?.studentCount??0;
+  const photoCount=plan.studentPlan?.photoCount??0;
+  const missingPhotos=plan.studentPlan?.missingPhotoCount??0;
+  const rows=[];
+  if(plan.scheduleLessons)rows.push(`<p><strong>المواعيد:</strong> ${scheduleCount}</p>`);
+  if(plan.studentPlan)rows.push(`<p><strong>الطلاب:</strong> ${studentCount} · <strong>الصور:</strong> ${photoCount}</p>`);
+  if(plan.settings)rows.push("<p><strong>الإعدادات:</strong> عرض الجدول والساعة العالمية</p>");
+  const warning=missingPhotos?`<div class="tool-status error">هناك ${missingPhotos} صورة مفقودة داخل الملف؛ ستُستعاد بيانات الطلاب من دونها.</div>`:"";
+  return `${warning}
+    <div class="tool-status on">تم فحص الملف بنجاح.</div>
+    <div class="tool-card">
+      <h3>محتويات النسخة</h3>
+      ${rows.join("")}
+      <p>سيتم الدمج مع بيانات حسابك الحالي: المتطابق يُحدّث والجديد يُضاف، ولن تُحذف البيانات الموجودة.</p>
+      <p class="install-help">قبل بدء الدمج سننزّل تلقائيًا نسخة أمان كاملة من حالتك الحالية.</p>
+      <div class="tool-actions">
+        <button type="button" class="tool-primary" id="confirmBackupRestore" onclick="confirmBackupRestore()">استعادة ودمج البيانات</button>
+        <button type="button" class="tool-secondary" onclick="cancelBackupRestore()">إلغاء</button>
+      </div>
+    </div>`;
+}
+function cancelBackupRestore(){
+  pendingBackupRestorePlan=null;
+  closeToolDialog();
+  setSync("saved","لم تتغير البيانات");
+}
 async function importBackup(event){
- const input=event.currentTarget,file=input.files?.[0];if(!file)return;
- if(file.size>MAX_BACKUP_BYTES){input.value="";alert("ملف النسخة الاحتياطية أكبر من الحد المسموح.");return}
- backupInFlight=true;setSync("saving","جارٍ فحص النسخة");
- try{
-  const restored=parseBackupText(await file.text());
-  const warning=restored.length?`سيتم استبدال مواعيدك الحالية بالنسخة التي تحتوي على ${restored.length} حصة. هل تريد المتابعة؟`:"هذه النسخة فارغة وستحذف كل المواعيد الحالية. هل تريد المتابعة؟";
-  if(!confirm(warning)){setSync("saved","لم تتغير البيانات");return}
-  const old=lessons;lessons=restored;
-  if(!await persist()){lessons=old;return}
-  render();alert(`تمت استعادة النسخة الاحتياطية بنجاح (${lessons.length} حصة).`);
- }catch(error){console.error("تعذّر استعادة النسخة الاحتياطية.",error);setSync("error","النسخة غير صالحة");alert("ملف النسخة الاحتياطية غير صالح أو تالف.")}
- finally{backupInFlight=false;input.value=""}
+  const input=event.currentTarget;
+  const file=input.files?.[0];
+  if(!file)return;
+  if(file.size>MAX_BACKUP_BYTES){input.value="";alert("ملف النسخة الاحتياطية أكبر من الحد المسموح.");return}
+  if(backupInFlight)return;
+  backupInFlight=true;
+  setSync("saving","جارٍ فحص النسخة");
+  try{
+    const plan=await parseFullBackupFile(file);
+    pendingBackupRestorePlan=plan;
+    openToolDialog("استعادة نسخة احتياطية","راجع المحتويات قبل دمجها في حسابك.",backupRestorePreviewMarkup(plan));
+    setSync("saved","النسخة جاهزة للاستعادة");
+  }catch(error){
+    pendingBackupRestorePlan=null;
+    console.error("تعذّر فحص النسخة الاحتياطية.",error);
+    setSync("error","النسخة غير صالحة");
+    alert("ملف النسخة الاحتياطية غير صالح أو تالف، ولم تتغير أي بيانات.");
+  }finally{
+    backupInFlight=false;
+    input.value="";
+  }
+}
+async function confirmBackupRestore(){
+  const plan=pendingBackupRestorePlan;
+  if(!plan||backupInFlight||!currentUser||!cloudReady)return;
+  const button=document.getElementById("confirmBackupRestore");
+  if(button){button.disabled=true;button.textContent="جارٍ إنشاء نسخة الأمان…"}
+  backupInFlight=true;
+  setSync("saving","جارٍ إنشاء نسخة أمان");
+  let safetyDownloaded=false;
+  let studentResult=null;
+  let scheduleResult=null;
+  let settingsApplied=false;
+  try{
+    await createAndDownloadFullBackup("mawaeidi-before-restore");
+    safetyDownloaded=true;
+    if(button)button.textContent="جارٍ دمج البيانات…";
+    setSync("saving","جارٍ دمج النسخة");
+
+    if(plan.studentPlan)studentResult=await studentsWorkspace.restoreBackupSnapshot(plan.studentPlan,currentUser);
+    if(plan.scheduleLessons){
+      const previous=lessons;
+      scheduleResult=mergeBackupLessons(lessons,plan.scheduleLessons);
+      lessons=scheduleResult.lessons;
+      if(!await persist(true)){
+        lessons=previous;
+        throw new Error("schedule_restore_failed");
+      }
+    }
+    if(plan.settings){
+      applyBackupSettings(plan.settings);
+      settingsApplied=true;
+    }
+    render();
+    pendingBackupRestorePlan=null;
+    closeToolDialog();
+    const summary=[];
+    if(scheduleResult)summary.push(`${scheduleResult.added} موعد جديد و${scheduleResult.updated} موعد محدّث`);
+    if(studentResult)summary.push(`${studentResult.inserted} طالب جديد و${studentResult.updated} طالب محدّث`);
+    if(studentResult)summary.push(`${studentResult.restoredPhotos} صورة مستعادة`);
+    if(settingsApplied)summary.push("تم استعادة إعدادات العرض");
+    const photoWarning=studentResult?.photoFailures?.length?`\nتعذّر رفع ${studentResult.photoFailures.length} صورة، وبقيت البيانات الحالية دون حذف.`:"";
+    setSync("saved","تم دمج النسخة بنجاح");
+    alert(`تمت الاستعادة والدمج بنجاح.\n${summary.join("\n")}\nتم تنزيل نسخة أمان قبل الاستعادة.${photoWarning}`);
+  }catch(error){
+    console.error("تعذّر إكمال استعادة النسخة الاحتياطية.",error);
+    setSync("error","تعذّر إكمال الاستعادة");
+    const partial=Boolean(studentResult||scheduleResult||settingsApplied);
+    const status=document.querySelector("#toolBody .tool-status");
+    if(status){
+      status.className="tool-status error";
+      status.textContent=partial
+        ?"توقفت العملية بعد استعادة جزء من البيانات. يمكنك مراجعة نسخة الأمان التي نُزّلت ثم المحاولة مرة أخرى."
+        :"توقفت العملية قبل تغيير البيانات.";
+    }
+    if(button){button.disabled=false;button.textContent="إعادة المحاولة"}
+    alert(safetyDownloaded
+      ?(partial?"تعذّر إكمال بعض أجزاء الاستعادة. نُزّلت نسخة أمان قبل البدء، ولم تُحذف السجلات الحالية.":"تعذّرت الاستعادة، لكن نُزّلت نسخة الأمان ولم تتغير البيانات.")
+      :"تعذّر إنشاء نسخة الأمان، لذلك أوقفنا الاستعادة ولم تتغير البيانات.");
+  }finally{backupInFlight=false}
 }
 function hasRecoveryMarker(){
   try{

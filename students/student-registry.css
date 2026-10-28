@@ -211,3 +211,29 @@
   #studentsView .import-summary{grid-template-columns:1fr}
 }
 
+
+/* Student trash and change history — compact, accessible, mobile-first. */
+#studentsView .registry-view-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 18px;border-bottom:1px solid #e7edf1;background:#fff}
+#studentsView .registry-switch-actions{display:inline-flex;gap:4px;padding:4px;border:1px solid #e7edf1;border-radius:11px;background:#f5f8fa}
+#studentsView .registry-switch{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:6px 13px;border:0;border-radius:8px;background:transparent;color:#677884;font-size:10px;font-weight:800}
+#studentsView .registry-switch[aria-pressed="true"]{background:#fff;color:var(--primary);box-shadow:0 1px 5px rgba(17,42,64,.11)}
+#studentsView .registry-switch:focus-visible{outline:3px solid rgba(71,137,180,.3);outline-offset:2px}
+#studentsView .trash-counter{display:inline-grid;min-width:21px;height:21px;padding:0 5px;place-items:center;border-radius:99px;background:#e8eef2;color:#31566d;font-size:9px;font-weight:900}
+#studentsView .trash-retention-note{margin:0;padding:10px 20px;border-bottom:1px solid #e9edf1;background:#fcfaf5;color:#806746;font-size:9px;line-height:1.85}
+#studentsView .student-history-dialog{width:min(760px,calc(100vw - 28px))}
+#studentsView .student-history-list{display:grid;gap:10px;max-height:65vh;overflow-y:auto;background:#f9fbfc}
+#studentsView .student-history-item{padding:13px 15px;border:1px solid var(--line);border-radius:11px;background:#fff}
+#studentsView .student-history-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+#studentsView .student-history-head strong{color:var(--primary);font-size:11px}
+#studentsView .student-history-head time{color:var(--muted);font-size:9px}
+#studentsView .student-history-item p{margin:5px 0;color:#546877;font-size:10px}
+#studentsView .student-history-item ul{margin:8px 0 0;padding:8px 22px 0 0;border-top:1px solid #edf1f3;color:#576e7d;font-size:9px;line-height:1.85;overflow-wrap:anywhere}
+#studentsView .student-history-item li strong{color:#344d5c}
+@media(max-width:520px){
+  #studentsView .registry-view-switch{align-items:stretch;flex-direction:column;padding:10px}
+  #studentsView .registry-switch-actions{width:100%}
+  #studentsView .registry-switch{flex:1;justify-content:center;padding-inline:8px;font-size:9px}
+  #studentsView .registry-history-button{width:100%}
+  #studentsView .trash-retention-note{padding-inline:12px}
+  #studentsView .student-history-head{align-items:flex-start;flex-direction:column;gap:4px}
+}

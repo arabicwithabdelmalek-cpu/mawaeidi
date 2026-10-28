@@ -57,6 +57,7 @@ let mode="gate";
 let accountSequence=0;
 let currentUser=null;
 let students=[];
+let summaryLoaded=false;
 let trashedStudents=[];
 let listMode="active";
 let filteredStudents=[];
@@ -408,6 +409,72 @@ function removeStudentPhotoFromEditor(){
   updateStudentPhotoEditor();
   byId("studentPhotoMeta").textContent=removeStudentPhotoRequested?"ستُحذف الصورة عند حفظ التعديلات.":"لم تُضف صورة لهذا الطالب.";
 }
+
+function summarizeStudents(list){
+  const active=Array.isArray(list)?list.filter(student=>student&&!student.deleted_at):[];
+  const statusCounts=new Map(),levelCounts=new Map(),countryCounts=new Map();
+  for(const student of active){
+    const status=text(student.status).trim()||"غير محدد";
+    const level=text(student.current_level).trim()||"غير محدد";
+    const country=text(student.country).trim()||"غير محدد";
+    statusCounts.set(status,(statusCounts.get(status)||0)+1);
+    levelCounts.set(level,(levelCounts.get(level)||0)+1);
+    countryCounts.set(country,(countryCounts.get(country)||0)+1);
+  }
+  const countryNames=[...countryCounts.keys()].filter(country=>country!=="غير محدد");
+  const sortGroups=entries=>entries.sort((a,b)=>b.count-a.count||a.label.localeCompare(b.label,"ar"));
+  const levels=LEVEL_OPTIONS.map(label=>({label,count:levelCounts.get(label)||0}));
+  const countries=sortGroups([...countryCounts].map(([label,count])=>({label,count})));
+  return {
+    total:active.length,
+    current:statusCounts.get("حالي")||0,
+    paused:statusCounts.get("متوقف مؤقتًا")||0,
+    countryCount:countryNames.length,
+    levels,
+    countries
+  };
+}
+function renderSummaryBreakdown(target,entries,total,emptyLabel){
+  target.replaceChildren();
+  if(!total){
+    const empty=document.createElement("p");
+    empty.className="student-insight-empty";
+    empty.textContent=emptyLabel;
+    target.append(empty);
+    return;
+  }
+  for(const entry of entries){
+    if(!entry.count)continue;
+    const row=document.createElement("div");
+    row.className="student-insight-row";
+    const heading=document.createElement("div");heading.className="student-insight-row-heading";
+    const label=document.createElement("span");label.textContent=entry.label;
+    const count=document.createElement("strong");count.textContent=String(entry.count);
+    heading.append(label,count);
+    const track=document.createElement("div");track.className="student-insight-track";
+    track.setAttribute("role","img");
+    const percentage=Math.round(entry.count/total*100);
+    track.setAttribute("aria-label",`${entry.label}: ${entry.count} من ${total} طالب (${percentage}٪)`);
+    const bar=document.createElement("span");bar.className="student-insight-bar";
+    bar.style.width=`${entry.count/total*100}%`;
+    track.append(bar);
+    row.append(heading,track);
+    target.append(row);
+  }
+}
+function renderStudentSummary(){
+  const section=byId("studentSummary");
+  section.hidden=!summaryLoaded||mode!=="cloud"||!currentUser;
+  if(section.hidden)return;
+  const summary=summarizeStudents(students);
+  byId("studentStatTotal").textContent=String(summary.total);
+  byId("studentStatCurrent").textContent=String(summary.current);
+  byId("studentStatPaused").textContent=String(summary.paused);
+  byId("studentStatCountries").textContent=String(summary.countryCount);
+  renderSummaryBreakdown(byId("studentLevelsBreakdown"),summary.levels,summary.total,"لا توجد بيانات للمستويات بعد.");
+  renderSummaryBreakdown(byId("studentCountriesBreakdown"),summary.countries,summary.total,"لا توجد بيانات للدول بعد.");
+}
+
 function renderStudents(){
   refreshCountryFilter();
   filteredStudents=filterAndSortStudents(students);
@@ -454,7 +521,7 @@ function renderStudents(){
   byId("tableWrap").hidden=empty;
   byId("emptyState").hidden=!empty;
 }
-function renderAll(){renderStudents()}
+function renderAll(){renderStudents();renderStudentSummary()}
 
 function profileDetails(rows){
   return rows.map(([label,value,wide=false])=>`<div class="detail-item${wide?" wide":""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value||"—")}</strong></div>`).join("");
@@ -827,6 +894,7 @@ async function loadCloudData(showSuccess=false){
     if(currentUser?.id!==userId||sequence!==cloudLoadSequence)return false;
     students=records.filter(student=>!student.deleted_at);
     trashedStudents=records.filter(student=>Boolean(student.deleted_at));
+    summaryLoaded=true;
     refreshCountryFilter();
     renderAll();
     applyInitialRoute();
@@ -1300,6 +1368,7 @@ function reset(){
   mode="gate";
   currentUser=null;
   students=[];
+  summaryLoaded=false;
   trashedStudents=[];
   listMode="active";
   filteredStudents=[];

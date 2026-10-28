@@ -857,7 +857,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 /* Keep main workspaces mutually exclusive even when their component CSS sets display. */
 #scheduleWorkspace[hidden],
 #worldClockView[hidden]{display:none!important}
-</style>  <link rel="stylesheet" href="./students/student-registry.css?v=3">
+</style>  <link rel="stylesheet" href="./students/student-registry.css?v=4">
 
 <style id="mawaeidi-unified-trash-style">
 .unified-trash{display:grid;gap:12px}
@@ -1103,7 +1103,46 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
               </div>
             </header>
 
-      
+            <section class="student-summary" id="studentSummary" aria-label="ملخص سجل الطلاب" hidden>
+              <div class="student-summary-heading">
+                <div>
+                  <h3>نظرة سريعة</h3>
+                  <p>جميع طلابك المسجّلين، بصرف النظر عن البحث والفلاتر.</p>
+                </div>
+              </div>
+              <div class="student-summary-metrics">
+                <article class="student-summary-metric">
+                  <span>إجمالي الطلاب</span>
+                  <strong id="studentStatTotal">0</strong>
+                </article>
+                <article class="student-summary-metric">
+                  <span>طلاب حاليون</span>
+                  <strong id="studentStatCurrent">0</strong>
+                </article>
+                <article class="student-summary-metric">
+                  <span>متوقفون مؤقتًا</span>
+                  <strong id="studentStatPaused">0</strong>
+                </article>
+                <article class="student-summary-metric">
+                  <span>دول الطلاب</span>
+                  <strong id="studentStatCountries">0</strong>
+                </article>
+              </div>
+              <details class="student-insights" id="studentInsights">
+                <summary>توزيع الطلاب حسب المستوى والدولة <span aria-hidden="true">التفاصيل</span></summary>
+                <div class="student-insights-grid">
+                  <section class="student-insight-section" aria-labelledby="studentLevelsTitle">
+                    <h4 id="studentLevelsTitle">المستويات</h4>
+                    <div class="student-insight-list" id="studentLevelsBreakdown"></div>
+                  </section>
+                  <section class="student-insight-section" aria-labelledby="studentCountriesTitle">
+                    <h4 id="studentCountriesTitle">الدول</h4>
+                    <div class="student-insight-list" id="studentCountriesBreakdown"></div>
+                  </section>
+                </div>
+              </details>
+            </section>
+
             <div class="filters" aria-label="البحث والفلاتر">
               <div class="field search-field">
                 <label class="sr-only" for="search">البحث في الطلاب</label>
@@ -1367,7 +1406,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js"></script>
 <script src="./backup-manager.js?v=1"></script>
-<script src="./students/student-registry.js?v=6"></script>
+<script src="./students/student-registry.js?v=7"></script>
 <script>
 const days=["الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"];
 const LEGACY_STORAGE_KEY="mawaeidi_arabic_v7";

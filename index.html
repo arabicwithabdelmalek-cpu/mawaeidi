@@ -857,7 +857,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 /* Keep main workspaces mutually exclusive even when their component CSS sets display. */
 #scheduleWorkspace[hidden],
 #worldClockView[hidden]{display:none!important}
-</style>  <link rel="stylesheet" href="./students/student-registry.css?v=2">
+</style>  <link rel="stylesheet" href="./students/student-registry.css?v=3">
 </head>
 <body class="auth-pending">
 
@@ -1068,7 +1068,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
               </div>
               <div class="page-actions">
                 <button class="btn primary" id="addStudent" type="button">＋ طالب جديد</button>
-                <details class="data-actions">
+                <details class="data-actions" id="studentDataTools">
                   <summary class="btn" aria-label="فتح أدوات البيانات">•••</summary>
                   <div class="data-actions-menu">
                     <button class="btn" id="refreshData" type="button">تحديث البيانات</button>
@@ -1079,6 +1079,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
                 <input id="csvFile" type="file" accept=".csv,text/csv" hidden>
               </div>
             </header>
+            <div class="registry-view-switch" aria-label="عرض سجل الطلاب">
+              <div class="registry-switch-actions">
+                <button class="registry-switch" id="showActiveStudents" type="button" aria-pressed="true">الطلاب</button>
+                <button class="registry-switch" id="showTrashedStudents" type="button" aria-pressed="false">سلة المحذوفات <span class="trash-counter" id="trashCount">0</span></button>
+              </div>
+              <button class="btn small registry-history-button" id="showStudentHistory" type="button">سجل التعديلات</button>
+            </div>
+            <p class="trash-retention-note" id="trashRetentionNote" hidden>تبقى الملفات المحذوفة وصورها 30 يومًا، ثم تُزال تلقائيًا عند فتح قسم الطلاب وأنت متصل بالإنترنت. الحذف النهائي لا يمكن التراجع عنه.</p>
       
             <div class="filters" aria-label="البحث والفلاتر">
               <div class="field search-field">
@@ -1124,7 +1132,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
             </div>
             <div class="empty-state" id="emptyState" hidden>
               <strong>لا توجد نتائج مطابقة</strong>
-              <span>غيّر البحث أو الفلاتر، أو أضف ملف طالب جديدًا.</span>
+              <span id="emptyStateText">غيّر البحث أو الفلاتر، أو أضف ملف طالب جديدًا.</span>
             </div>
           </div>
       <dialog id="studentEditor">
@@ -1173,10 +1181,20 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
           <div class="dialog-body" id="profileContent"></div>
           <footer class="dialog-foot split">
             <button class="btn primary" id="editFromProfile" type="button">تعديل البيانات</button>
-            <button class="btn danger" id="deleteStudent" type="button">حذف الطالب</button>
+            <button class="btn" id="historyFromProfile" type="button">سجل التعديلات</button>
+            <button class="btn danger" id="deleteStudent" type="button">نقل إلى السلة</button>
           </footer>
         </dialog>
       
+        <dialog id="studentHistory" class="student-history-dialog">
+          <header class="dialog-head">
+            <div><span class="eyebrow">سجل خاص بحسابك</span><h2 id="studentHistoryTitle">سجل تعديلات الطلاب</h2><p>يعرض الإضافات والتغييرات والحذف والاستعادة.</p></div>
+            <button class="icon-button" data-close="studentHistory" type="button" aria-label="إغلاق">×</button>
+          </header>
+          <div class="dialog-body student-history-list" id="studentHistoryContent"></div>
+          <footer class="dialog-foot"><button class="btn" data-close="studentHistory" type="button">إغلاق</button></footer>
+        </dialog>
+
         <dialog id="importPreview">
           <header class="dialog-head">
             <div><span class="eyebrow">استيراد Google Sheets / CSV</span><h2>مراجعة البيانات قبل الحفظ</h2></div>
@@ -1343,7 +1361,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js"></script>
 <script src="./backup-manager.js?v=1"></script>
-<script src="./students/student-registry.js?v=4"></script>
+<script src="./students/student-registry.js?v=5"></script>
 <script>
 const days=["الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"];
 const LEGACY_STORAGE_KEY="mawaeidi_arabic_v7";

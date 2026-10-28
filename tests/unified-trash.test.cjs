@@ -28,7 +28,7 @@ assert.match(html,/name:"trash\.json"/);
 assert.match(html,/function inspectTrashBackup\(payload\)/);
 assert.match(html,/function mergeTrashBackupRows\(items\)/);
 assert.match(html,/trash:archivedItems\.length/);
-assert.match(worker,/mawaeidi-shell-v47/);
+assert.match(worker,/mawaeidi-shell-v48/);
 assert.match(worker,/student-registry\.js\?v=7/);
 assert.match(html,/student-registry\.js\?v=7/);
 assert.match(migration,/enable row level security/);

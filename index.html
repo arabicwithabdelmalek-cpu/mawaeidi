@@ -885,6 +885,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .world-cloud-note{padding:9px 14px;border:1px solid #dbe6ec;border-radius:10px;background:#f6f9fa;color:#496c7d;font-size:11px;font-weight:750;line-height:1.8;text-align:right}
 @media(max-width:520px){.world-cloud-note{font-size:10px;padding:9px 11px}}
 </style>
+<link rel="stylesheet" href="./ui-polish.css?v=1">
 </head>
 <body class="auth-pending">
 
@@ -922,7 +923,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   </div>
 </div>
 
-<div class="shell">
+<div class="shell" inert>
+  <a class="skip-link" href="#mainContent">انتقل إلى المحتوى</a>
   <div class="hurufiyat" aria-hidden="true">
     <span>مواعيدي الوقت أمانة تنظيم موعد علم عمل</span>
     <span>ع ل م و ق ت د ر س م و ع د</span>
@@ -932,7 +934,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   </div>
   
 
-  <div class="app">
+  <div class="app" id="mainContent" role="main" tabindex="-1">
     <header class="header">
       <div class="identity">
         <div class="brand">
@@ -979,9 +981,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     </header>
 
     <nav class="workspace-switch" aria-label="أقسام مواعيدي">
-      <button type="button" id="scheduleSectionButton" class="active" aria-pressed="true" aria-controls="scheduleWorkspace" onclick="setSection('schedule',this)">المواعيد</button>
-      <button type="button" id="worldClockSectionButton" aria-pressed="false" aria-controls="worldClockView" onclick="setSection('world',this)">الساعة العالمية</button>
-      <button type="button" id="studentsSectionButton" aria-pressed="false" aria-controls="studentsView" onclick="setSection('students')">الطلاب</button>
+      <button type="button" id="scheduleSectionButton" class="active" aria-pressed="true" aria-controls="scheduleWorkspace" onclick="setSection('schedule',this)"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 5h3"/></svg><span>المواعيد</span></button>
+      <button type="button" id="worldClockSectionButton" aria-pressed="false" aria-controls="worldClockView" onclick="setSection('world',this)"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z"/></svg><span>الساعة العالمية</span></button>
+      <button type="button" id="studentsSectionButton" aria-pressed="false" aria-controls="studentsView" onclick="setSection('students')"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 4v2"/></svg><span>الطلاب</span></button>
     </nav>
 
     <div class="workspace" id="scheduleWorkspace">
@@ -1075,6 +1077,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
         </div>
         <div class="source-legend" id="sourceLegend"></div>
       </div>
+      <p class="scroll-hint">اسحب الجدول يمينًا ويسارًا لعرض بقية أيام الأسبوع.</p>
       <div class="week-table-wrap" tabindex="0" aria-label="الجدول الأسبوعي؛ يمكن تمريره أفقيًا على الشاشات الصغيرة">
         <div class="week-grid" id="weekGrid" role="table" aria-label="مواعيد الأسبوع مرتبة حسب الوقت"></div>
       </div>
@@ -1089,7 +1092,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
       <div class="registry-panel">
             <header class="registry-head">
               <div>
-                <span class="eyebrow">سجل مستقل</span>
+                <span class="eyebrow">ملفات طلابك</span>
                 <h2 id="studentsHeading">الطلاب</h2>
                 <p><span id="resultsCount">0 طالب</span> · اضغط على الطالب لعرض كل بياناته.</p>
               </div>
@@ -1262,7 +1265,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 </div>
 
 <div class="backdrop" id="backdrop" aria-hidden="true" onclick="closeDrawer()"></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="drawerTitle">
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="drawerTitle" inert>
   <div class="drawer-head">
     <div>
       <h2 id="drawerTitle">إضافة حصة</h2>
@@ -1395,7 +1398,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   </div>
 </aside>
 
-<div class="tool-backdrop" id="toolBackdrop" aria-hidden="true" onclick="closeToolDialog(event)">
+<div class="tool-backdrop" id="toolBackdrop" aria-hidden="true" onclick="closeToolDialog(event)" inert>
   <section class="tool-dialog" id="toolDialog" role="dialog" aria-modal="true" aria-labelledby="toolTitle" aria-describedby="toolIntro" tabindex="-1">
     <header class="tool-head">
       <div>
@@ -1579,6 +1582,7 @@ let lastAutoRefreshAt=0;
 let deferredInstallPrompt=null;
 let serviceWorkerRegistration=null;
 let toolReturnFocus=null;
+let drawerReturnFocus=null;
 let notificationBusy=false;
 let historySnapshots=new Map();
 let activeSessionContext=null;
@@ -1635,22 +1639,26 @@ function openToolDialog(title,intro,content){
   document.getElementById("toolBody").innerHTML=content||"";
   const backdrop=document.getElementById("toolBackdrop");
   backdrop.classList.add("show");
+  backdrop.inert=false;
   backdrop.setAttribute("aria-hidden","false");
   document.body.classList.add("drawer-open");
+  syncModalAccessibility();
   requestAnimationFrame(()=>document.getElementById("toolDialog").focus());
 }
 function closeToolDialog(event){
   const backdrop=document.getElementById("toolBackdrop");
   if(event&&event.target!==backdrop)return;
   backdrop.classList.remove("show");
-  backdrop.setAttribute("aria-hidden","true");
-  document.body.classList.remove("drawer-open");
+  backdrop.inert=true;
+  document.body.classList.toggle("drawer-open",document.getElementById("drawer").classList.contains("show"));
+  syncModalAccessibility();
   activeSessionContext=null;
   activeWeekMoveContext=null;
   pendingBackupRestorePlan=null;
   if(worldClockInterval){clearInterval(worldClockInterval);worldClockInterval=null}
   if(toolReturnFocus?.focus)toolReturnFocus.focus();
   toolReturnFocus=null;
+  backdrop.setAttribute("aria-hidden","true");
   setTimeout(flushPendingRemote,0);
 }
 function refreshInstallAction(){
@@ -1902,7 +1910,7 @@ function openWorldClock(){
 
     <section class="world-clock-section world-timeline-section world-timeline-featured">
       <div class="world-timeline-head"><div><div class="world-timeline-title-row"><span class="world-feature-tag">نظرة سريعة</span><h3>مقارنة اليوم بصريًا</h3></div><p>شاهد نفس اللحظة عند كل بلد بنظام 12 ساعة، واضغط أي ساعة لاستخدامها مباشرة في المحول.</p></div><div class="world-timeline-tools"><span class="world-format-badge">12 ساعة</span><div class="world-timeline-legend"><span><i></i>ليل</span><span class="work"><i></i>وقت مناسب</span><span class="evening"><i></i>مساء</span></div></div></div>
-      <div class="world-timeline-scroll"><div class="world-timeline" id="worldTimeline"></div></div>
+      <div class="world-timeline-scroll" tabindex="0" role="region" aria-label="مقارنة أوقات البلدان؛ اسحب أفقيًا لعرض بقية الساعات"><div class="world-timeline" id="worldTimeline"></div></div>
       <div class="world-timeline-note"><b>ملاحظة:</b> الألوان للمساعدة البصرية فقط؛ التحويل يعتمد على المنطقة الزمنية الحقيقية وتاريخ الموعد.</div>
     </section>
 
@@ -2956,7 +2964,15 @@ function requestAutoRefresh(){
   refreshFromCloud(true);
   refreshWorldClockFromCloud();
 }
-function finishAuthBootstrap(){document.body.classList.remove("auth-pending")}
+function syncModalAccessibility(){
+  const authOpen=!document.getElementById("authGate").classList.contains("hidden");
+  const toolOpen=document.getElementById("toolBackdrop").classList.contains("show");
+  const drawer=document.getElementById("drawer");
+  document.querySelector(".shell").inert=authOpen||toolOpen||drawer.classList.contains("show");
+  drawer.inert=authOpen||toolOpen||!drawer.classList.contains("show");
+  document.getElementById("toolBackdrop").inert=authOpen||!toolOpen;
+}
+function finishAuthBootstrap(){document.body.classList.remove("auth-pending");syncModalAccessibility()}
 function showAuth(){
   document.getElementById("authGate").classList.remove("hidden");
   finishAuthBootstrap();
@@ -3655,7 +3671,7 @@ function renderTimeline(){
   const items=datedOccurrencesForDate(currentDateKey(),filtered());
   const box=document.getElementById("timeline");
   if(!items.length){
-    box.innerHTML='<div class="empty">لا توجد حصص اليوم.</div>';
+    box.innerHTML='<div class="empty"><strong>لا توجد حصص اليوم</strong><span>راجع مواعيد الأسبوع، أو أضف موعدًا جديدًا إلى جدولك.</span><button type="button" class="secondary" onclick="openNew()">＋ إضافة حصة</button></div>';
     return;
   }
   box.innerHTML="";
@@ -3909,16 +3925,23 @@ function toggleFields(){
   document.getElementById("nameLabel").textContent=st==="group"?"اسم المجموعة / عنوان الدرس":"اسم الطالب / عنوان الدرس";
 }
 function openDrawer(){
+  drawerReturnFocus=document.activeElement;
   document.getElementById("backdrop").classList.add("show");
   document.getElementById("drawer").classList.add("show");
   document.getElementById("drawer").setAttribute("aria-hidden","false");
   document.body.classList.add("drawer-open");
+  syncModalAccessibility();
+  requestAnimationFrame(()=>document.getElementById("type").focus());
 }
 function closeDrawer(){
+  const wasOpen=document.getElementById("drawer").classList.contains("show");
   document.getElementById("backdrop").classList.remove("show");
   document.getElementById("drawer").classList.remove("show");
+  document.body.classList.toggle("drawer-open",document.getElementById("toolBackdrop").classList.contains("show"));
+  syncModalAccessibility();
+  if(wasOpen&&drawerReturnFocus?.isConnected)drawerReturnFocus.focus();
+  drawerReturnFocus=null;
   document.getElementById("drawer").setAttribute("aria-hidden","true");
-  document.body.classList.remove("drawer-open");
   setTimeout(flushPendingRemote,0);
 }
 
@@ -4148,12 +4171,22 @@ async function deleteLesson(){
 }
 
 document.addEventListener("keydown",e=>{
+  if(e.key==="Tab"){
+    const auth=document.getElementById("authGate"),tool=document.getElementById("toolBackdrop"),drawer=document.getElementById("drawer");
+    const modal=!auth.classList.contains("hidden")?auth:tool.classList.contains("show")?tool:drawer.classList.contains("show")?drawer:null;
+    if(modal){
+      const controls=[...modal.querySelectorAll('button,input,select,textarea,a[href],summary,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&!el.closest('[inert]')&&el.getClientRects().length);
+      const first=controls[0],last=controls.at(-1),active=document.activeElement;
+      if(e.shiftKey&&(active===first||!controls.includes(active))){e.preventDefault();last?.focus()}
+      else if(!e.shiftKey&&(active===last||!controls.includes(active))){e.preventDefault();first?.focus()}
+    }
+  }
   if(e.key==="Escape"){
     closeDataMenu();
     if(document.getElementById("toolBackdrop").classList.contains("show"))closeToolDialog();
     else if(document.getElementById("authGate").classList.contains("hidden"))closeDrawer();
   }
-  if(e.key==="Enter"&&!document.getElementById("authGate").classList.contains("hidden"))submitAuth();
+  if(e.key==="Enter"&&e.target.matches("input")&&!document.getElementById("authGate").classList.contains("hidden")){e.preventDefault();submitAuth()}
 });
 document.addEventListener("click",e=>{
   const menu=document.getElementById("dataMenu");

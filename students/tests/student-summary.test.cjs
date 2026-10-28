@@ -20,7 +20,7 @@ assert.match(html,/<section class="student-summary" id="studentSummary"[^>]*hidd
 assert.match(html,/جميع طلابك المسجّلين، بصرف النظر عن البحث والفلاتر/);
 assert.match(html,/student-registry\.css\?v=4/);
 assert.match(html,/student-registry\.js\?v=7/);
-assert.match(sw,/mawaeidi-shell-v47/);
+assert.match(sw,/mawaeidi-shell-v48/);
 assert.match(sw,/student-registry\.css\?v=4/);
 assert.match(sw,/student-registry\.js\?v=7/);
 assert.match(css,/#studentsView \.student-summary\[hidden\]\{display:none!important\}/);

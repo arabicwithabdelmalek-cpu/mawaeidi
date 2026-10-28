@@ -4,6 +4,7 @@
   "private": true,
   "description": "Android app shell for مواعيدي",
   "scripts": {
+    "preview:design": "node scripts/build-design-preview.cjs",
     "android:add": "cap add android",
     "android:sync": "cap sync android",
     "android:build": "cd android && ./gradlew assembleDebug",

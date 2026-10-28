@@ -885,6 +885,80 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .world-cloud-note{padding:9px 14px;border:1px solid #dbe6ec;border-radius:10px;background:#f6f9fa;color:#496c7d;font-size:11px;font-weight:750;line-height:1.8;text-align:right}
 @media(max-width:520px){.world-cloud-note{font-size:10px;padding:9px 11px}}
 </style>
+<style id="mawaeidi-motion-refinement-v1">
+/* Motion-only polish: original colors, typography, and layout stay untouched. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes mawaeidi-section-reveal {
+    from { opacity: .65; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* A quiet reveal only when a workspace becomes visible. */
+  #scheduleWorkspace:not([hidden]),
+  #worldClockView:not([hidden]),
+  #studentsView:not([hidden]) {
+    animation: mawaeidi-section-reveal .28s cubic-bezier(.2,.7,.2,1) both;
+  }
+
+  /* Smooth state changes, without altering button appearance. */
+  .workspace-switch button,
+  .tab, .filter,
+  .week-time-switch button,
+  .week-density-switch button,
+  .unified-trash-filter {
+    transition: background-color .2s ease, color .2s ease,
+                box-shadow .2s ease, transform .2s cubic-bezier(.2,.7,.2,1);
+  }
+
+  .add-btn, button.primary, button.secondary, button.danger,
+  .tool-actions button, .quick-actions button,
+  .unified-trash-controls button {
+    transition: transform .18s cubic-bezier(.2,.7,.2,1),
+                box-shadow .18s ease, background-color .18s ease,
+                border-color .18s ease;
+  }
+
+  /* Preserve existing modal and drawer positions, refining only their timing. */
+  .drawer { transition: transform .28s cubic-bezier(.22,1,.36,1); }
+  .tool-dialog { transition: transform .24s cubic-bezier(.22,1,.36,1); }
+  .backdrop, .tool-backdrop { transition: opacity .22s ease; }
+
+  .lesson {
+    transition: border-color .2s ease, box-shadow .2s ease,
+                transform .2s cubic-bezier(.2,.7,.2,1);
+  }
+  input, select, textarea {
+    transition: border-color .18s ease, box-shadow .18s ease;
+  }
+
+  /* Hover movement is available only to actual mouse/trackpad pointers. */
+  @media (hover: hover) and (pointer: fine) {
+    .workspace-switch button:hover,
+    .tab:hover, .filter:hover {
+      transform: translateY(-1px);
+    }
+    .lesson:hover { transform: translateY(-2px); }
+    .add-btn:hover,
+    button.primary:hover:not(:disabled),
+    button.secondary:hover:not(:disabled),
+    button.danger:hover:not(:disabled),
+    .tool-actions button:hover:not(:disabled),
+    .quick-actions button:hover:not(:disabled),
+    .unified-trash-controls button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+  }
+
+  .workspace-switch button:active,
+  .tab:active, .filter:active,
+  .add-btn:active:not(:disabled),
+  button.primary:active:not(:disabled),
+  button.secondary:active:not(:disabled),
+  button.danger:active:not(:disabled) {
+    transform: scale(.985);
+  }
+}
+</style>
 </head>
 <body class="auth-pending">
 

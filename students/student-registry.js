@@ -24,13 +24,29 @@ const MAX_IMPORT_ROWS=2000;
 const STATUS_OPTIONS=["حالي","سابق","متوقف مؤقتًا","جديد","غير محدد"];
 const LEVEL_OPTIONS=["مبتدئ","متوسط","متقدم","غير محدد"];
 const STUDY_TYPE_OPTIONS=["فردي","مجموعة","غير محدد"];
+const COUNTRY_CODES="AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW".split(" ");
+function countryFlag(code){
+  return [...code.toUpperCase()].map(char=>String.fromCodePoint(127397+char.charCodeAt(0))).join("");
+}
+function countryName(code){
+  try{
+    if(typeof Intl.DisplayNames==="function"){
+      const name=new Intl.DisplayNames(["ar"],{type:"region"}).of(code);
+      if(name)return name;
+    }
+  }catch{}
+  return code;
+}
+const COUNTRY_OPTIONS=COUNTRY_CODES
+  .map(code=>({code,name:countryName(code)}))
+  .sort((a,b)=>a.name.localeCompare(b.name,"ar"));
 
 const STUDENT_FIELDS=[
   {key:"username",label:"اسم المستخدم على الموقع",max:120},
   {key:"login_password",label:"كلمة السر",type:"password",max:240},
   {key:"first_name",label:"الاسم الأول",required:true,max:120},
   {key:"last_name",label:"اسم العائلة",max:120},
-  {key:"country",label:"الدولة",max:120},
+  {key:"country",label:"الدولة",country:true,max:120},
   {key:"status",label:"حالة الطالب",options:STATUS_OPTIONS},
   {key:"institute",label:"الجهة / المعهد",max:160},
   {key:"study_group",label:"المجموعة الدراسية",max:160},
@@ -194,6 +210,15 @@ function buildStudentForm(){
       let input;
       if(field.textarea){
         input=document.createElement("textarea");
+      }else if(field.country){
+        input=document.createElement("select");
+        input.append(new Option("اختر الدولة",""));
+        for(const country of COUNTRY_OPTIONS){
+          const option=document.createElement("option");
+          option.value=country.name;
+          option.textContent=`${countryFlag(country.code)} ${country.name}`;
+          input.append(option);
+        }
       }else if(field.options){
         input=document.createElement("select");
         for(const optionValue of field.options){
@@ -601,7 +626,12 @@ function openStudentEditor(student=null){
   byId("studentEditorTitle").textContent=student?"تعديل بيانات الطالب":"إضافة طالب جديد";
   for(const field of STUDENT_FIELDS){
     const input=byId(`student_${field.key}`);
-    input.value=student?.[field.key]??(field.options?"غير محدد":"");
+    const value=student?.[field.key]??(field.options?"غير محدد":"");
+    if(field.country&&value&&![...input.options].some(option=>option.value===value)){
+      const option=new Option(value,value);
+      input.append(option);
+    }
+    input.value=value;
   }
   updateStudentPhotoEditor();
   setMessage("studentFormMessage","");

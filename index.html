@@ -1916,20 +1916,28 @@ function checkedNotificationLeads(selector){
     .sort((a,b)=>b-a);
 }
 function openToolDialog(title,intro,content){
+  const backdrop=document.getElementById("toolBackdrop");
+  const previousFocus=document.activeElement;
+  if(!backdrop.classList.contains("show")){
+    // A tool opened from the collapsing <details> menu should return to its summary.
+    const menu=document.getElementById("dataMenu");
+    toolReturnFocus=menu?.contains(previousFocus)?menu.querySelector("summary"):previousFocus;
+  }
   closeDataMenu();
-  toolReturnFocus=document.activeElement;
   document.getElementById("toolTitle").textContent=title;
   document.getElementById("toolIntro").textContent=intro||"";
   document.getElementById("toolBody").innerHTML=content||"";
-  const backdrop=document.getElementById("toolBackdrop");
   backdrop.classList.add("show");
   backdrop.setAttribute("aria-hidden","false");
   document.body.classList.add("drawer-open");
-  requestAnimationFrame(()=>document.getElementById("toolDialog").focus());
+  requestAnimationFrame(()=>{
+    if(backdrop.classList.contains("show"))document.getElementById("toolDialog").focus({preventScroll:true});
+  });
 }
 function closeToolDialog(event){
   const backdrop=document.getElementById("toolBackdrop");
   if(event&&event.target!==backdrop)return;
+  if(!backdrop.classList.contains("show"))return;
   backdrop.classList.remove("show");
   backdrop.setAttribute("aria-hidden","true");
   document.body.classList.remove("drawer-open");
@@ -1937,8 +1945,16 @@ function closeToolDialog(event){
   activeWeekMoveContext=null;
   pendingBackupRestorePlan=null;
   if(worldClockInterval){clearInterval(worldClockInterval);worldClockInterval=null}
-  if(toolReturnFocus?.focus)toolReturnFocus.focus();
+  const requestedFocus=toolReturnFocus;
   toolReturnFocus=null;
+  const toolsSummary=document.querySelector("#dataMenu > summary");
+  const returnTarget=requestedFocus?.isConnected
+      &&!requestedFocus.closest("[hidden],details:not([open])")
+      &&!requestedFocus.hidden
+    ?requestedFocus:toolsSummary;
+  requestAnimationFrame(()=>{
+    if(!backdrop.classList.contains("show"))returnTarget?.focus({preventScroll:true});
+  });
   setTimeout(flushPendingRemote,0);
 }
 function refreshInstallAction(){
@@ -4488,11 +4504,27 @@ async function deleteLesson(){
  render();closeDrawer();
 }
 
+function keepToolDialogKeyboardFocus(event){
+  if(event.key!=="Tab"||!document.getElementById("toolBackdrop").classList.contains("show"))return;
+  const dialog=document.getElementById("toolDialog");
+  const focusables=[...dialog.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
+    .filter(el=>!el.hidden&&!el.closest("[hidden]")&&el.getClientRects().length);
+  if(!focusables.length){event.preventDefault();dialog.focus({preventScroll:true});return}
+  const first=focusables[0],last=focusables[focusables.length-1],current=document.activeElement;
+  if(!dialog.contains(current)||current===dialog){
+    event.preventDefault();(event.shiftKey?last:first).focus({preventScroll:true});
+  }else if(event.shiftKey&&current===first){
+    event.preventDefault();last.focus({preventScroll:true});
+  }else if(!event.shiftKey&&current===last){
+    event.preventDefault();first.focus({preventScroll:true});
+  }
+}
 document.addEventListener("keydown",e=>{
+  if(e.key==="Tab")keepToolDialogKeyboardFocus(e);
   if(e.key==="Escape"){
+    if(document.getElementById("toolBackdrop").classList.contains("show")){closeToolDialog();return}
     if(document.getElementById("dataMenu")?.open){closeDataMenu(true);return}
-    if(document.getElementById("toolBackdrop").classList.contains("show"))closeToolDialog();
-    else if(document.getElementById("authGate").classList.contains("hidden"))closeDrawer();
+    if(document.getElementById("authGate").classList.contains("hidden"))closeDrawer();
   }
   if(e.key==="Enter"&&!document.getElementById("authGate").classList.contains("hidden"))submitAuth();
 });

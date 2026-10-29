@@ -1125,6 +1125,18 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
   }
 }
 </style>
+<style id="mawaeidi-tools-schedule-ux-v1">
+/* Small workflow improvements; leave the established identity untouched. */
+#todayView .panel-head { flex-wrap: wrap; }
+.today-header-actions { display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap; }
+.today-quick-add { min-height:32px;padding:6px 10px;cursor:pointer; }
+.lesson[role="button"]:focus-visible { outline:3px solid rgba(35,75,110,.30);outline-offset:2px; }
+.drawer-foot .primary:disabled { opacity:.65;cursor:wait; }
+@media(max-width:520px) {
+  .today-header-actions { width:100%;justify-content:space-between; }
+  .today-quick-add { min-height:40px; }
+}
+</style>
 </head>
 <body class="auth-pending">
 
@@ -1256,7 +1268,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
       <div class="panel">
         <div class="panel-head">
           <h2 id="todayHeading">جدول اليوم</h2>
-          <span id="todayCount">0 حصة</span>
+          <div class="today-header-actions"><span id="todayCount">0 حصة</span><button type="button" class="small-btn add-time today-quick-add" onclick="openQuickAddForToday()" title="إضافة موعد أسبوعي سريع">＋ إضافة سريعة</button></div>
         </div>
         <div class="timeline" id="timeline"></div>
       </div>
@@ -1626,7 +1638,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 
   <div class="drawer-foot">
     <div class="group">
-      <button type="button" class="primary" onclick="saveLesson()">حفظ</button>
+      <button type="button" class="primary" id="saveLessonBtn" onclick="saveLesson()">حفظ</button>
       <button type="button" class="secondary" id="copyBtn" style="display:none" onclick="copyLesson()">نسخ الحصة</button>
     </div>
     <div class="group">
@@ -1802,6 +1814,7 @@ let draggedWeekContext=null;
 let activeWeekMoveContext=null;
 let currentSection=new URLSearchParams(location.search).get("section")==="students"?"students":"schedule";
 let editingId=null;
+let lessonSaveInFlight=false;
 let currentUser=null;
 let cloudReady=false;
 let authMode="signin";
@@ -1828,7 +1841,12 @@ let worldClockBusy=false;
 let worldClockLoadSequence=0;
 let timeZoneCatalogCache=null;
 
-function closeDataMenu(){document.getElementById("dataMenu")?.removeAttribute("open")}
+function closeDataMenu(restoreFocus=false){
+  const menu=document.getElementById("dataMenu");
+  const wasOpen=Boolean(menu?.open);
+  menu?.removeAttribute("open");
+  if(restoreFocus&&wasOpen)menu?.querySelector("summary")?.focus();
+}
 function isStandalone(){return window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone===true}
 function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||"")}
 function vapidKeyIsConfigured(){return VAPID_PUBLIC_KEY&&!VAPID_PUBLIC_KEY.startsWith("__")}
@@ -3908,7 +3926,7 @@ function renderTimeline(){
     row.style.animationDelay=`${i*.05}s`;
     row.innerHTML=`
       <div class="t-time">${fmt(o.time)}</div>
-      <div class="lesson ${l.type}${occurrenceIsInactive(o)?" session-inactive":""}" style="--source-color:${srcColor}" onclick="openEdit('${l.id}')">
+      <div class="lesson ${l.type}${occurrenceIsInactive(o)?" session-inactive":""}" style="--source-color:${srcColor}" role="button" tabindex="0" aria-label="فتح وتعديل الحصة: ${esc(l.name||"بدون اسم")}" onclick="openEdit('${l.id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openEdit('${l.id}')}">
         <div>
           <div class="lesson-name">${esc(l.name||"بدون اسم")}</div>
           <div class="lesson-meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة</div>
@@ -4192,6 +4210,12 @@ function updateQuickAddConflict(){
   const list=quickAddConflictList();box.classList.toggle("show",Boolean(list.length));
   box.innerHTML=list.length?`<strong>هذا الوقت غير متاح.</strong><br>${list.map(item=>`${esc(item.name)} · ${esc(fmt(item.exTime))}`).join("<br>")}`:"";
 }
+function openQuickAddForToday(){
+  const minutes=mins(currentTimeKey());
+  const nextHalfHour=Math.min(23*60+30,Math.ceil((minutes+1)/30)*30);
+  const time=`${String(Math.floor(nextHalfHour/60)).padStart(2,"0")}:${String(nextHalfHour%60).padStart(2,"0")}`;
+  openQuickAdd(todayName(),time);
+}
 function openQuickAdd(day,time){
   const safeDay=days.includes(day)?day:"الاثنين",safeTime=TIME_RE.test(String(time))?String(time):"18:00";
   const content=`<div class="quick-add-form">
@@ -4324,6 +4348,7 @@ function conflicts(candidate){
 }
 
 async function saveLesson(){
+  if(lessonSaveInFlight)return;
   const st=document.getElementById("studentType").value;
   const src=document.getElementById("lessonSource").value;
   const existingLesson=editingId?lessons.find(item=>item.id===editingId):null;
@@ -4364,9 +4389,21 @@ async function saveLesson(){
     box.style.display="block";return;
   }
   const old=lessons;
-  lessons=editingId?lessons.map(l=>l.id===editingId?lesson:l):[...lessons,lesson];
-  if(!await persist()){lessons=old;return}
-  render();closeDrawer();
+  const saveButton=document.getElementById("saveLessonBtn");
+  lessonSaveInFlight=true;
+  if(saveButton){saveButton.disabled=true;saveButton.textContent="جارٍ الحفظ…";}
+  try{
+    lessons=editingId?lessons.map(l=>l.id===editingId?lesson:l):[...lessons,lesson];
+    if(!await persist()){lessons=old;return}
+    render();closeDrawer();
+  }catch(error){
+    lessons=old;
+    console.error("تعذّر حفظ الحصة.",error);
+    alert("تعذّر حفظ الحصة. تحقق من الاتصال وحاول مرة أخرى.");
+  }finally{
+    lessonSaveInFlight=false;
+    if(saveButton){saveButton.disabled=false;saveButton.textContent="حفظ";}
+  }
 }
 function copyLessonById(id){
   const o=lessons.find(l=>l.id===id);if(!o)return;
@@ -4388,7 +4425,7 @@ async function deleteLesson(){
 
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){
-    closeDataMenu();
+    if(document.getElementById("dataMenu")?.open){closeDataMenu(true);return}
     if(document.getElementById("toolBackdrop").classList.contains("show"))closeToolDialog();
     else if(document.getElementById("authGate").classList.contains("hidden"))closeDrawer();
   }

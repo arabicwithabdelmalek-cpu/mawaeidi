@@ -26,7 +26,7 @@ const LEVEL_OPTIONS=["مبتدئ","متوسط","متقدم","غير محدد"];
 const STUDY_TYPE_OPTIONS=["فردي","مجموعة","غير محدد"];
 
 const STUDENT_FIELDS=[
-  {key:"username",label:"اسم المستخدم على الموقع",required:true,max:120},
+  {key:"username",label:"اسم المستخدم على الموقع",max:120},
   {key:"login_password",label:"كلمة السر",type:"password",max:240},
   {key:"first_name",label:"الاسم الأول",required:true,max:120},
   {key:"last_name",label:"اسم العائلة",max:120},
@@ -542,7 +542,7 @@ function renderProfile(){
   if(!student){closeDialog("studentProfile");return}
   setAvatarContent(byId("profileAvatar"),student);
   byId("profileTitle").textContent=studentName(student);
-  byId("profileSubtitle").textContent=`@${student.username} · ${student.country||"الدولة غير محددة"}`;
+  byId("profileSubtitle").textContent=`${student.username?`@${student.username}`:"من دون اسم مستخدم"} · ${student.country||"الدولة غير محددة"}`;
   const basic=[
     ["اسم المستخدم",student.username],
     ["كلمة السر",student.login_password],
@@ -618,10 +618,10 @@ function readStudentForm(){
   return result;
 }
 function validateStudent(student){
-  if(!student.username)return "اسم المستخدم مطلوب.";
   if(!student.first_name)return "الاسم الأول مطلوب.";
-  if(students.some(item=>item.id!==editingStudentId&&normalizeKey(item.username)===normalizeKey(student.username)))return "اسم المستخدم موجود بالفعل.";
-  if(trashedStudents.some(item=>item.id!==editingStudentId&&normalizeKey(item.username)===normalizeKey(student.username)))return "اسم المستخدم موجود في سلة المحذوفات. استعد الطالب أولًا أو احذفه نهائيًا.";
+  const usernameKey=normalizeKey(student.username);
+  if(usernameKey&&students.some(item=>item.id!==editingStudentId&&normalizeKey(item.username)===usernameKey))return "اسم المستخدم موجود بالفعل.";
+  if(usernameKey&&trashedStudents.some(item=>item.id!==editingStudentId&&normalizeKey(item.username)===usernameKey))return "اسم المستخدم موجود في سلة المحذوفات. استعد الطالب أولًا أو احذفه نهائيًا.";
   if(student.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student.email))return "اكتب بريدًا إلكترونيًا صحيحًا أو اتركه فارغًا.";
   if(student.student_account_url&&!safeUrl(student.student_account_url))return "رابط حساب الطالب يجب أن يبدأ بـ http أو https.";
   if(student.joined_on&&!/^\d{4}-\d{2}-\d{2}$/.test(student.joined_on))return "تاريخ الانضمام غير صحيح.";
@@ -702,7 +702,7 @@ async function saveStudentRecord(event){
   try{
     let saved,cleanupWarning=false;
       if(!cloud||!currentUser)throw new Error("missing_session");
-      const payload={...draft,user_id:currentUser.id,joined_on:draft.joined_on||null};
+      const payload={...draft,user_id:currentUser.id,username:draft.username||null,joined_on:draft.joined_on||null};
       let response;
       if(editingStudentId)response=await cloud.from(STUDENTS_TABLE).update(payload).eq("id",editingStudentId).select("*").single();
       else response=await cloud.from(STUDENTS_TABLE).insert(payload).select("*").single();
@@ -1115,8 +1115,8 @@ function inspectBackupSnapshot(payload,entries=new Map()){
     const validation=validateImportedStudent(student,0);
     if(validation.length)throw new Error("invalid_student");
     const usernameKey=normalizeKey(student.username);
-    if(seenUsernames.has(usernameKey))throw new Error("duplicate_student_username");
-    seenUsernames.add(usernameKey);
+    if(usernameKey&&seenUsernames.has(usernameKey))throw new Error("duplicate_student_username");
+    if(usernameKey)seenUsernames.add(usernameKey);
     let photoFile=clean(raw.photo_file,1024);
     let photoData=null;
     let photoType=null;
@@ -1146,15 +1146,16 @@ function inspectBackupSnapshot(payload,entries=new Map()){
 async function restoreBackupSnapshot(plan,user){
   if(!plan||!Array.isArray(plan.items)||plan.items.length>MAX_IMPORT_ROWS)throw new Error("invalid_students_restore_plan");
   const operation=await ensureBackupAccount(user,true);
-  const existingByName=new Map([...students,...trashedStudents].map(student=>[normalizeKey(student.username),student]));
+  const existingByName=new Map([...students,...trashedStudents].filter(student=>normalizeKey(student.username)).map(student=>[normalizeKey(student.username),student]));
   const now=new Date().toISOString();
   const prepared=plan.items.map(item=>{
     const student=normalizeStudent(item.student);
     if(validateImportedStudent(student,0).length)throw new Error("invalid_student");
-    const existing=existingByName.get(normalizeKey(student.username))||null;
+    const usernameKey=normalizeKey(student.username);
+    const existing=usernameKey?existingByName.get(usernameKey)||null:null;
     const id=existing?.id||makeId();
     const payload={user_id:operation.userId,id};
-    for(const field of STUDENT_FIELDS)payload[field.key]=field.key==="joined_on"?(student[field.key]||null):student[field.key];
+    for(const field of STUDENT_FIELDS)payload[field.key]=(field.key==="joined_on"||field.key==="username")?(student[field.key]||null):student[field.key];
     payload.created_at=existing?.created_at||(Number.isFinite(Date.parse(student.created_at))?student.created_at:now);
     payload.updated_at=now;
     payload.photo_path=existing?.photo_path||null;
@@ -1224,7 +1225,6 @@ function parseCsv(source){
 }
 function validateImportedStudent(student,rowNumber){
   const errors=[];
-  if(!student.username)errors.push(`الصف ${rowNumber}: اسم المستخدم مفقود.`);
   if(!student.first_name)errors.push(`الصف ${rowNumber}: الاسم الأول مفقود.`);
   if(student.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student.email))errors.push(`الصف ${rowNumber}: البريد الإلكتروني غير صحيح.`);
   if(student.student_account_url&&!safeUrl(student.student_account_url))errors.push(`الصف ${rowNumber}: رابط الحساب غير صحيح.`);
@@ -1263,13 +1263,19 @@ async function prepareCsvImport(file){
       errors.push(...validateImportedStudent(item,rowNumber));
       const usernameKey=normalizeKey(item.username);
       if(usernameKey&&seen.has(usernameKey))errors.push(`الصف ${rowNumber}: اسم المستخدم مكرر داخل الملف.`);
-      seen.add(usernameKey);
+      if(usernameKey)seen.add(usernameKey);
       items.push(item);
     }
-    const trashedNames=new Set(trashedStudents.map(item=>normalizeKey(item.username)));
-    for(const item of items)if(trashedNames.has(normalizeKey(item.username)))errors.push(`اسم المستخدم ${item.username} موجود في السلة؛ استعده أولًا قبل الاستيراد.`);
-    const existingNames=new Set(students.map(item=>normalizeKey(item.username)));
-    const updates=items.filter(item=>existingNames.has(normalizeKey(item.username))).length;
+    const trashedNames=new Set(trashedStudents.map(item=>normalizeKey(item.username)).filter(Boolean));
+    for(const item of items){
+      const usernameKey=normalizeKey(item.username);
+      if(usernameKey&&trashedNames.has(usernameKey))errors.push(`اسم المستخدم ${item.username} موجود في السلة؛ استعده أولًا قبل الاستيراد.`);
+    }
+    const existingNames=new Set(students.map(item=>normalizeKey(item.username)).filter(Boolean));
+    const updates=items.filter(item=>{
+      const usernameKey=normalizeKey(item.username);
+      return usernameKey&&existingNames.has(usernameKey);
+    }).length;
     importPlan={items,errors,updates,creates:items.length-updates};
     byId("importContent").innerHTML=`
       <div class="import-summary">
@@ -1292,15 +1298,16 @@ async function confirmCsvImport(){
   const button=byId("confirmImport");
   setBusy(button,true,"جارٍ الاستيراد…");
   try{
-    const existingByName=new Map(students.map(item=>[normalizeKey(item.username),item]));
+    const existingByName=new Map(students.filter(item=>normalizeKey(item.username)).map(item=>[normalizeKey(item.username),item]));
     const now=new Date().toISOString();
     const payload=importPlan.items.map(item=>{
-      const existing=existingByName.get(normalizeKey(item.username));
+      const usernameKey=normalizeKey(item.username);
+      const existing=usernameKey?existingByName.get(usernameKey):null;
       return normalizeStudent({...item,id:existing?.id||makeId(),created_at:existing?.created_at||now,updated_at:now});
     });
       const cloudPayload=payload.map(item=>{
         const data={user_id:currentUser.id,id:item.id};
-        for(const field of STUDENT_FIELDS)data[field.key]=field.key==="joined_on"?(item[field.key]||null):item[field.key];
+        for(const field of STUDENT_FIELDS)data[field.key]=(field.key==="joined_on"||field.key==="username")?(item[field.key]||null):item[field.key];
         return data;
       });
       const {data,error}=await cloud.from(STUDENTS_TABLE).upsert(cloudPayload,{onConflict:"id"}).select("*");

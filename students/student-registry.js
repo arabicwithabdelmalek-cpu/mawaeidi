@@ -258,7 +258,7 @@ function currentFilters(){
 function filterAndSortStudents(source=students){
   const filters=currentFilters();
   const list=source.filter(student=>{
-    const searchable=normalizeKey(STUDENT_FIELDS.map(field=>student[field.key]).join(" "));
+    const searchable=normalizeKey(STUDENT_FIELDS.filter(field=>field.key!=="login_password").map(field=>student[field.key]).join(" "));
     return (!filters.query||searchable.includes(filters.query))
       &&(!filters.status||student.status===filters.status)
       &&(!filters.level||student.current_level===filters.level)

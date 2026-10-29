@@ -169,6 +169,14 @@
 #studentsView .detail-item span,#studentsView .detail-item strong{display:block}
 #studentsView .detail-item span{color:var(--muted);font-size:8px}
 #studentsView .detail-item strong{margin-top:3px;overflow-wrap:anywhere;font-size:10px;font-weight:700}
+#studentsView .detail-value-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:3px}
+#studentsView .detail-value-row>strong{min-width:0;margin-top:0}
+#studentsView .detail-actions{display:flex;flex:0 0 auto;gap:4px}
+#studentsView .detail-action{min-height:25px;padding:3px 7px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--primary);font-size:7.5px;font-weight:800}
+#studentsView .detail-action:hover{background:#f4f7f9;border-color:#b9c8d1}
+#studentsView .profile-secret{direction:ltr;text-align:left;letter-spacing:.08em}
+#studentsView .profile-country{display:flex!important;align-items:center;gap:6px}
+#studentsView .profile-country-flag{font-size:16px;line-height:1}
 #studentsView .detail-item.wide{grid-column:1/-1}
 #studentsView .contact-actions{display:grid;gap:0;padding:3px 12px 10px}#studentsView .contact-row{display:grid;gap:3px;padding:9px 4px;border-bottom:1px solid #edf1f3}#studentsView .contact-row:last-child{border-bottom:0}#studentsView .contact-row span{color:var(--muted);font-size:8px}#studentsView .contact-row strong{overflow-wrap:anywhere;font-size:9px}#studentsView .contact-row a{width:max-content;margin-top:3px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:8px;font-weight:800;text-decoration:none}
 #studentsView .empty-mini{padding:22px 14px;text-align:center;color:var(--muted);font-size:9px}

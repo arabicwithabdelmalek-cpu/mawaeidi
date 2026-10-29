@@ -41,6 +41,122 @@ const COUNTRY_OPTIONS=COUNTRY_CODES
   .map(code=>({code,name:countryName(code)}))
   .sort((a,b)=>a.name.localeCompare(b.name,"ar"));
 
+function normalizeCountryQuery(value){
+  return clean(value,120)
+    .normalize("NFD")
+    .replace(/[\u064B-\u065F\u0670]/g,"")
+    .replace(/[أإآٱ]/g,"ا")
+    .replace(/ـ/g,"")
+    .toLocaleLowerCase("ar")
+    .replace(/\s+/g," ")
+    .trim();
+}
+function matchingCountries(value){
+  const query=normalizeCountryQuery(value);
+  if(!query)return COUNTRY_OPTIONS.slice(0,18);
+  const starts=[],contains=[];
+  for(const country of COUNTRY_OPTIONS){
+    const normalized=normalizeCountryQuery(country.name);
+    if(normalized.startsWith(query))starts.push(country);
+    else if(normalized.includes(query))contains.push(country);
+  }
+  return [...starts,...contains].slice(0,18);
+}
+function setupCountryPicker(wrapper,input){
+  wrapper.classList.add("country-field");
+  input.type="text";
+  input.autocomplete="off";
+  input.placeholder="ابحث عن الدولة";
+  input.setAttribute("role","combobox");
+  input.setAttribute("aria-autocomplete","list");
+  input.setAttribute("aria-expanded","false");
+  const menu=document.createElement("div");
+  menu.className="country-results";
+  menu.hidden=true;
+  menu.setAttribute("role","listbox");
+  menu.id="student_country_results";
+  input.setAttribute("aria-controls",menu.id);
+  let activeIndex=-1;
+  let current=[];
+
+  const close=()=>{
+    menu.hidden=true;
+    input.setAttribute("aria-expanded","false");
+    activeIndex=-1;
+    input.removeAttribute("aria-activedescendant");
+  };
+  const selectCountry=country=>{
+    input.value=country.name;
+    close();
+    input.dispatchEvent(new Event("change",{bubbles:true}));
+  };
+  const render=()=>{
+    current=matchingCountries(input.value);
+    menu.replaceChildren();
+    activeIndex=-1;
+    if(!current.length){
+      const empty=document.createElement("div");
+      empty.className="country-empty";
+      empty.textContent="لا توجد دولة مطابقة";
+      menu.append(empty);
+    }else{
+      current.forEach((country,index)=>{
+        const option=document.createElement("button");
+        option.type="button";
+        option.className="country-option";
+        option.id=`student_country_option_${index}`;
+        option.setAttribute("role","option");
+        const flag=document.createElement("span");
+        flag.className="country-flag";
+        flag.setAttribute("aria-hidden","true");
+        flag.textContent=countryFlag(country.code);
+        const name=document.createElement("span");
+        name.textContent=country.name;
+        option.append(flag,name);
+        option.addEventListener("pointerdown",event=>{
+          event.preventDefault();
+          selectCountry(country);
+        });
+        menu.append(option);
+      });
+    }
+    menu.hidden=false;
+    input.setAttribute("aria-expanded","true");
+  };
+  const setActive=index=>{
+    const options=[...menu.querySelectorAll(".country-option")];
+    if(!options.length)return;
+    activeIndex=(index+options.length)%options.length;
+    options.forEach((option,i)=>option.classList.toggle("active",i===activeIndex));
+    const active=options[activeIndex];
+    input.setAttribute("aria-activedescendant",active.id);
+    active.scrollIntoView({block:"nearest"});
+  };
+
+  input.addEventListener("focus",render);
+  input.addEventListener("input",render);
+  input.addEventListener("keydown",event=>{
+    if(event.key==="ArrowDown"){
+      event.preventDefault();
+      if(menu.hidden)render();
+      setActive(activeIndex+1);
+    }else if(event.key==="ArrowUp"){
+      event.preventDefault();
+      if(menu.hidden)render();
+      setActive(activeIndex-1);
+    }else if(event.key==="Enter"&&!menu.hidden&&activeIndex>=0&&current[activeIndex]){
+      event.preventDefault();
+      selectCountry(current[activeIndex]);
+    }else if(event.key==="Escape"){
+      close();
+    }
+  });
+  input.addEventListener("blur",()=>setTimeout(()=>{
+    if(!wrapper.contains(document.activeElement))close();
+  },0));
+  wrapper.append(menu);
+}
+
 const STUDENT_FIELDS=[
   {key:"username",label:"اسم المستخدم على الموقع",max:120},
   {key:"login_password",label:"كلمة السر",type:"password",max:240},
@@ -211,14 +327,7 @@ function buildStudentForm(){
       if(field.textarea){
         input=document.createElement("textarea");
       }else if(field.country){
-        input=document.createElement("select");
-        input.append(new Option("اختر الدولة",""));
-        for(const country of COUNTRY_OPTIONS){
-          const option=document.createElement("option");
-          option.value=country.name;
-          option.textContent=`${countryFlag(country.code)} ${country.name}`;
-          input.append(option);
-        }
+        input=document.createElement("input");
       }else if(field.options){
         input=document.createElement("select");
         for(const optionValue of field.options){
@@ -239,6 +348,7 @@ function buildStudentForm(){
       if(field.type==="password")input.autocomplete="new-password";
       if(field.key==="whatsapp")input.inputMode="tel";
       wrapper.append(label,input);
+      if(field.country)setupCountryPicker(wrapper,input);
       grid.append(wrapper);
     }
     section.append(heading,grid);
@@ -627,10 +737,6 @@ function openStudentEditor(student=null){
   for(const field of STUDENT_FIELDS){
     const input=byId(`student_${field.key}`);
     const value=student?.[field.key]??(field.options?"غير محدد":"");
-    if(field.country&&value&&![...input.options].some(option=>option.value===value)){
-      const option=new Option(value,value);
-      input.append(option);
-    }
     input.value=value;
   }
   updateStudentPhotoEditor();

@@ -27,6 +27,7 @@ const STUDY_TYPE_OPTIONS=["فردي","مجموعة","غير محدد"];
 
 const STUDENT_FIELDS=[
   {key:"username",label:"اسم المستخدم على الموقع",required:true,max:120},
+  {key:"login_password",label:"كلمة السر",type:"password",max:240},
   {key:"first_name",label:"الاسم الأول",required:true,max:120},
   {key:"last_name",label:"اسم العائلة",max:120},
   {key:"country",label:"الدولة",max:120},
@@ -45,7 +46,7 @@ const STUDENT_FIELDS=[
   {key:"student_account_url",label:"رابط حساب الطالب",type:"url",max:2048,span:2}
 ];
 const STUDENT_FIELD_GROUPS=[
-  {title:"البيانات الأساسية",hint:"الاسم والحالة والمكان",keys:["first_name","last_name","username","country","status"]},
+  {title:"البيانات الأساسية",hint:"الاسم والحالة والمكان",keys:["first_name","last_name","username","login_password","country","status"]},
   {title:"بيانات الدراسة",hint:"المستوى والكتاب والجهة",keys:["current_level","study_type","course_book","institute","study_group","joined_on"]},
   {title:"التواصل والحساب",hint:"وسائل الوصول إلى الطالب",keys:["whatsapp","email","communication_language","student_account_url"]},
   {title:"ملاحظاتك",hint:"معلومات تساعدك على تذكّر الطالب",keys:["distinguishing_mark","educational_notes"]}
@@ -210,6 +211,7 @@ function buildStudentForm(){
       input.name=field.key;
       input.className="control";
       input.required=Boolean(field.required);
+      if(field.type==="password")input.autocomplete="new-password";
       if(field.key==="whatsapp")input.inputMode="tel";
       wrapper.append(label,input);
       grid.append(wrapper);
@@ -543,6 +545,7 @@ function renderProfile(){
   byId("profileSubtitle").textContent=`@${student.username} · ${student.country||"الدولة غير محددة"}`;
   const basic=[
     ["اسم المستخدم",student.username],
+    ["كلمة السر",student.login_password],
     ["الدولة",student.country],
     ["الحالة",student.status],
     ["تاريخ الانضمام",student.joined_on?dateLabel(student.joined_on):""]

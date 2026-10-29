@@ -315,3 +315,52 @@
   #studentsView .student-insights-grid{grid-template-columns:1fr;gap:18px;padding:13px}
   #studentsView .student-insights>summary{font-size:9.5px}
 }
+
+
+/* Readability pass — larger Cairo text without changing the student layout. */
+#studentsView{--muted:#5f707c;font-size:13px}
+#studentsView .registry-head h1{font-size:25px}
+#studentsView .registry-head p,#studentsView .registry-head #resultsCount{font-size:11px}
+#studentsView .btn{font-size:11px}
+#studentsView .btn.small{font-size:10px}
+#studentsView .more-filters>summary,#studentsView .filters-toggle{font-size:10.5px}
+#studentsView .field label{font-size:11px}
+#studentsView .field label span{font-size:10px}
+#studentsView .control{font-size:13px;line-height:1.55}
+#studentsView .student-name{font-size:13px;line-height:1.45}
+#studentsView .student-sub{font-size:10px;line-height:1.45}
+#studentsView .student-study strong{font-size:11px;line-height:1.45}
+#studentsView .student-meta-item{font-size:10px}
+#studentsView .student-meta-empty{font-size:10px}
+#studentsView .chip{font-size:10px}
+#studentsView .quick-contact{font-size:10px}
+#studentsView .registry-switch{font-size:10.5px}
+#studentsView .trash-counter{font-size:10px}
+#studentsView .trash-retention-note{font-size:10.5px}
+#studentsView .student-summary-heading p{font-size:10.5px}
+#studentsView .student-summary-card span{font-size:10px}
+#studentsView .student-summary-card strong{font-size:17px}
+#studentsView .dialog-head h2{font-size:20px}
+#studentsView .dialog-head p{font-size:11px;line-height:1.55}
+#studentsView .form-section-head h3,#studentsView .profile-section-head h3{font-size:13px}
+#studentsView .form-section-head span,#studentsView .profile-section-head span{font-size:10px}
+#studentsView .detail-item span{font-size:10px}
+#studentsView .detail-item strong{font-size:12px;line-height:1.55}
+#studentsView .detail-action{font-size:9.5px}
+#studentsView .contact-row span{font-size:10px}
+#studentsView .contact-row strong{font-size:11px;line-height:1.55}
+#studentsView .contact-row a{font-size:10px}
+#studentsView .empty-mini,#studentsView .form-message,#studentsView .import-note,#studentsView .import-errors{font-size:10.5px;line-height:1.75}
+#studentsView .toast{font-size:11px}
+#studentsView .country-option{font-size:11px}
+#studentsView .country-empty{font-size:10.5px}
+#studentsView .student-history-head strong{font-size:12px}
+#studentsView .student-history-head time{font-size:10px}
+#studentsView .student-history-item p,#studentsView .student-history-item ul{font-size:10.5px;line-height:1.8}
+#studentsView .shell>footer{font-size:10px}
+@media(max-width:520px){
+  #studentsView .student-name{font-size:13px}
+  #studentsView .student-sub,#studentsView .student-meta-item,#studentsView .student-meta-empty{font-size:10px}
+  #studentsView .chip,#studentsView .quick-contact,#studentsView .btn.small{font-size:10px}
+  #studentsView .registry-head p{font-size:11px}
+}

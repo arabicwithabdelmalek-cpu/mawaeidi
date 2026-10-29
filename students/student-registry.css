@@ -432,3 +432,122 @@
   #studentsView .chip,#studentsView .quick-contact,#studentsView .btn.small{font-size:11px}
   #studentsView .registry-head p{font-size:12px}
 }
+
+
+/* Student readability pass v3 — target the still-small text visible in the registry. */
+#studentsView .registry-head p{
+  margin-top:8px;
+  color:#4d626f;
+  font-size:14px;
+  line-height:1.7;
+  font-weight:600;
+}
+#studentsView .registry-head #resultsCount{
+  color:var(--primary);
+  font-size:14px;
+  font-weight:900;
+}
+#studentsView .student-summary-heading h3{
+  font-size:17px;
+  line-height:1.45;
+}
+#studentsView .student-summary-heading p{
+  margin-top:6px;
+  color:#526773;
+  font-size:13px;
+  line-height:1.75;
+  font-weight:600;
+}
+#studentsView .student-summary-metric span,
+#studentsView .student-summary-card span{
+  color:#526875;
+  font-size:13px;
+  font-weight:750;
+}
+#studentsView .student-summary-metric strong,
+#studentsView .student-summary-card strong{
+  font-size:21px;
+}
+#studentsView .student-insights>summary{
+  min-height:48px;
+  padding:11px 14px;
+  color:#315a72;
+  font-size:13.5px;
+  font-weight:900;
+}
+#studentsView .student-insights>summary span{
+  color:#617785;
+  font-size:12.5px;
+  font-weight:700;
+}
+#studentsView .filters{
+  gap:10px;
+  padding-block:13px;
+}
+#studentsView .more-filters>summary,
+#studentsView .filters-toggle{
+  min-height:44px;
+  font-size:13px;
+  font-weight:900;
+}
+#studentsView .control{
+  min-height:44px;
+  font-size:14px;
+}
+#studentsView .control::placeholder{
+  color:#7b8992;
+  opacity:1;
+}
+#studentsView .btn{
+  font-size:13px;
+}
+#studentsView .btn.small{
+  min-height:34px;
+  font-size:12px;
+}
+#studentsView .student-name{
+  font-size:15px;
+}
+#studentsView .student-sub{
+  font-size:12.5px;
+}
+#studentsView .student-study strong{
+  font-size:13px;
+}
+#studentsView .student-meta-item{
+  min-height:25px;
+  padding-inline:8px;
+  font-size:12px;
+}
+#studentsView .student-meta-empty{
+  font-size:12px;
+}
+#studentsView .chip{
+  min-height:31px;
+  padding-inline:10px;
+  font-size:12px;
+}
+#studentsView .quick-contact{
+  min-height:34px;
+  padding-inline:10px;
+  font-size:12px;
+}
+#studentsView .row-actions .edit-student{
+  min-height:34px;
+}
+@media(max-width:520px){
+  #studentsView .registry-head p,
+  #studentsView .registry-head #resultsCount{font-size:13px}
+  #studentsView .student-summary-heading p{font-size:12.5px}
+  #studentsView .student-insights>summary{font-size:13px}
+  #studentsView .student-insights>summary span{font-size:12px}
+  #studentsView .more-filters>summary,
+  #studentsView .filters-toggle{font-size:12.5px}
+  #studentsView .student-name{font-size:15px}
+  #studentsView .student-sub,
+  #studentsView .student-meta-item,
+  #studentsView .student-meta-empty,
+  #studentsView .chip,
+  #studentsView .quick-contact,
+  #studentsView .btn.small{font-size:12px}
+}

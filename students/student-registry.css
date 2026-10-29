@@ -116,8 +116,13 @@
 #studentsView .chip.previous{background:#eff1f3;color:#66747d}
 #studentsView .chip.intermediate{background:var(--purple-bg);color:var(--purple)}
 #studentsView .chip.advanced{background:#e5eef8;color:var(--primary)}
-#studentsView .row-actions{display:flex;gap:5px;padding-inline-end:7px;white-space:nowrap}
+#studentsView .row-actions{display:flex;align-items:center;gap:5px;padding-inline-end:7px;white-space:nowrap}
 #studentsView .row-actions .edit-student{min-width:58px}
+#studentsView .quick-contact{display:inline-flex;min-height:30px;align-items:center;justify-content:center;padding:5px 8px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:8px;font-weight:800;text-decoration:none}
+#studentsView .quick-contact.whatsapp{border-color:#bfddd5;background:#f2f8f6;color:#176c63}
+#studentsView .quick-contact.telegram{border-color:#c8d8e8;background:#f3f7fb;color:#2c6096}
+#studentsView .quick-contact:hover{transform:translateY(-1px)}
+#studentsView .quick-contact:focus-visible{outline:3px solid rgba(71,137,180,.3);outline-offset:2px}
 #studentsView .loading-state,#studentsView .empty-state{padding:46px 20px;text-align:center;color:var(--muted);font-size:11px}
 #studentsView .loading-state span{display:inline-block;width:14px;height:14px;margin-inline-end:6px;border:2px solid #c9d5dc;border-top-color:var(--primary);border-radius:50%;vertical-align:middle;animation:students-spin .75s linear infinite}
 #studentsView .empty-state strong,#studentsView .empty-state span{display:block}
@@ -217,7 +222,7 @@
   #studentsView .form-grid{grid-template-columns:1fr}
   #studentsView .span-2,#studentsView .span-3{grid-column:auto}
   #studentsView .photo-editor{grid-template-columns:64px minmax(0,1fr);padding:12px}#studentsView .photo-preview{width:64px;height:64px;border-radius:16px;font-size:19px}
-  #studentsView .student-list-wrap{padding:4px 9px 10px}#studentsView .student-row{grid-template-columns:1fr}#studentsView .student-open{grid-template-columns:38px minmax(0,1fr) auto;padding:11px 5px}#studentsView .student-study{grid-column:2/4}#studentsView .row-actions{justify-content:flex-end;padding:0 5px 10px}#studentsView .row-actions .btn{width:auto}
+  #studentsView .student-list-wrap{padding:4px 9px 10px}#studentsView .student-row{grid-template-columns:1fr}#studentsView .student-open{grid-template-columns:38px minmax(0,1fr) auto;padding:11px 5px}#studentsView .student-study{grid-column:2/4}#studentsView .row-actions{flex-wrap:wrap;justify-content:flex-end;padding:0 5px 10px}#studentsView .row-actions .btn{width:auto}
   #studentsView .dialog-body{padding:14px}
   #studentsView .dialog-head,#studentsView .dialog-foot{padding-inline:14px}
   #studentsView .dialog-foot,#studentsView .dialog-foot.split{align-items:stretch;flex-direction:column}

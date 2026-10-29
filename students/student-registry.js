@@ -659,22 +659,69 @@ function renderStudents(){
     const avatar=document.createElement("span");avatar.className="student-avatar";avatar.setAttribute("aria-hidden","true");setAvatarContent(avatar,student);
     const identity=document.createElement("span");identity.className="student-identity";
     const name=document.createElement("strong");name.className="student-name";name.textContent=studentName(student);
-    const username=document.createElement("span");username.className="student-sub";username.textContent=student.username?`@${student.username}`:"من دون اسم مستخدم";
-    identity.append(name,username);
-    const study=document.createElement("span");study.className="student-study";
-    const course=document.createElement("strong");course.textContent=student.course_book||"لا توجد دورة مسجلة";
-    const details=document.createElement("span");
-    details.textContent=listMode==="trash"
-      ?`محذوف منذ ${new Intl.DateTimeFormat("ar-EG",{day:"numeric",month:"short",year:"numeric"}).format(new Date(student.deleted_at))} · ${Math.max(0,Math.ceil((Date.parse(student.deleted_at)+TRASH_RETENTION_MS-Date.now())/86400000))} يوم متبقٍ`
-      :[student.country,student.current_level].filter(Boolean).join(" · ")||"لا توجد تفاصيل إضافية";
-    study.append(course,details);
-    const status=document.createElement("span");status.className=`chip ${statusChipClass(student.status)}`;status.textContent=student.status||"غير محدد";
-    open.append(avatar,identity,study,status);
+    identity.append(name);
+    if(student.username){
+      const username=document.createElement("span");
+      username.className="student-sub";
+      username.textContent=`@${student.username}`;
+      identity.append(username);
+    }
 
+    const study=document.createElement("span");study.className="student-study";
+    const studyTitle=student.course_book||student.institute||"";
+    if(studyTitle){
+      const course=document.createElement("strong");
+      course.textContent=studyTitle;
+      study.append(course);
+    }
+    const details=document.createElement("span");
+    if(listMode==="trash"){
+      details.className="student-sub";
+      details.textContent=`محذوف منذ ${new Intl.DateTimeFormat("ar-EG",{day:"numeric",month:"short",year:"numeric"}).format(new Date(student.deleted_at))} · ${Math.max(0,Math.ceil((Date.parse(student.deleted_at)+TRASH_RETENTION_MS-Date.now())/86400000))} يوم متبقٍ`;
+    }else{
+      details.className="student-meta";
+      const country=countryProfileInfo(student.country);
+      if(country.name){
+        const countryItem=document.createElement("span");
+        countryItem.className="student-meta-item country";
+        const flag=document.createElement("span");
+        flag.className="student-row-flag";
+        flag.setAttribute("aria-hidden","true");
+        flag.textContent=country.flag;
+        const countryName=document.createElement("span");
+        countryName.textContent=country.name;
+        countryItem.append(flag,countryName);
+        details.append(countryItem);
+      }
+      if(student.current_level&&student.current_level!=="غير محدد"){
+        const level=document.createElement("span");
+        level.className="student-meta-item";
+        level.textContent=student.current_level;
+        details.append(level);
+      }
+      if(student.study_type&&student.study_type!=="غير محدد"){
+        const type=document.createElement("span");
+        type.className="student-meta-item subtle";
+        type.textContent=student.study_type;
+        details.append(type);
+      }
+      if(!details.childElementCount){
+        const emptyMeta=document.createElement("span");
+        emptyMeta.className="student-meta-empty";
+        emptyMeta.textContent="لم تُضف تفاصيل دراسية بعد";
+        details.append(emptyMeta);
+      }
+    }
+    study.append(details);
+    open.append(avatar,identity,study);
+
+    const status=document.createElement("span");status.className=`chip ${statusChipClass(student.status)}`;status.textContent=student.status||"غير محدد";
     const actionWrap=document.createElement("div");actionWrap.className="row-actions";
     if(listMode==="trash"){
+      open.append(status);
       actionWrap.append(makeButton("استعادة","restore",student.id),makeButton("حذف نهائي","purge",student.id,true));
     }else{
+      actionWrap.append(status);
       const wa=whatsappUrl(student.whatsapp);
       const tg=telegramUrl(student.telegram);
       if(wa)actionWrap.append(makeQuickContact("واتساب",wa,"whatsapp",student));

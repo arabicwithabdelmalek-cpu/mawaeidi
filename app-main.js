@@ -499,6 +499,21 @@ function swapWorldConverter(){
   const from=document.getElementById("worldFromZone"),to=document.getElementById("worldToZone");if(!from||!to)return;
   const a={value:from.value,zone:from.dataset.zone,label:from.dataset.zoneLabel};from.value=to.value;from.dataset.zone=to.dataset.zone||"";from.dataset.zoneLabel=to.dataset.zoneLabel||"";to.value=a.value;to.dataset.zone=a.zone||"";to.dataset.zoneLabel=a.label||"";convertWorldTime();
 }
+function syncWorldClockSectionOrder(){
+  const tool=document.querySelector("#worldClockView .world-clock-tool-v2");if(!tool)return;
+  const timeline=[...tool.children].find(element=>element.classList.contains("world-timeline-featured"));
+  const dashboard=[...tool.children].find(element=>element.classList.contains("world-dashboard-grid-v2"));
+  if(!timeline||!dashboard)return;
+  if(window.matchMedia("(max-width:760px)").matches){
+    if(timeline.previousElementSibling!==dashboard)tool.insertBefore(dashboard,timeline);
+  }else if(dashboard.previousElementSibling!==timeline)tool.insertBefore(timeline,dashboard);
+}
+function ensureWorldClockOrderListener(){
+  if(ensureWorldClockOrderListener.bound)return;
+  const query=window.matchMedia("(max-width:760px)"),apply=()=>syncWorldClockSectionOrder();
+  if(query.addEventListener)query.addEventListener("change",apply);else query.addListener?.(apply);
+  ensureWorldClockOrderListener.bound=true;
+}
 function openWorldClock(){
   closeDataMenu();currentSection="world";updateSectionChrome();
   const ticks=Array.from({length:60},(_,index)=>{const angle=index*6*Math.PI/180,r=index%5===0?45.5:46.5,x=50+r*Math.sin(angle),y=50-r*Math.cos(angle);return `<i class="world-clock-tick${index%5===0?" major":""}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"></i>`}).join("");
@@ -530,7 +545,7 @@ function openWorldClock(){
       <section class="world-clock-section world-converter-section"><header><div><h3>تحويل موعد</h3><p>حدّد الموعد أولًا، ثم اختر التوقيتين وشاهد النتيجة بوضوح.</p></div><span class="world-section-badge">DST تلقائي</span></header><div class="world-convert-shell"><div class="world-convert-when"><div class="field"><label for="worldConvertDate">التاريخ</label><input id="worldConvertDate" type="date" onchange="convertWorldTime()"></div><div class="field"><label for="worldConvertTime">الساعة</label><input id="worldConvertTime" type="time" oninput="convertWorldTime()"></div></div><div class="world-convert-route"><div class="world-zone-picker"><div class="field"><label for="worldFromZone">من توقيت</label><input id="worldFromZone" list="worldTimeZoneOptions" autocomplete="off" oninput="worldZoneInputChanged(this)" onchange="convertWorldTime()"></div></div><button type="button" class="world-swap-zone" onclick="swapWorldConverter()" title="عكس الاتجاه" aria-label="عكس اتجاه التحويل">⇄</button><div class="world-zone-picker"><div class="field"><label for="worldToZone">إلى توقيت</label><input id="worldToZone" list="worldTimeZoneOptions" autocomplete="off" oninput="worldZoneInputChanged(this)" onchange="convertWorldTime()"></div></div></div><div class="world-convert-actions"><button type="button" onclick="convertWorldTime()">تحويل الموعد</button><button type="button" class="secondary" onclick="setWorldConverterNow()">الآن</button></div><div class="world-convert-result" id="worldConvertResult" aria-live="polite"></div></div></section>
     </div>
   </div>`;
-  const mount=document.getElementById("worldClockPageMount");if(!mount)return;mount.innerHTML=content;populateTimeZoneDatalist("worldTimeZoneOptions");
+  const mount=document.getElementById("worldClockPageMount");if(!mount)return;mount.innerHTML=content;syncWorldClockSectionOrder();ensureWorldClockOrderListener();populateTimeZoneDatalist("worldTimeZoneOptions");
   const base=savedWorldClockBase();setTimeZoneInput(document.getElementById("worldBaseZone"),base);setTimeZoneInput(document.getElementById("worldFromZone"),base);const target=savedWorldClockZones().find(zone=>zone!==base)||SCHEDULE_TIMEZONE;setTimeZoneInput(document.getElementById("worldToZone"),validTimeZone(target)?target:base);
   const now=new Date();document.getElementById("worldConvertDate").value=dateKeyInZone(now,base);document.getElementById("worldConvertTime").value=timeKeyInZone(now,base);renderWorldClockCards();convertWorldTime();
   if(worldClockInterval)clearInterval(worldClockInterval);worldClockInterval=setInterval(renderWorldClockCards,30000);

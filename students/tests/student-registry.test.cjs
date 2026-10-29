@@ -20,7 +20,7 @@ assert.match(source,/cloud\.storage\.from\(STUDENT_PHOTO_BUCKET\)\.download/);
 assert.doesNotMatch(source,/async function exportStudentsBackup/);
 assert.match(main,/id="studentsView"[\s\S]*id="studentEditor"[\s\S]*id="studentProfile"/);
 assert.match(main,/backup-manager\.js\?v=1/);
-assert.match(main,/student-registry\.js\?v=7/);
+assert.match(main,/student-registry\.js\?v=15/);
 assert.doesNotMatch(main,/id="backupStudents"/);
 assert.doesNotMatch(main,/id="openStudentRegistry"/);
 

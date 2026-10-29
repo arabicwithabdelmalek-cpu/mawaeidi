@@ -4,6 +4,8 @@ const fs=require("node:fs");
 const path=require("node:path");
 const root=path.resolve(__dirname,"..");
 const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
+const appMain=fs.readFileSync(path.join(root,"app-main.js"),"utf8");
+const browserSource=html+"\n"+appMain;
 const sw=fs.readFileSync(path.join(root,"sw.js"),"utf8");
 const migration=fs.readFileSync(path.join(root,"supabase/migrations/20261028170000_world_clock_account_sync.sql"),"utf8");
 const fix=fs.readFileSync(path.join(root,"supabase/migrations/20261028170500_world_clock_restore_privileges.sql"),"utf8");
@@ -27,13 +29,11 @@ for(const pattern of [
  /clock_sync_required_for_backup/,
  /event:"\*",schema:"public",table:WORLD_CLOCK_SETTINGS_TABLE/,
  /resetWorldClockSync\(\)/,
- /world-clock-cloud-style/,
- /world-cloud-note/,
-]) assert.match(html,pattern);
+]) assert.match(browserSource,pattern);
 
-assert.doesNotMatch(html,/function rememberWorldClockBase/);
-assert.doesNotMatch(html,/function rememberWorldClockZones/);
-assert.match(sw,/mawaeidi-shell-v47/);
+assert.doesNotMatch(appMain,/function rememberWorldClockBase/);
+assert.doesNotMatch(appMain,/function rememberWorldClockZones/);
+assert.match(sw,/mawaeidi-shell-v68/);
 assert.match(migration,/mawaeidi_world_clock_settings/);
 assert.match(migration,/enable row level security/);
 assert.match(migration,/world_clock_select_own/);
@@ -47,10 +47,10 @@ assert.match(migration,/security invoker/);
 assert.match(fix,/returning \* into archived/);
 
 // Exercise account-aware read helpers with the code shipped to browsers.
-const start=html.indexOf("function legacyWorldClockSnapshot(){");
-const stop=html.indexOf("function worldClockState(hour){",start);
+const start=appMain.indexOf("function legacyWorldClockSnapshot(){");
+const stop=appMain.indexOf("function worldClockState(hour){",start);
 assert.ok(start>0&&stop>start);
-const code=html.slice(start,stop);
+const code=appMain.slice(start,stop);
 const local=new Map();
 const currentUser={id:"alice"};
 const getHelpers=new Function("store","owner",`
@@ -81,5 +81,5 @@ assert.equal(api.setWorldClockServerRow({base_zone:"Africa/Cairo",zones:["Asia/B
 assert.equal(api.setWorldClockServerRow({base_zone:"Africa/Cairo",zones:["Asia/Baku"],version:4},"bob"),false,"Another user's update must be ignored");
 api.resetWorldClockSync();
 assert.equal(api.savedWorldClockBase(),"Africa/Cairo","Logout must clear the previous user's clock");
-assert.doesNotThrow(()=>new Function(html.slice(html.indexOf("<script>\nconst days=")+8,html.indexOf("</script>",html.indexOf("<script>\nconst days=")))));
+assert.doesNotThrow(()=>new Function(appMain));
 console.log("World clock account sync and migration checks passed");

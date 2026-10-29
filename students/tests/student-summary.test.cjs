@@ -18,11 +18,11 @@ for(const id of summaryIds){
 }
 assert.match(html,/<section class="student-summary" id="studentSummary"[^>]*hidden>/);
 assert.match(html,/جميع طلابك المسجّلين، بصرف النظر عن البحث والفلاتر/);
-assert.match(html,/student-registry\.css\?v=4/);
-assert.match(html,/student-registry\.js\?v=7/);
-assert.match(sw,/mawaeidi-shell-v47/);
-assert.match(sw,/student-registry\.css\?v=4/);
-assert.match(sw,/student-registry\.js\?v=7/);
+assert.match(html,/student-registry\.css\?v=13/);
+assert.match(html,/student-registry\.js\?v=15/);
+assert.match(sw,/mawaeidi-shell-v68/);
+assert.match(sw,/student-registry\.css\?v=13/);
+assert.match(sw,/student-registry\.js\?v=15/);
 assert.match(css,/#studentsView \.student-summary\[hidden\]\{display:none!important\}/);
 assert.match(css,/@media\(max-width:520px\)/);
 assert.match(css,/student-summary-metrics\{grid-template-columns:repeat\(2/);

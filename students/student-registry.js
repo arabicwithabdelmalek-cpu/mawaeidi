@@ -169,6 +169,7 @@ const STUDENT_FIELDS=[
   {key:"distinguishing_mark",label:"علامة مميزة",max:160},
   {key:"email",label:"البريد الإلكتروني",type:"email",max:254},
   {key:"whatsapp",label:"واتساب",type:"tel",max:80},
+  {key:"telegram",label:"تيليجرام",max:120,placeholder:"رقم دولي أو @username"},
   {key:"current_level",label:"المستوى الحالي",options:LEVEL_OPTIONS},
   {key:"study_type",label:"نوع الدراسة",options:STUDY_TYPE_OPTIONS},
   {key:"course_book",label:"الدورة / الكتاب",max:240,span:2},
@@ -180,7 +181,7 @@ const STUDENT_FIELDS=[
 const STUDENT_FIELD_GROUPS=[
   {title:"البيانات الأساسية",hint:"الاسم والحالة والمكان",keys:["first_name","last_name","username","login_password","country","status"]},
   {title:"بيانات الدراسة",hint:"المستوى والكتاب والجهة",keys:["current_level","study_type","course_book","institute","study_group","joined_on"]},
-  {title:"التواصل والحساب",hint:"وسائل الوصول إلى الطالب",keys:["whatsapp","email","communication_language","student_account_url"]},
+  {title:"التواصل والحساب",hint:"وسائل الوصول إلى الطالب",keys:["whatsapp","telegram","email","communication_language","student_account_url"]},
   {title:"ملاحظاتك",hint:"معلومات تساعدك على تذكّر الطالب",keys:["distinguishing_mark","educational_notes"]}
 ];
 const CSV_HEADERS=STUDENT_FIELDS.map(field=>field.label);
@@ -345,6 +346,7 @@ function buildStudentForm(){
       input.name=field.key;
       input.className="control";
       input.required=Boolean(field.required);
+      if(field.placeholder)input.placeholder=field.placeholder;
       if(field.type==="password")input.autocomplete="new-password";
       if(field.key==="whatsapp")input.inputMode="tel";
       wrapper.append(label,input);
@@ -416,6 +418,31 @@ function makeButton(label,action,id,danger=false){
   button.dataset.action=action;
   button.dataset.id=id;
   return button;
+}
+
+function whatsappUrl(value){
+  const digits=clean(value,80).replace(/\D/g,"");
+  return digits?`https://wa.me/${digits}`:"";
+}
+function telegramUrl(value){
+  const raw=clean(value,120);
+  if(!raw)return "";
+  const safe=safeUrl(raw);
+  if(safe&&/^https:\/\/(?:www\.)?t\.me\//i.test(safe))return safe;
+  const username=raw.replace(/^@/,"");
+  if(/^@?[A-Za-z][A-Za-z0-9_]{3,}$/.test(raw))return `https://t.me/${encodeURIComponent(username)}`;
+  const digits=raw.replace(/\D/g,"");
+  return digits?`https://t.me/+${digits}`:"";
+}
+function makeQuickContact(label,url,kind,student){
+  const link=document.createElement("a");
+  link.className=`quick-contact ${kind}`;
+  link.href=url;
+  link.target="_blank";
+  link.rel="noopener";
+  link.textContent=label;
+  link.setAttribute("aria-label",`فتح ${label} مع ${studentName(student)}`);
+  return link;
 }
 function studentInitials(student){
   return [student.first_name,student.last_name].filter(Boolean).map(value=>text(value).trim().charAt(0)).join("").slice(0,2)||"ط";
@@ -648,6 +675,10 @@ function renderStudents(){
     if(listMode==="trash"){
       actionWrap.append(makeButton("استعادة","restore",student.id),makeButton("حذف نهائي","purge",student.id,true));
     }else{
+      const wa=whatsappUrl(student.whatsapp);
+      const tg=telegramUrl(student.telegram);
+      if(wa)actionWrap.append(makeQuickContact("واتساب",wa,"whatsapp",student));
+      if(tg)actionWrap.append(makeQuickContact("تيليجرام",tg,"telegram",student));
       const edit=makeButton("تعديل","edit",student.id);edit.classList.add("edit-student");
       actionWrap.append(edit);
     }
@@ -739,8 +770,10 @@ function profileDetails(rows){
 function profileContacts(student){
   const rows=[];
   if(student.email)rows.push(`<div class="contact-row"><span>البريد الإلكتروني</span><strong>${escapeHtml(student.email)}</strong><a href="mailto:${encodeURIComponent(student.email)}">إرسال بريد</a></div>`);
-  const digits=student.whatsapp.replace(/\D/g,"");
-  if(digits)rows.push(`<div class="contact-row"><span>واتساب</span><strong>${escapeHtml(student.whatsapp)}</strong><a href="https://wa.me/${digits}" target="_blank" rel="noopener">فتح واتساب</a></div>`);
+  const wa=whatsappUrl(student.whatsapp);
+  if(wa)rows.push(`<div class="contact-row"><span>واتساب</span><strong>${escapeHtml(student.whatsapp)}</strong><a href="${escapeHtml(wa)}" target="_blank" rel="noopener">فتح واتساب</a></div>`);
+  const tg=telegramUrl(student.telegram);
+  if(tg)rows.push(`<div class="contact-row"><span>تيليجرام</span><strong>${escapeHtml(student.telegram)}</strong><a href="${escapeHtml(tg)}" target="_blank" rel="noopener">فتح تيليجرام</a></div>`);
   const account=safeUrl(student.student_account_url);
   if(account)rows.push(`<div class="contact-row"><span>رابط حساب الطالب</span><strong>${escapeHtml(student.student_account_url)}</strong><a href="${escapeHtml(account)}" target="_blank" rel="noopener">فتح الحساب</a></div>`);
   return rows.length?rows.join(""):'<div class="empty-mini">لا توجد وسائل اتصال مسجّلة.</div>';

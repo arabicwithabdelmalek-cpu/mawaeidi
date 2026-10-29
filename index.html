@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&amp;family=Noto+Kufi+Arabic:wght@700;800&amp;display=swap">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Noto+Kufi+Arabic:wght@700;800&display=swap');
 
 :root{
   --paper:#EAF0F4;
@@ -860,7 +860,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 /* Keep main workspaces mutually exclusive even when their component CSS sets display. */
 #scheduleWorkspace[hidden],
 #worldClockView[hidden]{display:none!important}
-</style>  <link rel="stylesheet" href="./students/student-registry.css?v=4">
+</style>
+<link rel="preload" as="style" href="./students/student-registry.css?v=4" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="./students/student-registry.css?v=4"></noscript>
 
 <style id="mawaeidi-unified-trash-style">
 .unified-trash{display:grid;gap:12px}

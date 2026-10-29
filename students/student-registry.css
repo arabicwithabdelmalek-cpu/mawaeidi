@@ -551,3 +551,152 @@
   #studentsView .quick-contact,
   #studentsView .btn.small{font-size:12px}
 }
+
+
+/* Student readability pass v4 — clearly larger desktop text, based on visual review. */
+#studentsView .registry-head h2,
+#studentsView .registry-head h1{
+  font-size:28px!important;
+  line-height:1.35;
+}
+#studentsView .registry-head p{
+  margin-top:10px!important;
+  color:#3f5563!important;
+  font-size:16px!important;
+  line-height:1.8!important;
+  font-weight:650!important;
+}
+#studentsView .registry-head #resultsCount{
+  color:var(--primary)!important;
+  font-size:16px!important;
+  font-weight:900!important;
+}
+#studentsView .student-summary-heading h3{
+  font-size:19px!important;
+  line-height:1.45!important;
+}
+#studentsView .student-summary-heading p{
+  margin-top:7px!important;
+  color:#405764!important;
+  font-size:15px!important;
+  line-height:1.8!important;
+  font-weight:650!important;
+}
+#studentsView .student-summary-metric span,
+#studentsView .student-summary-card span{
+  color:#405764!important;
+  font-size:14px!important;
+  font-weight:800!important;
+}
+#studentsView .student-summary-metric strong,
+#studentsView .student-summary-card strong{
+  font-size:27px!important;
+  line-height:1.25!important;
+}
+#studentsView .student-insights>summary{
+  min-height:54px!important;
+  padding:13px 16px!important;
+  color:#284f68!important;
+  font-size:15px!important;
+  font-weight:900!important;
+}
+#studentsView .student-insights>summary span{
+  color:#526a79!important;
+  font-size:13.5px!important;
+  font-weight:800!important;
+}
+#studentsView .filters{
+  gap:11px!important;
+  padding-block:15px!important;
+}
+#studentsView .more-filters>summary,
+#studentsView .filters-toggle{
+  min-height:46px!important;
+  font-size:14px!important;
+  font-weight:900!important;
+}
+#studentsView .control{
+  min-height:46px!important;
+  font-size:15px!important;
+}
+#studentsView .control::placeholder{
+  color:#687b87!important;
+  opacity:1!important;
+}
+#studentsView .btn{
+  font-size:14px!important;
+}
+#studentsView .btn.small{
+  min-height:36px!important;
+  padding:6px 10px!important;
+  font-size:13px!important;
+}
+#studentsView .student-row{
+  min-height:68px;
+}
+#studentsView .student-open{
+  padding-block:15px!important;
+}
+#studentsView .student-name{
+  color:#1d3442!important;
+  font-size:16px!important;
+  line-height:1.45!important;
+}
+#studentsView .student-sub{
+  color:#4f6572!important;
+  font-size:13.5px!important;
+  line-height:1.5!important;
+}
+#studentsView .student-study strong{
+  color:#334f60!important;
+  font-size:14px!important;
+}
+#studentsView .student-meta-item{
+  min-height:29px!important;
+  padding:4px 9px!important;
+  color:#405764!important;
+  font-size:13px!important;
+  font-weight:800!important;
+}
+#studentsView .student-meta-empty{
+  color:#617581!important;
+  font-size:13px!important;
+}
+#studentsView .chip{
+  min-height:35px!important;
+  padding:5px 11px!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+#studentsView .quick-contact{
+  min-height:36px!important;
+  padding:6px 11px!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+#studentsView .row-actions{
+  gap:7px!important;
+}
+#studentsView .row-actions .edit-student{
+  min-height:36px!important;
+}
+@media(max-width:760px){
+  #studentsView .registry-head p,
+  #studentsView .registry-head #resultsCount{font-size:14.5px!important}
+  #studentsView .student-summary-heading p{font-size:14px!important}
+  #studentsView .student-summary-metric span,
+  #studentsView .student-summary-card span{font-size:13px!important}
+  #studentsView .student-insights>summary{font-size:14px!important}
+  #studentsView .student-insights>summary span{font-size:12.5px!important}
+  #studentsView .more-filters>summary,
+  #studentsView .filters-toggle{font-size:13.5px!important}
+  #studentsView .control{font-size:15px!important}
+  #studentsView .student-name{font-size:15.5px!important}
+  #studentsView .student-sub{font-size:13px!important}
+  #studentsView .student-study strong{font-size:13.5px!important}
+  #studentsView .student-meta-item,
+  #studentsView .student-meta-empty,
+  #studentsView .chip,
+  #studentsView .quick-contact,
+  #studentsView .btn.small{font-size:12.5px!important}
+}

@@ -861,8 +861,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 #scheduleWorkspace[hidden],
 #worldClockView[hidden]{display:none!important}
 </style>
-<link rel="preload" as="style" href="./students/student-registry.css?v=10" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="./students/student-registry.css?v=10"></noscript>
+<link rel="preload" as="style" href="./students/student-registry.css?v=11" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="./students/student-registry.css?v=11"></noscript>
 
 <style id="mawaeidi-unified-trash-style">
 .unified-trash{display:grid;gap:12px}
@@ -1460,6 +1460,127 @@ input,select,textarea{font-size:14px;line-height:1.55}
   .lesson-meta{font-size:12px}
   .week-name{font-size:13px}
   .week-meta{font-size:11px}
+}
+</style>
+
+
+<style id="mawaeidi-typography-v2">
+/* Strong readability scale: most UI text should remain comfortably readable on 100% zoom. */
+body{font-size:16px;line-height:1.72}
+small{line-height:1.6}
+button{font-weight:700}
+
+/* Header, menus and global controls */
+.sync-status{font-size:13px}
+.data-action{font-size:13px;line-height:1.6}
+.data-action small{font-size:12px}
+.data-state{font-size:11px}
+.workspace-switch button,.tab,.filter{font-size:13px}
+.panel-head h2{font-size:19px}
+.panel-head span{font-size:13px}
+.next .meta{font-size:14px}
+
+/* Today view */
+.t-time{font-size:14px}
+.lesson-name{font-size:16px}
+.lesson-meta{font-size:13px;line-height:1.8}
+.pill{font-size:12px}
+.stat small{font-size:12px}
+.bar-row b,.bar-row span{font-size:12px}
+
+/* Week view */
+.week-navigation button{font-size:12px}
+.week-summary-card small{font-size:11.5px}
+.week-summary-card span{font-size:12px}
+.week-time-toolbar-copy span{font-size:12px}
+.week-time-switch button,.week-density-switch button{font-size:12px}
+.legend-chip,.source-chip{font-size:12px}
+.week-day-head .count{font-size:11px}
+.week-day-label small{font-size:11px}
+.week-time-label{font-size:13px}
+.week-gap-control button,.week-gap-control button small{font-size:11px}
+.quick-conflict,.week-move-conflict,.quick-add-note{font-size:12px}
+.move-scope span{font-size:12px}
+.week-kind{font-size:11.5px}
+.week-name{font-size:14px}
+.week-meta{font-size:12px;line-height:1.7}
+.week-source{font-size:11.5px}
+.week-student-time{font-size:11.5px}
+.session-status-chip{font-size:11.5px}
+.session-status-current,.session-status-option{font-size:12.5px}
+.session-status-option small{font-size:11.5px}
+.session-status-note{font-size:12px}
+
+/* Tools, history and drawers */
+.notification-feature,.history-time,.history-detail,.history-restore,
+.timezone-field-hint,.install-help,.tool-status{font-size:12px}
+.tool-head p,.tool-card p,.tool-field label{font-size:12.5px}
+.lead-option,.tool-actions button{font-size:12.5px}
+.drawer-head p{font-size:13px}
+.section-title{font-size:14px}
+label{font-size:13.5px}
+input,select,textarea{font-size:15px}
+.primary,.secondary,.danger{font-size:13px}
+
+/* World clock: previously the densest and smallest area */
+.world-hero-kicker{font-size:12px}
+.world-hero-copy p{font-size:13px}
+.world-base-control label{font-size:12px}
+.world-base-control input{font-size:13px}
+.world-base-hint{font-size:11.5px!important}
+.world-home-meta{font-size:12px}
+.world-clock-number{font-size:11px}
+.world-clock-section p{font-size:12px}
+.world-section-badge{font-size:11.5px}
+.world-search-hint{font-size:12px}
+.world-clock-empty{font-size:12px}
+.world-clock-card small,.world-clock-card span{font-size:11.5px}
+.world-zone-state{font-size:11px!important}
+.world-zone-picker label,.world-convert-when label{font-size:12px}
+.world-result-head>span{font-size:12px}
+.world-result-head>small{font-size:11.5px}
+.world-result-time-card small{font-size:11.5px}
+.world-result-meta{font-size:11.5px}
+.world-result-warning{font-size:11.5px}
+.world-timeline-legend span{font-size:10.5px}
+.world-timeline-label strong{font-size:11.5px}
+.world-timeline-label small{font-size:10px}
+.world-hour-cell{font-size:10.5px}
+.world-timeline-axis .world-hour-cell{font-size:10px}
+.world-timeline-note{font-size:11.5px}
+.world-city-title small{font-size:10.5px}
+.world-clock-date{font-size:10.5px}
+.world-offset-chip{font-size:10.5px!important}
+.world-mini-number{font-size:8.5px}
+.world-base-change{font-size:11px}
+.world-base-control-v2 .world-base-hint{font-size:11px!important}
+.world-now-label{font-size:11.5px}
+.world-hero-now .world-home-meta{font-size:11.5px!important}
+.world-feature-tag,.world-format-badge{font-size:10.5px}
+.world-timeline-featured .world-timeline-label strong{font-size:12px}
+.world-timeline-featured .world-hour-cell{font-size:10.5px}
+
+/* Trash and utility text */
+.unified-trash-item p,.unified-trash-filter{font-size:12px}
+
+/* Improve contrast for supporting copy */
+.data-action small,.week-summary-card small,.week-summary-card span,.week-time-toolbar-copy span,
+.week-day-label small,.week-meta,.week-source,.session-status-option small,
+.history-time,.history-detail,.timezone-field-hint,.world-clock-section p,
+.world-search-hint,.world-clock-card small,.world-clock-card span,.world-result-head>small,
+.world-result-time-card small,.world-result-meta,.world-timeline-legend span,
+.world-timeline-label small,.world-timeline-note,.world-city-title small,.world-clock-date{
+  color:#536672
+}
+
+@media(max-width:760px){
+  body{font-size:16px}
+  .workspace-switch button,.tab,.filter{font-size:13px}
+  .lesson-name{font-size:16px}
+  .lesson-meta{font-size:13px}
+  .week-name{font-size:14px}
+  .week-meta{font-size:12px}
+  .world-clock-section p,.world-search-hint{font-size:12px}
 }
 </style>
 

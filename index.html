@@ -1514,7 +1514,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 </div>
 
 <div class="backdrop" id="backdrop" aria-hidden="true" onclick="closeDrawer()"></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="drawerTitle">
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="drawerTitle" tabindex="-1">
   <div class="drawer-head">
     <div>
       <h2 id="drawerTitle">إضافة حصة</h2>
@@ -1815,6 +1815,7 @@ let activeWeekMoveContext=null;
 let currentSection=new URLSearchParams(location.search).get("section")==="students"?"students":"schedule";
 let editingId=null;
 let lessonSaveInFlight=false;
+let drawerReturnFocus=null;
 let currentUser=null;
 let cloudReady=false;
 let authMode="signin";
@@ -4166,16 +4167,31 @@ function toggleFields(){
   document.getElementById("nameLabel").textContent=st==="group"?"اسم المجموعة / عنوان الدرس":"اسم الطالب / عنوان الدرس";
 }
 function openDrawer(){
+  const drawer=document.getElementById("drawer");
+  if(!drawer.classList.contains("show"))drawerReturnFocus=document.activeElement;
   document.getElementById("backdrop").classList.add("show");
-  document.getElementById("drawer").classList.add("show");
-  document.getElementById("drawer").setAttribute("aria-hidden","false");
+  drawer.classList.add("show");
+  drawer.setAttribute("aria-hidden","false");
   document.body.classList.add("drawer-open");
+  requestAnimationFrame(()=>{
+    if(drawer.classList.contains("show"))drawer.focus({preventScroll:true});
+  });
 }
 function closeDrawer(){
+  const drawer=document.getElementById("drawer");
+  if(!drawer.classList.contains("show"))return;
   document.getElementById("backdrop").classList.remove("show");
-  document.getElementById("drawer").classList.remove("show");
-  document.getElementById("drawer").setAttribute("aria-hidden","true");
+  drawer.classList.remove("show");
+  drawer.setAttribute("aria-hidden","true");
   document.body.classList.remove("drawer-open");
+  const returnFocus=drawerReturnFocus;
+  drawerReturnFocus=null;
+  const fallback=document.getElementById("primaryActionButton");
+  requestAnimationFrame(()=>{
+    if(returnFocus?.isConnected&&!returnFocus.hidden&&returnFocus.getAttribute?.("aria-hidden")!=="true")
+      returnFocus.focus({preventScroll:true});
+    else if(fallback&&!fallback.hidden)fallback.focus({preventScroll:true});
+  });
   setTimeout(flushPendingRemote,0);
 }
 
@@ -4212,9 +4228,12 @@ function updateQuickAddConflict(){
 }
 function openQuickAddForToday(){
   const minutes=mins(currentTimeKey());
-  const nextHalfHour=Math.min(23*60+30,Math.ceil((minutes+1)/30)*30);
-  const time=`${String(Math.floor(nextHalfHour/60)).padStart(2,"0")}:${String(nextHalfHour%60).padStart(2,"0")}`;
-  openQuickAdd(todayName(),time);
+  const nextHalfHour=Math.ceil((minutes+1)/30)*30;
+  const timeMinutes=nextHalfHour%(24*60);
+  const time=`${String(Math.floor(timeMinutes/60)).padStart(2,"0")}:${String(timeMinutes%60).padStart(2,"0")}`;
+  const todayIndex=days.indexOf(todayName());
+  const day=nextHalfHour>=24*60&&todayIndex>=0?days[(todayIndex+1)%days.length]:todayName();
+  openQuickAdd(day,time);
 }
 function openQuickAdd(day,time){
   const safeDay=days.includes(day)?day:"الاثنين",safeTime=TIME_RE.test(String(time))?String(time):"18:00";

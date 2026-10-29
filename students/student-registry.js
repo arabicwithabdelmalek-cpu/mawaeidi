@@ -660,6 +660,79 @@ function renderStudents(){
 }
 function renderAll(){renderStudents();renderStudentSummary()}
 
+function countryProfileInfo(value){
+  const name=clean(value,120);
+  if(!name)return {name:"",flag:""};
+  const key=normalizeCountryQuery(name);
+  const match=COUNTRY_OPTIONS.find(country=>normalizeCountryQuery(country.name)===key);
+  return {name,flag:match?countryFlag(match.code):""};
+}
+function credentialDetail(label,value,kind,{secret=false}={}){
+  const cleanValue=text(value);
+  const hasValue=Boolean(cleanValue);
+  const display=secret&&hasValue?"••••••••":(cleanValue||"—");
+  const valueClass=secret?"profile-secret":"";
+  const shown=secret?' data-shown="false"':"";
+  const actions=hasValue?`<div class="detail-actions">${secret?`<button type="button" class="detail-action" data-profile-action="toggle-password" aria-pressed="false">إظهار</button>`:""}<button type="button" class="detail-action" data-profile-action="copy-${escapeHtml(kind)}">نسخ</button></div>`:"";
+  return `<div class="detail-item credential-item"><span>${escapeHtml(label)}</span><div class="detail-value-row"><strong class="${valueClass}"${shown}>${escapeHtml(display)}</strong>${actions}</div></div>`;
+}
+function countryDetail(value){
+  const country=countryProfileInfo(value);
+  const content=country.name?`${country.flag?`<span class="profile-country-flag" aria-hidden="true">${country.flag}</span>`:""}<span>${escapeHtml(country.name)}</span>`:"—";
+  return `<div class="detail-item"><span>الدولة</span><strong class="profile-country">${content}</strong></div>`;
+}
+function statusDetail(value){
+  const label=value||"غير محدد";
+  return `<div class="detail-item"><span>الحالة</span><strong><span class="chip ${escapeHtml(statusChipClass(label))}">${escapeHtml(label)}</span></strong></div>`;
+}
+async function copyProfileText(value,label){
+  const output=text(value);
+  if(!output){showToast(`لا توجد ${label} لنسخها.`,true);return}
+  try{
+    if(navigator.clipboard?.writeText&&window.isSecureContext){
+      await navigator.clipboard.writeText(output);
+    }else{
+      const area=document.createElement("textarea");
+      area.value=output;
+      area.setAttribute("readonly","");
+      area.style.position="fixed";
+      area.style.opacity="0";
+      document.body.append(area);
+      area.select();
+      const copied=document.execCommand("copy");
+      area.remove();
+      if(!copied)throw new Error("copy_failed");
+    }
+    showToast(`تم نسخ ${label}.`);
+  }catch(error){
+    console.warn("Profile copy failed.",error);
+    showToast("تعذّر النسخ من المتصفح.",true);
+  }
+}
+function handleProfileContentAction(event){
+  const button=event.target.closest("button[data-profile-action]");
+  if(!button)return;
+  const student=students.find(item=>item.id===activeStudentId);
+  if(!student)return;
+  const action=button.dataset.profileAction;
+  if(action==="copy-username"){
+    copyProfileText(student.username,"اسم المستخدم");
+    return;
+  }
+  if(action==="copy-password"){
+    copyProfileText(student.login_password,"كلمة السر");
+    return;
+  }
+  if(action==="toggle-password"){
+    const secret=button.closest(".credential-item")?.querySelector(".profile-secret");
+    if(!secret||!student.login_password)return;
+    const shown=secret.dataset.shown==="true";
+    secret.dataset.shown=shown?"false":"true";
+    secret.textContent=shown?"••••••••":student.login_password;
+    button.textContent=shown?"إظهار":"إخفاء";
+    button.setAttribute("aria-pressed",shown?"false":"true");
+  }
+}
 function profileDetails(rows){
   return rows.map(([label,value,wide=false])=>`<div class="detail-item${wide?" wide":""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value||"—")}</strong></div>`).join("");
 }
@@ -677,14 +750,16 @@ function renderProfile(){
   if(!student){closeDialog("studentProfile");return}
   setAvatarContent(byId("profileAvatar"),student);
   byId("profileTitle").textContent=studentName(student);
-  byId("profileSubtitle").textContent=`${student.username?`@${student.username}`:"من دون اسم مستخدم"} · ${student.country||"الدولة غير محددة"}`;
-  const basic=[
-    ["اسم المستخدم",student.username],
-    ["كلمة السر",student.login_password],
-    ["الدولة",student.country],
-    ["الحالة",student.status],
-    ["تاريخ الانضمام",student.joined_on?dateLabel(student.joined_on):""]
-  ];
+  const profileCountry=countryProfileInfo(student.country);
+  const countryLabel=profileCountry.name?`${profileCountry.flag?`${profileCountry.flag} `:""}${profileCountry.name}`:"الدولة غير محددة";
+  byId("profileSubtitle").textContent=`${student.username?`@${student.username}`:"من دون اسم مستخدم"} · ${countryLabel}`;
+  const basicHtml=[
+    credentialDetail("اسم المستخدم",student.username,"username"),
+    credentialDetail("كلمة السر",student.login_password,"password",{secret:true}),
+    countryDetail(student.country),
+    statusDetail(student.status),
+    profileDetails([["تاريخ الانضمام",student.joined_on?dateLabel(student.joined_on):""]])
+  ].join("");
   const study=[
     ["المستوى الحالي",student.current_level],
     ["نوع الدراسة",student.study_type],
@@ -701,7 +776,7 @@ function renderProfile(){
     <div class="profile-layout">
       <section class="profile-section">
         <header class="profile-section-head"><h3>بيانات أساسية</h3><span>المعلومات المسجلة</span></header>
-        <div class="detail-grid">${profileDetails(basic)}</div>
+        <div class="detail-grid">${basicHtml}</div>
       </section>
       <section class="profile-section">
         <header class="profile-section-head"><h3>بيانات الدراسة</h3><span>التفاصيل التعليمية</span></header>
@@ -1486,6 +1561,7 @@ function bindEvents(){
   byId("removeStudentPhoto").addEventListener("click",removeStudentPhotoFromEditor);
   for(const id of ["student_first_name","student_last_name"])byId(id).addEventListener("input",updateStudentPhotoEditor);
   byId("studentRows").addEventListener("click",handleRowAction);
+  byId("profileContent").addEventListener("click",handleProfileContentAction);
   byId("editFromProfile").addEventListener("click",()=>{const student=students.find(item=>item.id===activeStudentId);if(student)openStudentEditor(student)});
   byId("deleteStudent").addEventListener("click",deleteActiveStudent);
   byId("clearFilters").addEventListener("click",clearFilters);

@@ -1826,6 +1826,111 @@ input,select,textarea{font-size:15.5px}
 }
 </style>
 
+
+<style id="mawaeidi-color-system-v3">
+:root{
+  --paper:#F2F6F8;
+  --paper-2:#FBFCFD;
+  --surface:#FFFFFF;
+  --surface-soft:#F7FAFB;
+  --surface-muted:#ECF2F5;
+  --ink:#1C2E3A;
+  --muted:#526773;
+  --primary:#2F5D7C;
+  --primary-2:#1C4158;
+  --primary-hover:#244E69;
+  --primary-soft:#E8F1F6;
+  --primary-soft-2:#DCEAF2;
+  --accent:#AD8656;
+  --accent-soft:#F1E6D8;
+  --line:#D5E0E6;
+  --line-strong:#C3D2DB;
+  --today-bg:#E8F1F6;
+  --today-border:#86A9BF;
+  --teach:#2F766F;
+  --teach-bg:#E8F4F1;
+  --teach-border:#B9DAD3;
+  --learn:#94612F;
+  --learn-bg:#F8EEE3;
+  --learn-border:#E5CDAF;
+  --success:#2F766F;
+  --success-bg:#E8F4F1;
+  --success-border:#B9DAD3;
+  --info:#3D6F96;
+  --info-bg:#EAF2F8;
+  --info-border:#C6D9E7;
+  --warning:#94612F;
+  --warning-bg:#F8EEE3;
+  --warning-border:#E5CDAF;
+  --danger:#A04D51;
+  --danger-bg:#FBEDEE;
+  --danger-border:#E7C3C5;
+  --neutral:#66757F;
+  --neutral-bg:#EEF2F4;
+  --neutral-border:#D8E0E5;
+  --purple:#675C83;
+  --purple-bg:#F0EEF6;
+  --purple-border:#D7D1E6;
+  --shadow:0 18px 46px rgba(28,65,88,.09);
+  --shadow-soft:0 8px 22px rgba(28,65,88,.07);
+}
+body{background:var(--paper);color:var(--ink)}
+.shell{background:radial-gradient(circle at 7% 2%,rgba(63,105,133,.10),transparent 25%),linear-gradient(180deg,#F8FAFB 0%,var(--paper) 100%)}
+.header{border-bottom-color:rgba(47,93,124,.14)}
+.panel,.next,.tool-dialog,.tool-card,.section,.week-grid,.world-clock-section,#studentsView .registry-panel,#studentsView dialog{border-color:var(--line)}
+.panel,.next,.tool-card,.section,.week-grid,.world-clock-section,#studentsView .registry-panel,#studentsView .student-row,#studentsView .profile-section,#studentsView dialog{background:var(--surface)}
+.add-btn,.auth-primary,.primary,.tool-actions .tool-primary,.world-zone-add button,.world-convert-actions button{background:var(--primary);color:#fff}
+.add-btn:hover,.auth-primary:hover,.primary:hover,.tool-actions .tool-primary:hover,.world-zone-add button:hover,.world-convert-actions button:hover{background:var(--primary-hover)}
+.workspace-switch,.tabs,.filters,.week-navigation,.week-time-switch,.week-density-switch{border-color:var(--line);background:rgba(251,252,253,.95)}
+.workspace-switch button:hover,.tab:hover,.filter:hover,.week-navigation button:hover,.week-time-switch button:hover,.week-density-switch button:hover{background:var(--primary-soft);color:var(--primary)}
+.workspace-switch button.active,.tab.active,.filter.active,.week-time-switch button.active,.week-density-switch button.active{background:var(--primary);color:#fff}
+.hero-copy{background:radial-gradient(circle at 8% 18%,rgba(127,161,184,.16),transparent 30%),linear-gradient(135deg,#355F7D,var(--primary-2))}
+.next{border-top-color:#7899AF}
+.next .label{background:var(--primary);color:#F2F6F8}
+.stat,.t-time,.week-time-label,.week-corner,.week-day-head,.week-smart-summary,#studentsView .filters{background:var(--surface-muted)}
+.week-day-head.today{background:var(--primary-soft-2);box-shadow:inset 0 4px 0 #5D84A0}
+.week-slot.today{background:#F1F7FA}
+.week-slot.drag-over{background:var(--success-bg);box-shadow:inset 0 0 0 2px #78AA9F}
+input,select,textarea,#studentsView .control{border-color:var(--line-strong);background:var(--surface);color:var(--ink)}
+input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,93,124,.12)}
+.icon-btn,.close,.secondary,.quick-actions button,#studentsView .btn:not(.primary):not(.danger),#studentsView .quick-contact{background:var(--surface)}
+.pill,.data-state,.notification-feature,.tool-status,.install-help,.quick-add-note,.session-status-note{background:var(--surface-muted);color:var(--muted)}
+.lesson.teach,.week-card.teach{background:var(--teach-bg);border-color:var(--teach-border)}
+.lesson.learn,.week-card.learn{background:var(--learn-bg);border-color:var(--learn-border)}
+.pill.teach,.legend-chip.teach,.week-kind.teach{background:var(--teach-bg);border-color:var(--teach-border);color:var(--teach)}
+.pill.learn,.legend-chip.learn,.week-kind.learn{background:var(--learn-bg);border-color:var(--learn-border);color:var(--learn)}
+.session-status-chip{background:var(--neutral-bg);border-color:var(--neutral-border);color:var(--neutral)}
+.session-status-chip.completed{background:var(--success-bg);border-color:var(--success-border);color:var(--success)}
+.session-status-chip.ongoing,.session-status-chip.rescheduled{background:var(--info-bg);border-color:var(--info-border);color:var(--info)}
+.session-status-chip.cancelled{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger)}
+.session-status-chip.counted-cancel{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning)}
+.session-status-chip.free{background:var(--purple-bg);border-color:var(--purple-border);color:var(--purple)}
+.world-clock-hero{background:linear-gradient(135deg,#1C4158 0%,#2F5D7C 52%,#4E7E98 100%);box-shadow:0 8px 22px rgba(28,65,88,.13)}
+.world-hero-kicker::before,.world-analog-clock::after,.world-clock-center{background:#D6B26A}
+.world-section-badge,.world-zone-state{background:var(--surface-muted);color:#536E7F!important}
+.world-zone-state.work{background:var(--success-bg);color:var(--success)!important}
+.world-zone-state.evening{background:var(--warning-bg);color:var(--warning)!important}
+.world-zone-state.night{background:var(--purple-bg);color:var(--purple)!important}
+.world-clock-card{border-color:var(--line);background:linear-gradient(180deg,#FFFFFF,#F8FAFB)}
+.world-result-warning{background:var(--warning-bg);color:var(--warning)}
+#studentsView{
+  --paper:#F2F6F8;--surface:#FFFFFF;--ink:#1C2E3A;--muted:#526773;--primary:#2F5D7C;--primary-dark:#1C4158;--accent:#AD8656;--line:#D5E0E6;--soft:#F7FAFB;
+  --green:#2F766F;--green-bg:#E8F4F1;--green-border:#B9DAD3;--gold:#94612F;--gold-bg:#F8EEE3;--gold-border:#E5CDAF;--red:#A04D51;--red-bg:#FBEDEE;
+  --blue:#3D6F96;--blue-bg:#EAF2F8;--blue-border:#C6D9E7;--neutral:#66757F;--neutral-bg:#EEF2F4;--neutral-border:#D8E0E5;--purple:#675C83;--purple-bg:#F0EEF6;
+}
+#studentsView .student-row:hover{background:#F7FAFB}
+#studentsView .student-meta-item{border-color:#D9E3E8;background:#F7FAFB}
+#studentsView .student-meta-item.country{background:var(--primary-soft);color:var(--primary)}
+#studentsView .chip.current{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+#studentsView .chip.new{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
+#studentsView .chip.paused{background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold)}
+#studentsView .chip.previous{background:var(--neutral-bg);border-color:var(--neutral-border);color:var(--neutral)}
+#studentsView .quick-contact.whatsapp{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+#studentsView .quick-contact.telegram{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
+.track{background:#DCE5EA}
+.fill{background:linear-gradient(90deg,var(--primary),#7395AB)}
+</style>
+
 </head>
 <body class="auth-pending">
 
@@ -2352,9 +2457,9 @@ input,select,textarea{font-size:15.5px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js" defer></script>
 <script src="./backup-manager.js?v=1" defer></script>
 <script src="./students/student-registry.js?v=15" defer></script>
-<script src="./app-main.js?v=2" defer></script>
+<script src="./app-main.js?v=3" defer></script>
 <script src="./account.js?v=1" defer></script>
-<script src="./account-page.js?v=5" defer></script>
+<script src="./account-page.js?v=6" defer></script>
 <script src="./day-order.js?v=2" defer></script>
 </body>
 </html>

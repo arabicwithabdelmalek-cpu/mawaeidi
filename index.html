@@ -505,6 +505,25 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .primary,.secondary,.danger{border-radius:8px;padding:9px 13px;font-weight:800}
 .primary{border:0;background:var(--primary);color:#fff}.secondary{border:1px solid var(--line);background:#fff;color:#596A76}.danger{border:0;background:var(--danger-bg);color:var(--danger)}
 
+/* desktop-weekly-ux-v1 */
+@media(min-width:761px){
+  .week-view .panel-head{padding:17px 18px}
+  .week-panel-title{gap:5px}.week-panel-title h2{font-size:22px}.week-panel-title span{font-size:13px;line-height:1.55}
+  .week-navigation{gap:7px;padding:5px}.week-navigation button{min-width:64px;min-height:38px;padding:8px 11px;font-size:12px}
+  .week-smart-summary{gap:10px;padding:13px 16px}.week-summary-card{padding:12px 13px}
+  .week-summary-card small{font-size:11px}.week-summary-card strong{margin-top:5px;font-size:18px}.week-summary-card span{margin-top:3px;font-size:10px;line-height:1.45}
+  .week-time-toolbar{padding:12px 16px}.week-time-toolbar-copy{gap:3px}.week-time-toolbar-copy strong{font-size:13px}.week-time-toolbar-copy span{font-size:11px}
+  .week-time-switch button,.week-density-switch button{min-height:36px;padding:7px 12px;font-size:11px}
+  .week-legend{padding:12px 16px}.legend-title,.legend-chip,.source-chip{font-size:12px}
+  .week-table-wrap{padding:12px;scrollbar-gutter:stable}
+  .week-grid{grid-template-columns:72px repeat(7,minmax(145px,1fr));min-width:1100px}
+  .week-corner,.week-day-head{min-height:64px;font-size:14px}.week-day-head .count{min-width:28px;height:28px;font-size:11px}.week-day-label small{font-size:10px}
+  .week-time-label{padding-top:14px;font-size:13px}
+  .week-card{padding:11px 12px}.week-card .icon-btn{width:32px;height:32px}.week-kind{padding:4px 8px;font-size:11px}
+  .week-name{font-size:14px;line-height:1.5}.week-meta{font-size:12px;line-height:1.65}.week-source{font-size:11px}.session-status-chip{font-size:11px}
+  .quick-add-slot{opacity:.64;font-size:12px}.week-gap-control button{min-width:92px;height:27px;font-size:10px}.week-gap-control button small{font-size:10px}
+}
+
 @media(max-width:1000px){
   .hero,.content{grid-template-columns:1fr}.hero-copy,.next{min-height:auto}
 }

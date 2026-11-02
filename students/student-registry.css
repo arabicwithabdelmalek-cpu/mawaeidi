@@ -700,3 +700,96 @@
   #studentsView .quick-contact,
   #studentsView .btn.small{font-size:12.5px!important}
 }
+
+/* Student registry rows: stable columns and aligned study details (desktop/tablet/mobile). */
+@media (min-width:981px){
+  #studentsView .student-row{
+    grid-template-columns:minmax(0,1fr) 320px;
+    column-gap:16px;
+  }
+  #studentsView .student-open{
+    width:100%;
+    grid-template-columns:46px clamp(205px,23vw,245px) minmax(0,1fr);
+    column-gap:15px;
+  }
+  #studentsView .student-identity{
+    min-width:0;
+    justify-self:stretch;
+  }
+  #studentsView .student-study{
+    width:min(100%,345px);
+    min-width:0;
+    justify-self:center;
+    text-align:right;
+  }
+  #studentsView .student-meta{
+    display:grid;
+    grid-template-columns:minmax(0,132px) minmax(0,79px) minmax(0,86px);
+    justify-content:start;
+    align-items:center;
+    gap:6px;
+  }
+  #studentsView .student-meta-item{
+    min-width:0;
+    justify-content:center;
+    overflow:hidden;
+  }
+  #studentsView .student-meta-item.country{grid-column:1}
+  #studentsView .student-meta-item.level{grid-column:2}
+  #studentsView .student-meta-item.study-type{grid-column:3}
+  #studentsView .student-meta-item.country>span:last-child{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  #studentsView .student-meta-empty{grid-column:1/-1}
+  #studentsView .row-actions{
+    min-width:0;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+  }
+}
+/* Move actions beneath student information before desktop columns become cramped. */
+@media (min-width:701px) and (max-width:980px){
+  #studentsView .student-row{grid-template-columns:minmax(0,1fr);gap:0}
+  #studentsView .student-open{
+    width:100%;
+    grid-template-columns:44px minmax(165px,.8fr) minmax(0,1.2fr);
+    gap:12px;
+  }
+  #studentsView .student-study{min-width:0;justify-self:stretch;text-align:right}
+  #studentsView .row-actions{
+    justify-content:flex-start;
+    flex-wrap:wrap;
+    padding:0 64px 11px 8px;
+  }
+}
+/* On phones, align the study block with the name and keep all actions together. */
+@media (max-width:700px){
+  #studentsView .student-row{
+    grid-template-columns:minmax(0,1fr);
+    gap:0;
+  }
+  #studentsView .student-open{
+    width:100%;
+    grid-template-columns:44px minmax(0,1fr);
+    gap:7px 11px;
+    padding-inline:6px;
+  }
+  #studentsView .student-study{
+    grid-column:2;
+    justify-self:stretch;
+    width:100%;
+    min-width:0;
+    text-align:right;
+  }
+  #studentsView .student-meta{display:flex;flex-wrap:wrap;gap:5px}
+  #studentsView .student-meta-item{max-width:100%}
+  #studentsView .row-actions{
+    justify-content:flex-start;
+    flex-wrap:wrap;
+    padding:4px 61px 12px 8px;
+    white-space:normal;
+  }
+}

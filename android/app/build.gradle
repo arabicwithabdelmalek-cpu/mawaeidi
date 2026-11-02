@@ -1,5 +1,18 @@
 apply plugin: 'com.android.application'
 
+def mawaeidiVersionCode = (System.getenv('MAWAEIDI_VERSION_CODE') ?: '2').toInteger()
+def mawaeidiVersionName = System.getenv('MAWAEIDI_VERSION_NAME') ?: '2.0.0-beta.1'
+def mawaeidiStorePath = System.getenv('MAWAEIDI_KEYSTORE_PATH')
+def mawaeidiStorePassword = System.getenv('MAWAEIDI_KEYSTORE_PASSWORD')
+def mawaeidiKeyAlias = System.getenv('MAWAEIDI_KEY_ALIAS')
+def mawaeidiKeyPassword = System.getenv('MAWAEIDI_KEY_PASSWORD')
+def mawaeidiReleaseSigningAvailable = [
+    mawaeidiStorePath,
+    mawaeidiStorePassword,
+    mawaeidiKeyAlias,
+    mawaeidiKeyPassword
+].every { it != null && !it.trim().isEmpty() }
+
 android {
     namespace = "com.abdelmalek.mawaeidi"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +20,8 @@ android {
         applicationId "com.abdelmalek.mawaeidi"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "2.0.0-beta.1"
+        versionCode mawaeidiVersionCode
+        versionName mawaeidiVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +29,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (mawaeidiReleaseSigningAvailable) {
+            mawaeidiRelease {
+                storeFile file(mawaeidiStorePath)
+                storePassword mawaeidiStorePassword
+                keyAlias mawaeidiKeyAlias
+                keyPassword mawaeidiKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (mawaeidiReleaseSigningAvailable) {
+                signingConfig signingConfigs.mawaeidiRelease
+            }
         }
     }
 }

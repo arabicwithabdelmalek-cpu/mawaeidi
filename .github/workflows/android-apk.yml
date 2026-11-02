@@ -17,7 +17,7 @@ on:
       - "scripts/**"
       - "android/**"
       - "icons/**"
-      - ".github/workflows/android-apk.yml"
+      - ".github/workflows/android-*.yml"
   pull_request:
     branches:
       - main
@@ -32,7 +32,7 @@ on:
       - "scripts/**"
       - "android/**"
       - "icons/**"
-      - ".github/workflows/android-apk.yml"
+      - ".github/workflows/android-*.yml"
   workflow_dispatch:
 
 permissions:

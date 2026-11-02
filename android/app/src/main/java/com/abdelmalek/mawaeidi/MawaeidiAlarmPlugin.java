@@ -36,6 +36,15 @@ public class MawaeidiAlarmPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void getAppInfo(PluginCall call) {
+        JSObject info = new JSObject();
+        info.put("packageName", getContext().getPackageName());
+        info.put("versionName", BuildConfig.VERSION_NAME);
+        info.put("versionCode", BuildConfig.VERSION_CODE);
+        call.resolve(info);
+    }
+
+    @PluginMethod
     public void setEnabled(PluginCall call) {
         boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false));
         String userId = safeText(call.getString("userId", ""), 120);
@@ -127,6 +136,29 @@ public class MawaeidiAlarmPlugin extends Plugin {
     @PluginMethod
     public void openBatterySettings(PluginCall call) {
         openSettings(call, new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+    }
+
+    @PluginMethod
+    public void openExternalUrl(PluginCall call) {
+        Uri uri = Uri.parse(call.getString("url", ""));
+        String path = uri.getPath();
+        boolean trusted = "https".equalsIgnoreCase(uri.getScheme())
+            && "github.com".equalsIgnoreCase(uri.getHost())
+            && path != null
+            && path.startsWith("/arabicwithabdelmalek-cpu/mawaeidi/releases/");
+        if (!trusted) {
+            call.reject("رابط التحديث غير موثوق.", "untrusted_update_url");
+            return;
+        }
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+            JSObject result = new JSObject();
+            result.put("opened", true);
+            call.resolve(result);
+        } catch (Exception error) {
+            call.reject("تعذّر فتح رابط التحديث.", "update_url_unavailable", error);
+        }
     }
 
     private void openSettings(PluginCall call, Intent intent) {

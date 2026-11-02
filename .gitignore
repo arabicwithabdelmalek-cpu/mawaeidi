@@ -4,5 +4,9 @@ supabase/functions/.env.*
 !supabase/functions/.env.example
 node_modules/
 mobile-dist/
+deliverables/
+*.jks
+*.keystore
+release-key.properties
 www/*
 !www/index.html

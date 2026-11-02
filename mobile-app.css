@@ -183,6 +183,25 @@ body.native-app .drawer-foot{position:sticky;bottom:0;padding-bottom:calc(12px +
 body.native-app .auth-gate{padding:calc(20px + var(--native-safe-top)) 16px calc(20px + var(--native-safe-bottom));background:linear-gradient(150deg,#EDF3F6,#F9FBFC)}
 body.native-app .auth-card{width:100%;max-width:430px;padding:27px 22px;border-radius:25px;box-shadow:0 24px 58px rgba(31,67,89,.15)}
 body.native-app .startup-screen{padding-top:var(--native-safe-top)}
+body.native-app .native-update-banner{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  margin:0 0 14px;
+  padding:14px;
+  border:1px solid #B9D5E3;
+  border-radius:18px;
+  background:linear-gradient(145deg,#EAF5FA,#F7FBFD);
+  box-shadow:0 8px 20px rgba(33,92,123,.09);
+}
+body.native-app .native-update-banner>div:first-child{display:grid;gap:4px}
+body.native-app .native-update-banner strong{color:#214F69;font-size:14px}
+body.native-app .native-update-banner span{color:#5E7786;font-size:11px;line-height:1.65}
+body.native-app .native-update-actions{display:flex;align-items:center;gap:7px}
+body.native-app .native-update-actions button{min-height:40px;padding:8px 12px;border-radius:12px;font-size:11px}
+body.native-app .native-update-download{border:0;background:#2F6F8F;color:#fff}
+body.native-app .native-update-later{border:1px solid #C7D8E1;background:#fff;color:#536F7F}
 body.native-app .native-alarm-status{display:grid;gap:10px}
 body.native-app .native-alarm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 body.native-app .native-alarm-check{display:grid;gap:4px;padding:12px;border:1px solid #D5E0E6;border-radius:15px;background:#F8FAFB}
@@ -198,6 +217,9 @@ body.native-app .native-alarm-actions button{min-height:46px}
   body.native-app .header{margin-inline:-10px;padding-inline:10px}
   body.native-app .brand small{display:none}
   body.native-app .controls{grid-template-columns:1fr}
+  body.native-app .native-update-banner{grid-template-columns:1fr}
+  body.native-app .native-update-actions{justify-content:stretch}
+  body.native-app .native-update-actions button{flex:1}
   body.native-app .native-alarm-grid{grid-template-columns:1fr}
 }
 @media(orientation:landscape) and (max-height:520px){

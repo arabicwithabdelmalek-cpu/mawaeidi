@@ -21,9 +21,11 @@ assert.match(app,/window\.MawaeidiNative\.syncFromApp/);
 assert.match(app,/function nativeOccurrenceCanAlert/);
 
 const bridge=read("native-bridge.js");
-for(const method of ["getAlarmState","enableAlarms","disableAlarms","syncFromApp","testAlarm"]){
+for(const method of ["getAlarmState","enableAlarms","disableAlarms","syncFromApp","testAlarm","getAppInfo","checkForUpdates","openUpdate"]){
   assert.match(bridge,new RegExp(`\\b${method}\\b`));
 }
+assert.match(bridge,/api\.github\.com\/repos\/arabicwithabdelmalek-cpu\/mawaeidi\/releases/);
+assert.match(bridge,/nativeUpdateBanner/);
 
 const manifest=read("android/app/src/main/AndroidManifest.xml");
 for(const permission of [
@@ -41,6 +43,30 @@ const plugin=read("android/app/src/main/java/com/abdelmalek/mawaeidi/MawaeidiAla
 assert.match(plugin,/replaceAlarms/);
 assert.match(plugin,/canUseFullScreenIntent/);
 assert.match(plugin,/ACTION_REQUEST_SCHEDULE_EXACT_ALARM/);
+assert.match(plugin,/getAppInfo/);
+assert.match(plugin,/openExternalUrl/);
+assert.match(plugin,/untrusted_update_url/);
+
+const gradle=read("android/app/build.gradle");
+for(const variable of ["MAWAEIDI_VERSION_CODE","MAWAEIDI_VERSION_NAME","MAWAEIDI_KEYSTORE_PATH","MAWAEIDI_KEYSTORE_PASSWORD","MAWAEIDI_KEY_ALIAS","MAWAEIDI_KEY_PASSWORD"]){
+  assert.match(gradle,new RegExp(variable));
+}
+assert.match(gradle,/signingConfigs/);
+
+const releaseWorkflow=read(".github/workflows/android-release.yml");
+assert.match(releaseWorkflow,/assembleRelease/);
+assert.match(releaseWorkflow,/apksigner/);
+assert.match(releaseWorkflow,/gh release create/);
+assert.match(releaseWorkflow,/secrets\.MAWAEIDI_KEYSTORE_BASE64/);
+assert.match(releaseWorkflow,/release\/android-version\.json/);
+
+const releaseManifest=JSON.parse(read("release/android-version.json"));
+assert.match(releaseManifest.version,/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
+assert.equal(typeof releaseManifest.notes,"string");
+assert.equal(typeof releaseManifest.prerelease,"boolean");
+
+const mobileCss=read("mobile-app.css");
+assert.match(mobileCss,/native-update-banner/);
 
 const service=read("android/app/src/main/java/com/abdelmalek/mawaeidi/AlarmRingService.java");
 assert.match(service,/setLooping\(true\)/);

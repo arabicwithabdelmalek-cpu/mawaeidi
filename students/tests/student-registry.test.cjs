@@ -25,7 +25,7 @@ assert.match(main,/student-registry\.js\?v=16/);
 assert.doesNotMatch(main,/id="backupStudents"/);
 assert.doesNotMatch(main,/id="openStudentRegistry"/);
 
-assert.match(css,/grid-template-columns:minmax\(0,1fr\) 320px/);
+assert.match(css,/grid-template-columns:minmax\(0,1fr\) 324px/);
 assert.match(css,/@media \(min-width:701px\) and \(max-width:980px\)/);
 assert.match(css,/@media \(max-width:700px\)/);
 assert.match(source,/level\.className="student-meta-item level"/);

@@ -704,7 +704,7 @@
 /* Student registry rows: stable columns and aligned study details (desktop/tablet/mobile). */
 @media (min-width:981px){
   #studentsView .student-row{
-    grid-template-columns:minmax(0,1fr) 320px;
+    grid-template-columns:minmax(0,1fr) 324px;
     column-gap:16px;
   }
   #studentsView .student-open{
@@ -745,10 +745,35 @@
   }
   #studentsView .student-meta-empty{grid-column:1/-1}
   #studentsView .row-actions{
+    display:grid;
+    grid-template-columns:108px minmax(0,1fr) 64px;
+    align-items:center;
+    justify-content:stretch;
     min-width:0;
+    gap:7px!important;
+  }
+  #studentsView .row-actions>.chip{
+    max-width:100%;
+    justify-self:start;
+    text-align:center;
+    white-space:normal;
+    line-height:1.3;
+  }
+  #studentsView .row-actions .edit-student{justify-self:end}
+  #studentsView .row-actions.trash-actions{
+    display:flex;
     justify-content:flex-end;
     flex-wrap:wrap;
   }
+}
+/* Keep contact buttons in a dedicated slot, even when a student has no links. */
+#studentsView .student-row-contacts{
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  min-width:0;
+  gap:5px;
 }
 /* Move actions beneath student information before desktop columns become cramped. */
 @media (min-width:701px) and (max-width:980px){

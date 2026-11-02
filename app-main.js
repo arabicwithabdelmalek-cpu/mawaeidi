@@ -32,6 +32,8 @@ const WORLD_CLOCK_BASE_KEY="mawaeidi-world-clock-base-v1";
 const WORLD_CLOCK_SETTINGS_TABLE="mawaeidi_world_clock_settings";
 const WORLD_CLOCK_LEGACY_OWNER_KEY="mawaeidi-world-clock-v1-owner";
 const SCHEDULE_TIMEZONE="Africa/Cairo";
+const NATIVE_ALARM_HORIZON_DAYS=42;
+const NATIVE_ALARM_LIMIT=450;
 const SESSION_RECORD_STATUSES=["default","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"];
 const TIMEZONE_COUNTRY_MAP={"Europe/Andorra":"AD","Asia/Dubai":"AE","Asia/Kabul":"AF","America/Antigua":"AG","America/Anguilla":"AI","Europe/Tirane":"AL","Asia/Yerevan":"AM","Africa/Luanda":"AO","Antarctica/McMurdo":"AQ","Antarctica/Casey":"AQ","Antarctica/Davis":"AQ","Antarctica/DumontDUrville":"AQ","Antarctica/Mawson":"AQ","Antarctica/Palmer":"AQ","Antarctica/Rothera":"AQ","Antarctica/Syowa":"AQ","Antarctica/Troll":"AQ","Antarctica/Vostok":"AQ","America/Argentina/Buenos_Aires":"AR","America/Argentina/Cordoba":"AR","America/Argentina/Salta":"AR","America/Argentina/Jujuy":"AR","America/Argentina/Tucuman":"AR","America/Argentina/Catamarca":"AR","America/Argentina/La_Rioja":"AR","America/Argentina/San_Juan":"AR","America/Argentina/Mendoza":"AR","America/Argentina/San_Luis":"AR","America/Argentina/Rio_Gallegos":"AR","America/Argentina/Ushuaia":"AR","Pacific/Pago_Pago":"AS","Europe/Vienna":"AT","Australia/Lord_Howe":"AU","Antarctica/Macquarie":"AU","Australia/Hobart":"AU","Australia/Melbourne":"AU","Australia/Sydney":"AU","Australia/Broken_Hill":"AU","Australia/Brisbane":"AU","Australia/Lindeman":"AU","Australia/Adelaide":"AU","Australia/Darwin":"AU","Australia/Perth":"AU","Australia/Eucla":"AU","America/Aruba":"AW","Europe/Mariehamn":"AX","Asia/Baku":"AZ","Europe/Sarajevo":"BA","America/Barbados":"BB","Asia/Dhaka":"BD","Europe/Brussels":"BE","Africa/Ouagadougou":"BF","Europe/Sofia":"BG","Asia/Bahrain":"BH","Africa/Bujumbura":"BI","Africa/Porto-Novo":"BJ","America/St_Barthelemy":"BL","Atlantic/Bermuda":"BM","Asia/Brunei":"BN","America/La_Paz":"BO","America/Kralendijk":"BQ","America/Noronha":"BR","America/Belem":"BR","America/Fortaleza":"BR","America/Recife":"BR","America/Araguaina":"BR","America/Maceio":"BR","America/Bahia":"BR","America/Sao_Paulo":"BR","America/Campo_Grande":"BR","America/Cuiaba":"BR","America/Santarem":"BR","America/Porto_Velho":"BR","America/Boa_Vista":"BR","America/Manaus":"BR","America/Eirunepe":"BR","America/Rio_Branco":"BR","America/Nassau":"BS","Asia/Thimphu":"BT","Africa/Gaborone":"BW","Europe/Minsk":"BY","America/Belize":"BZ","America/St_Johns":"CA","America/Halifax":"CA","America/Glace_Bay":"CA","America/Moncton":"CA","America/Goose_Bay":"CA","America/Blanc-Sablon":"CA","America/Toronto":"CA","America/Iqaluit":"CA","America/Atikokan":"CA","America/Winnipeg":"CA","America/Resolute":"CA","America/Rankin_Inlet":"CA","America/Regina":"CA","America/Swift_Current":"CA","America/Edmonton":"CA","America/Cambridge_Bay":"CA","America/Inuvik":"CA","America/Vancouver":"CA","America/Creston":"CA","America/Dawson_Creek":"CA","America/Fort_Nelson":"CA","America/Whitehorse":"CA","America/Dawson":"CA","Indian/Cocos":"CC","Africa/Kinshasa":"CD","Africa/Lubumbashi":"CD","Africa/Bangui":"CF","Africa/Brazzaville":"CG","Europe/Zurich":"CH","Africa/Abidjan":"CI","Pacific/Rarotonga":"CK","America/Santiago":"CL","America/Coyhaique":"CL","America/Punta_Arenas":"CL","Pacific/Easter":"CL","Africa/Douala":"CM","Asia/Shanghai":"CN","Asia/Urumqi":"CN","America/Bogota":"CO","America/Costa_Rica":"CR","America/Havana":"CU","Atlantic/Cape_Verde":"CV","America/Curacao":"CW","Indian/Christmas":"CX","Asia/Nicosia":"CY","Asia/Famagusta":"CY","Europe/Prague":"CZ","Europe/Berlin":"DE","Europe/Busingen":"DE","Africa/Djibouti":"DJ","Europe/Copenhagen":"DK","America/Dominica":"DM","America/Santo_Domingo":"DO","Africa/Algiers":"DZ","America/Guayaquil":"EC","Pacific/Galapagos":"EC","Europe/Tallinn":"EE","Africa/Cairo":"EG","Africa/El_Aaiun":"EH","Africa/Asmara":"ER","Europe/Madrid":"ES","Africa/Ceuta":"ES","Atlantic/Canary":"ES","Africa/Addis_Ababa":"ET","Europe/Helsinki":"FI","Pacific/Fiji":"FJ","Atlantic/Stanley":"FK","Pacific/Chuuk":"FM","Pacific/Pohnpei":"FM","Pacific/Kosrae":"FM","Atlantic/Faroe":"FO","Europe/Paris":"FR","Africa/Libreville":"GA","Europe/London":"GB","America/Grenada":"GD","Asia/Tbilisi":"GE","America/Cayenne":"GF","Europe/Guernsey":"GG","Africa/Accra":"GH","Europe/Gibraltar":"GI","America/Nuuk":"GL","America/Danmarkshavn":"GL","America/Scoresbysund":"GL","America/Thule":"GL","Africa/Banjul":"GM","Africa/Conakry":"GN","America/Guadeloupe":"GP","Africa/Malabo":"GQ","Europe/Athens":"GR","Atlantic/South_Georgia":"GS","America/Guatemala":"GT","Pacific/Guam":"GU","Africa/Bissau":"GW","America/Guyana":"GY","Asia/Hong_Kong":"HK","America/Tegucigalpa":"HN","Europe/Zagreb":"HR","America/Port-au-Prince":"HT","Europe/Budapest":"HU","Asia/Jakarta":"ID","Asia/Pontianak":"ID","Asia/Makassar":"ID","Asia/Jayapura":"ID","Europe/Dublin":"IE","Asia/Jerusalem":"IL","Europe/Isle_of_Man":"IM","Asia/Kolkata":"IN","Indian/Chagos":"IO","Asia/Baghdad":"IQ","Asia/Tehran":"IR","Atlantic/Reykjavik":"IS","Europe/Rome":"IT","Europe/Jersey":"JE","America/Jamaica":"JM","Asia/Amman":"JO","Asia/Tokyo":"JP","Africa/Nairobi":"KE","Asia/Bishkek":"KG","Asia/Phnom_Penh":"KH","Pacific/Tarawa":"KI","Pacific/Kanton":"KI","Pacific/Kiritimati":"KI","Indian/Comoro":"KM","America/St_Kitts":"KN","Asia/Pyongyang":"KP","Asia/Seoul":"KR","Asia/Kuwait":"KW","America/Cayman":"KY","Asia/Almaty":"KZ","Asia/Qyzylorda":"KZ","Asia/Qostanay":"KZ","Asia/Aqtobe":"KZ","Asia/Aqtau":"KZ","Asia/Atyrau":"KZ","Asia/Oral":"KZ","Asia/Vientiane":"LA","Asia/Beirut":"LB","America/St_Lucia":"LC","Europe/Vaduz":"LI","Asia/Colombo":"LK","Africa/Monrovia":"LR","Africa/Maseru":"LS","Europe/Vilnius":"LT","Europe/Luxembourg":"LU","Europe/Riga":"LV","Africa/Tripoli":"LY","Africa/Casablanca":"MA","Europe/Monaco":"MC","Europe/Chisinau":"MD","Europe/Podgorica":"ME","America/Marigot":"MF","Indian/Antananarivo":"MG","Pacific/Majuro":"MH","Pacific/Kwajalein":"MH","Europe/Skopje":"MK","Africa/Bamako":"ML","Asia/Yangon":"MM","Asia/Ulaanbaatar":"MN","Asia/Hovd":"MN","Asia/Macau":"MO","Pacific/Saipan":"MP","America/Martinique":"MQ","Africa/Nouakchott":"MR","America/Montserrat":"MS","Europe/Malta":"MT","Indian/Mauritius":"MU","Indian/Maldives":"MV","Africa/Blantyre":"MW","America/Mexico_City":"MX","America/Cancun":"MX","America/Merida":"MX","America/Monterrey":"MX","America/Matamoros":"MX","America/Chihuahua":"MX","America/Ciudad_Juarez":"MX","America/Ojinaga":"MX","America/Mazatlan":"MX","America/Bahia_Banderas":"MX","America/Hermosillo":"MX","America/Tijuana":"MX","Asia/Kuala_Lumpur":"MY","Asia/Kuching":"MY","Africa/Maputo":"MZ","Africa/Windhoek":"NA","Pacific/Noumea":"NC","Africa/Niamey":"NE","Pacific/Norfolk":"NF","Africa/Lagos":"NG","America/Managua":"NI","Europe/Amsterdam":"NL","Europe/Oslo":"NO","Asia/Kathmandu":"NP","Pacific/Nauru":"NR","Pacific/Niue":"NU","Pacific/Auckland":"NZ","Pacific/Chatham":"NZ","Asia/Muscat":"OM","America/Panama":"PA","America/Lima":"PE","Pacific/Tahiti":"PF","Pacific/Marquesas":"PF","Pacific/Gambier":"PF","Pacific/Port_Moresby":"PG","Pacific/Bougainville":"PG","Asia/Manila":"PH","Asia/Karachi":"PK","Europe/Warsaw":"PL","America/Miquelon":"PM","Pacific/Pitcairn":"PN","America/Puerto_Rico":"PR","Asia/Gaza":"PS","Asia/Hebron":"PS","Europe/Lisbon":"PT","Atlantic/Madeira":"PT","Atlantic/Azores":"PT","Pacific/Palau":"PW","America/Asuncion":"PY","Asia/Qatar":"QA","Indian/Reunion":"RE","Europe/Bucharest":"RO","Europe/Belgrade":"RS","Europe/Kaliningrad":"RU","Europe/Moscow":"RU","Europe/Simferopol":"UA","Europe/Kirov":"RU","Europe/Volgograd":"RU","Europe/Astrakhan":"RU","Europe/Saratov":"RU","Europe/Ulyanovsk":"RU","Europe/Samara":"RU","Asia/Yekaterinburg":"RU","Asia/Omsk":"RU","Asia/Novosibirsk":"RU","Asia/Barnaul":"RU","Asia/Tomsk":"RU","Asia/Novokuznetsk":"RU","Asia/Krasnoyarsk":"RU","Asia/Irkutsk":"RU","Asia/Chita":"RU","Asia/Yakutsk":"RU","Asia/Khandyga":"RU","Asia/Vladivostok":"RU","Asia/Ust-Nera":"RU","Asia/Magadan":"RU","Asia/Sakhalin":"RU","Asia/Srednekolymsk":"RU","Asia/Kamchatka":"RU","Asia/Anadyr":"RU","Africa/Kigali":"RW","Asia/Riyadh":"SA","Pacific/Guadalcanal":"SB","Indian/Mahe":"SC","Africa/Khartoum":"SD","Europe/Stockholm":"SE","Asia/Singapore":"SG","Atlantic/St_Helena":"SH","Europe/Ljubljana":"SI","Arctic/Longyearbyen":"SJ","Europe/Bratislava":"SK","Africa/Freetown":"SL","Europe/San_Marino":"SM","Africa/Dakar":"SN","Africa/Mogadishu":"SO","America/Paramaribo":"SR","Africa/Juba":"SS","Africa/Sao_Tome":"ST","America/El_Salvador":"SV","America/Lower_Princes":"SX","Asia/Damascus":"SY","Africa/Mbabane":"SZ","America/Grand_Turk":"TC","Africa/Ndjamena":"TD","Indian/Kerguelen":"TF","Africa/Lome":"TG","Asia/Bangkok":"TH","Asia/Dushanbe":"TJ","Pacific/Fakaofo":"TK","Asia/Dili":"TL","Asia/Ashgabat":"TM","Africa/Tunis":"TN","Pacific/Tongatapu":"TO","Europe/Istanbul":"TR","America/Port_of_Spain":"TT","Pacific/Funafuti":"TV","Asia/Taipei":"TW","Africa/Dar_es_Salaam":"TZ","Europe/Kyiv":"UA","Africa/Kampala":"UG","Pacific/Midway":"UM","Pacific/Wake":"UM","America/New_York":"US","America/Detroit":"US","America/Kentucky/Louisville":"US","America/Kentucky/Monticello":"US","America/Indiana/Indianapolis":"US","America/Indiana/Vincennes":"US","America/Indiana/Winamac":"US","America/Indiana/Marengo":"US","America/Indiana/Petersburg":"US","America/Indiana/Vevay":"US","America/Chicago":"US","America/Indiana/Tell_City":"US","America/Indiana/Knox":"US","America/Menominee":"US","America/North_Dakota/Center":"US","America/North_Dakota/New_Salem":"US","America/North_Dakota/Beulah":"US","America/Denver":"US","America/Boise":"US","America/Phoenix":"US","America/Los_Angeles":"US","America/Anchorage":"US","America/Juneau":"US","America/Sitka":"US","America/Metlakatla":"US","America/Yakutat":"US","America/Nome":"US","America/Adak":"US","Pacific/Honolulu":"US","America/Montevideo":"UY","Asia/Samarkand":"UZ","Asia/Tashkent":"UZ","Europe/Vatican":"VA","America/St_Vincent":"VC","America/Caracas":"VE","America/Tortola":"VG","America/St_Thomas":"VI","Asia/Ho_Chi_Minh":"VN","Pacific/Efate":"VU","Pacific/Wallis":"WF","Pacific/Apia":"WS","Asia/Aden":"YE","Indian/Mayotte":"YT","Africa/Johannesburg":"ZA","Africa/Lusaka":"ZM","Africa/Harare":"ZW"};
 const cloud=window.supabase?.createClient
@@ -179,6 +181,7 @@ let deferredInstallPrompt=null;
 let serviceWorkerRegistration=null;
 let toolReturnFocus=null;
 let notificationBusy=false;
+let nativeAlarmSyncTimer=null;
 let historySnapshots=new Map();
 let activeSessionContext=null;
 let worldClockInterval=null;
@@ -231,6 +234,66 @@ function checkedNotificationLeads(selector){
     .filter(value=>NOTIFICATION_LEAD_OPTIONS.includes(value)))]
     .sort((a,b)=>b-a);
 }
+function nativeAlarmAvailable(){return Boolean(window.MawaeidiNative?.isNative)}
+function nativeOccurrenceCanAlert(occurrence){
+  const status=occurrence?.record?.status||"default";
+  return !["completed","cancelled_unpaid","cancelled_counted","rescheduled"].includes(status);
+}
+function nativeLessonReminderLeads(lesson){
+  if(lesson?.reminderMode==="off")return [];
+  if(lesson?.reminderMode==="custom")return normalizeNotificationLeads(lesson.reminderLeads,[DEFAULT_NOTIFICATION_LEAD]);
+  return savedNotificationLeads();
+}
+function nativeAlarmPayload(){
+  const alarms=[],now=Date.now()+15000,start=currentDateKey();
+  for(let dayOffset=0;dayOffset<=NATIVE_ALARM_HORIZON_DAYS;dayOffset++){
+    const date=addDaysToDateKey(start,dayOffset);
+    for(const occurrence of datedOccurrencesForDate(date,lessons)){
+      if(!nativeOccurrenceCanAlert(occurrence))continue;
+      const startsAt=wallTimeToInstant(date,occurrence.time,SCHEDULE_TIMEZONE)?.getTime();
+      if(!Number.isFinite(startsAt))continue;
+      for(const leadMinutes of nativeLessonReminderLeads(occurrence.lesson)){
+        const fireAt=startsAt-leadMinutes*60000;
+        if(fireAt<=now)continue;
+        const occurrenceKey=occurrence.kind==="replacement"?occurrence.recordId||"replacement":"base";
+        alarms.push({
+          id:`${occurrence.lesson.id}|${date}|${occurrence.time}|${occurrenceKey}|${leadMinutes}`,
+          fireAt,
+          startsAt,
+          lessonId:occurrence.lesson.id,
+          occurrenceDate:date,
+          occurrenceTime:occurrence.time,
+          leadMinutes,
+          title:`تبقّى ${notificationLeadText(leadMinutes)} على الحصة`,
+          lessonName:occurrence.lesson.name||occurrence.lesson.subject||"حصة",
+          body:[occurrence.lesson.subject,occurrence.lesson.platform,fmt(occurrence.time)].filter(Boolean).join(" · ")
+        });
+      }
+    }
+  }
+  alarms.sort((left,right)=>left.fireAt-right.fireAt||left.id.localeCompare(right.id));
+  return {
+    userId:currentUser?.id||"",
+    timezone:SCHEDULE_TIMEZONE,
+    defaultLeads:savedNotificationLeads(),
+    alarms:alarms.slice(0,NATIVE_ALARM_LIMIT)
+  };
+}
+async function syncNativeAlarms(force=false){
+  if(!nativeAlarmAvailable()||!currentUser||!cloudReady)return false;
+  try{
+    await window.MawaeidiNative.syncFromApp(nativeAlarmPayload(),{force});
+    return true;
+  }catch(error){
+    console.warn("تعذّرت مزامنة منبّهات التطبيق.",error);
+    return false;
+  }
+}
+function queueNativeAlarmSync(force=false){
+  if(!nativeAlarmAvailable())return;
+  clearTimeout(nativeAlarmSyncTimer);
+  nativeAlarmSyncTimer=setTimeout(()=>syncNativeAlarms(force),300);
+}
 function openToolDialog(title,intro,content){
   const backdrop=document.getElementById("toolBackdrop");
   const previousFocus=document.activeElement;
@@ -275,9 +338,10 @@ function closeToolDialog(event){
 }
 function refreshInstallAction(){
   const action=document.getElementById("installAction");
-  if(action)action.hidden=isStandalone();
+  if(action)action.hidden=nativeAlarmAvailable()||isStandalone();
 }
 async function registerAppWorker(){
+  if(nativeAlarmAvailable())return null;
   if(!("serviceWorker" in navigator))return null;
   const safeOrigin=location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1";
   if(!safeOrigin)return null;
@@ -573,6 +637,7 @@ function urlBase64ToUint8Array(value){
   return Uint8Array.from([...raw].map(char=>char.charCodeAt(0)));
 }
 function notificationSupport(){
+  if(nativeAlarmAvailable())return true;
   return "Notification" in window&&"serviceWorker" in navigator&&"PushManager" in window;
 }
 async function getAppWorker(){
@@ -596,6 +661,12 @@ function updateNotificationMenuStatus(enabled){
   status.classList.toggle("on",Boolean(enabled));
 }
 async function refreshNotificationMenuStatus(){
+  if(nativeAlarmAvailable()){
+    const state=await window.MawaeidiNative.getAlarmState();
+    const enabled=Boolean(state.available&&state.enabled&&state.notificationsAllowed);
+    updateNotificationMenuStatus(enabled);
+    return enabled;
+  }
   if(!currentUser||!notificationSupport()){updateNotificationMenuStatus(false);return false}
   try{
     const registration=await getAppWorker();
@@ -641,6 +712,52 @@ function notificationSettingsMarkup({supported,configured,requiresInstall=false,
       <p class="install-help">الصوت هو صوت الإشعارات الذي اخترته في الجهاز، وقد يمنعه الوضع الصامت أو «عدم الإزعاج». لا يستطيع الموقع معرفة إن كان صوت الجهاز مكتومًا.</p>
     </div>`;
 }
+function nativePermissionCard(label,description,allowed,action=""){
+  const stateClass=allowed?"ok":"warn",stateText=allowed?"جاهز":"يحتاج إذنًا";
+  return `<div class="native-alarm-check ${stateClass}"><strong>${esc(label)} · ${stateText}</strong><span>${esc(description)}</span>${!allowed&&action?`<button type="button" class="tool-secondary" onclick="${action}">فتح الإعداد</button>`:""}</div>`;
+}
+function nativeNotificationSettingsMarkup(state){
+  const enabled=Boolean(state?.enabled),available=state?.available!==false,leads=savedNotificationLeads();
+  if(!available)return '<div class="tool-status error">تعذّر الاتصال بخدمة المنبّه داخل التطبيق. أغلق التطبيق وافتحه ثم حاول مرة أخرى.</div>';
+  const ready=Boolean(state.notificationsAllowed&&state.exactAlarmAllowed);
+  const summary=enabled&&ready
+    ?`المنبّه الحقيقي مفعّل، ويوجد ${Number(state.pendingCount||0)} تنبيهًا مجدولًا على هذا الهاتف.`
+    :enabled?"تم تشغيل المنبّه، لكن يلزم إكمال أذونات النظام ليعمل في موعده بدقة.":"المنبّه الحقيقي غير مفعّل على هذا الهاتف.";
+  return `<div class="native-alarm-status">
+    <div class="tool-status ${enabled&&ready?"on":enabled?"":""}">${esc(summary)}</div>
+    <div class="tool-card">
+      <h3>مواعيد المنبّه الافتراضية</h3>
+      <p>اختر من منبّه إلى ثلاثة لكل حصة. ويمكنك تخصيص أي حصة من نافذة تعديلها.</p>
+      <div class="notification-leads" id="notificationLeadChoices" data-enabled="${enabled?"true":"false"}">${notificationLeadChoices(leads)}</div>
+      <div class="notification-features" aria-label="خصائص المنبّه">
+        <span class="notification-feature">صوت منبّه متكرر</span>
+        <span class="notification-feature">يوقظ الشاشة</span>
+        <span class="notification-feature">إيقاف أو غفوة</span>
+      </div>
+    </div>
+    <div class="native-alarm-grid">
+      ${nativePermissionCard("الإشعارات","لعرض المنبّه وأزرار الإيقاف والغفوة.",Boolean(state.notificationsAllowed),"openNativeNotificationSettings()")}
+      ${nativePermissionCard("المنبّه الدقيق","ليعمل في الدقيقة المحددة حتى أثناء وضع توفير البطارية.",Boolean(state.exactAlarmAllowed),"openNativeExactAlarmSettings()")}
+      ${nativePermissionCard("شاشة القفل","لإظهار شاشة المنبّه كاملة عند قفل الهاتف.",Boolean(state.fullScreenAllowed),"openNativeFullScreenSettings()")}
+      ${nativePermissionCard("البطارية","اختياري؛ يقلل احتمال تأخير المنبّه في بعض الهواتف.",Boolean(state.batteryOptimizationIgnored),"openNativeBatterySettings()")}
+    </div>
+    <div class="native-alarm-actions">
+      <button type="button" class="${enabled?"tool-danger":"tool-primary"}" id="notificationToggle" onclick="${enabled?"disableNotifications()":"enableNotifications()"}">${enabled?"إيقاف المنبّه":"تفعيل المنبّه"}</button>
+      <button type="button" class="tool-secondary" id="notificationTest" onclick="testNotificationNow()">اختبار بعد 3 ثوانٍ</button>
+    </div>
+    <p class="install-help">بعد التفعيل تُحفظ المنبّهات على الهاتف نفسه، لذلك تعمل دون إنترنت. ويُعاد ترتيبها تلقائيًا عند فتح التطبيق أو وصول تعديل أثناء تشغيله.</p>
+  </div>`;
+}
+async function renderNativeNotificationSettings(){
+  const body=document.getElementById("toolBody");if(!body)return;
+  const state=await window.MawaeidiNative.getAlarmState();
+  if(document.getElementById("toolBackdrop").classList.contains("show"))body.innerHTML=nativeNotificationSettingsMarkup(state);
+  updateNotificationMenuStatus(Boolean(state.available&&state.enabled&&state.notificationsAllowed));
+}
+async function openNativeExactAlarmSettings(){await window.MawaeidiNative.openExactAlarmSettings()}
+async function openNativeFullScreenSettings(){await window.MawaeidiNative.openFullScreenSettings()}
+async function openNativeNotificationSettings(){await window.MawaeidiNative.openNotificationSettings()}
+async function openNativeBatterySettings(){await window.MawaeidiNative.openBatterySettings()}
 async function readNotificationState(){
   const base={supported:notificationSupport(),configured:vapidKeyIsConfigured(),requiresInstall:isIOS()&&!isStandalone(),permission:"default",enabled:false,leads:savedNotificationLeads(),error:""};
   if(!base.supported||base.requiresInstall)return base;
@@ -668,6 +785,11 @@ async function readNotificationState(){
 async function openNotificationSettings(){
   closeDataMenu();
   if(!currentUser||!cloudReady){alert("انتظر حتى يكتمل تحميل حسابك ثم حاول مرة أخرى.");return}
+  if(nativeAlarmAvailable()){
+    openToolDialog("منبّه الحصص","منبّه حقيقي مستقل على هذا الهاتف.",'<div class="tool-status">جارٍ قراءة إعدادات الهاتف…</div>');
+    await renderNativeNotificationSettings();
+    return;
+  }
   openToolDialog("تنبيهات الحصص","إعداد مستقل لكل هاتف أو كمبيوتر.",'<div class="tool-status">جارٍ قراءة إعداد هذا الجهاز…</div>');
   const state=await readNotificationState();
   if(!document.getElementById("toolBackdrop").classList.contains("show"))return;
@@ -733,6 +855,21 @@ async function storePushSubscription(subscription,leads){
 }
 async function enableNotifications(){
   if(notificationBusy||!currentUser||!cloudReady)return;
+  if(nativeAlarmAvailable()){
+    notificationBusy=true;
+    const button=document.getElementById("notificationToggle");if(button)button.disabled=true;
+    const selected=checkedNotificationLeads("#notificationLeadChoices .notification-lead");
+    rememberNotificationLeads(selected.length?selected:savedNotificationLeads());
+    try{
+      await window.MawaeidiNative.enableAlarms(nativeAlarmPayload());
+      await renderNativeNotificationSettings();
+    }catch(error){
+      console.error("تعذّر تفعيل منبّه التطبيق.",error);
+      const status=document.querySelector(".tool-status");
+      if(status){status.className="tool-status error";status.textContent="تعذّر تفعيل المنبّه. اسمح بإشعارات التطبيق ثم حاول مرة أخرى."}
+    }finally{notificationBusy=false;if(button)button.disabled=false}
+    return;
+  }
   if(!notificationSupport()||!vapidKeyIsConfigured()){await openNotificationSettings();return}
   notificationBusy=true;
   const button=document.getElementById("notificationToggle");if(button)button.disabled=true;
@@ -781,6 +918,12 @@ async function saveNotificationLeads(changedInput){
     return;
   }
   leads=rememberNotificationLeads(leads);
+  if(nativeAlarmAvailable()){
+    if(status){status.className="tool-status";status.textContent=`جارٍ حفظ المنبّه قبل ${notificationLeadsText(leads)}…`}
+    await syncNativeAlarms(true);
+    if(status){status.className="tool-status on";status.textContent=`تم الحفظ: المنبّه قبل ${notificationLeadsText(leads)}.`}
+    return;
+  }
   if(choices?.dataset.enabled!=="true"){
     if(status){status.className="tool-status";status.textContent=`سيتم التنبيه قبل ${notificationLeadsText(leads)} عند التفعيل.`}
     return;
@@ -816,6 +959,19 @@ async function saveNotificationLeads(changedInput){
 }
 async function testNotificationNow(){
   if(notificationBusy)return;
+  if(nativeAlarmAvailable()){
+    notificationBusy=true;
+    const button=document.getElementById("notificationTest");if(button)button.disabled=true;
+    const status=document.querySelector(".tool-status");
+    try{
+      await window.MawaeidiNative.testAlarm();
+      if(status){status.className="tool-status on";status.textContent="سيعمل منبّه تجريبي بعد 3 ثوانٍ. جرّب الإيقاف والغفوة من شاشة المنبّه."}
+    }catch(error){
+      console.error("تعذّر اختبار منبّه التطبيق.",error);
+      if(status){status.className="tool-status error";status.textContent="تعذّر تشغيل الاختبار. فعّل الإشعارات والمنبّه الدقيق أولًا."}
+    }finally{notificationBusy=false;if(button)button.disabled=false}
+    return;
+  }
   notificationBusy=true;
   const button=document.getElementById("notificationTest");if(button)button.disabled=true;
   const status=document.querySelector(".tool-status");
@@ -848,6 +1004,20 @@ async function testNotificationNow(){
 }
 async function disableNotifications(silent=false){
   if(notificationBusy)return false;
+  if(nativeAlarmAvailable()){
+    notificationBusy=true;
+    const button=document.getElementById("notificationToggle");if(button)button.disabled=true;
+    try{
+      await window.MawaeidiNative.disableAlarms();
+      updateNotificationMenuStatus(false);
+      if(!silent)await renderNativeNotificationSettings();
+      return true;
+    }catch(error){
+      console.error("تعذّر إيقاف منبّه التطبيق.",error);
+      if(!silent){const status=document.querySelector(".tool-status");if(status){status.className="tool-status error";status.textContent="تعذّر إيقاف المنبّه. حاول مرة أخرى."}}
+      return false;
+    }finally{notificationBusy=false;if(button)button.disabled=false}
+  }
   notificationBusy=true;
   const button=document.getElementById("notificationToggle");if(button)button.disabled=true;
   try{
@@ -1512,6 +1682,7 @@ function applyRemoteRow(row,message="تم تحديث المواعيد"){
   lessons=normalizeLessons(row.lessons);
   lastCloudUpdatedAt=textValue(row.updated_at)||lastCloudUpdatedAt;
   render();
+  queueNativeAlarmSync(true);
   setSync("saved",message);
   return true;
 }
@@ -1741,6 +1912,7 @@ async function activateSession(user){
     hideAuth();
     setSync("saved","محفوظ سحابيًا");
     startRealtime(user);
+    queueNativeAlarmSync(true);
     refreshNotificationMenuStatus();
     if(currentSection==="students")await studentsWorkspace.activate(user);
   }catch(error){
@@ -1785,6 +1957,7 @@ async function persist(silent=false){
     if(error)throw error;
     lastCloudUpdatedAt=textValue(data?.updated_at)||updatedAt;
     setSync("saved","تم الحفظ");
+    queueNativeAlarmSync(true);
     return true;
   }catch(error){
     console.error("تعذّر حفظ بيانات مواعيدي.",error);
@@ -2865,6 +3038,12 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("visibilitychange",requestAutoRefresh);
 window.addEventListener("focus",requestAutoRefresh);
+window.addEventListener("mawaeidi-native-resume",async()=>{
+  if(!nativeAlarmAvailable()||!currentUser||!cloudReady)return;
+  await refreshFromCloud(true);
+  queueNativeAlarmSync(true);
+  refreshNotificationMenuStatus();
+});
 window.addEventListener("online",requestAutoRefresh);
 window.addEventListener("offline",()=>{if(currentUser)setSync("error","غير متصل بالإنترنت")});
 window.addEventListener("beforeinstallprompt",event=>{

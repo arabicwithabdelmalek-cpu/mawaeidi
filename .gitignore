@@ -2,3 +2,7 @@ supabase/.temp/
 supabase/functions/.env
 supabase/functions/.env.*
 !supabase/functions/.env.example
+node_modules/
+mobile-dist/
+www/*
+!www/index.html

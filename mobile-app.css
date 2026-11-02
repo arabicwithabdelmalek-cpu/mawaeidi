@@ -1,0 +1,206 @@
+/* Native-app presentation. Every rule is scoped so the published website keeps its current design. */
+.native-app-root{
+  color-scheme:light;
+  --native-safe-top:env(safe-area-inset-top,0px);
+  --native-safe-bottom:env(safe-area-inset-bottom,0px);
+}
+body.native-app{
+  min-width:0;
+  min-height:100dvh;
+  padding:0;
+  overscroll-behavior-y:none;
+  background:#F3F6F8;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;
+}
+body.native-app .shell{min-height:100dvh;padding:0;background:#F3F6F8}
+body.native-app .hurufiyat{display:none}
+body.native-app .app{width:100%;max-width:none;margin:0;padding:0 14px calc(104px + var(--native-safe-bottom))}
+body.native-app .header{
+  position:sticky;
+  z-index:40;
+  top:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-height:68px;
+  margin:0 -14px 14px;
+  padding:calc(10px + var(--native-safe-top)) 14px 10px;
+  border:0;
+  border-bottom:1px solid rgba(51,84,105,.12);
+  border-radius:0;
+  background:rgba(248,250,251,.95);
+  box-shadow:0 5px 20px rgba(33,66,87,.06);
+  backdrop-filter:blur(18px);
+}
+body.native-app .identity{min-width:0}
+body.native-app .brand h1{margin:0;color:#234C68;font-size:24px;line-height:1.15;letter-spacing:-.4px}
+body.native-app .brand small{display:block;overflow:hidden;margin-top:3px;color:#758896;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+body.native-app .header-actions{display:flex;flex-wrap:nowrap;align-items:center;gap:7px}
+body.native-app .account-trigger{width:42px;height:42px;min-width:42px;padding:0;border-radius:14px}
+body.native-app .account-trigger .account-name{display:none}
+body.native-app .account-trigger img,body.native-app .account-trigger .account-avatar{width:34px;height:34px}
+body.native-app #syncStatus,body.native-app .data-menu>summary{
+  display:grid;
+  width:42px;
+  height:42px;
+  min-width:42px;
+  place-items:center;
+  padding:0;
+  border:1px solid #D4DEE4;
+  border-radius:14px;
+  background:#fff;
+  color:#365D76;
+  font-size:0;
+}
+body.native-app .data-menu>summary::before{content:"•••";font-size:17px;letter-spacing:1px}
+body.native-app .sync-icon{display:block;font-size:20px}
+body.native-app .sync-text,body.native-app #syncStatus::before{display:none}
+body.native-app #primaryActionButton{
+  position:fixed;
+  z-index:55;
+  left:18px;
+  bottom:calc(74px + var(--native-safe-bottom));
+  display:grid;
+  width:58px;
+  height:58px;
+  min-width:58px;
+  place-items:center;
+  overflow:hidden;
+  padding:0;
+  border:3px solid #F3F6F8;
+  border-radius:20px;
+  background:#2F6F8F;
+  box-shadow:0 12px 28px rgba(30,79,107,.30);
+  color:transparent;
+  font-size:0;
+}
+body.native-app #primaryActionButton::before{content:"＋";color:#fff;font-size:28px;font-weight:500;line-height:1}
+body.native-app .workspace-switch{
+  position:fixed;
+  z-index:50;
+  right:0;
+  bottom:0;
+  left:0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  width:auto;
+  margin:0;
+  padding:8px 8px calc(7px + var(--native-safe-bottom));
+  border:0;
+  border-top:1px solid rgba(51,84,105,.13);
+  border-radius:0;
+  background:rgba(251,252,253,.97);
+  box-shadow:0 -8px 24px rgba(33,66,87,.08);
+  backdrop-filter:blur(18px);
+}
+body.native-app .workspace-switch button{
+  display:grid;
+  min-height:54px;
+  place-items:center;
+  gap:2px;
+  padding:5px 6px;
+  border:0;
+  border-radius:15px;
+  background:transparent;
+  color:#697F8D;
+  font-size:11px;
+  font-weight:800;
+  box-shadow:none;
+}
+body.native-app .workspace-switch button::before{font-size:20px;font-weight:500;line-height:1}
+body.native-app #scheduleSectionButton::before{content:"▦"}
+body.native-app #worldClockSectionButton::before{content:"◷"}
+body.native-app #studentsSectionButton::before{content:"♙"}
+body.native-app .workspace-switch button.active{background:#E8F0F4;color:#245C7B;box-shadow:none}
+body.native-app .workspace{width:100%}
+body.native-app .hero{display:block;margin:0 0 12px}
+body.native-app .hero-copy{display:none}
+body.native-app .next{
+  min-height:148px;
+  padding:18px;
+  border:1px solid #D3DEE5;
+  border-top:4px solid #5D88A3;
+  border-radius:21px;
+  background:linear-gradient(145deg,#FFFFFF 0%,#F8FBFC 100%);
+  box-shadow:0 9px 24px rgba(29,66,90,.07);
+}
+body.native-app .next .label{display:inline-flex;padding:6px 10px;border-radius:10px;background:#E8F1F5;color:#2B6685;font-size:11px}
+body.native-app .next .time{margin-top:11px;font-size:31px}
+body.native-app .next .name{margin-top:4px;font-size:18px}
+body.native-app .next .meta{margin-top:5px;font-size:12px;line-height:1.55}
+body.native-app .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+body.native-app .filters,body.native-app .tabs{width:100%;min-width:0;padding:4px;border-radius:15px;background:#E9EFF3}
+body.native-app .filter,body.native-app .tab{min-height:38px;padding:7px 4px;border-radius:11px;font-size:11px}
+body.native-app .filter.active,body.native-app .tab.active{box-shadow:0 4px 10px rgba(34,77,103,.15)}
+body.native-app .content{display:block}
+body.native-app .panel,body.native-app .week-view,body.native-app .world-clock-section,body.native-app #studentsView .registry-panel{
+  margin-bottom:12px;
+  border:1px solid #D6E0E6;
+  border-radius:21px;
+  background:#fff;
+  box-shadow:0 8px 22px rgba(32,67,88,.055);
+}
+body.native-app .panel.side{margin-top:12px}
+body.native-app .panel-head{padding:16px 16px 12px}
+body.native-app .panel-head h2{font-size:18px}
+body.native-app .timeline{padding:0 12px 12px}
+body.native-app .timeline-item{border-radius:16px}
+body.native-app .week-table-wrap{-webkit-overflow-scrolling:touch}
+body.native-app .data-popover{
+  position:fixed;
+  z-index:80;
+  top:calc(67px + var(--native-safe-top));
+  right:12px;
+  left:12px;
+  width:auto;
+  max-height:calc(100dvh - 100px - var(--native-safe-top));
+  overflow:auto;
+  border-radius:20px;
+  box-shadow:0 22px 58px rgba(20,48,66,.24);
+}
+body.native-app .tool-backdrop{align-items:flex-end;padding:0}
+body.native-app .tool-dialog{
+  width:100%;
+  max-width:none;
+  max-height:92dvh;
+  margin:0;
+  padding-bottom:var(--native-safe-bottom);
+  border-radius:26px 26px 0 0;
+  animation:native-sheet-in .24s ease both;
+}
+body.native-app .tool-head{padding:18px 18px 13px}
+body.native-app .tool-body{padding:16px 18px 20px}
+body.native-app .drawer{
+  width:min(100%,560px);
+  max-width:100%;
+  padding-top:var(--native-safe-top);
+  padding-bottom:var(--native-safe-bottom);
+}
+body.native-app .drawer-head{position:sticky;top:0;z-index:3;background:#fff}
+body.native-app .drawer-foot{position:sticky;bottom:0;padding-bottom:calc(12px + var(--native-safe-bottom));background:#fff}
+body.native-app .auth-gate{padding:calc(20px + var(--native-safe-top)) 16px calc(20px + var(--native-safe-bottom));background:linear-gradient(150deg,#EDF3F6,#F9FBFC)}
+body.native-app .auth-card{width:100%;max-width:430px;padding:27px 22px;border-radius:25px;box-shadow:0 24px 58px rgba(31,67,89,.15)}
+body.native-app .startup-screen{padding-top:var(--native-safe-top)}
+body.native-app .native-alarm-status{display:grid;gap:10px}
+body.native-app .native-alarm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+body.native-app .native-alarm-check{display:grid;gap:4px;padding:12px;border:1px solid #D5E0E6;border-radius:15px;background:#F8FAFB}
+body.native-app .native-alarm-check strong{color:#244F69;font-size:13px}
+body.native-app .native-alarm-check span{color:#748793;font-size:10px;line-height:1.55}
+body.native-app .native-alarm-check.ok{border-color:#BAD7CD;background:#F0F8F5}
+body.native-app .native-alarm-check.warn{border-color:#E5D1AC;background:#FFF9EF}
+body.native-app .native-alarm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+body.native-app .native-alarm-actions button{min-height:46px}
+@keyframes native-sheet-in{from{transform:translateY(22px);opacity:.4}to{transform:none;opacity:1}}
+@media(max-width:420px){
+  body.native-app .app{padding-inline:10px}
+  body.native-app .header{margin-inline:-10px;padding-inline:10px}
+  body.native-app .brand small{display:none}
+  body.native-app .controls{grid-template-columns:1fr}
+  body.native-app .native-alarm-grid{grid-template-columns:1fr}
+}
+@media(orientation:landscape) and (max-height:520px){
+  body.native-app .workspace-switch{grid-template-columns:repeat(3,100px);right:auto;left:12px;width:auto;border:1px solid #D4DEE4;border-radius:18px 18px 0 0}
+  body.native-app #primaryActionButton{bottom:78px}
+}

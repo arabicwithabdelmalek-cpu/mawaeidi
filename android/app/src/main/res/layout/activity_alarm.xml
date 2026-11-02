@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/alarmBackground"
+    android:fillViewport="true"
+    android:layoutDirection="rtl"
+    android:overScrollMode="never">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingLeft="20dp"
+        android:paddingTop="36dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="28dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="مواعيدي"
+            android:textColor="@color/alarmPrimary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="الوقت أمانة"
+            android:textColor="@color/alarmMuted"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/alarm_card_background"
+            android:elevation="6dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/alarm_secondary_button"
+                android:gravity="center"
+                android:text="⏰"
+                android:textSize="29sp" />
+
+            <TextView
+                android:id="@+id/alarm_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="الآن"
+                android:textColor="@color/alarmPrimaryDark"
+                android:textSize="48sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/alarm_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:gravity="center"
+                android:text="حان موعد الحصة"
+                android:textColor="@color/alarmMuted"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="64dp"
+                android:layout_height="1dp"
+                android:layout_marginTop="20dp"
+                android:background="@color/alarmLine" />
+
+            <TextView
+                android:id="@+id/alarm_lesson_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="19dp"
+                android:gravity="center"
+                android:maxLines="3"
+                android:text="اسم الحصة"
+                android:textColor="#1E3544"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/alarm_body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp"
+                android:maxLines="4"
+                android:textColor="@color/alarmMuted"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/alarm_stop"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/alarm_primary_button"
+            android:text="إيقاف المنبّه"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFFFF"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/alarm_snooze"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/alarm_secondary_button"
+            android:text="غفوة 5 دقائق"
+            android:textAllCaps="false"
+            android:textColor="@color/alarmPrimaryDark"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:lineSpacingExtra="3dp"
+            android:text="سيستمر الصوت حتى توقفه أو تختار الغفوة."
+            android:textColor="@color/alarmMuted"
+            android:textSize="11sp" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#2F6F8F</color>
+    <color name="colorPrimaryDark">#234F69</color>
+    <color name="colorAccent">#B18149</color>
+    <color name="appSurface">#F8FAFB</color>
+    <color name="alarmBackground">#F3F6F8</color>
+    <color name="alarmCard">#FFFFFFFF</color>
+    <color name="alarmPrimary">#2F6F8F</color>
+    <color name="alarmPrimaryDark">#234F69</color>
+    <color name="alarmMuted">#708591</color>
+    <color name="alarmLine">#D4E0E6</color>
+    <color name="alarmDanger">#A94646</color>
+</resources>

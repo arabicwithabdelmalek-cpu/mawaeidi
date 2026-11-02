@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">مواعيدي</string>
+    <string name="title_activity_main">مواعيدي</string>
+    <string name="package_name">com.abdelmalek.mawaeidi</string>
+    <string name="custom_url_scheme">com.abdelmalek.mawaeidi</string>
+</resources>

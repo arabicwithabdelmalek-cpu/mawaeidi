@@ -690,18 +690,19 @@ function renderStudents(){
         flag.textContent=country.flag;
         const countryName=document.createElement("span");
         countryName.textContent=country.name;
+        countryName.title=country.name;
         countryItem.append(flag,countryName);
         details.append(countryItem);
       }
       if(student.current_level&&student.current_level!=="غير محدد"){
         const level=document.createElement("span");
-        level.className="student-meta-item";
+        level.className="student-meta-item level";
         level.textContent=student.current_level;
         details.append(level);
       }
       if(student.study_type&&student.study_type!=="غير محدد"){
         const type=document.createElement("span");
-        type.className="student-meta-item subtle";
+        type.className="student-meta-item subtle study-type";
         type.textContent=student.study_type;
         details.append(type);
       }
@@ -718,8 +719,7 @@ function renderStudents(){
     const status=document.createElement("span");status.className=`chip ${statusChipClass(student.status)}`;status.textContent=student.status||"غير محدد";
     const actionWrap=document.createElement("div");actionWrap.className="row-actions";
     if(listMode==="trash"){
-      open.append(status);
-      actionWrap.append(makeButton("استعادة","restore",student.id),makeButton("حذف نهائي","purge",student.id,true));
+      actionWrap.append(status,makeButton("استعادة","restore",student.id),makeButton("حذف نهائي","purge",student.id,true));
     }else{
       actionWrap.append(status);
       const wa=whatsappUrl(student.whatsapp);

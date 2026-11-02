@@ -5,6 +5,7 @@ import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -39,8 +40,18 @@ public class MawaeidiAlarmPlugin extends Plugin {
     public void getAppInfo(PluginCall call) {
         JSObject info = new JSObject();
         info.put("packageName", getContext().getPackageName());
-        info.put("versionName", BuildConfig.VERSION_NAME);
-        info.put("versionCode", BuildConfig.VERSION_CODE);
+        try {
+            PackageInfo packageInfo = getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0);
+            info.put("versionName", packageInfo.versionName == null ? "" : packageInfo.versionName);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                info.put("versionCode", packageInfo.getLongVersionCode());
+            } else {
+                info.put("versionCode", packageInfo.versionCode);
+            }
+        } catch (PackageManager.NameNotFoundException error) {
+            info.put("versionName", "");
+            info.put("versionCode", 0);
+        }
         call.resolve(info);
     }
 

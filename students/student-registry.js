@@ -719,13 +719,16 @@ function renderStudents(){
     const status=document.createElement("span");status.className=`chip ${statusChipClass(student.status)}`;status.textContent=student.status||"غير محدد";
     const actionWrap=document.createElement("div");actionWrap.className="row-actions";
     if(listMode==="trash"){
+      actionWrap.classList.add("trash-actions");
       actionWrap.append(status,makeButton("استعادة","restore",student.id),makeButton("حذف نهائي","purge",student.id,true));
     }else{
       actionWrap.append(status);
+      const contactWrap=document.createElement("span");contactWrap.className="student-row-contacts";
       const wa=whatsappUrl(student.whatsapp);
       const tg=telegramUrl(student.telegram);
-      if(wa)actionWrap.append(makeQuickContact("واتساب",wa,"whatsapp",student));
-      if(tg)actionWrap.append(makeQuickContact("تيليجرام",tg,"telegram",student));
+      if(wa)contactWrap.append(makeQuickContact("واتساب",wa,"whatsapp",student));
+      if(tg)contactWrap.append(makeQuickContact("تيليجرام",tg,"telegram",student));
+      actionWrap.append(contactWrap);
       const edit=makeButton("تعديل","edit",student.id);edit.classList.add("edit-student");
       actionWrap.append(edit);
     }

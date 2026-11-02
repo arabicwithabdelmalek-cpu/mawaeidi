@@ -7,6 +7,7 @@ const path=require("node:path");
 const root=path.resolve(__dirname,"../..");
 const source=fs.readFileSync(path.join(root,"students/student-registry.js"),"utf8");
 const main=fs.readFileSync(path.join(root,"index.html"),"utf8");
+const css=fs.readFileSync(path.join(root,"students/student-registry.css"),"utf8");
 
 assert.match(source,/window\.MawaeidiStudents=Object\.freeze\(\{create\}\)/);
 assert.match(source,/root\.querySelector\(\`#\$\{id\}\`\)/);
@@ -23,6 +24,13 @@ assert.match(main,/backup-manager\.js\?v=1/);
 assert.match(main,/student-registry\.js\?v=16/);
 assert.doesNotMatch(main,/id="backupStudents"/);
 assert.doesNotMatch(main,/id="openStudentRegistry"/);
+
+assert.match(css,/grid-template-columns:minmax\\(0,1fr\\) 320px/);
+assert.match(css,/@media \\(min-width:701px\\) and \\(max-width:980px\\)/);
+assert.match(css,/@media \\(max-width:700px\\)/);
+assert.match(source,/level\\.className="student-meta-item level"/);
+assert.match(source,/type\\.className="student-meta-item subtle study-type"/);
+assert.match(source,/actionWrap\\.append\\(status,makeButton\\("استعادة"/);
 
 const script=new vm.Script(source,{filename:"student-registry.js"});
 assert.ok(script);

@@ -47,7 +47,7 @@ new Script(js,{filename:"iphone-pwa.js"}).runInContext(desktop);
 let iphoneClass="";
 const iphone={
   navigator:{userAgent:"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",standalone:true},
-  window:{matchMedia:()=>({matches:true})},
+  window:{matchMedia:()=>({matches:true}),addEventListener(){}},
   document:{
     documentElement:{classList:{add(value){iphoneClass=value}}},
     readyState:"loading",

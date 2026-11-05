@@ -387,6 +387,10 @@ body.auth-pending .app{visibility:hidden}
 .week-status-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px;flex-wrap:wrap}
 .week-status-row > .week-source{min-width:0;max-width:100%;margin-top:0}
 .week-status-row > .session-status-chip{flex-shrink:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.35;text-align:center}
+/* Replacement sessions get a dedicated status row in narrow weekly cells. */
+.week-status-row.is-replacement{display:grid;grid-template-columns:minmax(0,1fr);justify-items:start;row-gap:6px}
+.week-status-row.is-replacement > .week-source,.week-status-row.is-replacement > .session-status-chip{max-width:100%;min-width:0}
+.week-status-row.is-replacement > .session-status-chip{justify-self:start;text-align:center}
 .week-card.session-inactive,.lesson.session-inactive{filter:saturate(.68);opacity:.78}
 .week-card.session-inactive .week-name,.lesson.session-inactive .lesson-name{text-decoration:line-through;text-decoration-thickness:1px}
 .week-grid.is-empty{display:block;min-width:0}
@@ -2503,7 +2507,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 <script src="./students/student-registry.js?v=16" defer></script>
 <script src="./ipad-pwa.js?v=1" defer></script>
 <script src="./iphone-pwa.js?v=1" defer></script>
-<script src="./app-main.js?v=6" defer></script>
+<script src="./app-main.js?v=7" defer></script>
 <script src="./account.js?v=1" defer></script>
 <script src="./account-page.js?v=6" defer></script>
 <script src="./day-order.js?v=3" defer></script>

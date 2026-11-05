@@ -863,7 +863,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 </style>
 <link rel="preload" as="style" href="./students/student-registry.css?v=13" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="./students/student-registry.css?v=13"></noscript>
-<link rel="stylesheet" href="./mobile-app.css?v=3">
+<link rel="stylesheet" href="./mobile-app.css?v=4">
 
 <style id="mawaeidi-unified-trash-style">
 .unified-trash{display:grid;gap:12px}
@@ -2138,14 +2138,10 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
           <button type="button" onclick="changeScheduleWeek(1)" aria-label="عرض الأسبوع التالي">التالي</button>
         </nav>
       </div>
-      <div class="native-week-controls" id="nativeWeekControls" hidden aria-label="طريقة عرض الأسبوع">
-        <div class="native-week-switch" role="group" aria-label="عرض الجدول">
-          <button type="button" id="nativeAgendaMode" aria-pressed="true" onclick="setNativeWeekLayout('agenda')">قائمة الأيام</button>
-          <button type="button" id="nativeGridMode" aria-pressed="false" onclick="setNativeWeekLayout('grid')">الشبكة</button>
-        </div>
+      <div class="native-week-controls" id="nativeWeekControls" hidden aria-label="مواعيد الأسبوع">
+        <div class="native-week-heading"><strong>جدول الأيام</strong><small>كل حصصك مرتبة حسب اليوم والوقت</small></div>
         <div class="native-week-actions">
-          <button type="button" id="nativeWeekMetricsButton" aria-pressed="false" aria-controls="weekSmartSummary" onclick="toggleNativeWeekMetrics()">الملخص</button>
-          <button type="button" id="nativeWeekOptionsButton" aria-expanded="false" aria-controls="weekTimeToolbar" onclick="toggleNativeWeekOptions()" hidden>خيارات الشبكة</button>
+          <button type="button" id="nativeWeekMetricsButton" aria-pressed="false" aria-controls="weekSmartSummary" onclick="toggleNativeWeekMetrics()">ملخص الأسبوع</button>
         </div>
       </div>
       <div class="week-smart-summary" id="weekSmartSummary" aria-live="polite"></div>
@@ -2370,8 +2366,17 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
     <button type="button" class="close" aria-label="إغلاق" onclick="closeDrawer()">×</button>
   </div>
 
+  <div class="native-lesson-wizard" id="nativeLessonWizard" hidden>
+    <div class="native-lesson-steps" role="list" aria-label="مراحل إعداد الحصة">
+      <span role="listitem" data-native-stage="1">١ <span>البيانات</span></span>
+      <span role="listitem" data-native-stage="2">٢ <span>المواعيد</span></span>
+      <span role="listitem" data-native-stage="3">٣ <span>التنبيهات</span></span>
+    </div>
+    <p class="native-lesson-instruction" id="nativeLessonInstruction">أدخل بيانات الطالب أو المجموعة ونوع الحصة.</p>
+    <p class="native-lesson-error" id="nativeLessonError" role="alert" hidden></p>
+  </div>
   <div class="drawer-body">
-    <section class="section">
+    <section class="section" data-native-step="1">
       <div class="section-title">نوع الحصة والجهة</div>
       <div class="grid">
         <div class="field">
@@ -2395,7 +2400,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" data-native-step="1">
       <div class="section-title">الطالب أو المجموعة</div>
       <div class="grid">
         <div class="field">
@@ -2422,7 +2427,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" data-native-step="2">
       <div class="section-title">تفاصيل الدرس</div>
       <div class="grid">
         <div class="field">
@@ -2440,7 +2445,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" data-native-step="2">
       <div class="section-title">المواعيد الأسبوعية</div>
       <div class="schedule">
         <div class="schedule-head">
@@ -2453,7 +2458,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" data-native-step="3">
       <div class="section-title">تنبيه الحصة</div>
       <div class="field full">
         <label for="lessonReminderMode">إعداد التنبيه</label>
@@ -2476,7 +2481,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
       <div class="hint" id="lessonReminderHint">سيُستخدم موعد التنبيه الافتراضي المحفوظ على كل جهاز.</div>
     </section>
 
-    <section class="section">
+    <section class="section" data-native-step="3">
       <div class="section-title">ملاحظات</div>
       <label class="sr-only" for="notes">الملاحظات</label>
       <textarea id="notes" placeholder="أي ملاحظات تحتاجها"></textarea>
@@ -2484,6 +2489,10 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
   </div>
 
   <div class="drawer-foot">
+    <div class="native-lesson-actions" id="nativeLessonActions" hidden>
+      <button type="button" class="native-lesson-back" id="nativeLessonBack" onclick="nativeLessonPreviousStep()">السابق</button>
+      <button type="button" class="native-lesson-next" id="nativeLessonNext" onclick="nativeLessonNextStep()">متابعة</button>
+    </div>
     <div class="group">
       <button type="button" class="primary" id="saveLessonBtn" onclick="saveLesson()">حفظ</button>
       <button type="button" class="secondary" id="copyBtn" style="display:none" onclick="copyLesson()">نسخ الحصة</button>
@@ -2511,7 +2520,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 <script src="./backup-manager.js?v=1" defer></script>
 <script src="./students/student-registry.js?v=15" defer></script>
 <script src="./native-bridge.js?v=1" defer></script>
-<script src="./app-main.js?v=5" defer></script>
+<script src="./app-main.js?v=6" defer></script>
 <script src="./account.js?v=1" defer></script>
 <script src="./account-page.js?v=6" defer></script>
 <script src="./day-order.js?v=2" defer></script>

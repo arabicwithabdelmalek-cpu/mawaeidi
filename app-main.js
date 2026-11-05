@@ -27,7 +27,6 @@ const NOTIFICATION_LEAD_KEY="mawaeidi-notification-lead-v1";
 const NOTIFICATION_LEADS_KEY="mawaeidi-notification-leads-v2";
 const WEEK_TIME_MODE_KEY="mawaeidi-week-time-mode-v1";
 const WEEK_DENSITY_KEY="mawaeidi-week-density-v1";
-const NATIVE_WEEK_LAYOUT_KEY="mawaeidi-native-week-layout-v1";
 const WORLD_CLOCK_ZONES_KEY="mawaeidi-world-clock-zones-v1";
 const WORLD_CLOCK_BASE_KEY="mawaeidi-world-clock-base-v1";
 const WORLD_CLOCK_SETTINGS_TABLE="mawaeidi_world_clock_settings";
@@ -147,9 +146,7 @@ let currentView="today";
 let selectedWeekOffset=0;
 let weekTimeMode=savedWeekTimeMode();
 let weekDensity=savedWeekDensity();
-let nativeWeekLayout=savedNativeWeekLayout();
 let nativeWeekMetricsVisible=false;
-let nativeWeekOptionsVisible=false;
 const nativeWeekExpandedDays=new Map();
 let expandedWeekTimes=new Set();
 let draggedWeekContext=null;
@@ -2351,25 +2348,9 @@ function setSection(section){
  if(currentSection==="students"&&currentUser&&cloudReady)studentsWorkspace.activate(currentUser);
 }
 function filtered(){return lessons.filter(l=>l&&(currentFilter==="all"||l.type===currentFilter))}
-function savedNativeWeekLayout(){
-  try{return localStorage.getItem(NATIVE_WEEK_LAYOUT_KEY)==="grid"?"grid":"agenda"}
-  catch{return "agenda"}
-}
-function setNativeWeekLayout(value){
-  if(!window.MawaeidiNative?.isNative)return;
-  nativeWeekLayout=value==="grid"?"grid":"agenda";
-  nativeWeekOptionsVisible=false;
-  try{localStorage.setItem(NATIVE_WEEK_LAYOUT_KEY,nativeWeekLayout)}catch{}
-  renderWeek();
-}
 function toggleNativeWeekMetrics(){
   if(!window.MawaeidiNative?.isNative)return;
   nativeWeekMetricsVisible=!nativeWeekMetricsVisible;
-  renderNativeWeekChrome();
-}
-function toggleNativeWeekOptions(){
-  if(!window.MawaeidiNative?.isNative||nativeWeekLayout!=="grid")return;
-  nativeWeekOptionsVisible=!nativeWeekOptionsVisible;
   renderNativeWeekChrome();
 }
 function renderNativeWeekChrome(){
@@ -2379,27 +2360,17 @@ function renderNativeWeekChrome(){
   if(!wrapper||!controls||!agenda)return false;
   const native=Boolean(window.MawaeidiNative?.isNative);
   controls.hidden=!native;
-  wrapper.classList.toggle("native-week-agenda-active",native&&nativeWeekLayout==="agenda");
-  wrapper.classList.toggle("native-week-grid-active",native&&nativeWeekLayout==="grid");
+  wrapper.classList.toggle("native-week-agenda-active",native);
+  wrapper.classList.remove("native-week-grid-active","native-week-options-open");
   wrapper.classList.toggle("native-week-metrics-open",native&&nativeWeekMetricsVisible);
-  wrapper.classList.toggle("native-week-options-open",native&&nativeWeekOptionsVisible&&nativeWeekLayout==="grid");
-  agenda.hidden=!(native&&nativeWeekLayout==="agenda");
-  for(const [id,value] of [["nativeAgendaMode","agenda"],["nativeGridMode","grid"]]){
-    const button=document.getElementById(id),active=nativeWeekLayout===value;
-    if(button){button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active))}
-  }
+  agenda.hidden=!native;
   const metricsButton=document.getElementById("nativeWeekMetricsButton");
   if(metricsButton)metricsButton.setAttribute("aria-pressed",String(nativeWeekMetricsVisible));
-  const optionsButton=document.getElementById("nativeWeekOptionsButton");
-  if(optionsButton){
-    optionsButton.hidden=!native||nativeWeekLayout!=="grid";
-    optionsButton.setAttribute("aria-expanded",String(nativeWeekOptionsVisible&&nativeWeekLayout==="grid"));
-  }
   return native;
 }
 function renderNativeWeekAgenda(occurrences){
   const mount=document.getElementById("nativeWeekAgenda");
-  if(!mount||!window.MawaeidiNative?.isNative||nativeWeekLayout!=="agenda")return;
+  if(!mount||!window.MawaeidiNative?.isNative)return;
   mount.replaceChildren();
   const currentWeek=selectedWeekOffset===0;
   days.forEach(day=>{
@@ -2454,7 +2425,7 @@ function renderNativeWeekAgenda(occurrences){
     add.className="native-agenda-add";
     add.textContent="＋ إضافة حصة لهذا اليوم";
     add.setAttribute("aria-label",`إضافة حصة يوم ${day}`);
-    add.addEventListener("click",()=>openQuickAdd(day,"18:00"));
+    add.addEventListener("click",()=>{openNew();setScheduleRows([{day,time:"18:00"}]);});
     content.appendChild(add);
     details.appendChild(content);
     mount.appendChild(details);
@@ -2679,7 +2650,7 @@ function renderWeek(){
   if(rangeLabel)rangeLabel.textContent=`${selectedWeekRangeLabel()}${isCurrentWeek?" · الأسبوع الحالي":""}`;
   renderWeekTimeModeChrome();renderWeekDensityChrome();renderWeekSmartSummary(occ);
   const nativeWeek=renderNativeWeekChrome();
-  if(nativeWeek&&nativeWeekLayout==="agenda"){
+  if(nativeWeek){
     renderNativeWeekAgenda(occ);
     grid.replaceChildren();
     grid.removeAttribute("aria-rowcount");grid.removeAttribute("aria-colcount");
@@ -2853,6 +2824,91 @@ function toggleFields(){
   document.getElementById("centerField").style.display=src==="center"?"flex":"none";
   document.getElementById("nameLabel").textContent=st==="group"?"اسم المجموعة / عنوان الدرس":"اسم الطالب / عنوان الدرس";
 }
+function nativeLessonReportError(message,fieldId=""){
+  const box=document.getElementById("nativeLessonError");
+  if(box){box.textContent=message;box.hidden=false}
+  if(fieldId)document.getElementById(fieldId)?.focus?.({preventScroll:false});
+  return false;
+}
+function nativeLessonClearError(){
+  const box=document.getElementById("nativeLessonError");
+  if(box){box.textContent="";box.hidden=true}
+}
+function nativeLessonGoToStep(value){
+  if(!window.MawaeidiNative?.isNative)return;
+  const drawer=document.getElementById("drawer");
+  const wizard=document.getElementById("nativeLessonWizard");
+  const actions=document.getElementById("nativeLessonActions");
+  if(!drawer||!wizard||!actions)return;
+  const step=Math.max(1,Math.min(3,Number(value)||1));
+  drawer.dataset.nativeLessonStep=String(step);
+  wizard.hidden=false;actions.hidden=false;
+  nativeLessonClearError();
+  const labels=[
+    "أدخل بيانات الطالب أو المجموعة ونوع الحصة.",
+    "حدّد المادة والمدة ومواعيد الحصة الأسبوعية.",
+    "اضبط التنبيه والملاحظات إن احتجت، ثم احفظ الحصة."
+  ];
+  const instruction=document.getElementById("nativeLessonInstruction");
+  if(instruction)instruction.textContent=labels[step-1];
+  wizard.querySelectorAll("[data-native-stage]").forEach(item=>{
+    const stage=Number(item.dataset.nativeStage),active=stage===step;
+    item.classList.toggle("active",active);
+    item.classList.toggle("completed",stage<step);
+    if(active)item.setAttribute("aria-current","step");else item.removeAttribute("aria-current");
+  });
+  const back=document.getElementById("nativeLessonBack");
+  const next=document.getElementById("nativeLessonNext");
+  const save=document.getElementById("saveLessonBtn");
+  if(back)back.hidden=step===1;
+  if(next)next.hidden=step===3;
+  if(save){
+    save.hidden=step!==3;
+    if(step===3)save.textContent=editingId?"حفظ التعديلات":"حفظ الحصة";
+  }
+  const content=drawer.querySelector(".drawer-body");
+  if(content)content.scrollTop=0;
+}
+function nativeLessonValidateStep(step){
+  nativeLessonClearError();
+  if(step===1){
+    const name=document.getElementById("name")?.value.trim()||"";
+    const type=document.getElementById("studentType")?.value;
+    const group=document.getElementById("groupStudents")?.value.split(/[\n،,]+/).map(x=>x.trim()).filter(Boolean)||[];
+    if(type==="individual"&&!name)return nativeLessonReportError("اكتب اسم الطالب أو عنوان الحصة أولًا.","name");
+    if(type==="group"&&!group.length)return nativeLessonReportError("أضف اسم طالب واحدًا على الأقل في المجموعة.","groupStudents");
+    if(document.getElementById("lessonSource")?.value==="center"&&!document.getElementById("centerName")?.value.trim())return nativeLessonReportError("اكتب اسم المركز للحصة التابعة للمركز.","centerName");
+    if(document.getElementById("studentTimeZoneInput")?.value.trim()&&!readLessonTimeZone())return nativeLessonReportError("اختر منطقة زمنية صحيحة من الاقتراحات.","studentTimeZoneInput");
+  }
+  if(step===2){
+    const duration=Number(document.getElementById("duration")?.value);
+    if(!Number.isFinite(duration)||duration<15||duration>720)return nativeLessonReportError("مدة الحصة يجب أن تكون بين 15 و720 دقيقة.","duration");
+    const rows=readSchedules();
+    if(!rows.length||rows.some(row=>!days.includes(row.day)||!TIME_RE.test(row.time)))return nativeLessonReportError("أضف يومًا ووقتًا صحيحين لكل حصة.");
+    const box=document.getElementById("conflictBox");
+    const overlap=conflicts({id:editingId||"",schedules:rows,duration});
+    if(overlap.length){
+      if(box){
+        box.innerHTML="<strong>يوجد تعارض:</strong><br>"+overlap.map(item=>`${item.day} ${fmt(item.time)} مع ${esc(item.name)} (${fmt(item.exTime)})`).join("<br>");
+        box.style.display="block";
+      }
+      return nativeLessonReportError("هناك تعارض بين مواعيد الحصص. راجع الأيام والأوقات قبل المتابعة.");
+    }
+    if(box){box.innerHTML="";box.style.display="none"}
+  }
+  return true;
+}
+function nativeLessonNextStep(){
+  if(!window.MawaeidiNative?.isNative)return;
+  const current=Number(document.getElementById("drawer")?.dataset.nativeLessonStep||1);
+  if(current>=3||!nativeLessonValidateStep(current))return;
+  nativeLessonGoToStep(current+1);
+}
+function nativeLessonPreviousStep(){
+  if(!window.MawaeidiNative?.isNative)return;
+  const current=Number(document.getElementById("drawer")?.dataset.nativeLessonStep||1);
+  nativeLessonGoToStep(Math.max(1,current-1));
+}
 function openDrawer(){
   const drawer=document.getElementById("drawer");
   if(!drawer.classList.contains("show"))drawerReturnFocus=document.activeElement;
@@ -2860,6 +2916,7 @@ function openDrawer(){
   drawer.classList.add("show");
   drawer.setAttribute("aria-hidden","false");
   document.body.classList.add("drawer-open");
+  if(window.MawaeidiNative?.isNative)nativeLessonGoToStep(1);
   requestAnimationFrame(()=>{
     if(drawer.classList.contains("show"))drawer.focus({preventScroll:true});
   });
@@ -2895,7 +2952,7 @@ function openNew(){
   document.getElementById("lessonSource").value="private";
   document.getElementById("duration").value=60;
   document.getElementById("conflictBox").style.display="none";
-  setScheduleRows([{day:"الاثنين",time:"18:00"}]);
+  setScheduleRows([{day:window.MawaeidiNative?.isNative?todayName():"الاثنين",time:"18:00"}]);
   setLessonReminderFields("default",[DEFAULT_NOTIFICATION_LEAD]);
   toggleFields();openDrawer();
 }
@@ -3055,6 +3112,11 @@ function conflicts(candidate){
 
 async function saveLesson(){
   if(lessonSaveInFlight)return;
+  if(window.MawaeidiNative?.isNative){
+    for(const stage of [1,2]){
+      if(!nativeLessonValidateStep(stage)){nativeLessonGoToStep(stage);nativeLessonValidateStep(stage);return}
+    }
+  }
   const st=document.getElementById("studentType").value;
   const src=document.getElementById("lessonSource").value;
   const existingLesson=editingId?lessons.find(item=>item.id===editingId):null;
@@ -3091,6 +3153,7 @@ async function saveLesson(){
   if(src==="center"&&!lesson.centerName){alert("اكتب اسم المركز.");return}
   const c=conflicts(lesson),box=document.getElementById("conflictBox");
   if(c.length){
+    if(window.MawaeidiNative?.isNative)nativeLessonGoToStep(2);
     box.innerHTML="<strong>يوجد تعارض:</strong><br>"+c.map(x=>`${x.day} ${fmt(x.time)} مع ${esc(x.name)} (${fmt(x.exTime)})`).join("<br>");
     box.style.display="block";return;
   }

@@ -67,6 +67,18 @@ assert.equal(typeof releaseManifest.prerelease,"boolean");
 
 const mobileCss=read("mobile-app.css");
 assert.match(mobileCss,/native-update-banner/);
+assert.match(mobileCss,/native-agenda-day/);
+assert.match(mobileCss,/native-week-agenda-active/);
+assert.match(index,/id="nativeWeekControls"/);
+assert.match(index,/id="nativeWeekAgenda"/);
+assert.match(index,/id="nativeWeekOptionsButton"/);
+assert.match(index,/id="weekTimeToolbar"/);
+assert.match(app,/function renderNativeWeekAgenda\(/);
+assert.match(app,/function setNativeWeekLayout\(/);
+assert.match(app,/nativeWeekLayout==="agenda"/);
+assert.match(app,/sessionStatusButtonMarkup\(occurrence\)/);
+assert.match(app,/openQuickAdd\(day,"18:00"\)/);
+assert.match(app,/const nativeWeek=renderNativeWeekChrome\(\)/);
 
 const service=read("android/app/src/main/java/com/abdelmalek/mawaeidi/AlarmRingService.java");
 assert.match(service,/setLooping\(true\)/);

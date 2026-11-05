@@ -27,6 +27,7 @@ const NOTIFICATION_LEAD_KEY="mawaeidi-notification-lead-v1";
 const NOTIFICATION_LEADS_KEY="mawaeidi-notification-leads-v2";
 const WEEK_TIME_MODE_KEY="mawaeidi-week-time-mode-v1";
 const WEEK_DENSITY_KEY="mawaeidi-week-density-v1";
+const NATIVE_WEEK_LAYOUT_KEY="mawaeidi-native-week-layout-v1";
 const WORLD_CLOCK_ZONES_KEY="mawaeidi-world-clock-zones-v1";
 const WORLD_CLOCK_BASE_KEY="mawaeidi-world-clock-base-v1";
 const WORLD_CLOCK_SETTINGS_TABLE="mawaeidi_world_clock_settings";
@@ -146,6 +147,10 @@ let currentView="today";
 let selectedWeekOffset=0;
 let weekTimeMode=savedWeekTimeMode();
 let weekDensity=savedWeekDensity();
+let nativeWeekLayout=savedNativeWeekLayout();
+let nativeWeekMetricsVisible=false;
+let nativeWeekOptionsVisible=false;
+const nativeWeekExpandedDays=new Map();
 let expandedWeekTimes=new Set();
 let draggedWeekContext=null;
 let activeWeekMoveContext=null;
@@ -2346,6 +2351,115 @@ function setSection(section){
  if(currentSection==="students"&&currentUser&&cloudReady)studentsWorkspace.activate(currentUser);
 }
 function filtered(){return lessons.filter(l=>l&&(currentFilter==="all"||l.type===currentFilter))}
+function savedNativeWeekLayout(){
+  try{return localStorage.getItem(NATIVE_WEEK_LAYOUT_KEY)==="grid"?"grid":"agenda"}
+  catch{return "agenda"}
+}
+function setNativeWeekLayout(value){
+  if(!window.MawaeidiNative?.isNative)return;
+  nativeWeekLayout=value==="grid"?"grid":"agenda";
+  nativeWeekOptionsVisible=false;
+  try{localStorage.setItem(NATIVE_WEEK_LAYOUT_KEY,nativeWeekLayout)}catch{}
+  renderWeek();
+}
+function toggleNativeWeekMetrics(){
+  if(!window.MawaeidiNative?.isNative)return;
+  nativeWeekMetricsVisible=!nativeWeekMetricsVisible;
+  renderNativeWeekChrome();
+}
+function toggleNativeWeekOptions(){
+  if(!window.MawaeidiNative?.isNative||nativeWeekLayout!=="grid")return;
+  nativeWeekOptionsVisible=!nativeWeekOptionsVisible;
+  renderNativeWeekChrome();
+}
+function renderNativeWeekChrome(){
+  const wrapper=document.getElementById("weekView");
+  const controls=document.getElementById("nativeWeekControls");
+  const agenda=document.getElementById("nativeWeekAgenda");
+  if(!wrapper||!controls||!agenda)return false;
+  const native=Boolean(window.MawaeidiNative?.isNative);
+  controls.hidden=!native;
+  wrapper.classList.toggle("native-week-agenda-active",native&&nativeWeekLayout==="agenda");
+  wrapper.classList.toggle("native-week-grid-active",native&&nativeWeekLayout==="grid");
+  wrapper.classList.toggle("native-week-metrics-open",native&&nativeWeekMetricsVisible);
+  wrapper.classList.toggle("native-week-options-open",native&&nativeWeekOptionsVisible&&nativeWeekLayout==="grid");
+  agenda.hidden=!(native&&nativeWeekLayout==="agenda");
+  for(const [id,value] of [["nativeAgendaMode","agenda"],["nativeGridMode","grid"]]){
+    const button=document.getElementById(id),active=nativeWeekLayout===value;
+    if(button){button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active))}
+  }
+  const metricsButton=document.getElementById("nativeWeekMetricsButton");
+  if(metricsButton)metricsButton.setAttribute("aria-pressed",String(nativeWeekMetricsVisible));
+  const optionsButton=document.getElementById("nativeWeekOptionsButton");
+  if(optionsButton){
+    optionsButton.hidden=!native||nativeWeekLayout!=="grid";
+    optionsButton.setAttribute("aria-expanded",String(nativeWeekOptionsVisible&&nativeWeekLayout==="grid"));
+  }
+  return native;
+}
+function renderNativeWeekAgenda(occurrences){
+  const mount=document.getElementById("nativeWeekAgenda");
+  if(!mount||!window.MawaeidiNative?.isNative||nativeWeekLayout!=="agenda")return;
+  mount.replaceChildren();
+  const currentWeek=selectedWeekOffset===0;
+  days.forEach(day=>{
+    const date=weekDateForDay(day);
+    const items=occurrences.filter(item=>item.day===day);
+    const activeCount=items.filter(item=>!occurrenceIsInactive(item)).length;
+    const details=document.createElement("details");
+    details.className="native-agenda-day";
+    if(currentWeek&&day===todayName())details.classList.add("is-today");
+    details.dataset.agendaDate=date;
+    details.open=nativeWeekExpandedDays.has(date)?nativeWeekExpandedDays.get(date):items.length>0;
+    details.addEventListener("toggle",()=>nativeWeekExpandedDays.set(date,details.open));
+    const summary=document.createElement("summary");
+    summary.innerHTML=`<span class="native-agenda-heading"><strong>${esc(day)}</strong><small>${esc(formatSessionDate(date,true))}${currentWeek&&day===todayName()?" · اليوم":""}</small></span><span class="native-agenda-count">${activeCount?activeCount+" حصة":items.length?"لا توجد حصص نشطة":"لا توجد حصص"}</span><span class="native-agenda-chevron" aria-hidden="true"></span>`;
+    details.appendChild(summary);
+    const content=document.createElement("div");
+    content.className="native-agenda-day-content";
+    if(!items.length){
+      const empty=document.createElement("p");
+      empty.className="native-agenda-empty";
+      empty.textContent="اليوم بدون مواعيد. يمكنك إضافة حصة جديدة.";
+      content.appendChild(empty);
+    }
+    items.forEach(occurrence=>{
+      const lesson=occurrence.lesson;
+      const inactive=occurrenceIsInactive(occurrence);
+      const title=lesson.name||"بدون اسم";
+      const type=lesson.type==="teach"?"أُدرِّس":"أدرس";
+      const typeClass=lesson.type==="teach"?"teach":"learn";
+      const item=document.createElement("article");
+      item.className=`native-agenda-lesson ${typeClass}${inactive?" is-inactive":""}`;
+      item.style.setProperty("--native-source-color",sourceColor(lesson));
+      const meta=[lesson.subject,sourceLabel(lesson),lesson.platform,`${Number(lesson.duration)||60} دقيقة`]
+        .filter(Boolean).map(esc).join(" · ");
+      item.innerHTML=`
+        <div class="native-agenda-clock">${esc(fmt(occurrence.time))}<small>بتوقيت مصر</small></div>
+        <div class="native-agenda-lesson-copy">
+          <h3>${esc(title)}</h3>
+          <p>${meta}</p>
+          ${studentTimeInline(occurrence)?`<p class="native-agenda-student-time">${esc(studentTimeInline(occurrence))}</p>`:""}
+          <div class="native-agenda-lesson-actions">
+            <span class="native-agenda-kind ${typeClass}">${type}</span>
+            ${sessionStatusButtonMarkup(occurrence)}
+            <button type="button" class="native-agenda-edit" aria-label="تعديل ${esc(title)}">تعديل</button>
+          </div>
+        </div>`;
+      item.querySelector(".native-agenda-edit")?.addEventListener("click",()=>openEdit(lesson.id));
+      content.appendChild(item);
+    });
+    const add=document.createElement("button");
+    add.type="button";
+    add.className="native-agenda-add";
+    add.textContent="＋ إضافة حصة لهذا اليوم";
+    add.setAttribute("aria-label",`إضافة حصة يوم ${day}`);
+    add.addEventListener("click",()=>openQuickAdd(day,"18:00"));
+    content.appendChild(add);
+    details.appendChild(content);
+    mount.appendChild(details);
+  });
+}
 function savedWeekTimeMode(){
   try{return localStorage.getItem(WEEK_TIME_MODE_KEY)==="full"?"full":"compact"}catch{return "compact"}
 }
@@ -2564,6 +2678,13 @@ function renderWeek(){
   const rangeLabel=document.getElementById("weekRangeLabel"),isCurrentWeek=selectedWeekOffset===0;
   if(rangeLabel)rangeLabel.textContent=`${selectedWeekRangeLabel()}${isCurrentWeek?" · الأسبوع الحالي":""}`;
   renderWeekTimeModeChrome();renderWeekDensityChrome();renderWeekSmartSummary(occ);
+  const nativeWeek=renderNativeWeekChrome();
+  if(nativeWeek&&nativeWeekLayout==="agenda"){
+    renderNativeWeekAgenda(occ);
+    grid.replaceChildren();
+    grid.removeAttribute("aria-rowcount");grid.removeAttribute("aria-colcount");
+    return;
+  }
   grid.innerHTML="";grid.classList.toggle("full-day",weekTimeMode==="full");
   grid.classList.remove("density-compact","density-normal","density-comfortable");grid.classList.add(`density-${weekDensity}`);
   const sourceNames=[...new Set(list.map(sourceLabel))].sort((a,b)=>a.localeCompare(b,"ar"));

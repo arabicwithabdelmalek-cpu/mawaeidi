@@ -149,18 +149,21 @@ public class MawaeidiAlarmPlugin: CAPPlugin, CAPBridgedPlugin, UNUserNotificatio
         }
         let records = call.getArray("alarms") as? [[String: Any]] ?? []
         let now = Date()
+        // Sort the original epoch values; UNNotificationTrigger is not required
+        // to expose nextTriggerDate() in its base API.
+        let sortedRecords = records.sorted { first, second in
+            let firstDate = (first["fireAt"] as? NSNumber)?.doubleValue ?? 0
+            let secondDate = (second["fireAt"] as? NSNumber)?.doubleValue ?? 0
+            return firstDate < secondDate
+        }
         var notifications: [UNNotificationRequest] = []
-        for record in records {
+        for record in sortedRecords {
             if let request = notification(for: record, now: now) {
                 notifications.append(request)
             }
+            if notifications.count >= maxScheduled { break }
         }
-        notifications.sort { first, second in
-            let firstDate = first.trigger?.nextTriggerDate() ?? Date.distantFuture
-            let secondDate = second.trigger?.nextTriggerDate() ?? Date.distantFuture
-            return firstDate < secondDate
-        }
-        let chosen = Array(notifications.prefix(maxScheduled))
+        let chosen = notifications
 
         center.getPendingNotificationRequests { existing in
             self.center.removePendingNotificationRequests(withIdentifiers: self.managedIDs(existing))

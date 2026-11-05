@@ -385,6 +385,31 @@ body.auth-pending .app{visibility:hidden}
 .week-source{display:flex;align-items:center;gap:5px;margin-top:7px;color:#52636F;font-size:10px;font-weight:800}
 .week-source .source-line{height:14px}
 .week-status-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
+/* Keep long replacement labels inside the lesson card without squeezing the source. */
+.week-status-row.is-replacement{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  justify-items:start;
+  align-items:start;
+  row-gap:6px;
+  min-width:0;
+}
+.week-status-row.is-replacement > .week-source{
+  min-width:0;
+  max-width:100%;
+  margin-top:0;
+}
+.week-status-row.is-replacement > .session-status-chip{
+  box-sizing:border-box;
+  min-width:0;
+  max-width:100%;
+  justify-self:start;
+  flex-shrink:1;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.4;
+  text-align:center;
+}
 .week-card.session-inactive,.lesson.session-inactive{filter:saturate(.68);opacity:.78}
 .week-card.session-inactive .week-name,.lesson.session-inactive .lesson-name{text-decoration:line-through;text-decoration-thickness:1px}
 .week-grid.is-empty{display:block;min-width:0}
@@ -2501,7 +2526,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 <script src="./students/student-registry.js?v=16" defer></script>
 <script src="./ipad-pwa.js?v=1" defer></script>
 <script src="./iphone-pwa.js?v=1" defer></script>
-<script src="./app-main.js?v=6" defer></script>
+<script src="./app-main.js?v=8" defer></script>
 <script src="./account.js?v=1" defer></script>
 <script src="./account-page.js?v=6" defer></script>
 <script src="./day-order.js?v=3" defer></script>

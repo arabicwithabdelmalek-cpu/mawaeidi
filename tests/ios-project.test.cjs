@@ -13,7 +13,7 @@ assert.equal(config.webDir, "mobile-dist");
 const swift = read("ios-native/MawaeidiAlarmPlugin.swift");
 for (const method of ["getState", "getAppInfo", "requestPermissions", "setEnabled",
     "replaceAlarms", "cancelAll", "testAlarm", "openNotificationSettings"]) {
-  assert.match(swift, new RegExp("@objc public func " + method + "\\("));
+  assert.match(swift, new RegExp("@objc (?:override )?public func " + method + "\\("));
 }
 assert.match(swift, /UNUserNotificationCenter/);
 assert.match(swift, /UNCalendarNotificationTrigger/);

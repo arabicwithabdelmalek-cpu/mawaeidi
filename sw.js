@@ -1,13 +1,13 @@
-const CACHE_NAME="mawaeidi-shell-v34";
+const CACHE_NAME="mawaeidi-shell-v35";
 const APP_SHELL=[
   "./",
   "./index.html",
   "./day-order.js?v=2",
   "./manifest.webmanifest",
-  "./icons/icon.svg",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/apple-touch-icon.png"
+  "./icons/favicon-32.png?v=2",
+  "./icons/icon-192.png?v=2",
+  "./icons/icon-512.png?v=2",
+  "./icons/apple-touch-icon.png?v=2"
 ];
 
 self.addEventListener("install",event=>{

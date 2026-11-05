@@ -77,14 +77,28 @@ assert.match(mobileCss,/body\.native-app \.hurufiyat/);
 assert.match(mobileCss,/--native-paper:#EDF3F6/);
 assert.match(index,/id="nativeWeekControls"/);
 assert.match(index,/id="nativeWeekAgenda"/);
-assert.match(index,/id="nativeWeekOptionsButton"/);
 assert.match(index,/id="weekTimeToolbar"/);
+assert.match(index,/id="weekGrid"/,"The website must retain its weekly grid");
+assert.doesNotMatch(index,/id="nativeGridMode"/,"Android must not expose the weekly grid mode");
+assert.doesNotMatch(index,/id="nativeWeekOptionsButton"/);
 assert.match(app,/function renderNativeWeekAgenda\(/);
-assert.match(app,/function setNativeWeekLayout\(/);
-assert.match(app,/nativeWeekLayout==="agenda"/);
+assert.match(app,/if\(nativeWeek\)\{/,"Native weekly view must render only agenda cards");
+assert.doesNotMatch(app,/nativeWeekLayout/,"No saved grid preference should restore grid mode");
 assert.match(app,/sessionStatusButtonMarkup\(occurrence\)/);
-assert.match(app,/openQuickAdd\(day,"18:00"\)/);
+assert.match(app,/openNew\(\);setScheduleRows\(\[\{day,time:"18:00"\}\]\)/);
 assert.match(app,/const nativeWeek=renderNativeWeekChrome\(\)/);
+assert.match(index,/id="nativeLessonWizard"/);
+assert.match(index,/id="nativeLessonActions"/);
+assert.match(index,/id="nativeLessonBack"/);
+assert.match(index,/id="nativeLessonNext"/);
+assert.match(index,/data-native-step="1"/);
+assert.match(index,/data-native-step="2"/);
+assert.match(index,/data-native-step="3"/);
+assert.match(mobileCss,/Native-only lessons wizard/);
+assert.match(mobileCss,/body\.native-app #drawer\[data-native-lesson-step="1"\]/);
+for(const name of ["nativeLessonGoToStep","nativeLessonNextStep","nativeLessonPreviousStep","nativeLessonValidateStep"]){
+  assert.match(app,new RegExp("function "+name+"\\("));
+}
 
 const service=read("android/app/src/main/java/com/abdelmalek/mawaeidi/AlarmRingService.java");
 assert.match(service,/setLooping\(true\)/);

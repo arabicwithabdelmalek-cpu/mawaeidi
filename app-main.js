@@ -2885,6 +2885,16 @@ function nativeLessonValidateStep(step){
     if(!Number.isFinite(duration)||duration<15||duration>720)return nativeLessonReportError("مدة الحصة يجب أن تكون بين 15 و720 دقيقة.","duration");
     const rows=readSchedules();
     if(!rows.length||rows.some(row=>!days.includes(row.day)||!TIME_RE.test(row.time)))return nativeLessonReportError("أضف يومًا ووقتًا صحيحين لكل حصة.");
+    const box=document.getElementById("conflictBox");
+    const overlap=conflicts({id:editingId||"",schedules:rows,duration});
+    if(overlap.length){
+      if(box){
+        box.innerHTML="<strong>يوجد تعارض:</strong><br>"+overlap.map(item=>`${item.day} ${fmt(item.time)} مع ${esc(item.name)} (${fmt(item.exTime)})`).join("<br>");
+        box.style.display="block";
+      }
+      return nativeLessonReportError("هناك تعارض بين مواعيد الحصص. راجع الأيام والأوقات قبل المتابعة.");
+    }
+    if(box){box.innerHTML="";box.style.display="none"}
   }
   return true;
 }

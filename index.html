@@ -863,7 +863,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 </style>
 <link rel="preload" as="style" href="./students/student-registry.css?v=13" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="./students/student-registry.css?v=13"></noscript>
-<link rel="stylesheet" href="./mobile-app.css?v=2">
+<link rel="stylesheet" href="./mobile-app.css?v=3">
 
 <style id="mawaeidi-unified-trash-style">
 .unified-trash{display:grid;gap:12px}
@@ -2138,8 +2138,19 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
           <button type="button" onclick="changeScheduleWeek(1)" aria-label="عرض الأسبوع التالي">التالي</button>
         </nav>
       </div>
+      <div class="native-week-controls" id="nativeWeekControls" hidden aria-label="طريقة عرض الأسبوع">
+        <div class="native-week-switch" role="group" aria-label="عرض الجدول">
+          <button type="button" id="nativeAgendaMode" aria-pressed="true" onclick="setNativeWeekLayout('agenda')">قائمة الأيام</button>
+          <button type="button" id="nativeGridMode" aria-pressed="false" onclick="setNativeWeekLayout('grid')">الشبكة</button>
+        </div>
+        <div class="native-week-actions">
+          <button type="button" id="nativeWeekMetricsButton" aria-pressed="false" aria-controls="weekSmartSummary" onclick="toggleNativeWeekMetrics()">الملخص</button>
+          <button type="button" id="nativeWeekOptionsButton" aria-expanded="false" aria-controls="weekTimeToolbar" onclick="toggleNativeWeekOptions()" hidden>خيارات الشبكة</button>
+        </div>
+      </div>
       <div class="week-smart-summary" id="weekSmartSummary" aria-live="polite"></div>
-      <div class="week-time-toolbar" aria-label="طريقة عرض أوقات الأسبوع">
+      <div class="native-week-agenda" id="nativeWeekAgenda" aria-label="المواعيد حسب اليوم" hidden></div>
+      <div class="week-time-toolbar" id="weekTimeToolbar" aria-label="طريقة عرض أوقات الأسبوع">
         <div class="week-time-toolbar-copy">
           <strong>عرض الأوقات</strong>
           <span id="weekTimeModeHint">اعرض المواعيد الموجودة فقط، وافتح ساعة فارغة عند الحاجة.</span>
@@ -2500,7 +2511,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 <script src="./backup-manager.js?v=1" defer></script>
 <script src="./students/student-registry.js?v=15" defer></script>
 <script src="./native-bridge.js?v=1" defer></script>
-<script src="./app-main.js?v=4" defer></script>
+<script src="./app-main.js?v=5" defer></script>
 <script src="./account.js?v=1" defer></script>
 <script src="./account-page.js?v=6" defer></script>
 <script src="./day-order.js?v=2" defer></script>

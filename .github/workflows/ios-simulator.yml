@@ -48,6 +48,38 @@ jobs:
           test -d build/ios/Build/Products/Debug-iphonesimulator/App.app
           ditto -c -k --keepParent build/ios/Build/Products/Debug-iphonesimulator/App.app Mawaeidi-iOS-Simulator.zip
           ditto -c -k --keepParent ios Mawaeidi-iOS-Xcode-Project.zip
+      - name: Build unsigned iPhone device application (arm64)
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/iphone \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+      - name: Package unsigned IPA for user-side Apple ID signing
+        run: |
+          set -euo pipefail
+          APP_PATH="build/iphone/Build/Products/Debug-iphoneos/App.app"
+          test -d "$APP_PATH"
+          file "$APP_PATH/App"
+          lipo -archs "$APP_PATH/App" | grep -q arm64
+          mkdir -p iphone-package/Payload
+          ditto "$APP_PATH" iphone-package/Payload/App.app
+          (
+            cd iphone-package
+            ditto -c -k --keepParent Payload ../Mawaeidi-iPhone-unsigned.ipa
+          )
+          unzip -t Mawaeidi-iPhone-unsigned.ipa | tail -1
+      - name: Upload unsigned device IPA (not directly installable until signed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mawaeidi-iPhone-unsigned-IPA
+          path: Mawaeidi-iPhone-unsigned.ipa
+          retention-days: 30
       - name: Upload generated iOS files for review
         uses: actions/upload-artifact@v4
         with:

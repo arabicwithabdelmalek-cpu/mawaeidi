@@ -100,6 +100,31 @@ for(const name of ["nativeLessonGoToStep","nativeLessonNextStep","nativeLessonPr
   assert.match(app,new RegExp("function "+name+"\\("));
 }
 
+
+const dayOrder=read("day-order.js");
+assert.match(dayOrder,/function arrangeAgenda\(/);
+assert.match(dayOrder,/native-week-actions/);
+assert.match(mobileCss,/body\.native-app \.next::before,/);
+assert.match(mobileCss,/body\.native-app #weekView \.week-navigation/);
+assert.match(mobileCss,/body\.native-app #weekView \.native-week-actions #dayOrderOpen/);
+assert.match(app,/async function chooseNativeAlarmTone\(/);
+assert.match(app,/native-alarm-tone/);
+assert.match(bridge,/async chooseAlarmTone\(/);
+
+const tone=read("android/app/src/main/java/com/abdelmalek/mawaeidi/AlarmTone.java");
+assert.match(tone,/SharedPreferences/);
+assert.match(tone,/selectedUri\(Context context\)/);
+assert.match(tone,/RingtoneManager\.TYPE_ALARM/);
+const pluginTone=read("android/app/src/main/java/com/abdelmalek/mawaeidi/MawaeidiAlarmPlugin.java");
+assert.match(pluginTone,/startActivityForResult\(call, picker, "onAlarmToneChosen"\)/);
+assert.match(pluginTone,/@ActivityCallback/);
+assert.match(pluginTone,/soundTitle/);
+assert.match(pluginTone,/EXTRA_RINGTONE_SHOW_SILENT, false/);
+const alarmService=read("android/app/src/main/java/com/abdelmalek/mawaeidi/AlarmRingService.java");
+assert.match(alarmService,/AlarmTone\.selectedUri\(this\)/);
+assert.match(alarmService,/AlarmTone\.defaultUri\(\)/);
+assert.match(alarmService,/setLooping\(true\)/);
+
 const service=read("android/app/src/main/java/com/abdelmalek/mawaeidi/AlarmRingService.java");
 assert.match(service,/setLooping\(true\)/);
 assert.match(service,/setFullScreenIntent/);

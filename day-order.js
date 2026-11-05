@@ -41,7 +41,14 @@ function arrangeDayDialogs(){
  const arrangement=order();
  ['quickDay','weekMoveDay'].forEach(id=>arrangeDaySelect(document.getElementById(id),arrangement));
 }
-function arrangeEverywhere(){arrange();arrangeScheduleRows();arrangeDayDialogs()}
+function arrangeAgenda(){
+ const agenda=document.getElementById('nativeWeekAgenda');if(!agenda||!window.MawaeidiNative?.isNative)return;
+ const byDay=new Map([...agenda.children].map(item=>[item.querySelector('.native-agenda-heading strong')?.textContent.trim(),item]));
+ const arrangement=order();
+ if(byDay.size===7&&arrangement.every(day=>byDay.has(day)))
+   arrangement.forEach(day=>agenda.appendChild(byDay.get(day)));
+}
+function arrangeEverywhere(){arrange();arrangeAgenda();arrangeScheduleRows();arrangeDayDialogs()}
 function save(a){
  if(!valid(a))return false;
  try{localStorage.setItem(storageKey(),JSON.stringify(a))}catch{return false}
@@ -79,11 +86,11 @@ function setup(){
 .day-order-list{display:grid;gap:8px;margin:12px 0}.day-order-row{display:flex;align-items:center;gap:9px;padding:10px;border:1px solid var(--line);border-radius:11px;background:white}.day-order-row.day-order-target{background:#EAF2F7;border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}.day-order-row.day-order-dragging{opacity:.55}.day-order-grip{flex:0 0 38px;height:40px;touch-action:none;cursor:grab;font-size:22px;color:var(--primary);background:#F5F8FA;border:1px solid var(--line);border-radius:8px}.day-order-row strong{flex:1;font-size:14px}.day-order-number{display:grid;place-items:center;width:25px;height:25px;background:#EAF0F4;border-radius:7px;font-size:11px;color:var(--primary)}.day-order-arrows{display:flex;gap:5px}.day-order-arrows button{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--primary);font-size:17px}.day-order-arrows button:disabled{opacity:.3}.day-order-status{min-height:19px;color:var(--teach);font-size:11px}.day-order-footer{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:13px;border-top:1px solid var(--line)}.day-order-footer button{padding:10px 14px;border-radius:8px;font-weight:800}.day-order-reset{background:#fff;border:1px solid var(--line);color:var(--muted)}.day-order-done{background:var(--primary);color:#fff;border:0}
 @media(max-width:760px){.week-navigation{flex-wrap:wrap}.week-navigation .day-order-open{flex:1 0 100%;min-height:37px}.day-order-row{gap:6px;padding:8px}.day-order-row strong{font-size:13px}}
 `;document.head.appendChild(style);
- const btn=document.createElement('button');btn.id='dayOrderOpen';btn.type='button';btn.className='day-order-open';btn.textContent='☷ ترتيب الأيام';btn.setAttribute('aria-label','تغيير ترتيب أعمدة أيام الجدول');btn.addEventListener('click',openEditor);nav.appendChild(btn);
+ const btn=document.createElement('button');btn.id='dayOrderOpen';btn.type='button';btn.className='day-order-open';btn.textContent='☷ ترتيب الأيام';btn.setAttribute('aria-label','تغيير ترتيب أعمدة أيام الجدول');btn.addEventListener('click',openEditor);if(window.MawaeidiNative?.isNative){const host=document.querySelector('#nativeWeekControls .native-week-actions');(host||nav).appendChild(btn)}else nav.appendChild(btn);
 }
 // Keep canonical DAYS and `days` intact: date arithmetic, notifications and lesson data are untouched.
 const originalRender=window.renderWeek;
-if(typeof originalRender==='function')window.renderWeek=function(...args){const result=originalRender.apply(this,args);setup();arrange();return result};
+if(typeof originalRender==='function')window.renderWeek=function(...args){const result=originalRender.apply(this,args);setup();arrange();arrangeAgenda();return result};
 const originalSetRows=window.setScheduleRows;
 if(typeof originalSetRows==='function')window.setScheduleRows=function(...args){const result=originalSetRows.apply(this,args);arrangeScheduleRows();return result};
 const originalAddRow=window.addScheduleRow;

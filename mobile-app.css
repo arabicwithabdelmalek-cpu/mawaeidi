@@ -1137,3 +1137,89 @@ body.native-app #drawer .drawer-foot>.group button:not(#saveLessonBtn) {
 @media(prefers-reduced-motion:reduce) {
   body.native-app #drawer .native-lesson-steps>span {transition:none!important;animation:none!important;}
 }
+
+
+/* Phone feedback pass: keep weekday order controls inside the available toolbar width. */
+body.native-app .next::before,
+body.native-app .next::after {content:none!important;display:none!important;}
+body.native-app #weekView .week-panel-head {min-width:0;}
+body.native-app #weekView .week-navigation {
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  min-width:0;
+  max-width:100%;
+  width:100%;
+  gap:5px;
+  flex-wrap:nowrap!important;
+  box-sizing:border-box;
+}
+body.native-app #weekView .week-navigation>button {
+  min-width:0;
+  width:100%;
+  padding:9px 5px;
+  font-size:12px;
+  white-space:nowrap;
+}
+body.native-app #weekView .native-week-controls {
+  display:grid;
+  grid-template-columns:1fr;
+  min-width:0;
+  align-items:stretch;
+}
+body.native-app #weekView .native-week-actions {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  width:100%;
+  min-width:0;
+}
+body.native-app #weekView .native-week-actions #dayOrderOpen {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-width:0!important;
+  max-width:100%;
+  min-height:44px;
+  margin:0;
+  padding:8px 7px;
+  border:1px solid #C8DCE7;
+  border-radius:11px;
+  background:#EDF4F8;
+  color:var(--primary);
+  font-size:12px;
+  font-weight:800;
+  white-space:normal;
+  line-height:1.45;
+  box-sizing:border-box;
+}
+body.native-app #weekView .native-week-actions #nativeWeekMetricsButton {min-width:0;max-width:100%;white-space:normal;}
+@media(max-width:360px){
+ body.native-app #weekView .native-week-actions {gap:6px;}
+ body.native-app #weekView .native-week-actions button {font-size:11px!important;padding-inline:4px!important;}
+}
+
+/* Native ringtone setting: grounded on the device's own Android sound chooser. */
+body.native-app .native-alarm-tone {
+  display:grid;gap:10px;
+  padding:15px 14px;
+  border:1px solid #D7E4EA;
+  border-radius:16px;
+  background:#FBFDFE;
+}
+body.native-app .native-alarm-tone h3 {margin:0;color:var(--primary);font-size:15px;font-weight:850;}
+body.native-app .native-alarm-tone .native-alarm-tone-name {font-size:14px;font-weight:750;color:#315367;line-height:1.7;overflow-wrap:anywhere;}
+body.native-app .native-alarm-tone p {margin:0;color:#607989;font-size:12px;line-height:1.7;}
+body.native-app .native-alarm-tone button {
+  min-height:46px;
+  width:100%;
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid var(--primary);
+  background:var(--primary);
+  color:#fff;
+  font-family:inherit;
+  font-size:13px;
+  font-weight:800;
+}
+body.native-app .native-alarm-tone button:disabled {opacity:.55;}

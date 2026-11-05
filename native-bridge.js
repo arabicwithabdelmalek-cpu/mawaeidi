@@ -149,6 +149,7 @@
       lastAlarmFingerprint=nextFingerprint;
       return {scheduled:true,...result};
     },
+    async chooseAlarmTone(){return invoke("chooseAlarmTone")},
     async testAlarm(){return invoke("testAlarm",{delaySeconds:3})},
     async getAppInfo(){return native?invoke("getAppInfo"):{packageName:"web",versionName:"web",versionCode:0}},
     async checkForUpdates({force=false,render=true}={}){

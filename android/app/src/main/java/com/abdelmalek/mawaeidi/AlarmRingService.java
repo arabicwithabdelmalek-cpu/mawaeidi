@@ -153,15 +153,33 @@ public class AlarmRingService extends Service {
                     .build();
                 audioManager.requestAudioFocus(focusRequest);
             }
-            Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (sound == null) sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            player = new MediaPlayer();
-            player.setAudioAttributes(attributes);
-            player.setDataSource(this, sound);
-            player.setLooping(true);
-            player.prepare();
-            player.start();
-        } catch (Exception ignored) {}
+            Uri selected = AlarmTone.selectedUri(this);
+            if (!playSound(selected, attributes)) {
+                Uri standard = AlarmTone.defaultUri();
+                if (standard != null && !standard.equals(selected) && playSound(standard, attributes)) return;
+                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                if (notification != null && !notification.equals(selected)) playSound(notification, attributes);
+            }
+        } catch (Exception error) {
+            // Vibration and the on-screen stop/snooze controls remain available.
+        }
+    }
+
+    private boolean playSound(Uri sound, AudioAttributes attributes) {
+        if (sound == null) return false;
+        MediaPlayer candidate = new MediaPlayer();
+        try {
+            candidate.setAudioAttributes(attributes);
+            candidate.setDataSource(this, sound);
+            candidate.setLooping(true);
+            candidate.prepare();
+            candidate.start();
+            player = candidate;
+            return true;
+        } catch (Exception unavailable) {
+            candidate.release();
+            return false;
+        }
     }
 
     private void startVibration() {

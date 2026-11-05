@@ -722,3 +722,234 @@ body.native-app .week-density-switch button {min-height:38px;font-size:11.5px;}
 @media(prefers-reduced-motion:reduce) {
   body.native-app .native-agenda-chevron {transition:none!important;}
 }
+
+
+/* Mawaeidi native consistency pass — 2026-11-05
+   Keep the site's original blue/grey palette and the original calligraphic asset.
+   All overrides are scoped to the installed app; website styles are unchanged. */
+
+/* 1. Restore site's approved color language without undoing the mobile-first layout. */
+body.native-app {
+  --native-paper:#EDF3F6;
+  --native-surface:#FCFDFE;
+  --native-ink:#1D2E3A;
+  --native-teal:#2F5D7C;
+  --native-teal-dark:#1B3D54;
+  --native-gold:#A98558;
+  --native-muted:#6C7B86;
+  --native-line:#D7E1E7;
+  --native-shadow:0 7px 20px rgba(17,42,64,.065);
+  background:var(--paper);
+  color:var(--ink);
+}
+body.native-app .shell {
+  background:radial-gradient(circle at 7% 2%,rgba(58,104,142,.10),transparent 25%),
+    linear-gradient(180deg,#F5F8FA 0%,var(--paper) 100%);
+}
+body.native-app .header {
+  background:rgba(250,252,253,.97);
+  border-bottom-color:#DCE5EA;
+}
+body.native-app .brand h1 {color:var(--primary);}
+body.native-app #syncStatus,
+body.native-app .data-menu>summary,
+body.native-app .account-trigger {
+  background:#fff;
+  border-color:var(--line);
+  color:var(--primary);
+}
+body.native-app #primaryActionButton {
+  border-color:var(--paper);
+  background:linear-gradient(145deg,#3B7092,var(--primary));
+  box-shadow:0 10px 26px rgba(35,75,110,.25);
+}
+body.native-app .workspace-switch {
+  background:rgba(251,252,253,.98);
+  border-top-color:var(--line);
+}
+body.native-app .workspace-switch button {color:#627886;}
+body.native-app .workspace-switch button.active {
+  background:var(--today-bg);
+  color:var(--primary);
+  box-shadow:inset 0 0 0 1px #CEDDE6;
+}
+body.native-app .next {
+  border-color:var(--line);
+  background:linear-gradient(140deg,#FCFDFE 0%,#F5F8FA 100%);
+}
+body.native-app .next::before {
+  background:linear-gradient(135deg,rgba(91,140,174,.13),transparent);
+}
+body.native-app .next::after {background:var(--accent);opacity:.75;}
+body.native-app .next .label {
+  background:var(--today-bg);
+  color:var(--primary);
+}
+body.native-app .next .time,
+body.native-app .next .name {color:var(--primary-2);}
+body.native-app .next .meta {color:var(--muted);}
+body.native-app .controls>.filters,
+body.native-app .controls>.tabs {
+  background:#E9EFF3;
+  border-color:var(--line);
+}
+body.native-app .controls :is(.filter,.tab) {color:#597281;}
+body.native-app .controls :is(.filter.active,.tab.active) {
+  background:var(--primary);
+  color:#fff;
+  box-shadow:0 3px 9px rgba(35,75,110,.12);
+}
+body.native-app .controls .teach-filter.active {background:var(--teach);color:#fff;}
+body.native-app .controls .learn-filter.active {background:var(--learn);color:#fff;}
+body.native-app :is(.panel,.week-view,#studentsView .registry-panel) {
+  background:#FCFDFE;
+  border-color:var(--line);
+}
+body.native-app .stat {background:#F1F5F7;border-color:var(--line);}
+body.native-app .stat strong,
+body.native-app .panel-head h2 {color:var(--primary);}
+body.native-app .native-week-switch {background:#E9EFF3;}
+body.native-app .native-week-switch button.active {color:var(--primary);}
+body.native-app .native-week-actions button[aria-pressed="true"] {
+  background:var(--today-bg);
+  color:var(--primary);
+  border-color:#CADCE6;
+}
+body.native-app .native-agenda-day.is-today {border-color:var(--today-border);}
+body.native-app .native-agenda-day.is-today>summary {background:var(--today-bg);}
+body.native-app .native-agenda-heading strong,
+body.native-app .native-agenda-clock {color:var(--primary-2);}
+body.native-app .native-agenda-lesson {border-inline-start-color:var(--teach);}
+body.native-app .native-agenda-lesson.learn {border-inline-start-color:var(--learn);}
+body.native-app .native-agenda-add {
+  background:#F3F7F9;
+  color:var(--primary);
+  border-color:#C4D7E1;
+}
+body.native-app #studentsView .student-summary-metric {background:#F1F5F7;border-color:var(--line);}
+body.native-app #studentsView .student-summary-metric strong,
+body.native-app #studentsView .registry-head h2 {color:var(--primary);}
+body.native-app .auth-primary {background:var(--primary);}
+
+/* 2. Use the existing site's Arabic calligraphy as a quiet, non-interactive watermark. */
+body.native-app .hurufiyat {
+  display:block;
+  z-index:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+body.native-app .hurufiyat span {display:none;width:clamp(250px,78vw,385px);}
+body.native-app .hurufiyat span:nth-child(1) {
+  display:block;
+  top:95px;
+  right:-140px;
+  opacity:.046;
+  transform:rotate(13deg);
+}
+body.native-app .hurufiyat span:nth-child(4) {
+  display:block;
+  bottom:95px;
+  left:-145px;
+  opacity:.035;
+  transform:rotate(-13deg);
+}
+body.native-app .app {position:relative;z-index:1;}
+
+/* 3. Keep the students data dropdown completely inside the phone's viewport. */
+body.native-app #studentsView .registry-head,
+body.native-app #studentsView .page-actions,
+body.native-app #studentsView .data-actions {overflow:visible;}
+body.native-app #studentsView .data-actions[open] {z-index:100;}
+body.native-app #studentsView .data-actions-menu {
+  left:0!important;
+  right:auto!important;
+  top:calc(100% + 8px);
+  width:min(220px,calc(100vw - 36px));
+  max-width:calc(100vw - 36px);
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#fff;
+  box-shadow:0 14px 33px rgba(17,42,64,.17);
+  box-sizing:border-box;
+}
+body.native-app #studentsView .data-actions-menu .btn {
+  display:flex;
+  width:100%;
+  min-height:44px;
+  padding:9px 12px;
+  justify-content:flex-start;
+  text-align:right;
+  font-size:13px!important;
+  white-space:normal;
+}
+
+/* 4. Give both live analogue clock designs readable, separate numerals. */
+body.native-app .world-hero-now {
+  display:grid!important;
+  grid-template-columns:140px minmax(0,1fr)!important;
+  align-items:center;
+  gap:13px!important;
+  min-width:0!important;
+  width:100%;
+}
+body.native-app .world-hero-now .world-analog-clock {
+  width:138px!important;
+  height:138px!important;
+  flex-basis:138px!important;
+  margin:0!important;
+}
+body.native-app .world-analog-clock .world-clock-number {
+  font-size:12px!important;
+  font-weight:700;
+  letter-spacing:0;
+  line-height:1;
+  white-space:nowrap;
+}
+body.native-app .world-analog-clock .world-clock-tick.major {height:5px;}
+body.native-app .world-hero-now .world-home-time {
+  font-size:33px!important;
+  letter-spacing:0;
+  white-space:nowrap;
+}
+body.native-app .world-hero-now .world-home-meta {font-size:11px!important;line-height:1.7!important;}
+body.native-app .world-city-clock-layout {
+  grid-template-columns:112px minmax(0,1fr);
+  gap:12px;
+  min-height:120px;
+}
+body.native-app .world-city-clock-card {
+  padding:15px;
+}
+body.native-app .world-mini-clock {
+  width:108px!important;
+  height:108px!important;
+  flex-shrink:0;
+  box-shadow:inset 0 0 0 4px rgba(35,75,110,.022),0 5px 13px rgba(17,42,64,.06)!important;
+}
+body.native-app .world-mini-clock .world-mini-number {
+  font-size:11px!important;
+  font-weight:650;
+  line-height:1;
+  color:#516573;
+  letter-spacing:0;
+  white-space:nowrap;
+}
+body.native-app .world-mini-clock::before {height:25%;}
+body.native-app .world-mini-clock::after {height:33%;}
+body.native-app .world-city-clock-card .world-clock-time {
+  color:var(--primary)!important;
+  font-size:25px;
+  line-height:1.28;
+}
+@media(max-width:370px) {
+  body.native-app .world-hero-now {grid-template-columns:126px minmax(0,1fr)!important;gap:10px!important;}
+  body.native-app .world-hero-now .world-analog-clock {
+    width:124px!important;height:124px!important;flex-basis:124px!important;
+  }
+  body.native-app .world-analog-clock .world-clock-number {font-size:11px!important;}
+  body.native-app .world-city-clock-layout {grid-template-columns:100px minmax(0,1fr);gap:9px;}
+  body.native-app .world-mini-clock {width:98px!important;height:98px!important;}
+  body.native-app .world-mini-clock .world-mini-number {font-size:10px!important;}
+  body.native-app .world-hero-now .world-home-time {font-size:29px!important;}
+}

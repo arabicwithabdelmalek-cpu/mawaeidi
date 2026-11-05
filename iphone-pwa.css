@@ -1,0 +1,62 @@
+/* iPhone Safari and installed Home Screen web app only. */
+html.mawaeidi-iphone { -webkit-text-size-adjust:100%; }
+html.mawaeidi-iphone .app {
+  padding-bottom:max(28px,calc(env(safe-area-inset-bottom,0px) + 16px));
+}
+html.mawaeidi-iphone .iphone-pwa-hint {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:13px 0 14px;
+  padding:14px 15px;
+  border:1px solid #BFD3E0;
+  border-radius:15px;
+  background:#F2F8FB;
+  box-shadow:0 3px 11px rgba(25,67,88,.045);
+}
+html.mawaeidi-iphone .iphone-pwa-hint-copy {
+  display:grid;
+  flex:1 1 200px;
+  min-width:0;
+  gap:3px;
+}
+html.mawaeidi-iphone .iphone-pwa-hint-copy strong {
+  font-size:14px;
+  font-weight:850;
+  line-height:1.6;
+  color:var(--primary);
+}
+html.mawaeidi-iphone .iphone-pwa-hint-copy span {
+  font-size:12px;
+  line-height:1.8;
+  color:#5E7684;
+}
+html.mawaeidi-iphone .iphone-pwa-hint :is(button) {
+  min-height:44px;
+  padding:9px 13px;
+  font-family:var(--font);
+  font-size:12px;
+  font-weight:850;
+  border-radius:11px;
+}
+html.mawaeidi-iphone .iphone-pwa-hint-action {
+  border:1px solid var(--primary);
+  background:var(--primary);
+  color:#fff;
+}
+html.mawaeidi-iphone .iphone-pwa-hint-dismiss {
+  min-width:44px;
+  font-size:23px!important;
+  padding:4px!important;
+  border:1px solid #CBDDE7;
+  background:#fff;
+  color:var(--primary);
+}
+html.mawaeidi-iphone .tool-body :is(#notificationServerTest,#notificationToggle) {
+  min-height:46px;
+}
+@media(max-width:380px){
+  html.mawaeidi-iphone .iphone-pwa-hint {padding:12px;}
+  html.mawaeidi-iphone .iphone-pwa-hint-action {flex:1 1 auto;}
+}

@@ -13,12 +13,12 @@ const worker=read("sw.js");
 assert.match(index,/viewport-fit=cover/);
 assert.match(index,/\.\/ipad-pwa\.css\?v=1/);
 assert.match(index,/\.\/ipad-pwa\.js\?v=1/);
-assert.ok(index.indexOf("ipad-pwa.js?v=1")<index.indexOf("app-main.js?v=5"),
+assert.ok(index.indexOf("ipad-pwa.js?v=1")<index.indexOf("app-main.js?v=6"),
   "iPad enhancement must load before core render");
 assert.match(app,/window\.mawaeidiIPadRenderAgenda\?\.\(occ\)/);
 assert.match(app,/navigator\.platform==="MacIntel"&&navigator\.maxTouchPoints>1/);
 assert.match(order,/window\.mawaeidiIPadArrangeAgenda\?\.\(\)/);
-assert.match(worker,/mawaeidi-shell-v71/);
+assert.match(worker,/mawaeidi-shell-v72/);
 assert.match(worker,/ipad-pwa\.css\?v=1/);
 assert.match(worker,/ipad-pwa\.js\?v=1/);
 assert.match(ipad,/sessionStatusButtonMarkup\(item\)/);

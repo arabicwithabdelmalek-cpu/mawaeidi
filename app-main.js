@@ -618,8 +618,8 @@ async function refreshNotificationMenuStatus(){
   }
 }
 function notificationSettingsMarkup({supported,configured,requiresInstall=false,permission,enabled,leads=DEFAULT_NOTIFICATION_LEADS,error=""}){
-  if(!supported)return '<div class="tool-status error">هذا المتصفح لا يدعم تنبيهات الويب. جرّب Chrome أو Edge، أو ثبّت الموقع من Safari على iPhone.</div>';
-  if(requiresInstall)return '<div class="tool-status">على iPhone وiPad يجب تثبيت مواعيدي على الشاشة الرئيسية أولًا، ثم فتحه من الأيقونة وتفعيل التنبيهات من داخله.</div><div class="tool-actions"><button type="button" class="tool-primary" onclick="installApp()">طريقة التثبيت</button></div>';
+  if(requiresInstall)return '<div class="tool-status">لتفعيل إشعارات الحصص على الآيفون: افتح مواعيدي في Safari ← مشاركة ← إضافة إلى الشاشة الرئيسية، ثم افتح مواعيدي من الأيقونة واضغط «تفعيل التنبيهات».</div><div class="tool-actions"><button type="button" class="tool-primary" onclick="installApp()">عرض طريقة التثبيت</button></div>';
+  if(!supported)return '<div class="tool-status error">جهازك لا يدعم إشعارات الويب في هذا الوضع. على iPhone تحتاج iOS 16.4 أو أحدث، وأن تفتح مواعيدي من أيقونة الشاشة الرئيسية.</div>';
   if(!configured)return '<div class="tool-status">الميزة مجهّزة في النسخة المحلية، وستصبح قابلة للتفعيل بعد اعتماد التحديث وإضافة مفتاح التنبيهات الآمن.</div><div class="tool-card"><h3>كيف ستعمل؟</h3><p>بعد النشر ستضغط «تفعيل التنبيهات» مرة واحدة على كل جهاز، وستصلك الرسالة قبل الحصة حتى إن كان التطبيق مغلقًا.</p></div>';
   const leadValues=normalizeNotificationLeads(leads);
   const statusClass=error?"error":enabled?"on":"";
@@ -636,9 +636,9 @@ function notificationSettingsMarkup({supported,configured,requiresInstall=false,
       </div>
       <div class="tool-actions">
         <button type="button" class="${enabled?"tool-danger":"tool-primary"}" id="notificationToggle" onclick="${enabled?"disableNotifications()":"enableNotifications()"}">${enabled?"إيقاف التنبيهات":"تفعيل التنبيهات"}</button>
-        ${enabled?'<button type="button" class="tool-secondary" id="notificationTest" onclick="testNotificationNow()">اختبار الصوت والتنبيه</button>':""}
+        ${enabled?'<button type="button" class="tool-secondary" id="notificationTest" onclick="testNotificationNow()">اختبار إشعار على الجهاز</button><button type="button" class="tool-secondary" id="notificationServerTest" onclick="testNotificationFromServer()">اختبار إشعار من الخادم</button>':""}
       </div>
-      <p class="install-help">الصوت هو صوت الإشعارات الذي اخترته في الجهاز، وقد يمنعه الوضع الصامت أو «عدم الإزعاج». لا يستطيع الموقع معرفة إن كان صوت الجهاز مكتومًا.</p>
+      <p class="install-help">اختبار الجهاز يُظهر إشعارًا محليًا؛ واختبار الخادم يرسل تنبيهًا فعليًا عبر الإنترنت إلى نفس الجهاز. على iPhone يجب استخدام مواعيدي المُثبت من الشاشة الرئيسية (iOS 16.4 أو أحدث). الصوت هو صوت إشعارات الجهاز، وقد يمنعه الوضع الصامت أو «التركيز»؛ وليس منبّهًا مستمر الرنين.</p>
     </div>`;
 }
 async function readNotificationState(){
@@ -846,6 +846,52 @@ async function testNotificationNow(){
     if(button)button.disabled=false;
   }
 }
+async function testNotificationFromServer(){
+  if(notificationBusy||!currentUser||!cloudReady)return;
+  notificationBusy=true;
+  const button=document.getElementById("notificationServerTest");
+  if(button){button.disabled=true;button.textContent="جارٍ إرسال الاختبار…"}
+  const status=document.querySelector(".tool-status");
+  try{
+    if(!notificationSupport()||Notification.permission!=="granted")throw new Error("permission_denied");
+    const registration=await getAppWorker();
+    const subscription=await registration?.pushManager.getSubscription();
+    if(!subscription)throw new Error("not_subscribed");
+    const {data:{session},error:authError}=await cloud.auth.getSession();
+    if(authError||!session?.access_token)throw new Error("session_expired");
+    const response=await fetch(SUPABASE_URL+"/functions/v1/mawaeidi-push-test",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer "+session.access_token,
+        "apikey":SUPABASE_PUBLISHABLE_KEY
+      },
+      body:JSON.stringify({endpoint:subscription.endpoint}),
+      cache:"no-store"
+    });
+    if(!response.ok){
+      if(response.status===429)throw new Error("test_rate_limited");
+      if(response.status===404||response.status===410)throw new Error("not_subscribed");
+      throw new Error("push_delivery_failed");
+    }
+    if(status){
+      status.className="tool-status on";
+      status.textContent="قبل خادم الإشعارات الطلب وأرسله إلى خدمة هاتفك. راجع الإشعارات خلال لحظات؛ وإذا لم يصلك شيء، افحص إعدادات الإشعارات والتركيز.";
+    }
+  }catch(error){
+    console.error("اختبار Web Push من خادم مواعيدي لم يكتمل",error);
+    let message="تعذّر وصول الاختبار من الخادم. تحقق من الإنترنت وأعد المحاولة.";
+    if(error?.message==="test_rate_limited")message="اختبرت الإشعار للتو. انتظر دقيقة ثم جرّب مرة أخرى.";
+    else if(error?.message==="not_subscribed")message="هذا الجهاز غير مسجّل حاليًا. أوقف التنبيهات وأعد تفعيلها ثم اختبر.";
+    else if(error?.message==="session_expired")message="انتهت جلسة الدخول. أعد تسجيل الدخول ثم اختبر.";
+    else if(error?.message==="permission_denied")message="اسمح بإشعارات مواعيدي في إعدادات الجهاز أولًا.";
+    if(status){status.className="tool-status error";status.textContent=message}
+  }finally{
+    notificationBusy=false;
+    if(button){button.disabled=false;button.textContent="اختبار إشعار من الخادم"}
+  }
+}
+
 async function disableNotifications(silent=false){
   if(notificationBusy)return false;
   notificationBusy=true;

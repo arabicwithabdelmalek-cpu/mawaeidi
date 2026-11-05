@@ -381,13 +381,7 @@ body.auth-pending .app{visibility:hidden}
 .week-meta{margin-top:3px;color:#64727C;font-size:11px;line-height:1.55}
 .week-source{display:flex;align-items:center;gap:5px;margin-top:7px;color:#52636F;font-size:10px;font-weight:800}
 .week-source .source-line{height:14px}
-.week-status-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px;flex-wrap:wrap}
-.week-status-row > .week-source{min-width:0;max-width:100%;margin-top:0}
-.week-status-row > .session-status-chip{flex-shrink:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.35;text-align:center}
-/* Replacement sessions get a dedicated status row in narrow weekly cells. */
-.week-status-row.is-replacement{display:grid;grid-template-columns:minmax(0,1fr);justify-items:start;row-gap:6px}
-.week-status-row.is-replacement > .week-source,.week-status-row.is-replacement > .session-status-chip{max-width:100%;min-width:0}
-.week-status-row.is-replacement > .session-status-chip{justify-self:start;text-align:center}
+.week-status-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
 .week-card.session-inactive,.lesson.session-inactive{filter:saturate(.68);opacity:.78}
 .week-card.session-inactive .week-name,.lesson.session-inactive .lesson-name{text-decoration:line-through;text-decoration-thickness:1px}
 .week-grid.is-empty{display:block;min-width:0}
@@ -4023,7 +4017,7 @@ function renderWeek(){
           <div class="week-name">${esc(l.name||"بدون اسم")}</div>
           <div class="week-meta">${details}</div>
           ${studentTimeInline(o)?`<div class="week-student-time">${esc(studentTimeInline(o))}</div>`:""}
-          <div class="week-status-row${o.kind==="replacement"?" is-replacement":""}"><div class="week-source"><i class="source-line" aria-hidden="true"></i>${esc(src)}</div>${sessionStatusButtonMarkup(o)}</div>`;
+          <div class="week-status-row"><div class="week-source"><i class="source-line" aria-hidden="true"></i>${esc(src)}</div>${sessionStatusButtonMarkup(o)}</div>`;
         const moveContext={lessonId:l.id,date:o.date,time:o.time,day:o.day,kind:o.kind||"base",recordId:o.recordId||""};
         card.onclick=()=>openEdit(l.id);
         card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit(l.id)}};

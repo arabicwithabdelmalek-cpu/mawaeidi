@@ -84,7 +84,7 @@ public class MawaeidiAlarmPlugin: CAPPlugin, CAPBridgedPlugin, UNUserNotificatio
         ])
     }
 
-    @objc public func requestPermissions(_ call: CAPPluginCall) {
+    @objc override public func requestPermissions(_ call: CAPPluginCall) {
         center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
             if let error = error {
                 call.reject("تعذّر طلب إذن الإشعارات.", "ios_notification_permission_failed", error)

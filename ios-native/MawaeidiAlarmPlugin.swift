@@ -149,9 +149,17 @@ public class MawaeidiAlarmPlugin: CAPPlugin, CAPBridgedPlugin, UNUserNotificatio
         }
         let records = call.getArray("alarms") as? [[String: Any]] ?? []
         let now = Date()
-        let notifications = records.compactMap { notification(for: $0, now: now) }
-            .sorted { ($0.trigger?.nextTriggerDate() ?? .distantFuture) <
-                      ($1.trigger?.nextTriggerDate() ?? .distantFuture) }
+        var notifications: [UNNotificationRequest] = []
+        for record in records {
+            if let request = notification(for: record, now: now) {
+                notifications.append(request)
+            }
+        }
+        notifications.sort { first, second in
+            let firstDate = first.trigger?.nextTriggerDate() ?? Date.distantFuture
+            let secondDate = second.trigger?.nextTriggerDate() ?? Date.distantFuture
+            return firstDate < secondDate
+        }
         let chosen = Array(notifications.prefix(maxScheduled))
 
         center.getPendingNotificationRequests { existing in

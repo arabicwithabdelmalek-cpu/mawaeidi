@@ -278,7 +278,7 @@ function nativeAlarmPayload(){
     userId:currentUser?.id||"",
     timezone:SCHEDULE_TIMEZONE,
     defaultLeads:savedNotificationLeads(),
-    alarms:alarms.slice(0,NATIVE_ALARM_LIMIT)
+    alarms:alarms.slice(0,window.MawaeidiNative?.platform==="ios"?55:NATIVE_ALARM_LIMIT)
   };
 }
 async function syncNativeAlarms(force=false){
@@ -718,7 +718,40 @@ function nativePermissionCard(label,description,allowed,action=""){
   const stateClass=allowed?"ok":"warn",stateText=allowed?"جاهز":"يحتاج إذنًا";
   return `<div class="native-alarm-check ${stateClass}"><strong>${esc(label)} · ${stateText}</strong><span>${esc(description)}</span>${!allowed&&action?`<button type="button" class="tool-secondary" onclick="${action}">فتح الإعداد</button>`:""}</div>`;
 }
+function iosNotificationSettingsMarkup(state) {
+  const enabled=Boolean(state?.enabled);
+  const allowed=Boolean(state?.notificationsAllowed);
+  const ready=enabled&&allowed;
+  const leads=savedNotificationLeads();
+  const message=ready?`تنبيهات iPhone مفعّلة. يوجد ${Number(state.pendingCount||0)} إشعارًا محليًا مجدولًا على هذا الجهاز.`:
+    enabled?"تم تفعيل التنبيهات، لكن إشعارات مواعيدي غير مسموح بها من إعدادات iPhone.":"تنبيهات الحصص غير مفعّلة على هذا iPhone.";
+  return `<div class="native-alarm-status ios-notification-settings">
+    <div class="tool-status ${ready?"on":""}">${esc(message)}</div>
+    <div class="tool-card">
+      <h3>متى يصلك التنبيه؟</h3>
+      <p>اختر حتى ثلاثة تنبيهات قبل كل حصة، أو اضبطها من بيانات الحصة نفسها.</p>
+      <div class="notification-leads" id="notificationLeadChoices" data-enabled="${enabled?"true":"false"}">${notificationLeadChoices(leads)}</div>
+      <div class="notification-features">
+        <span class="notification-feature">إشعار محلي بصوت النظام</span>
+        <span class="notification-feature">يصل عند إغلاق التطبيق</span>
+        <span class="notification-feature">اختبار بعد 3 ثوانٍ</span>
+      </div>
+    </div>
+    <div class="tool-card">
+      <h3>معلومات مهمة على iPhone</h3>
+      <p>هذه إشعارات iOS المحلية وليست منبّهًا متكرر الرنين أو شاشة منبّه كاملة. قد يتأثر الصوت بالوضع الصامت والتركيز وإعدادات النظام.</p>
+      <p>يمكن حفظ ما يصل إلى 55 تنبيهًا قادمًا على الجهاز. افتح مواعيدي دوريًا لتجديد التنبيهات المستقبلية.</p>
+      <p>يستخدم التطبيق صوت إشعارات iPhone الافتراضي، وليس قائمة نغمات Android.</p>
+    </div>
+    <div class="native-alarm-actions">
+      <button type="button" class="${enabled?"tool-danger":"tool-primary"}" id="notificationToggle" onclick="${enabled?"disableNotifications()":"enableNotifications()"}">${enabled?"إيقاف التنبيهات":"تفعيل التنبيهات"}</button>
+      <button type="button" class="tool-secondary" onclick="openNativeNotificationSettings()">إعدادات إشعارات iPhone</button>
+      <button type="button" class="tool-secondary" id="notificationTest" onclick="testNotificationNow()">اختبار الإشعار</button>
+    </div>
+  </div>`;
+}
 function nativeNotificationSettingsMarkup(state){
+  if(window.MawaeidiNative?.platform==="ios")return iosNotificationSettingsMarkup(state);
   const enabled=Boolean(state?.enabled),available=state?.available!==false,leads=savedNotificationLeads();
   if(!available)return '<div class="tool-status error">تعذّر الاتصال بخدمة المنبّه داخل التطبيق. أغلق التطبيق وافتحه ثم حاول مرة أخرى.</div>';
   const ready=Boolean(state.notificationsAllowed&&state.exactAlarmAllowed);
@@ -811,7 +844,7 @@ async function openNotificationSettings(){
   closeDataMenu();
   if(!currentUser||!cloudReady){alert("انتظر حتى يكتمل تحميل حسابك ثم حاول مرة أخرى.");return}
   if(nativeAlarmAvailable()){
-    openToolDialog("منبّه الحصص","منبّه حقيقي مستقل على هذا الهاتف.",'<div class="tool-status">جارٍ قراءة إعدادات الهاتف…</div>');
+    openToolDialog(window.MawaeidiNative?.platform==="ios"?"تنبيهات الحصص – iPhone":"منبّه الحصص",window.MawaeidiNative?.platform==="ios"?"إشعارات محلية مجدولة على هذا iPhone.":"منبّه حقيقي مستقل على هذا الهاتف.",'<div class="tool-status">جارٍ قراءة إعدادات الهاتف…</div>');
     await renderNativeNotificationSettings();
     return;
   }
@@ -990,10 +1023,10 @@ async function testNotificationNow(){
     const status=document.querySelector(".tool-status");
     try{
       await window.MawaeidiNative.testAlarm();
-      if(status){status.className="tool-status on";status.textContent="سيعمل منبّه تجريبي بعد 3 ثوانٍ. جرّب الإيقاف والغفوة من شاشة المنبّه."}
+      if(status){status.className="tool-status on";status.textContent=window.MawaeidiNative?.platform==="ios"?"سيظهر إشعار تجريبي بعد 3 ثوانٍ. جرّب إغلاق التطبيق للتأكد من الصوت.":"سيعمل منبّه تجريبي بعد 3 ثوانٍ. جرّب الإيقاف والغفوة من شاشة المنبّه."}
     }catch(error){
       console.error("تعذّر اختبار منبّه التطبيق.",error);
-      if(status){status.className="tool-status error";status.textContent="تعذّر تشغيل الاختبار. فعّل الإشعارات والمنبّه الدقيق أولًا."}
+      if(status){status.className="tool-status error";status.textContent=window.MawaeidiNative?.platform==="ios"?"تعذّر اختبار الإشعار. اسمح بإشعارات مواعيدي في إعدادات iPhone أولًا.":"تعذّر تشغيل الاختبار. فعّل الإشعارات والمنبّه الدقيق أولًا."}
     }finally{notificationBusy=false;if(button)button.disabled=false}
     return;
   }

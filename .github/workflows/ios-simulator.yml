@@ -1,0 +1,58 @@
+name: Build Mawaeidi iOS simulator app
+
+on:
+  push:
+    branches:
+      - ios-app
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios-simulator:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - name: Checkout iOS source
+        uses: actions/checkout@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned mobile dependencies
+        run: npm ci
+      - name: Check iOS source and notification bridge
+        run: npm run test:ios
+      - name: Install Xcode project editing gem
+        run: |
+          ruby -e 'require "xcodeproj"' || gem install xcodeproj --no-document
+      - name: Generate native Xcode project and approved app icon
+        run: npm run ios:project
+      - name: Check selected Xcode version
+        run: xcodebuild -version
+      - name: Build unsigned iOS Simulator application
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+      - name: Package iOS simulator app and native source
+        run: |
+          test -d build/ios/Build/Products/Debug-iphonesimulator/App.app
+          ditto -c -k --keepParent build/ios/Build/Products/Debug-iphonesimulator/App.app Mawaeidi-iOS-Simulator.zip
+          ditto -c -k --keepParent ios Mawaeidi-iOS-Xcode-Project.zip
+      - name: Upload generated iOS files for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: mawaeidi-ios-simulator-and-xcode
+          path: |
+            Mawaeidi-iOS-Simulator.zip
+            Mawaeidi-iOS-Xcode-Project.zip
+          retention-days: 30

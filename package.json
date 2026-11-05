@@ -2,14 +2,17 @@
   "name": "mawaeidi-mobile",
   "version": "2.0.0-beta.1",
   "private": true,
-  "description": "Native Android app for مواعيدي with synchronized exact lesson alarms",
+  "description": "Mawaeidi mobile app for Android and iOS with synchronized lesson schedules and platform-specific reminders",
   "scripts": {
     "mobile:prepare": "node scripts/prepare-mobile.mjs",
     "android:add": "npm run mobile:prepare && cap add android",
     "android:sync": "npm run mobile:prepare && cap sync android",
     "android:build": "npm run android:sync && cd android && ./gradlew assembleDebug",
     "test:native": "node tests/native-alarm.test.cjs",
-    "test:students": "node students/tests/student-registry.test.cjs && node students/tests/production-integration.test.cjs && node students/tests/workspace.test.cjs && node tests/full-backup.test.cjs && node students/tests/student-trash.test.cjs && node tests/unified-trash.test.cjs && node students/tests/student-summary.test.cjs && node tests/world-clock-sync.test.cjs && npm run test:native"
+    "test:students": "node students/tests/student-registry.test.cjs && node students/tests/production-integration.test.cjs && node students/tests/workspace.test.cjs && node tests/full-backup.test.cjs && node students/tests/student-trash.test.cjs && node tests/unified-trash.test.cjs && node students/tests/student-summary.test.cjs && node tests/world-clock-sync.test.cjs && npm run test:native",
+    "ios:project": "npm run mobile:prepare && npm install --no-save --package-lock=false @capacitor/ios@8.5.2 && npx cap add ios --packagemanager SPM && node scripts/prepare-ios-project.mjs && ruby scripts/register-ios-plugin.rb",
+    "ios:sync": "npm run mobile:prepare && npx cap sync ios && node scripts/prepare-ios-project.mjs && ruby scripts/register-ios-plugin.rb",
+    "test:ios": "node tests/ios-project.test.cjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.2",

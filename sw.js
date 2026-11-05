@@ -1,4 +1,4 @@
-const CACHE_NAME="mawaeidi-shell-v68";
+const CACHE_NAME="mawaeidi-shell-v70";
 const APP_SHELL=[
   "./",
   "./index.html",
@@ -13,10 +13,10 @@ const APP_SHELL=[
   "./manifest.webmanifest",
   "./icons/huruf-background.png",
   "./icons/kufi-quote.png",
-  "./icons/icon.svg",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/apple-touch-icon.png"
+  "./icons/favicon-32.png?v=2",
+  "./icons/icon-192.png?v=2",
+  "./icons/icon-512.png?v=2",
+  "./icons/apple-touch-icon.png?v=2"
 ];
 
 self.addEventListener("install",event=>{

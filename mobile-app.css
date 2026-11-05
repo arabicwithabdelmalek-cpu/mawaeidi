@@ -226,3 +226,348 @@ body.native-app .native-alarm-actions button{min-height:46px}
   body.native-app .workspace-switch{grid-template-columns:repeat(3,100px);right:auto;left:12px;width:auto;border:1px solid #D4DEE4;border-radius:18px 18px 0 0}
   body.native-app #primaryActionButton{bottom:78px}
 }
+
+
+/* Native visual refresh / review 2026-11-05.
+   Website styles are untouched: selectors below are native-only. */
+body.native-app {
+  --native-paper:#F7F5F0;
+  --native-surface:#FFFEFB;
+  --native-ink:#193D4D;
+  --native-teal:#256C73;
+  --native-teal-dark:#174C59;
+  --native-gold:#C7964A;
+  --native-muted:#657B82;
+  --native-line:#E3E7E3;
+  --native-shadow:0 6px 24px rgba(26,70,77,.065);
+  color:var(--native-ink);
+  background:var(--native-paper);
+  font-family:"Cairo","Segoe UI",Tahoma,Arial,sans-serif;
+}
+body.native-app .shell {
+  background:linear-gradient(180deg,#FBFAF6 0%,#F7F5F0 42%,#F3F6F5 100%);
+}
+body.native-app .app { padding-inline:15px; padding-bottom:calc(106px + var(--native-safe-bottom)); }
+body.native-app .header {
+  min-height:73px;
+  margin-inline:-15px;
+  margin-bottom:17px;
+  padding:calc(13px + var(--native-safe-top)) 16px 13px;
+  border-bottom:1px solid #E8EAE5;
+  background:rgba(255,254,250,.965);
+  box-shadow:0 6px 20px rgba(24,59,68,.045);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+}
+body.native-app .brand h1 {
+  color:#184858;
+  font-family:"Noto Kufi Arabic","Cairo",sans-serif;
+  font-size:23px;
+  font-weight:800;
+  line-height:1.25;
+  letter-spacing:-.35px;
+}
+body.native-app .brand small { color:#6B858B; font-size:11px; font-weight:650; }
+body.native-app .header-actions { gap:8px; }
+body.native-app #syncStatus,
+body.native-app .data-menu>summary,
+body.native-app .account-trigger {
+  width:44px;
+  height:44px;
+  min-width:44px;
+  border:1px solid #E2E8E6;
+  border-radius:15px;
+  background:#F9FBF9;
+  color:#275D69;
+  box-shadow:0 2px 6px rgba(23,69,78,.025);
+}
+body.native-app .data-menu>summary::before { content:"···"; font-size:25px; line-height:1; letter-spacing:2px; }
+body.native-app .sync-icon { font-size:22px; line-height:1; }
+body.native-app :is(button,summary,input,select,textarea):focus-visible {
+  outline:3px solid rgba(37,108,115,.35);
+  outline-offset:2px;
+}
+body.native-app #primaryActionButton {
+  left:17px;
+  bottom:calc(91px + var(--native-safe-bottom));
+  width:60px;
+  height:60px;
+  min-width:60px;
+  border:3px solid var(--native-paper);
+  border-radius:22px;
+  background:linear-gradient(145deg,#327D83,#1D5965);
+  box-shadow:0 10px 26px rgba(24,82,91,.28);
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+body.native-app #primaryActionButton:active {transform:scale(.95);}
+body.native-app #primaryActionButton::before { font-size:29px; font-weight:550; }
+body.native-app #primaryActionButton[hidden] { display:none!important; }
+
+/* Keep app navigation comfortably tappable, with distinctive line icons. */
+body.native-app .workspace-switch {
+  z-index:50;
+  gap:5px;
+  padding:8px 11px calc(8px + var(--native-safe-bottom));
+  border-top:1px solid #E4E9E5;
+  background:rgba(255,254,250,.97);
+  box-shadow:0 -6px 25px rgba(21,66,74,.08);
+  -webkit-backdrop-filter:blur(20px);
+}
+body.native-app .workspace-switch button {
+  min-width:0;
+  min-height:62px;
+  gap:5px;
+  padding:7px 2px 6px;
+  border-radius:17px;
+  color:#617A81;
+  font-size:12px;
+  line-height:1.3;
+  font-weight:800;
+}
+body.native-app .workspace-switch button::before {
+  content:"";
+  display:block;
+  width:23px;
+  height:23px;
+  background-color:currentColor;
+  mask-position:center;
+  mask-size:contain;
+  mask-repeat:no-repeat;
+  -webkit-mask-position:center;
+  -webkit-mask-size:contain;
+  -webkit-mask-repeat:no-repeat;
+}
+body.native-app #scheduleSectionButton::before {mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.85%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%223%22%20y%3D%224%22%20width%3D%2218%22%20height%3D%2218%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M16%202v4%20M8%202v4%20M3%2010h18%20M8%2015h2%20M14%2015h2%20M8%2019h2%22%2F%3E%3C%2Fsvg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.85%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%223%22%20y%3D%224%22%20width%3D%2218%22%20height%3D%2218%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M16%202v4%20M8%202v4%20M3%2010h18%20M8%2015h2%20M14%2015h2%20M8%2019h2%22%2F%3E%3C%2Fsvg%3E");}
+body.native-app #worldClockSectionButton::before {mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.85%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M12%207v5l3.5%202%22%2F%3E%3C%2Fsvg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.85%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M12%207v5l3.5%202%22%2F%3E%3C%2Fsvg%3E");}
+body.native-app #studentsSectionButton::before {mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.85%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M16%2021v-2a4%204%200%200%200-4-4H6a4%204%200%200%200-4%204v2%22%2F%3E%3Ccircle%20cx%3D%229%22%20cy%3D%227%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M22%2021v-2a4%204%200%200%200-3-3.87%20M16%203.13a4%204%200%200%201%200%207.75%22%2F%3E%3C%2Fsvg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.85%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M16%2021v-2a4%204%200%200%200-4-4H6a4%204%200%200%200-4%204v2%22%2F%3E%3Ccircle%20cx%3D%229%22%20cy%3D%227%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M22%2021v-2a4%204%200%200%200-3-3.87%20M16%203.13a4%204%200%200%201%200%207.75%22%2F%3E%3C%2Fsvg%3E");}
+body.native-app .workspace-switch button.active {
+  background:#E9F3F0;
+  color:#1F6570;
+  box-shadow:inset 0 0 0 1px #D8E8E3;
+}
+
+/* The next-lesson card anchors the main screen without a busy background. */
+body.native-app .hero {margin-bottom:15px;}
+body.native-app .next {
+  min-height:168px;
+  padding:19px 19px 20px;
+  border:1px solid #E7E5DC;
+  border-top:0;
+  border-radius:23px;
+  background:linear-gradient(140deg,#FFFDF8 0%,#FAF8F0 100%);
+  box-shadow:var(--native-shadow);
+}
+body.native-app .next::before {
+  inset:0 auto auto 0;
+  width:65px;
+  height:65px;
+  border-radius:0 0 0 65px;
+  background:linear-gradient(135deg,rgba(210,169,95,.18),rgba(210,169,95,0));
+  animation:none;
+}
+body.native-app .next::after {
+  content:"";
+  position:absolute;
+  top:0;
+  right:20px;
+  width:56px;
+  height:4px;
+  background:var(--native-gold);
+  border-radius:0 0 6px 6px;
+}
+body.native-app .next .label {
+  padding:6px 12px;
+  border-radius:999px;
+  background:#E7F1EE;
+  color:#235F64;
+  font-size:12px;
+  font-weight:800;
+}
+body.native-app .next .time {margin-top:13px;color:#163F50;font-size:32px;line-height:1.3;font-weight:850;}
+body.native-app .next .name {margin-top:5px;color:#254B55;font-size:18px;line-height:1.55;font-weight:800;overflow-wrap:anywhere;}
+body.native-app .next .meta {margin-top:7px;color:#697F82;font-size:13px;line-height:1.75;}
+
+/* Day/week switches remain prominent without shrinking the labels. */
+body.native-app .controls {gap:10px;margin-bottom:15px;}
+body.native-app .controls>.filters,
+body.native-app .controls>.tabs {
+  display:flex;
+  align-items:center;
+  justify-content:stretch;
+  padding:5px;
+  border:1px solid #E4E9E6;
+  border-radius:16px;
+  background:#EDEFEC;
+}
+body.native-app .controls :is(.filter,.tab) {
+  flex:1;
+  min-width:0;
+  min-height:44px;
+  padding:8px 6px;
+  border-radius:12px;
+  color:#5A747A;
+  font-size:12px;
+  line-height:1.45;
+  font-weight:800;
+}
+body.native-app .controls :is(.filter.active,.tab.active) {
+  background:#FFFDF9;
+  color:#215966;
+  box-shadow:0 2px 8px rgba(25,66,75,.085);
+}
+body.native-app .controls .teach-filter.active {background:#E6F3EC;color:#267063;}
+body.native-app .controls .learn-filter.active {background:#F6ECE0;color:#8F6538;}
+
+/* Real timetable classes: timeline-row / lesson (not timeline-item). */
+body.native-app :is(.panel,.week-view,#studentsView .registry-panel) {
+  border:1px solid var(--native-line);
+  border-radius:22px;
+  background:var(--native-surface);
+  box-shadow:var(--native-shadow);
+}
+body.native-app .panel-head {min-height:66px;gap:10px;padding:16px 16px 13px;border-bottom:1px solid #ECF0ED;}
+body.native-app .panel-head h2 {color:var(--native-ink);font-size:18px;line-height:1.4;}
+body.native-app .panel-head span {font-size:12px;}
+body.native-app .today-header-actions {display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:7px;}
+body.native-app .today-quick-add {min-height:41px;padding:8px 10px;border-radius:12px;font-size:12px;}
+body.native-app .timeline {padding:10px 12px 16px;}
+body.native-app .timeline-row {grid-template-columns:69px minmax(0,1fr);gap:9px;padding:7px 0;}
+body.native-app .timeline-row .t-time {
+  min-height:42px;
+  margin-top:3px;
+  border:1px solid #D8E7E4;
+  border-radius:12px;
+  background:#F0F6F4;
+  color:#215E68;
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+}
+body.native-app .timeline .lesson {
+  min-width:0;
+  padding:13px;
+  border-radius:16px;
+  border-inline-start-width:4px;
+  box-shadow:0 2px 9px rgba(23,66,76,.03);
+}
+body.native-app .timeline .lesson-name {font-size:15px;line-height:1.55;overflow-wrap:anywhere;}
+body.native-app .timeline .lesson-meta {font-size:12px;line-height:1.7;}
+body.native-app .timeline .pills {gap:6px;}
+body.native-app .timeline .pill {padding:5px 9px;border-radius:8px;font-size:11px;line-height:1.5;}
+body.native-app .timeline .icon-btn {width:38px;height:38px;min-width:38px;border-radius:12px;}
+body.native-app .timeline .actions {flex-wrap:wrap;}
+body.native-app .empty {color:#667B82;font-size:14px;line-height:1.8;}
+body.native-app .summary {gap:10px;}
+body.native-app .stat {min-height:92px;padding:14px;border:1px solid #E4ECE8;border-radius:16px;background:#F6F9F6;}
+body.native-app .stat small {color:#5D767A;font-size:12px;}
+body.native-app .stat strong {margin-top:7px;color:#245C6B;font-size:28px;}
+
+/* The horizontal weekly grid stays scrollable, but the controls read as mobile UI. */
+body.native-app .week-panel-head {flex-wrap:wrap;align-items:center;}
+body.native-app .week-panel-title {min-width:0;}
+body.native-app .week-panel-title span {white-space:normal;line-height:1.55;}
+body.native-app .week-navigation {max-width:100%;gap:5px;border-radius:14px;}
+body.native-app .week-navigation button {min-height:40px;min-width:53px;padding:8px 10px;border-radius:10px;font-size:12px;}
+body.native-app .week-smart-summary {grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:13px;background:#F9FAF7;}
+body.native-app .week-summary-card {padding:11px;border-radius:13px;background:white;}
+body.native-app .week-summary-card small {font-size:11px;}
+body.native-app .week-summary-card strong {font-size:16px;}
+body.native-app .week-time-toolbar {flex-wrap:wrap;gap:8px;}
+body.native-app .week-time-toolbar button {min-height:41px;}
+body.native-app .week-table-wrap {overflow-x:auto;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;}
+body.native-app .week-grid {border-radius:14px;}
+body.native-app .week-day-head {background:#EAF2EE;color:#265D67;}
+body.native-app .week-time-label {background:#F4F8F6;color:#345F6B;}
+
+/* Actual world-clock section and cards (not the removed world-clock-section). */
+body.native-app .world-clock-page {padding:0 0 20px;}
+body.native-app .world-clock-tool {gap:13px;}
+body.native-app .world-clock-hero,
+body.native-app .world-dashboard-grid> *,
+body.native-app .world-clock-card {
+  border-radius:21px;
+}
+body.native-app .world-clock-card {
+  padding:16px;
+  border:1px solid #DEE9E5;
+  background:#FFFEFB;
+  box-shadow:var(--native-shadow);
+}
+body.native-app .world-clock-card strong {font-size:14px;white-space:normal;}
+body.native-app .world-clock-card small,
+body.native-app .world-clock-card span {font-size:12px;}
+body.native-app .world-clock-time {font-size:27px;font-variant-numeric:tabular-nums;color:#205E69;}
+body.native-app .world-zone-state {font-size:10px!important;}
+body.native-app .world-clock-page :is(button,input,select) {min-height:43px;}
+
+/* Students: retain every existing field and action; increase readability. */
+body.native-app #studentsView .registry-panel {overflow:visible;}
+body.native-app #studentsView .registry-head {gap:10px;padding:17px 16px;border-bottom-color:#E5ECE8;}
+body.native-app #studentsView .registry-head h2 {color:#204E5C;font-size:22px;}
+body.native-app #studentsView .registry-head p {color:#5B747B;line-height:1.75;}
+body.native-app #studentsView .filters {gap:10px;padding:13px;background:#F8FAF7;border-bottom-color:#E5ECE7;}
+body.native-app #studentsView .student-list-wrap {padding:8px 10px 15px;}
+body.native-app #studentsView .student-row {margin-top:8px;border:1px solid #E5ECE8;border-radius:15px;background:#FFFFFF;}
+body.native-app #studentsView .student-row:last-child {border-bottom:1px solid #E5ECE8;}
+body.native-app #studentsView .student-row:hover {background:#FAFCFB;}
+body.native-app #studentsView .student-avatar {border-radius:14px;}
+body.native-app #studentsView .student-summary-metrics {grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+body.native-app #studentsView .student-summary-metric {min-height:95px;border-color:#E0EAE5;border-radius:15px;background:#F6F9F6;}
+body.native-app #studentsView .student-summary-metric strong {color:#225F6A;}
+
+/* Dialogs, inputs and status — comfortable tap targets and less visual noise. */
+body.native-app .tool-dialog {border:0;border-radius:26px 26px 0 0;background:#FBFAF7;}
+body.native-app .tool-head {border-bottom-color:#E7ECE7;background:#FFFEFB;}
+body.native-app .tool-head h2 {font-size:21px;color:#1F5261;}
+body.native-app .tool-body {padding:17px 18px calc(20px + var(--native-safe-bottom));}
+body.native-app .tool-card {border-radius:16px;border-color:#E3E9E5;background:#fff;}
+body.native-app .drawer {background:#F9FAF7;}
+body.native-app .drawer-head,
+body.native-app .drawer-foot {background:#FFFEFB;}
+body.native-app .drawer-head h2 {font-size:22px;color:#1F5261;}
+body.native-app .drawer :is(input,select,textarea),
+body.native-app .tool-dialog :is(input,select,textarea) {
+  min-height:46px;
+  border-radius:12px;
+  font-size:16px;
+}
+body.native-app .auth-gate {background:linear-gradient(150deg,#F2F4EE,#F9FBF8);}
+body.native-app .auth-card {border-color:#DEE7DF;border-top-color:#C7964A;background:#FFFEFA;}
+body.native-app .auth-name {color:#215564;}
+body.native-app .auth-fields input {min-height:49px;border-radius:12px;font-size:16px;}
+body.native-app .auth-primary {min-height:50px;border-radius:13px;background:#216871;}
+body.native-app .startup-name {font-family:"Noto Kufi Arabic","Cairo",sans-serif;color:#215D69;}
+body.native-app .startup-spinner {border-top-color:#C7964A;}
+body.native-app .native-update-banner {border-color:#CFE4DD;border-radius:19px;background:#F0F7F2;}
+body.native-app .native-update-banner strong {color:#255A61;font-size:15px;}
+body.native-app .native-update-banner span {font-size:12px;}
+body.native-app .native-update-download {background:#236B73;}
+body.native-app .native-alarm-check {border-color:#E2EBE5;border-radius:15px;background:#FAFCF9;}
+
+@media(max-width:420px) {
+  body.native-app .app {padding-inline:12px;}
+  body.native-app .header {margin-inline:-12px;padding-inline:12px;}
+  body.native-app .brand small {display:none;}
+  body.native-app .controls {grid-template-columns:1fr;}
+  body.native-app .workspace-switch button {font-size:11.5px;}
+  body.native-app .panel-head {flex-wrap:wrap;}
+  body.native-app .week-panel-head {align-items:stretch;}
+  body.native-app .week-navigation {justify-content:space-between;}
+  body.native-app #studentsView .registry-head {padding:16px 13px;}
+}
+@media(max-width:355px) {
+  body.native-app .brand h1 {font-size:21px;}
+  body.native-app .header-actions {gap:5px;}
+  body.native-app #syncStatus,
+  body.native-app .account-trigger,
+  body.native-app .data-menu>summary {width:40px;height:40px;min-width:40px;}
+  body.native-app .timeline-row {grid-template-columns:1fr;gap:5px;}
+  body.native-app .timeline-row .t-time {justify-self:start;min-height:35px;margin-top:0;}
+  body.native-app .workspace-switch {padding-inline:6px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  body.native-app .workspace-switch *,
+  body.native-app .timeline-row,
+  body.native-app .next,
+  body.native-app .tool-dialog,
+  body.native-app #primaryActionButton {animation:none!important;transition:none!important;}
+}

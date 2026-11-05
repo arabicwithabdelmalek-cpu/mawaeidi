@@ -571,3 +571,35 @@ body.native-app .native-alarm-check {border-color:#E2EBE5;border-radius:15px;bac
   body.native-app .tool-dialog,
   body.native-app #primaryActionButton {animation:none!important;transition:none!important;}
 }
+
+
+/* Reuse the already-approved app icon as a restrained branded entry point. */
+body.native-app .startup-mark::before {
+  content:"";
+  display:block;
+  width:86px;
+  height:86px;
+  margin:0 auto 12px;
+  border:1px solid #E3E9E3;
+  border-radius:23px;
+  background:#F7F5F0 url("./icons/icon-192.png") center/cover no-repeat;
+  box-shadow:0 12px 30px rgba(25,67,73,.13);
+  animation:native-mark-appear .55s cubic-bezier(.2,.8,.2,1) both;
+}
+body.native-app .auth-card::before {
+  content:"";
+  display:block;
+  width:65px;
+  height:65px;
+  margin:0 auto 12px;
+  border-radius:19px;
+  background:#F7F5F0 url("./icons/icon-192.png") center/cover no-repeat;
+  box-shadow:0 7px 19px rgba(25,67,73,.10);
+}
+@keyframes native-mark-appear {
+  from {opacity:.5;transform:scale(.91) translateY(5px);}
+  to {opacity:1;transform:scale(1) translateY(0);}
+}
+@media(prefers-reduced-motion:reduce) {
+  body.native-app .startup-mark::before {animation:none!important;}
+}

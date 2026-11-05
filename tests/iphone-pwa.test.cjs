@@ -67,7 +67,7 @@ const render=new Function("helpers","const {normalizeNotificationLeads,notificat
     notificationLeadChoices:()=>"",
     esc:x=>String(x)
   });
-const notInstalled=render({supported:false,configured:true,requiresInstall:true});
+const notInstalled=render({supported:false,configured:true,requiresInstall:true,leads:[60,15]});
 assert.match(notInstalled,/إضافة إلى الشاشة الرئيسية/);
 assert.doesNotMatch(notInstalled,/لا يدعم تنبيهات الويب/);
 const enabled=render({supported:true,configured:true,requiresInstall:false,permission:"granted",enabled:true,leads:[60,15]});

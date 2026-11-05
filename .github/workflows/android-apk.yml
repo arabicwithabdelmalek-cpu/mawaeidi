@@ -3,23 +3,34 @@ name: Build Mawaeidi Android APK
 on:
   push:
     branches:
-      - main
-      - mobile-app
+      - android-app
     paths:
       - "package.json"
+      - "package-lock.json"
       - "capacitor.config.json"
-      - "www/**"
+      - "index.html"
+      - "app-main.js"
+      - "native-bridge.js"
+      - "mobile-app.css"
+      - "scripts/**"
+      - "android/**"
       - "icons/**"
-      - ".github/workflows/android-apk.yml"
+      - ".github/workflows/android-*.yml"
   pull_request:
     branches:
-      - main
+      - android-app
     paths:
       - "package.json"
+      - "package-lock.json"
       - "capacitor.config.json"
-      - "www/**"
+      - "index.html"
+      - "app-main.js"
+      - "native-bridge.js"
+      - "mobile-app.css"
+      - "scripts/**"
+      - "android/**"
       - "icons/**"
-      - ".github/workflows/android-apk.yml"
+      - ".github/workflows/android-*.yml"
   workflow_dispatch:
 
 permissions:
@@ -27,6 +38,7 @@ permissions:
 
 jobs:
   build-apk:
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/android-app'
     runs-on: ubuntu-latest
 
     steps:
@@ -52,11 +64,14 @@ jobs:
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Install Capacitor
-        run: npm install
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Generate Android project
-        run: npx cap add android
+      - name: Verify application logic
+        run: npm run test:students
+
+      - name: Synchronize bundled web assets
+        run: npm run android:sync
 
       - name: Apply Mawaeidi launcher icon
         shell: bash

@@ -1,5 +1,13 @@
 # مواعيدي
 
+## تنظيم فروع التطبيق
+
+- `main`: الموقع المنشور على GitHub Pages، و`development`: مراجعة تعديلات الموقع.
+- **[`android-app`](https://github.com/arabicwithabdelmalek-cpu/mawaeidi/tree/android-app)**: الفرع الرسمي الوحيد لتطوير تطبيق Android الأصلي الذي يتضمن المنبّه الحقيقي.
+- `mobile-app` و`feature/native-mobile-alarm-v1`: فروع تاريخية محفوظة، وليست مصادر للإصدارات الجديدة.
+- تُنشَر تحديثات التطبيق الموقّعة من `android-app` فقط، بأرقام إصدارات متتابعة وبنفس معرّف الحزمة ومفتاح التوقيع.
+- آخر إصدار موقّع قبل توحيد الفروع: [2.0.0-beta.3](https://github.com/arabicwithabdelmalek-cpu/mawaeidi/releases/tag/v2.0.0-beta.3).
+
 تطبيق شخصي عربي لإدارة الحصص والمواعيد الأسبوعية، مع تسجيل دخول وحفظ سحابي عبر Supabase. يدعم التثبيت كتطبيق، الإضافة السريعة من الجدول، النسخ الاحتياطي، المزامنة الفورية، سجل التعديلات، وتنبيهات Web Push.
 
 ## النشر على GitHub Pages

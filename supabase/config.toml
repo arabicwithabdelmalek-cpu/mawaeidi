@@ -1,2 +1,6 @@
 [functions.mawaeidi-reminders]
 verify_jwt = false
+
+[functions.mawaeidi-push-test]
+# The function explicitly validates Supabase Auth access tokens for users.
+verify_jwt = false

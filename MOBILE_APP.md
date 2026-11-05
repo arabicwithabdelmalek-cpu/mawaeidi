@@ -1,5 +1,7 @@
 # نسخة Android من مواعيدي
 
+> **أرشيف فقط:** هذا الفرع `mobile-app` محفوظ للرجوع التاريخي، وليس مصدرًا لنشر تطبيق Android. مصدر التطوير والبناء والإصدارات الموقّعة الوحيد هو [`android-app`](https://github.com/arabicwithabdelmalek-cpu/mawaeidi/tree/android-app).
+
 هذه النسخة تغلف الموقع الحي داخل تطبيق Android باستخدام Capacitor، مع الحفاظ على نفس Supabase ونفس البيانات.
 
 ## هوية التطبيق

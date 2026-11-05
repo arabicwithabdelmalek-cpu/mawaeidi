@@ -3,8 +3,7 @@ name: Build Mawaeidi Android APK
 on:
   push:
     branches:
-      - main
-      - mobile-app
+      - android-app
     paths:
       - "package.json"
       - "capacitor.config.json"
@@ -13,7 +12,7 @@ on:
       - ".github/workflows/android-apk.yml"
   pull_request:
     branches:
-      - main
+      - android-app
     paths:
       - "package.json"
       - "capacitor.config.json"
@@ -27,6 +26,7 @@ permissions:
 
 jobs:
   build-apk:
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/android-app'
     runs-on: ubuntu-latest
 
     steps:

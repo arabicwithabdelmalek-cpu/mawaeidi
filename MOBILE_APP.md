@@ -15,7 +15,7 @@
 
 - الاسم: مواعيدي
 - Package ID: `com.abdelmalek.mawaeidi`
-- أحدث إصدار معدّ للنشر: `2.0.0-beta.4`
+- آخر إصدار Android موقّع منشور: `2.0.0-beta.4`
 - الموقع المتزامن: `https://arabicwithabdelmalek-cpu.github.io/mawaeidi/`
 
 ## تجربة الهاتف

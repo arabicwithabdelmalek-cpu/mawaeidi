@@ -1,6 +1,7 @@
 package com.abdelmalek.mawaeidi;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -8,6 +9,8 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.media.RingtoneManager;
+import androidx.activity.result.ActivityResult;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
@@ -19,6 +22,7 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.Permission;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,6 +38,44 @@ public class MawaeidiAlarmPlugin extends Plugin {
     @PluginMethod
     public void getState(PluginCall call) {
         call.resolve(stateObject());
+    }
+
+    @PluginMethod
+    public void chooseAlarmTone(PluginCall call) {
+        try {
+            Intent picker = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM);
+            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "اختر صوت منبّه مواعيدي");
+            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
+            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_DEFAULT_URI, AlarmTone.defaultUri());
+            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, AlarmTone.selectedUri(getContext()));
+            startActivityForResult(call, picker, "onAlarmToneChosen");
+        } catch (Exception error) {
+            call.reject("تعذّر فتح قائمة نغمات الهاتف.", "alarm_tone_picker_unavailable", error);
+        }
+    }
+
+    @ActivityCallback
+    private void onAlarmToneChosen(PluginCall call, ActivityResult result) {
+        if (call == null) return;
+        Intent data = result.getData();
+        if (result.getResultCode() != Activity.RESULT_OK || data == null) {
+            JSObject response = stateObject();
+            response.put("changed", false);
+            call.resolve(response);
+            return;
+        }
+        Uri chosen = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
+        if (chosen == null || (!"content".equalsIgnoreCase(chosen.getScheme())
+            && !"android.resource".equalsIgnoreCase(chosen.getScheme()))) {
+            call.reject("لم يتم اختيار نغمة صالحة.", "invalid_alarm_tone");
+            return;
+        }
+        AlarmTone.save(getContext(), chosen);
+        JSObject response = stateObject();
+        response.put("changed", true);
+        call.resolve(response);
     }
 
     @PluginMethod
@@ -190,6 +232,7 @@ public class MawaeidiAlarmPlugin extends Plugin {
         state.put("fullScreenAllowed", fullScreenAllowed());
         state.put("batteryOptimizationIgnored", batteryOptimizationIgnored());
         state.put("pendingCount", AlarmStore.pendingCount(getContext()));
+        state.put("soundTitle", AlarmTone.title(getContext()));
         return state;
     }
 

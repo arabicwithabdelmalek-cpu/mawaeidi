@@ -737,6 +737,12 @@ function nativeNotificationSettingsMarkup(state){
         <span class="notification-feature">إيقاف أو غفوة</span>
       </div>
     </div>
+    <section class="native-alarm-tone" aria-label="نغمة منبّه الحصص">
+      <h3>صوت المنبّه على هذا الهاتف</h3>
+      <div class="native-alarm-tone-name" aria-live="polite">${esc(state.soundTitle||"نغمة المنبّه الافتراضية")}</div>
+      <button type="button" id="chooseNativeAlarmTone" onclick="chooseNativeAlarmTone(this)">اختيار نغمة من الهاتف</button>
+      <p>اختر نغمة من أصوات المنبّه الموجودة على جهازك. سيتم استخدامها في كل الحصص، حتى عند غلق التطبيق. ويمكن اختبارها من الزر أسفل الصفحة.</p>
+    </section>
     <div class="native-alarm-grid">
       ${nativePermissionCard("الإشعارات","لعرض المنبّه وأزرار الإيقاف والغفوة.",Boolean(state.notificationsAllowed),"openNativeNotificationSettings()")}
       ${nativePermissionCard("المنبّه الدقيق","ليعمل في الدقيقة المحددة حتى أثناء وضع توفير البطارية.",Boolean(state.exactAlarmAllowed),"openNativeExactAlarmSettings()")}
@@ -755,6 +761,23 @@ async function renderNativeNotificationSettings(){
   const state=await window.MawaeidiNative.getAlarmState();
   if(document.getElementById("toolBackdrop").classList.contains("show"))body.innerHTML=nativeNotificationSettingsMarkup(state);
   updateNotificationMenuStatus(Boolean(state.available&&state.enabled&&state.notificationsAllowed));
+}
+async function chooseNativeAlarmTone(button){
+  if(!window.MawaeidiNative?.isNative)return;
+  if(button){button.disabled=true;button.textContent="جارٍ فتح نغمات الهاتف…"}
+  try{
+    const result=await window.MawaeidiNative.chooseAlarmTone();
+    if(result?.changed&&document.getElementById("toolBackdrop")?.classList.contains("show")){
+      await renderNativeNotificationSettings();
+    }else if(button){
+      button.disabled=false;button.textContent="اختيار نغمة من الهاتف";
+    }
+  }catch(error){
+    console.error("تعذّر تغيير نغمة منبّه مواعيدي",error);
+    if(button){button.disabled=false;button.textContent="اختيار نغمة من الهاتف"}
+    const area=document.querySelector(".native-alarm-tone p");
+    if(area)area.textContent="تعذّر اختيار النغمة. جرّب مرة أخرى، وتأكد من توفر تطبيق نغمات على الهاتف.";
+  }
 }
 async function openNativeExactAlarmSettings(){await window.MawaeidiNative.openExactAlarmSettings()}
 async function openNativeFullScreenSettings(){await window.MawaeidiNative.openFullScreenSettings()}

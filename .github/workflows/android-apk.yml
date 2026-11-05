@@ -3,9 +3,7 @@ name: Build Mawaeidi Android APK
 on:
   push:
     branches:
-      - main
-      - mobile-app
-      - "feature/native-mobile-alarm-v1"
+      - android-app
     paths:
       - "package.json"
       - "package-lock.json"
@@ -20,7 +18,7 @@ on:
       - ".github/workflows/android-*.yml"
   pull_request:
     branches:
-      - main
+      - android-app
     paths:
       - "package.json"
       - "package-lock.json"

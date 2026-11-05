@@ -3,8 +3,7 @@ name: Publish signed Mawaeidi Android release
 on:
   push:
     branches:
-      - main
-      - "feature/native-mobile-alarm-v1"
+      - android-app
     paths:
       - "release/android-version.json"
   workflow_dispatch:

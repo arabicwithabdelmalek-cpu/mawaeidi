@@ -3,8 +3,7 @@ name: Publish signed Mawaeidi Android release
 on:
   push:
     branches:
-      - main
-      - "feature/native-mobile-alarm-v1"
+      - android-app
     paths:
       - "release/android-version.json"
   workflow_dispatch:
@@ -18,6 +17,7 @@ concurrency:
 
 jobs:
   release:
+    if: github.ref == 'refs/heads/android-app'
     runs-on: ubuntu-latest
     env:
       MAWAEIDI_KEYSTORE_PASSWORD: ${{ secrets.MAWAEIDI_KEYSTORE_PASSWORD }}

@@ -41,7 +41,7 @@ function arrangeDayDialogs(){
  const arrangement=order();
  ['quickDay','weekMoveDay'].forEach(id=>arrangeDaySelect(document.getElementById(id),arrangement));
 }
-function arrangeEverywhere(){arrange();arrangeScheduleRows();arrangeDayDialogs()}
+function arrangeEverywhere(){arrange();arrangeScheduleRows();arrangeDayDialogs();window.mawaeidiIPadArrangeAgenda?.()}
 function save(a){
  if(!valid(a))return false;
  try{localStorage.setItem(storageKey(),JSON.stringify(a))}catch{return false}

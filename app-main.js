@@ -194,7 +194,7 @@ function closeDataMenu(restoreFocus=false){
   if(restoreFocus&&wasOpen)menu?.querySelector("summary")?.focus();
 }
 function isStandalone(){return window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone===true}
-function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||"")}
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||"")||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)}
 function vapidKeyIsConfigured(){return VAPID_PUBLIC_KEY&&!VAPID_PUBLIC_KEY.startsWith("__")}
 function validNotificationLead(value){
   const lead=Number(value);
@@ -305,7 +305,7 @@ async function installApp(){
     return;
   }
   const help=isIOS()
-    ?'<div class="tool-card"><h3>على iPhone أو iPad</h3><p>افتح الموقع في Safari، واضغط زر المشاركة، ثم اختر «إضافة إلى الشاشة الرئيسية» وبعدها «إضافة».</p><div class="install-help">بعد التثبيت سيفتح مواعيدي كتطبيق كامل، ومن داخله يمكنك تفعيل التنبيهات.</div></div>'
+    ?'<div class="tool-card"><h3>على iPhone أو iPad</h3><p>افتح الموقع في Safari، واضغط زر المشاركة، ثم اختر «إضافة إلى الشاشة الرئيسية» وبعدها «إضافة».</p><div class="install-help">بعد الإضافة افتح مواعيدي من أيقونته. تنبيهات الويب تحتاج تفعيل خدمة الإشعارات على الخادم؛ راجع حالة الخدمة من «الأدوات ← التنبيهات».</div></div>'
     :'<div class="tool-card"><h3>تثبيت التطبيق</h3><p>افتح قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». إن لم يظهر الخيار، حدّث الصفحة مرة واحدة ثم افتح القائمة مجددًا.</p></div>';
   openToolDialog("تثبيت مواعيدي","خطوة واحدة تضع أيقونة التطبيق على هاتفك.",help);
 }
@@ -2391,6 +2391,7 @@ function renderWeek(){
   const rangeLabel=document.getElementById("weekRangeLabel"),isCurrentWeek=selectedWeekOffset===0;
   if(rangeLabel)rangeLabel.textContent=`${selectedWeekRangeLabel()}${isCurrentWeek?" · الأسبوع الحالي":""}`;
   renderWeekTimeModeChrome();renderWeekDensityChrome();renderWeekSmartSummary(occ);
+  window.mawaeidiIPadRenderAgenda?.(occ);
   grid.innerHTML="";grid.classList.toggle("full-day",weekTimeMode==="full");
   grid.classList.remove("density-compact","density-normal","density-comfortable");grid.classList.add(`density-${weekDensity}`);
   const sourceNames=[...new Set(list.map(sourceLabel))].sort((a,b)=>a.localeCompare(b,"ar"));

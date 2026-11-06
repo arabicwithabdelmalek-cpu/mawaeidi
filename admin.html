@@ -11,55 +11,194 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#EAF0F4;--paper:#FBFCFD;--surface:#fff;--ink:#192733;--muted:#687987;--primary:#234B6E;--primary-dark:#112A40;--line:#D3DDE5;--teal:#176C63;--teal-bg:#E3F2EE;--gold:#A78352;--shadow:0 12px 30px rgba(17,42,64,.08)}
-*{box-sizing:border-box}html{font-family:"Cairo",Tahoma,Arial,sans-serif}body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6}button,input,select{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}[hidden]{display:none!important}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #7CB0DD;outline-offset:2px}
-.shell{width:min(1180px,calc(100% - 34px));margin:26px auto 54px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:22px}.brand{display:flex;align-items:center;gap:14px}.mark{width:48px;height:48px;flex:none;object-fit:contain;border-radius:12px;filter:drop-shadow(0 3px 7px rgba(17,42,64,.13))}h1,h2,h3,p{margin:0}.brand h1{font-size:clamp(21px,3vw,28px);font-weight:800;letter-spacing:-.5px}.subtitle{color:var(--muted);font-size:12px}.actions{display:flex;gap:9px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border-radius:10px;padding:8px 16px;border:1px solid var(--line);background:white;font-weight:800;font-size:12px}.btn.primary{background:var(--primary);color:white;border-color:var(--primary)}.btn:hover{filter:brightness(.97)}
-.intro{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:14px;margin:6px 0 17px}.intro h2{font-size:clamp(19px,2.5vw,24px)}.intro p{color:var(--muted);font-size:12px}.filter{display:flex;align-items:center;gap:9px}.filter label{font-size:12px;font-weight:800;color:var(--muted)}select,.search{border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);padding:10px 12px;min-height:42px}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat{background:var(--surface);border:1px solid var(--line);padding:19px;border-radius:16px;box-shadow:var(--shadow)}.stat .label{color:var(--muted);font-size:12px;font-weight:700}.stat .value{font-size:clamp(25px,4vw,34px);font-weight:800;line-height:1.5;display:block;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}.stat .hint{color:var(--muted);font-size:11px}.stat.highlight{border-color:#A9D4CA;background:linear-gradient(130deg,#fff,#EFF9F6)}.stat.highlight .value{color:var(--teal)}
-.section{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px;margin-top:16px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}.section-head h2{font-size:17px;font-weight:800}.muted{color:var(--muted);font-size:12px}.chart{display:flex;align-items:end;gap:6px;min-height:168px;overflow-x:auto;padding:12px 0 4px}.bar-item{display:flex;flex-direction:column;justify-content:end;align-items:center;min-width:22px;flex:1;height:160px;gap:4px}.bar-num{font-size:10px;line-height:1;color:var(--muted)}.bar-track{width:100%;max-width:38px;flex:1;display:flex;align-items:end;justify-content:center;background:#F4F7F9;border-radius:7px 7px 0 0}.bar-fill{width:100%;min-height:3px;background:linear-gradient(180deg,#3E779F,var(--primary));border-radius:7px 7px 0 0}.bar-item.today .bar-fill{background:linear-gradient(180deg,#2B9B8F,var(--teal))}.bar-day{font-size:10px;color:var(--muted);white-space:nowrap;direction:ltr}.bar-item.today .bar-day{font-weight:800;color:var(--teal)}
-.user-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.search{width:min(300px,100%);max-width:100%;font-size:12px}.table-wrap{overflow:auto;margin-top:12px}table{width:100%;border-collapse:collapse;text-align:right;min-width:620px}th{font-size:11px;color:var(--muted);font-weight:800;background:#F5F8FA}th,td{padding:13px 12px;border-bottom:1px solid #E6EDF2}td{font-size:12px}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:#F6FAFC}tbody tr{cursor:pointer}.person{display:flex;align-items:center;gap:10px;min-width:0}.avatar{width:34px;height:34px;background:#E5EDF3;color:var(--primary);border-radius:11px;display:grid;place-items:center;font-weight:800;flex:0 0 auto}.person-name{font-size:12px;font-weight:800;line-height:1.5}.person-mail{font-size:10px;color:var(--muted);direction:ltr;text-align:right;overflow-wrap:anywhere}.status{display:inline-flex;padding:3px 9px;border-radius:99px;background:#EDF2F6;color:#536B80;font-size:10px;font-weight:800;white-space:nowrap}.status.now{background:var(--teal-bg);color:var(--teal)}.status.never{background:#FFF2E5;color:#9A6A2C}.view{border:1px solid var(--line);background:white;border-radius:8px;padding:6px 9px;font-size:11px;color:var(--primary);font-weight:800}
-.detail{margin-top:14px;background:#F5F8FA;border:1px solid var(--line);border-radius:13px;padding:16px}.detail-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.detail h3{font-size:15px}.detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}.detail-stat{padding:12px;background:white;border:1px solid #E2EAF0;border-radius:10px}.detail-stat b{display:block;font-size:20px}.detail-stat span{font-size:11px;color:var(--muted)}.session-list{display:grid;gap:7px;max-height:270px;overflow:auto}.session-item{display:flex;justify-content:space-between;gap:8px;background:white;border:1px solid #E5EDF2;border-radius:9px;padding:9px 12px;font-size:11px}
-.notice{margin-top:15px;font-size:11px;color:var(--muted)}.message{background:#fff;border:1px solid var(--line);border-radius:15px;padding:32px;text-align:center;margin-top:22px}.message h2{font-size:20px;margin-bottom:7px}.message p{font-size:13px;color:var(--muted);max-width:540px;margin:0 auto}.error{color:#984545!important}.small-loader{display:inline-block;width:19px;height:19px;border:3px solid #D8E5EF;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-inline-end:8px}@keyframes spin{to{transform:rotate(360deg)}}.updated{font-size:11px;color:var(--muted)}
-@media(max-width:800px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bar-item{min-width:23px}.shell{width:min(100% - 24px,1180px);margin-top:17px}.top{align-items:flex-start}.stat{padding:15px}.section{padding:15px}}
-@media(max-width:460px){.top{flex-direction:column}.actions{width:100%}.actions .btn{flex:1}.intro{align-items:stretch}.filter{justify-content:space-between}.brand .mark{width:42px;height:42px}.stats{gap:8px}.stat .label{font-size:11px}.stat .hint{font-size:10px}.section-head{align-items:start}.bar-item{flex:none;width:27px}.search{width:100%}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important}}
-</style>
+<link rel="stylesheet" href="./admin-ui.css?v=1">
 </head>
 <body>
 <main class="shell">
   <header class="top">
-    <div class="brand"><img class="mark" src="./icons/icon-192.png?v=2" alt="شعار مواعيدي" width="48" height="48"><div><h1>لوحة إدارة مواعيدي</h1><p class="subtitle">متابعة دخول الحسابات ونشاط استخدامها</p></div></div>
-    <div class="actions"><a class="btn" href="./index.html">العودة إلى مواعيدي</a><button class="btn primary" id="refreshBtn" type="button">تحديث البيانات</button></div>
-  </header>
-  <section id="loading" class="message" role="status"><span class="small-loader"></span> جارٍ التحقق من صلاحية الإدارة وتحميل الإحصائيات…</section>
-  <section id="errorBox" class="message" hidden role="alert"><h2 id="errorTitle">تعذّر تحميل التقارير</h2><p id="errorText"></p><a class="btn" href="./index.html" style="margin-top:17px">العودة للموقع</a></section>
-  <div id="dashboard" hidden>
-    <div class="intro">
-      <div><h2>نظرة عامة على المستخدمين</h2><p>إحصائيات الحسابات والزيارات المسجلة منذ تفعيل المتابعة.</p></div>
-      <div class="filter"><label for="period">الفترة</label><select id="period"><option value="7">آخر 7 أيام</option><option value="30" selected>آخر 30 يومًا</option><option value="90">آخر 90 يومًا</option></select></div>
-    </div>
-    <div class="stats" aria-label="ملخص الاستخدام">
-      <article class="stat"><div class="label">الحسابات المسجلة</div><strong class="value" id="statUsers">—</strong><div class="hint">جميع حسابات مواعيدي</div></article>
-      <article class="stat highlight"><div class="label">نشطون اليوم</div><strong class="value" id="statActiveToday">—</strong><div class="hint">استخدموا الموقع اليوم</div></article>
-      <article class="stat"><div class="label">زيارات اليوم</div><strong class="value" id="statVisitsToday">—</strong><div class="hint">الجلسات التي بدأت اليوم</div></article>
-      <article class="stat"><div class="label">لم يدخلوا اليوم</div><strong class="value" id="statInactiveToday">—</strong><div class="hint">من إجمالي الحسابات</div></article>
-    </div>
-    <section class="section" aria-labelledby="chartTitle">
-      <div class="section-head"><div><h2 id="chartTitle">حركة الزيارات</h2><p class="muted">عدد جلسات الاستخدام حسب اليوم — توقيت مصر</p></div><span id="updatedAt" class="updated"></span></div>
-      <div class="chart" id="dailyChart" role="img" aria-label="رسم بياني يوضح عدد الزيارات اليومية"></div>
-    </section>
-    <section class="section" aria-labelledby="usersTitle">
-      <div class="user-toolbar"><div><h2 id="usersTitle">تفاصيل المستخدمين</h2><p class="muted">اختر أي حساب لمعرفة عدد مرات دخوله والوقت النشط التقريبي.</p></div><input class="search" id="userSearch" type="search" placeholder="البحث باسم المستخدم أو بريده..." aria-label="بحث عن مستخدم"></div>
-      <div class="table-wrap">
-        <table><thead><tr><th>المستخدم</th><th>آخر استخدام للموقع</th><th>زيارات اليوم</th><th>زيارات الفترة</th><th>مدة النشاط</th><th></th></tr></thead><tbody id="usersBody"></tbody></table>
+    <div class="brand">
+      <img class="mark" src="./icons/icon-192.png?v=2" alt="شعار مواعيدي" width="60" height="60">
+      <div>
+        <div class="brand-name">
+          <h1>لوحة إدارة مواعيدي</h1>
+          <span class="admin-pill">حساب المدير فقط</span>
+        </div>
+        <p class="subtitle">نظرة واضحة على زيارات الحسابات ونشاط المستخدمين</p>
       </div>
-      <div class="detail" id="userDetail" hidden></div>
+    </div>
+    <div class="actions">
+      <a class="btn ghost" href="./index.html">العودة إلى مواعيدي</a>
+      <button class="btn" id="exportBtn" type="button" disabled>تصدير التقرير CSV</button>
+      <button class="btn primary" id="refreshBtn" type="button">تحديث البيانات</button>
+    </div>
+  </header>
+
+  <section id="loading" class="message" role="status" aria-live="polite">
+    <span class="loader" aria-hidden="true"></span>
+    جارٍ التحقق من صلاحية الإدارة وتحميل الإحصائيات…
+  </section>
+  <section id="errorBox" class="message" hidden role="alert">
+    <h2 id="errorTitle">تعذّر تحميل الإحصائيات</h2>
+    <p id="errorText"></p>
+    <a class="btn" href="./index.html" style="margin-top:18px">العودة إلى الموقع</a>
+  </section>
+
+  <div id="dashboard" hidden>
+    <section class="controls" aria-label="نظرة عامة">
+      <div>
+        <div class="eyebrow">لوحة المتابعة</div>
+        <h2>نشاط المستخدمين</h2>
+        <p>تعرف على زيارات كل حساب، ومدى استخدامه للموقع، دون الاطلاع على بياناته الخاصة.</p>
+      </div>
+      <div class="period-wrap">
+        <label for="period">الفترة</label>
+        <select id="period">
+          <option value="7">آخر ٧ أيام</option>
+          <option value="30" selected>آخر ٣٠ يومًا</option>
+          <option value="90">آخر ٩٠ يومًا</option>
+        </select>
+      </div>
     </section>
-    <p class="notice">ملاحظات: مدة النشاط تقديرية وتحسب من النبضات المسجلة أثناء الاستخدام، وليست مدة فتح الصفحة بالخلفية. آخر تسجيل دخول للحساب في خدمة المصادقة يختلف عن آخر استخدام للموقع. لا تُسجَّل عناوين IP أو محتويات الحصص.</p>
+
+    <section class="metrics" aria-label="المؤشرات الرئيسية">
+      <article class="metric">
+        <span class="metric-line" aria-hidden="true"></span>
+        <p class="metric-title">إجمالي الحسابات</p>
+        <strong class="metric-value" id="statUsers">—</strong>
+        <p class="metric-note">الحسابات المنشأة على مواعيدي</p>
+      </article>
+      <article class="metric accent">
+        <span class="metric-line" aria-hidden="true"></span>
+        <p class="metric-title">نشطون اليوم</p>
+        <strong class="metric-value" id="statActiveToday">—</strong>
+        <p class="metric-note">استخدموا الموقع خلال اليوم</p>
+      </article>
+      <article class="metric">
+        <span class="metric-line" aria-hidden="true"></span>
+        <p class="metric-title">الزيارات التي بدأت اليوم</p>
+        <strong class="metric-value" id="statVisitsToday">—</strong>
+        <p class="metric-note">جلسات بدأ استخدامها اليوم</p>
+      </article>
+      <article class="metric">
+        <span class="metric-line" aria-hidden="true"></span>
+        <p class="metric-title" id="labelPeriodVisits">زيارات آخر ٣٠ يومًا</p>
+        <strong class="metric-value" id="statPeriodVisits">—</strong>
+        <p class="metric-note">إجمالي جلسات الاستخدام</p>
+      </article>
+      <article class="metric">
+        <span class="metric-line" aria-hidden="true"></span>
+        <p class="metric-title">إجمالي وقت الاستخدام</p>
+        <strong class="metric-value" id="statActiveTime">—</strong>
+        <p class="metric-note">وقت النشاط التقريبي خلال الفترة</p>
+      </article>
+      <article class="metric">
+        <span class="metric-line" aria-hidden="true"></span>
+        <p class="metric-title" id="labelNoActivity">بلا زيارات خلال الفترة</p>
+        <strong class="metric-value" id="statNoActivity">—</strong>
+        <p class="metric-note">حسابات لم تسجل زيارات في الفترة</p>
+      </article>
+    </section>
+
+    <div class="content-grid">
+      <section class="panel" aria-labelledby="chartTitle">
+        <div class="panel-heading">
+          <div>
+            <h2 id="chartTitle">حركة الزيارات</h2>
+            <p id="chartMode">توقيت مصر</p>
+          </div>
+          <span class="panel-meta" id="chartTotal">—</span>
+        </div>
+        <div id="dailyChart" class="plot" role="img" aria-label="رسم بياني يوضح عدد الزيارات"></div>
+        <div id="chartEmpty" class="plot-empty" hidden>
+          لا توجد زيارات مسجلة خلال هذه الفترة حتى الآن.
+        </div>
+        <div class="plot-foot">
+          <span><span class="dot" aria-hidden="true"></span>العمود الأخضر يوضح الفترة الحالية</span>
+          <span id="updatedAt">—</span>
+        </div>
+      </section>
+      <aside class="panel insight-panel" aria-label="ملخص النشاط">
+        <div>
+          <div class="panel-heading">
+            <div><h2>ملخص النشاط</h2><p>أرقام سريعة عن استخدام الموقع</p></div>
+          </div>
+          <div class="insight-main">
+            <small>الأكثر استخدامًا خلال الفترة</small>
+            <strong id="topUser">—</strong>
+            <p id="topUserInfo">—</p>
+          </div>
+          <div class="insight-row"><span>استخدموا الموقع اليوم</span><strong id="todayRecap">—</strong></div>
+          <div class="insight-row"><span>نشطون خلال ٥ دقائق</span><strong id="activeNow">—</strong></div>
+          <div class="insight-row"><span>حسابات زارت الموقع في الفترة</span><strong id="totalActiveInPeriod">—</strong></div>
+          <div class="insight-row"><span>وقت الاستخدام التقديري</span><strong id="overallTime">—</strong></div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="panel" aria-labelledby="usersTitle">
+      <div class="user-toolbar">
+        <div>
+          <h2 id="usersTitle">المستخدمون</h2>
+          <p>افتح تفاصيل أي حساب لمعرفة الزيارات ووقت النشاط المسجل.</p>
+        </div>
+        <span class="panel-meta" id="usersCount">—</span>
+      </div>
+      <div class="table-filters">
+        <input id="userSearch" class="search" type="search" autocomplete="off"
+          aria-label="بحث باسم المستخدم أو البريد" placeholder="ابحث بالاسم أو البريد الإلكتروني…">
+        <select id="userFilter" class="choice" aria-label="تصفية الحسابات">
+          <option value="all">كل المستخدمين</option>
+          <option value="active">دخلوا اليوم</option>
+          <option value="inactive">لم يدخلوا اليوم</option>
+          <option value="no-period">بلا زيارة في الفترة</option>
+        </select>
+        <select id="userSort" class="choice" aria-label="ترتيب المستخدمين">
+          <option value="latest">الأحدث نشاطًا</option>
+          <option value="visits">الأكثر زيارة</option>
+          <option value="name">حسب الاسم</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">المستخدم</th>
+              <th scope="col">الحالة / آخر استخدام</th>
+              <th scope="col">زيارات اليوم</th>
+              <th scope="col">زيارات الفترة</th>
+              <th scope="col">الوقت النشط</th>
+              <th scope="col">التفاصيل</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+      <div class="user-cards" id="userCards"></div>
+      <div class="detail" id="userDetail" hidden aria-live="polite"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="recentTitle">
+      <div class="panel-heading">
+        <div>
+          <h2 id="recentTitle">آخر الزيارات</h2>
+          <p>أحدث الجلسات التي بدأت خلال الفترة المحددة</p>
+        </div>
+        <span class="panel-meta">آخر ٧ زيارات</span>
+      </div>
+      <div id="recentFeed" class="feed"></div>
+    </section>
+
+    <p class="notice">
+      الإحصائيات تبدأ من تاريخ تفعيل المتابعة، ولا يمكن استرجاع زيارات لم تُسجَّل سابقًا.
+      المدة النشطة تقريبية وتعتمد على التفاعل المسجل، وليست مدة بقاء الصفحة مفتوحة.
+      آخر دخول للمصادقة يختلف عن آخر استخدام مسجل للموقع. لا تُسجَّل عناوين IP أو محتويات الدروس.
+      تُحدَّث البيانات تلقائيًا كل دقيقتين أثناء فتح اللوحة.
+    </p>
+    <p class="notice" id="limitedDataNotice" hidden>تنبيه: تم الوصول إلى الحد الأقصى للزيارات التي يعيدها التقرير، وقد تكون بعض المجاميع جزئية.</p>
   </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js" defer></script>
-<script src="./admin-dashboard.js?v=1" defer></script>
+<script src="./admin-dashboard.js?v=2" defer></script>
 </body>
 </html>

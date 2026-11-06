@@ -18,6 +18,7 @@ create table if not exists public.mawaeidi_usage_sessions (
   session_key uuid not null,
   started_at timestamptz not null default now(),
   last_seen_at timestamptz not null default now(),
+  active_seconds integer not null default 0 check (active_seconds >= 0),
   client_type text not null default 'web'
     check (client_type in ('web', 'android', 'ios')),
   primary key (user_id, session_key),
@@ -47,10 +48,16 @@ begin
   if tg_op = 'INSERT' then
     new.started_at := now();
     new.last_seen_at := now();
+    new.active_seconds := 0;
   else
     new.user_id := old.user_id;
     new.session_key := old.session_key;
     new.started_at := old.started_at;
+    -- Count only contiguous activity windows; ignore idle gaps.
+    new.active_seconds := old.active_seconds + case
+      when (now() - old.last_seen_at) <= interval '120 seconds'
+      then greatest(0, floor(extract(epoch from now() - old.last_seen_at)))::integer
+      else 0 end;
     new.last_seen_at := now();
   end if;
   return new;
@@ -95,10 +102,11 @@ begin
         'user_id', x.user_id,
         'started_at', x.started_at,
         'last_seen_at', x.last_seen_at,
+        'active_seconds', x.active_seconds,
         'client_type', x.client_type
       ) order by x.started_at desc), '[]'::jsonb)
       from (
-        select s.user_id, s.started_at, s.last_seen_at, s.client_type
+        select s.user_id, s.started_at, s.last_seen_at, s.active_seconds, s.client_type
         from public.mawaeidi_usage_sessions s
         where s.started_at >= (now() - make_interval(days => v_days))
         order by s.started_at desc limit 8000

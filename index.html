@@ -2031,6 +2031,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
     <button type="button" class="auth-forgot" id="authForgot" onclick="startPasswordRecovery()">نسيت كلمة المرور؟</button>
     <button type="button" class="auth-primary" id="authSubmit" onclick="submitAuth()">تسجيل الدخول</button>
     <button type="button" class="auth-switch" id="authSwitch" onclick="handleAuthSwitch()" hidden>العودة إلى تسجيل الدخول</button>
+    <p style="color:var(--muted);font-size:11px;line-height:1.65;margin:7px 0">تنويه: تُسجَّل أوقات استخدام الحساب لتحسين إدارة مواعيدي، دون تسجيل محتوى دروسك أو عناوين IP.</p>
     <div class="auth-message" id="authMessage" role="status" aria-live="polite">جارٍ الاتصال بالحساب…</div>
   </div>
 </div>
@@ -2084,6 +2085,10 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
               <small>فحص الملف ثم دمج البيانات دون حذف الموجود</small>
             </button>
             <div class="data-separator" aria-hidden="true"></div>
+            <button type="button" class="data-action" id="adminUsageLink" onclick="location.href='./admin.html'" hidden>
+              <strong>لوحة الإدارة — نشاط المستخدمين</strong>
+              <small>عدد مرات الدخول وآخر زيارة ومدة الاستخدام</small>
+            </button>
             <button type="button" class="data-action logout" onclick="logout()"><strong>تسجيل الخروج</strong></button>
           </div>
         </details>
@@ -2530,6 +2535,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 <script src="./account.js?v=1" defer></script>
 <script src="./account-page.js?v=6" defer></script>
 <script src="./day-order.js?v=3" defer></script>
+<script src="./activity-tracker.js?v=1" defer></script>
 </body>
 </html>
 

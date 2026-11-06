@@ -17,7 +17,29 @@
   let busy = false;
   let warned = false;
 
-  const accountLink = document.getElementById("adminUsageLink");
+  // No admin-only element is present in the HTML of ordinary accounts.
+  // Create it only after Supabase confirms the signed-in user's admin role.
+  let accountLink = null;
+  function removeAdminLink() {
+    accountLink?.remove();
+    accountLink = null;
+  }
+  function insertAdminLink() {
+    const logout = document.querySelector("#dataMenu .data-action.logout");
+    if (!logout || accountLink) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "data-action";
+    button.id = "adminUsageLink";
+    const heading = document.createElement("strong");
+    heading.textContent = "لوحة الإدارة — نشاط المستخدمين";
+    const detail = document.createElement("small");
+    detail.textContent = "عدد مرات الدخول وآخر زيارة ومدة الاستخدام";
+    button.append(heading, detail);
+    button.addEventListener("click", () => { location.href = "./admin.html"; });
+    logout.before(button);
+    accountLink = button;
+  }
   function storedVisit() {
     try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "null"); }
     catch { return null; }
@@ -76,14 +98,13 @@
   }
 
   async function refreshAdminLink(id) {
-    if (!accountLink) return;
-    accountLink.hidden = true;
+    removeAdminLink();
     if (!id) return;
     try {
       const { data, error } = await sb.from("mawaeidi_usage_admins")
         .select("user_id").eq("user_id", id).maybeSingle();
-      if (!error && data && userId === id) accountLink.hidden = false;
-    } catch { accountLink.hidden = true; }
+      if (!error && data?.user_id === id && userId === id) insertAdminLink();
+    } catch { removeAdminLink(); }
   }
 
   function onSession(user) {

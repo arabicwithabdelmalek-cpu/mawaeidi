@@ -1995,6 +1995,23 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
   .drawer-head p{font-size:12px;line-height:1.5}
   .drawer-foot{padding:8px 10px}
 }
+
+/* Brand consistency: reuse the existing Mawaeidi app icon without redrawing it. */
+.site-logo-image{
+  display:block;width:60px;height:60px;max-width:none;flex:0 0 auto;
+  object-fit:contain;filter:drop-shadow(0 3px 7px rgba(27,61,84,.13));
+}
+.header .identity{gap:12px;min-width:0}
+.header .brand{min-width:0}
+.auth-brand-lockup{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.auth-brand-lockup .site-logo-image{width:70px;height:70px}
+.auth-brand-lockup .auth-name{line-height:1.4}
+.startup-mark > .site-logo-image{width:68px;height:68px}
+@media(max-width:760px){
+  .header .identity{gap:9px}
+  .header .site-logo-image{width:46px;height:46px}
+  .auth-brand-lockup .site-logo-image{width:62px;height:62px}
+}
 </style>
 <link rel="stylesheet" href="./ipad-pwa.css?v=1">
 <link rel="stylesheet" href="./iphone-pwa.css?v=1">
@@ -2003,6 +2020,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 
 <div class="startup-gate" id="startupGate" role="status" aria-live="polite" aria-label="جارٍ فتح جدول مواعيدي">
   <div class="startup-mark">
+    <img class="site-logo-image" src="./icons/icon-192.png?v=2" alt="" width="68" height="68" decoding="async">
     <div class="startup-name">مواعيدي</div>
     <div class="startup-note">جارٍ فتح جدولك…</div>
     <span class="startup-spinner" aria-hidden="true"></span>
@@ -2011,7 +2029,10 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 
 <div class="auth-gate hidden" id="authGate">
   <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-    <div class="auth-name">مواعيدي</div>
+    <div class="auth-brand-lockup">
+      <img class="site-logo-image" src="./icons/icon-192.png?v=2" alt="شعار مواعيدي" width="70" height="70" decoding="async">
+      <div class="auth-name">مواعيدي</div>
+    </div>
     <h2 id="authTitle">تسجيل الدخول</h2>
     <p id="authIntro">ادخل إلى جدولك المحفوظ وافتحه من أي جهاز.</p>
     <div class="auth-fields">
@@ -2050,6 +2071,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
   <div class="app">
     <header class="header">
       <div class="identity">
+        <img class="site-logo-image" src="./icons/icon-192.png?v=2" alt="شعار مواعيدي" width="60" height="60" decoding="async">
         <div class="brand">
           <h1>مواعيدي</h1>
           <small>حصصك ودروسك في مكان واحد</small>

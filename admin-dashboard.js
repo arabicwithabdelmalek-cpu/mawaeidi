@@ -1,257 +1,470 @@
-/* Admin reporting for Mawaeidi. The database authorizes every report request. */
+/* Mawaeidi administrative usage dashboard.
+   All account data comes exclusively from an admin-guarded database RPC. */
 (() => {
   "use strict";
   const SUPABASE_URL = "https://nvefdkkjkyalpsrgoffj.supabase.co";
   const PUBLISHABLE_KEY = "sb_publishable_t0pqtkV0-3Wj0htl-eGR9w_BsifiUDE";
   const $ = id => document.getElementById(id);
-  const errorBox = $("errorBox");
-  const dashboard = $("dashboard");
-  const loading = $("loading");
-  const sb = window.supabase?.createClient(SUPABASE_URL, PUBLISHABLE_KEY);
-  const cairoParts = new Intl.DateTimeFormat("en-GB", {
+  const client = window.supabase?.createClient(SUPABASE_URL, PUBLISHABLE_KEY);
+  const cairoKeyFormat = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit"
   });
-  const displayDate = new Intl.DateTimeFormat("ar-EG", {
-    timeZone: "Africa/Cairo", dateStyle: "medium", timeStyle: "short"
+  const cairoDateFormat = new Intl.DateTimeFormat("ar-EG", {
+    timeZone: "Africa/Cairo", day: "numeric", month: "short", year: "numeric",
+    hour: "numeric", minute: "2-digit"
   });
-  let users = [], sessions = [], chosenId = null, pending = false;
-  const nowMs = () => Date.now();
-  const dateKey = date => {
-    const pieces = Object.fromEntries(cairoParts.formatToParts(date).map(p => [p.type, p.value]));
-    return [pieces.year, pieces.month, pieces.day].join("-");
-  };
+  const arabicNumber = new Intl.NumberFormat("ar-EG");
+  let users = [];
+  let sessions = [];
+  let selectedUserId = null;
+  let pending = false;
+  let current = null;
+
   const toMs = value => {
-    const n = new Date(value).getTime();
-    return Number.isFinite(n) ? n : 0;
+    if (!value) return 0;
+    const result = new Date(value).getTime();
+    return Number.isFinite(result) ? result : 0;
+  };
+  const dateKey = date => {
+    const parts = Object.fromEntries(cairoKeyFormat.formatToParts(date)
+      .map(item => [item.type, item.value]));
+    return [parts.year, parts.month, parts.day].join("-");
   };
   const todayKey = () => dateKey(new Date());
-  const daysCount = () => Number($("period").value) || 30;
-  const number = n => new Intl.NumberFormat("ar-EG").format(n || 0);
-  const age = timestamp => {
-    const ms = toMs(timestamp);
-    if (!ms) return "لا توجد زيارة مسجلة";
-    const diff = Math.max(0, nowMs() - ms);
-    if (diff < 5 * 60 * 1000) return "نشط الآن";
-    if (diff < 60 * 60 * 1000) return "منذ " + number(Math.ceil(diff / 60000)) + " دقيقة";
-    if (diff < 24 * 60 * 60 * 1000) return "منذ " + number(Math.floor(diff / 3600000)) + " ساعات";
-    return displayDate.format(new Date(ms));
+  const displayDate = value => {
+    const ms = toMs(value);
+    return ms ? cairoDateFormat.format(new Date(ms)) : "غير متاح";
   };
+  const number = value => arabicNumber.format(Number(value) || 0);
   const duration = seconds => {
-    if (!seconds) return "أقل من دقيقة";
-    const mins = Math.floor(seconds / 60);
-    if (!mins) return "أقل من دقيقة";
-    const hrs = Math.floor(mins / 60), remaining = mins % 60;
-    return hrs ? number(hrs) + " س" + (remaining ? " " + number(remaining) + " د" : "")
-      : number(mins) + " دقيقة";
+    const minutes = Math.floor(Math.max(0, Number(seconds) || 0) / 60);
+    if (!minutes) return "٠ دقيقة";
+    const hours = Math.floor(minutes / 60), rest = minutes % 60;
+    return hours
+      ? number(hours) + " ساعة" + (rest ? " و" + number(rest) + " د" : "")
+      : number(minutes) + " دقيقة";
   };
-  const sessionMillis = s => toMs(s.started_at);
-  const inRange = (s, days) => sessionMillis(s) >= nowMs() - days * 86400000;
-  const matchingSessions = (id, days) => sessions.filter(s =>
-    s.user_id === id && inRange(s, days));
-  const latestSession = id => sessions
-    .filter(s => s.user_id === id).sort((a, b) =>
-      toMs(b.last_seen_at) - toMs(a.last_seen_at))[0] || null;
-  const secondsSum = items => items.reduce((sum, s) =>
-    sum + (Number.isFinite(Number(s.active_seconds)) ? Math.max(0, Number(s.active_seconds)) : 0), 0);
-
-  function personStats(person) {
-    const all = sessions.filter(s => s.user_id === person.id);
-    const today = todayKey();
-    const todays = all.filter(s => dateKey(new Date(sessionMillis(s))) === today);
-    const usedToday = all.some(s => dateKey(new Date(toMs(s.last_seen_at))) === today);
-    const period = all.filter(s => inRange(s, daysCount()));
-    const mostRecent = latestSession(person.id);
-    return {
-      todayVisits: todays.length,
-      usedToday, visits: period.length,
-      activeSeconds: secondsSum(period),
-      lastSeen: mostRecent?.last_seen_at || null,
-      isOnline: mostRecent && nowMs() - toMs(mostRecent.last_seen_at) < 300000
-    };
-  }
-
-  function makeEl(tag, className, content) {
-    const el = document.createElement(tag);
-    if (className) el.className = className;
-    if (content !== undefined) el.textContent = String(content);
+  const relativeTime = value => {
+    const ms = toMs(value);
+    if (!ms) return "لا توجد زيارة مسجلة";
+    const elapsed = Math.max(0, Date.now() - ms);
+    if (elapsed < 300000) return "خلال آخر ٥ دقائق";
+    if (elapsed < 3600000) return "منذ " + number(Math.ceil(elapsed / 60000)) + " دقيقة";
+    if (elapsed < 86400000) return "منذ " + number(Math.floor(elapsed / 3600000)) + " ساعات";
+    if (elapsed < 7 * 86400000) return "منذ " + number(Math.floor(elapsed / 86400000)) + " أيام";
+    return displayDate(value);
+  };
+  const makeEl = (tag, className = "", text = null) => {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text !== null) element.textContent = String(text);
+    return element;
+  };
+  const field = (label, value) => {
+    const el = makeEl("div");
+    el.append(makeEl("small", "", label), makeEl("strong", "", value));
     return el;
+  };
+  const periodDays = () => Number($("period").value) || 30;
+  // UTC noon maps to the same date in Cairo even during daylight-saving changes.
+  const lastCalendarDays = total => {
+    const [y, m, d] = todayKey().split("-").map(Number);
+    const anchor = Date.UTC(y, m - 1, d, 12);
+    return Array.from({ length: total }, (_, index) =>
+      dateKey(new Date(anchor - (total - index - 1) * 86400000)));
+  };
+  const clientLabel = value => value === "android" ? "تطبيق أندرويد"
+    : value === "ios" ? "تطبيق iOS" : "الموقع";
+
+  function buildSummary() {
+    const keys = lastCalendarDays(periodDays());
+    const validDays = new Set(keys);
+    const today = todayKey();
+    const userStats = new Map(users.map(person => [person.id, {
+      visits: 0, todayVisits: 0, activeSeconds: 0,
+      lastSeen: null, lastSeenMs: 0, recent: false, activeToday: false
+    }]));
+    const daily = new Map(keys.map(key => [key, 0]));
+    const periodSessions = [];
+    for (const session of sessions) {
+      const record = userStats.get(session.user_id);
+      if (!record) continue;
+      const startedMs = toMs(session.started_at);
+      const seenMs = toMs(session.last_seen_at);
+      if (seenMs > record.lastSeenMs) {
+        record.lastSeenMs = seenMs;
+        record.lastSeen = session.last_seen_at;
+      }
+      if (seenMs && dateKey(new Date(seenMs)) === today) record.activeToday = true;
+      if (!startedMs) continue;
+      const startedKey = dateKey(new Date(startedMs));
+      if (!validDays.has(startedKey)) continue;
+      record.visits++;
+      if (startedKey === today) record.todayVisits++;
+      record.activeSeconds += Math.max(0, Number(session.active_seconds) || 0);
+      periodSessions.push(session);
+      daily.set(startedKey, (daily.get(startedKey) || 0) + 1);
+    }
+    for (const record of userStats.values()) {
+      record.recent = !!record.lastSeenMs && Date.now() - record.lastSeenMs < 300000;
+    }
+    return { keys, today, userStats, daily, periodSessions };
   }
-  function refreshSummary() {
+
+  function paintSummary() {
+    const stats = [...current.userStats.values()];
+    const todayUsers = stats.filter(item => item.activeToday).length;
+    const visitsToday = stats.reduce((n, item) => n + item.todayVisits, 0);
+    const visitsPeriod = stats.reduce((n, item) => n + item.visits, 0);
+    const activitySeconds = stats.reduce((n, item) => n + item.activeSeconds, 0);
+    const noVisits = stats.filter(item => item.visits === 0).length;
+
     $("statUsers").textContent = number(users.length);
-    const stats = users.map(personStats);
-    $("statActiveToday").textContent = number(stats.filter(s => s.usedToday).length);
-    $("statVisitsToday").textContent = number(stats.reduce((n, s) => n + s.todayVisits, 0));
-    $("statInactiveToday").textContent = number(stats.filter(s => !s.usedToday).length);
+    $("statActiveToday").textContent = number(todayUsers);
+    $("statVisitsToday").textContent = number(visitsToday);
+    $("statPeriodVisits").textContent = number(visitsPeriod);
+    $("statActiveTime").textContent = duration(activitySeconds);
+    $("statNoActivity").textContent = number(noVisits);
+    $("labelPeriodVisits").textContent = "زيارات آخر " + number(periodDays()) + " يومًا";
+    $("labelNoActivity").textContent = "بلا زيارات خلال الفترة";
+    $("chartTotal").textContent = number(visitsPeriod) + " زيارة خلال الفترة";
+    $("todayRecap").textContent = number(todayUsers) + " من " + number(users.length) + " حسابات";
+    $("activeNow").textContent = number(stats.filter(item => item.recent).length);
+    $("totalActiveInPeriod").textContent = number(users.length - noVisits);
+    $("overallTime").textContent = duration(activitySeconds);
+
+    const mostActive = users
+      .map(person => ({ person, stats: current.userStats.get(person.id) }))
+      .sort((a, b) => b.stats.visits - a.stats.visits)[0];
+    if (mostActive && mostActive.stats.visits > 0) {
+      $("topUser").textContent = mostActive.person.name || mostActive.person.email || "مستخدم";
+      $("topUserInfo").textContent = number(mostActive.stats.visits) + " زيارة خلال الفترة المحددة";
+    } else {
+      $("topUser").textContent = "لا توجد زيارات بعد";
+      $("topUserInfo").textContent = "ستظهر النتائج بعد بدء تسجيل الاستخدام";
+    }
+    $("limitedDataNotice").hidden = sessions.length < 8000;
   }
+
   function drawChart() {
-    const days = daysCount();
-    const el = $("dailyChart");
-    el.replaceChildren();
-    const daily = new Map();
-    sessions.filter(s => inRange(s, days)).forEach(s => {
-      const key = dateKey(new Date(sessionMillis(s)));
-      daily.set(key, (daily.get(key) || 0) + 1);
+    const element = $("dailyChart");
+    element.replaceChildren();
+    const days = periodDays();
+    const step = days === 7 ? 1 : days === 30 ? 3 : 7;
+    const bins = [];
+    for (let i = 0; i < current.keys.length; i += step) {
+      const keys = current.keys.slice(i, i + step);
+      bins.push({
+        start: keys[0], end: keys[keys.length - 1],
+        total: keys.reduce((count, key) => count + (current.daily.get(key) || 0), 0),
+        currentDay: keys.includes(current.today)
+      });
+    }
+    const max = Math.max(0, ...bins.map(bin => bin.total));
+    const mode = step === 1 ? "يومي" : step === 3 ? "كل ثلاثة أيام" : "أسبوعي";
+    $("chartMode").textContent = "التجميع: " + mode + " · توقيت مصر";
+    $("chartTitle").textContent = "حركة الزيارات";
+    if (!max) {
+      $("dailyChart").hidden = true;
+      $("chartEmpty").hidden = false;
+      return;
+    }
+    $("chartEmpty").hidden = true;
+    $("dailyChart").hidden = false;
+    for (const bin of bins) {
+      const col = makeEl("div", "plot-col" + (bin.currentDay ? " latest" : ""));
+      col.tabIndex = 0;
+      const range = bin.start === bin.end ? bin.start : bin.start + " — " + bin.end;
+      col.title = range + ": " + number(bin.total) + " زيارة";
+      col.setAttribute("aria-label", col.title);
+      const count = makeEl("span", "plot-value", bin.total ? number(bin.total) : "");
+      const slot = makeEl("span", "plot-slot");
+      const fill = makeEl("span", "plot-bar");
+      fill.style.height = bin.total ? Math.max(4, bin.total / max * 100) + "%" : "0";
+      slot.append(fill);
+      const label = bin.start.slice(5).replace("-", "/");
+      col.append(count, slot, makeEl("span", "plot-label", label));
+      element.append(col);
+    }
+    element.setAttribute("aria-label", number(current.periodSessions.length) +
+      " زيارة موزعة على " + number(bins.length) + " فترات");
+  }
+
+  function selectedUsers() {
+    const search = $("userSearch").value.trim().toLowerCase();
+    const filter = $("userFilter").value;
+    const order = $("userSort").value;
+    const rows = users.filter(person => {
+      const stats = current.userStats.get(person.id);
+      if (search && !(person.name || "").toLowerCase().includes(search)
+        && !(person.email || "").toLowerCase().includes(search)) return false;
+      if (filter === "active" && !stats.activeToday) return false;
+      if (filter === "inactive" && stats.activeToday) return false;
+      if (filter === "no-period" && stats.visits > 0) return false;
+      return true;
     });
-    const keys = Array.from({ length: days }, (_, i) =>
-      dateKey(new Date(nowMs() - (days - 1 - i) * 86400000)));
-    const bins = days === 90
-      ? Array.from({ length: 13 }, (_, i) => {
-          const batch = keys.slice(i * 7, (i + 1) * 7);
-          return { label: batch.length ? batch[0].slice(5).replace("-", "/") : "",
-            total: batch.reduce((n, k) => n + (daily.get(k) || 0), 0), isToday: i === 12 };
-        })
-      : keys.map((key, i) => ({
-          label: key.slice(5).replace("-", "/"),
-          total: daily.get(key) || 0,
-          isToday: i === keys.length - 1
-        }));
-    const high = Math.max(1, ...bins.map(b => b.total));
-    bins.forEach(bin => {
-      const box = makeEl("div", "bar-item" + (bin.isToday ? " today" : ""));
-      box.title = bin.label + ": " + number(bin.total) + " زيارة";
-      box.append(makeEl("span", "bar-num", bin.total ? number(bin.total) : " "));
-      const track = makeEl("div", "bar-track");
-      const fill = makeEl("div", "bar-fill");
-      fill.style.height = Math.max(3, (bin.total / high) * 100) + "%";
-      track.append(fill);
-      box.append(track, makeEl("span", "bar-day", bin.label));
-      el.append(box);
+    rows.sort((a, b) => {
+      const x = current.userStats.get(a.id), y = current.userStats.get(b.id);
+      if (order === "visits") return y.visits - x.visits || y.lastSeenMs - x.lastSeenMs;
+      if (order === "name") return (a.name || a.email || "").localeCompare(b.name || b.email || "", "ar");
+      return y.lastSeenMs - x.lastSeenMs;
     });
-    $("chartTitle").textContent = days === 90 ? "حركة الزيارات الأسبوعية" : "حركة الزيارات اليومية";
-    el.setAttribute("aria-label", "عدد الزيارات في الفترة: " +
-      number(bins.reduce((n, x) => n + x.total, 0)));
+    return rows;
+  }
+  function statusFor(stats) {
+    if (stats.recent) return ["good", "نشط خلال ٥ دقائق"];
+    if (stats.activeToday) return ["good", "دخل اليوم"];
+    if (!stats.lastSeen) return ["warn", "بلا زيارة مسجلة"];
+    return ["", relativeTime(stats.lastSeen)];
+  }
+  function appendPerson(root, user) {
+    const box = makeEl("div", "person");
+    const initials = [...(user.name || user.email || "م")][0] || "م";
+    box.append(makeEl("span", "avatar", initials));
+    const names = makeEl("div");
+    names.append(makeEl("div", "person-name", user.name || "مستخدم"),
+      makeEl("div", "person-email", user.email || ""));
+    box.append(names);
+    root.append(box);
+  }
+  function makeStatus(stats) {
+    const [kind, text] = statusFor(stats);
+    const status = makeEl("span", "status" + (kind ? " " + kind : ""));
+    status.append(makeEl("span", "status-dot"), document.createTextNode(text));
+    return status;
+  }
+  function detailsButton(user) {
+    const b = makeEl("button", "view", "عرض التفاصيل");
+    b.type = "button";
+    b.setAttribute("aria-label", "عرض تفاصيل " + (user.name || user.email || "المستخدم"));
+    b.addEventListener("click", () => {
+      selectedUserId = user.id;
+      renderDetails(true);
+    });
+    return b;
   }
   function renderUsers() {
-    const term = $("userSearch").value.trim().toLowerCase();
+    const rows = selectedUsers();
     const tbody = $("usersBody");
+    const cards = $("userCards");
     tbody.replaceChildren();
-    const sorted = users.filter(u => [u.name, u.email].some(v =>
-      String(v || "").toLowerCase().includes(term)))
-      .sort((a, b) => toMs(personStats(b).lastSeen) - toMs(personStats(a).lastSeen));
-    if (!sorted.length) {
-      const tr = makeEl("tr");
-      const td = makeEl("td", "", "لا توجد حسابات مطابقة.");
-      td.colSpan = 6; tr.append(td); tbody.append(tr); return;
+    cards.replaceChildren();
+    $("usersCount").textContent = number(rows.length) + " حساب";
+    if (!rows.length) {
+      const tr = makeEl("tr"), td = makeEl("td", "empty-state", "لا توجد حسابات تطابق البحث أو التصفية.");
+      td.colSpan = 6; tr.append(td); tbody.append(tr);
+      cards.append(makeEl("p", "empty-state", "لا توجد حسابات تطابق البحث أو التصفية."));
+      return;
     }
-    sorted.forEach(user => {
-      const stat = personStats(user);
-      const tr = makeEl("tr");
-      const tdPerson = makeEl("td");
-      const person = makeEl("div", "person");
-      const initial = [...(user.name || user.email || "م")][0] || "م";
-      person.append(makeEl("span", "avatar", initial));
-      const names = makeEl("div");
-      names.append(makeEl("div", "person-name", user.name || "مستخدم"),
-        makeEl("div", "person-mail", user.email || ""));
-      person.append(names);
-      tdPerson.append(person);
-      const tdLast = makeEl("td");
-      tdLast.append(makeEl("span", "status" +
-        (stat.isOnline ? " now" : !stat.lastSeen ? " never" : ""), age(stat.lastSeen)));
-      const tdToday = makeEl("td", "", number(stat.todayVisits));
-      const tdPeriod = makeEl("td", "", number(stat.visits));
-      const tdTime = makeEl("td", "", duration(stat.activeSeconds));
-      const tdLink = makeEl("td");
-      const button = makeEl("button", "view", "عرض التفاصيل");
-      button.type = "button";
-      button.setAttribute("aria-label", "تفاصيل " + (user.name || user.email || "المستخدم"));
-      button.addEventListener("click", () => showDetails(user.id));
-      tdLink.append(button);
-      tr.append(tdPerson, tdLast, tdToday, tdPeriod, tdTime, tdLink);
+    rows.forEach(user => {
+      const stats = current.userStats.get(user.id);
+      const tr = makeEl("tr"), personCell = makeEl("td");
+      appendPerson(personCell, user);
+      const lastCell = makeEl("td");
+      lastCell.append(makeStatus(stats));
+      const action = makeEl("td"); action.append(detailsButton(user));
+      tr.append(personCell, lastCell,
+        makeEl("td", "", number(stats.todayVisits)),
+        makeEl("td", "", number(stats.visits)),
+        makeEl("td", "", stats.visits ? duration(stats.activeSeconds) : "—"), action);
       tbody.append(tr);
+
+      const card = makeEl("article", "user-card");
+      const top = makeEl("div", "user-card-top");
+      appendPerson(top, user); top.append(makeStatus(stats));
+      const facts = makeEl("div", "user-card-details");
+      facts.append(
+        field("زيارات اليوم", number(stats.todayVisits)),
+        field("زيارات الفترة", number(stats.visits)),
+        field("المدة النشطة", stats.visits ? duration(stats.activeSeconds) : "—"),
+        field("آخر نشاط", stats.lastSeen ? relativeTime(stats.lastSeen) : "لا توجد زيارات")
+      );
+      card.append(top, facts, detailsButton(user));
+      cards.append(card);
     });
   }
 
-  function showDetails(id) {
-    chosenId = id;
-    const user = users.find(item => item.id === id);
-    const container = $("userDetail");
-    if (!user) { container.hidden = true; return; }
-    const stat = personStats(user);
-    const all = matchingSessions(id, daysCount())
-      .sort((a, b) => sessionMillis(b) - sessionMillis(a));
-    container.hidden = false;
-    container.replaceChildren();
-    const top = makeEl("div", "detail-top");
-    top.append(makeEl("h3", "", "تفاصيل استخدام " + (user.name || user.email || "الحساب")));
-    const close = makeEl("button", "view", "إغلاق");
+  function renderDetails(scroll = false) {
+    const panel = $("userDetail");
+    const person = users.find(u => u.id === selectedUserId);
+    if (!person) { panel.hidden = true; return; }
+    const stats = current.userStats.get(person.id);
+    const all = current.periodSessions.filter(s => s.user_id === person.id)
+      .sort((a,b) => toMs(b.started_at) - toMs(a.started_at));
+    panel.replaceChildren();
+    panel.hidden = false;
+    const top = makeEl("div", "detail-header");
+    const title = makeEl("div");
+    title.append(makeEl("h3", "", person.name || person.email || "تفاصيل المستخدم"),
+      makeEl("p", "", person.email || "بيانات الحساب"));
+    const close = makeEl("button", "view", "إغلاق التفاصيل");
     close.type = "button";
-    close.addEventListener("click", () => { container.hidden = true; chosenId = null; });
-    top.append(close);
-    container.append(top);
+    close.addEventListener("click", () => {
+      panel.hidden = true; selectedUserId = null;
+    });
+    top.append(title,close);
+    panel.append(top);
     const grid = makeEl("div", "detail-grid");
     [
-      ["زيارات اليوم", number(stat.todayVisits)],
-      ["زيارات الفترة", number(stat.visits)],
-      ["المدة النشطة", duration(stat.activeSeconds)],
-      ["آخر استخدام", age(stat.lastSeen)]
-    ].forEach(([title, val]) => {
-      const entry = makeEl("div", "detail-stat");
-      entry.append(makeEl("span", "", title), makeEl("b", "", val));
-      grid.append(entry);
+      ["زيارات اليوم", number(stats.todayVisits)],
+      ["زيارات الفترة", number(stats.visits)],
+      ["الوقت النشط", stats.visits ? duration(stats.activeSeconds) : "—"],
+      ["آخر استخدام مسجل", stats.lastSeen ? relativeTime(stats.lastSeen) : "غير مسجل"]
+    ].forEach(([label, value]) => grid.append(field(label, value)));
+    grid.querySelectorAll("div").forEach(el => el.className = "detail-stat");
+    panel.append(grid);
+    const meta = makeEl("div", "detail-meta");
+    [
+      ["تاريخ إنشاء الحساب", displayDate(person.created_at)],
+      ["آخر تسجيل دخول للمصادقة", displayDate(person.last_sign_in_at)]
+    ].forEach(([label, value]) => {
+      const item = makeEl("span");
+      item.append(makeEl("strong", "", label + ": "), document.createTextNode(value));
+      meta.append(item);
     });
-    container.append(grid);
-    container.append(makeEl("h3", "", "آخر الجلسات"));
+    panel.append(meta);
+    panel.append(makeEl("h4", "detail-session-title", "الزيارات الأخيرة خلال الفترة"));
     const list = makeEl("div", "session-list");
-    if (!all.length) list.append(makeEl("p", "muted", "لم تُسجَّل زيارات خلال الفترة المحددة."));
-    all.slice(0, 30).forEach(s => {
-      const row = makeEl("div", "session-item");
-      row.append(makeEl("span", "", displayDate.format(new Date(sessionMillis(s)))),
-        makeEl("strong", "", duration(s.active_seconds)));
-      list.append(row);
+    if (!all.length) list.append(makeEl("p", "empty-state", "لم تُسجَّل زيارات لهذا الحساب خلال الفترة."));
+    all.slice(0,12).forEach(session => {
+      const item = makeEl("div", "session-item"), left = makeEl("div");
+      left.append(makeEl("strong", "", displayDate(session.started_at)),
+        makeEl("small", "", clientLabel(session.client_type)));
+      item.append(left, makeEl("strong", "", duration(session.active_seconds)));
+      list.append(item);
     });
-    container.append(list);
-    container.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    panel.append(list);
+    if (scroll) panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
+
+  function renderFeed() {
+    const list = $("recentFeed");
+    list.replaceChildren();
+    const latest = [...current.periodSessions]
+      .sort((a,b) => toMs(b.started_at) - toMs(a.started_at)).slice(0,7);
+    if (!latest.length) {
+      list.append(makeEl("p", "empty-state", "لا توجد زيارات مسجلة خلال الفترة المحددة."));
+      return;
+    }
+    const lookup = new Map(users.map(person => [person.id, person]));
+    latest.forEach(session => {
+      const person = lookup.get(session.user_id);
+      if (!person) return;
+      const item = makeEl("div", "feed-item");
+      item.append(makeEl("span", "avatar", [...(person.name || person.email || "م")][0]));
+      const body = makeEl("div", "feed-content");
+      body.append(makeEl("strong", "", person.name || person.email || "مستخدم"),
+        makeEl("span", "", clientLabel(session.client_type) + " · " +
+          duration(session.active_seconds) + " نشط تقريبي"));
+      item.append(body, makeEl("span", "feed-time", displayDate(session.started_at)));
+      list.append(item);
+    });
+  }
+
   function renderAll() {
-    refreshSummary(); drawChart(); renderUsers();
-    if (chosenId) showDetails(chosenId);
+    if (!current) return;
+    paintSummary();
+    drawChart();
+    renderUsers();
+    renderDetails(false);
+    renderFeed();
   }
   function fail(message, accessDenied = false) {
-    loading.hidden = true;
-    dashboard.hidden = true;
-    errorBox.hidden = false;
-    $("errorTitle").textContent = accessDenied ? "هذه اللوحة مخصصة للمدير فقط" : "تعذّر تحميل التقارير";
+    users = []; sessions = []; current = null; selectedUserId = null;
+    $("loading").hidden = true;
+    $("dashboard").hidden = true;
+    $("errorBox").hidden = false;
+    $("exportBtn").disabled = true;
+    $("errorTitle").textContent = accessDenied ? "هذه الصفحة خاصة بمالك مواعيدي" : "تعذّر تحميل الإحصائيات";
     $("errorText").textContent = message;
   }
 
   async function loadReport() {
     if (pending) return;
-    if (!sb) { fail("تعذّر تحميل خدمة الحساب. تحقق من اتصال الإنترنت."); return; }
+    if (!client) { fail("تعذّر الاتصال بخدمة الحساب. تحقق من اتصال الإنترنت."); return; }
     pending = true;
     $("refreshBtn").disabled = true;
-    if (!users.length) { loading.hidden = false; errorBox.hidden = true; }
+    $("refreshBtn").textContent = "جارٍ التحديث…";
+    if (!current) { $("loading").hidden = false; $("errorBox").hidden = true; }
     try {
-      const { data: auth, error: authError } = await sb.auth.getUser();
+      const { data: auth, error: authError } = await client.auth.getUser();
       if (authError || !auth?.user) {
-        fail("سجّل الدخول إلى حسابك في مواعيدي أولًا، ثم افتح لوحة الإدارة.");
+        fail("سجّل الدخول بحسابك الإداري إلى مواعيدي أولًا، ثم افتح هذه الصفحة.");
         return;
       }
-      const { data, error } = await sb.rpc("mawaeidi_admin_usage", { p_days: 90 });
+      const { data, error } = await client.rpc("mawaeidi_admin_usage", { p_days: 90 });
       if (error) {
         if (error.code === "42501" || /admin_only/i.test(error.message || "")) {
-          fail("ليس لهذا الحساب صلاحية مشاهدة بيانات المستخدمين.", true);
+          fail("هذا الحساب لا يملك صلاحية قراءة بيانات لوحة الإدارة.", true);
         } else {
-          fail("تعذّر قراءة إحصائيات الاستخدام. تأكد من اتصال الشبكة وإعداد قاعدة البيانات.");
-          console.error("Usage dashboard query failed:", error);
+          fail("لم نتمكن من قراءة بيانات الاستخدام. حدّث الصفحة أو تحقق من الاتصال.");
+          console.error("Mawaeidi admin RPC error:", error);
         }
         return;
       }
       users = Array.isArray(data?.users) ? data.users : [];
       sessions = Array.isArray(data?.sessions) ? data.sessions : [];
-      loading.hidden = true; errorBox.hidden = true; dashboard.hidden = false;
-      $("updatedAt").textContent = "آخر تحديث: " + displayDate.format(new Date());
+      current = buildSummary();
+      $("loading").hidden = true; $("errorBox").hidden = true;
+      $("dashboard").hidden = false; $("exportBtn").disabled = false;
+      $("updatedAt").textContent = "آخر تحديث: " + cairoDateFormat.format(new Date());
       renderAll();
     } catch (error) {
-      fail("حدث خطأ في الاتصال. جرّب تحديث البيانات مرة أخرى.");
-      console.error("Usage dashboard error:", error);
+      console.error("Mawaeidi admin report:", error);
+      fail("حدث خطأ في الاتصال. حاول تحديث البيانات مرة أخرى.");
     } finally {
       pending = false;
       $("refreshBtn").disabled = false;
+      $("refreshBtn").textContent = "تحديث البيانات";
     }
   }
+
+  function csvEscape(value) {
+    let text = String(value ?? "");
+    // Prevent spreadsheet formula execution if account display names are untrusted.
+    if (/^[=+@\-\t\r]/.test(text)) text = "'" + text;
+    return '"' + text.replace(/"/g, '""') + '"';
+  }
+  function exportCsv() {
+    if (!current || !users.length) return;
+    const headings = ["المستخدم","البريد الإلكتروني","زيارات اليوم","زيارات الفترة",
+      "الوقت النشط بالدقائق","آخر زيارة مسجلة","آخر تسجيل دخول للمصادقة"];
+    const rows = users.map(user => {
+      const stats = current.userStats.get(user.id);
+      return [user.name || "",user.email || "",stats.todayVisits,stats.visits,
+        Math.floor(stats.activeSeconds / 60),stats.lastSeen ? displayDate(stats.lastSeen) : "",
+        user.last_sign_in_at ? displayDate(user.last_sign_in_at) : ""];
+    });
+    const csv = "\ufeff" + [headings,...rows].map(row => row.map(csvEscape).join(",")).join("\r\n");
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    link.href = url;
+    link.download = "mawaeidi-usage-" + todayKey() + ".csv";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
   $("refreshBtn").addEventListener("click", loadReport);
-  $("period").addEventListener("change", renderAll);
-  $("userSearch").addEventListener("input", renderUsers);
+  $("exportBtn").addEventListener("click", exportCsv);
+  $("period").addEventListener("change", () => {
+    if (!users.length) return;
+    current = buildSummary();
+    renderAll();
+  });
+  ["userFilter", "userSort"].forEach(id => $(id).addEventListener("change", () => {
+    if (current) renderUsers();
+  }));
+  $("userSearch").addEventListener("input", () => {
+    if (current) renderUsers();
+  });
+  if (client) {
+    client.auth.onAuthStateChange(event => {
+      if (event === "SIGNED_OUT") fail("انتهت جلسة الحساب. سجّل الدخول مرة أخرى.");
+    });
+  }
+  window.setInterval(() => {
+    if (!document.hidden && navigator.onLine) loadReport();
+  }, 120000);
   loadReport();
 })();

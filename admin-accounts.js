@@ -148,6 +148,7 @@
       const emailLine = create("div", "account-compact-email-line");
       const email = create("span", "account-compact-email", user.email || "بدون بريد");
       email.dir = "ltr";
+      email.title = user.email || "";
       const copyEmail = iconButton("نسخ البريد الإلكتروني");
       copyEmail.addEventListener("click", async () => {
         try {

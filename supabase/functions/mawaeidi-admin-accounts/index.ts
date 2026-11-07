@@ -88,6 +88,40 @@ Deno.serve(async (req: Request) => {
         });
         if (batch.length < 100) break;
       }
+
+      // Account pictures live in a private bucket under <user UUID>/avatar.jpg.
+      // Only a verified administrator can request these short-lived URLs.
+      // They are never made public, and missing pictures simply use initials.
+      try {
+        const bucket = supabaseAdmin.storage.from("mawaeidi-avatars");
+        const userIds = new Set(result.map((u) => String(u.id)));
+        const existingFolders = new Set<string>();
+        for (let offset = 0; offset < 1000; offset += 100) {
+          const { data: folders, error: folderError } = await bucket.list("", {
+            limit: 100, offset, sortBy: { column: "name", order: "asc" },
+          });
+          if (folderError) break;
+          for (const folder of folders || []) {
+            if (userIds.has(folder.name)) existingFolders.add(folder.name);
+          }
+          if (!folders || folders.length < 100) break;
+        }
+        const picturedUsers = result.filter((u) => existingFolders.has(String(u.id)));
+        for (let start = 0; start < picturedUsers.length; start += 100) {
+          const selected = picturedUsers.slice(start, start + 100);
+          const paths = selected.map((u) => String(u.id) + "/avatar.jpg");
+          const { data: signed, error: signError } = await bucket.createSignedUrls(paths, 1800);
+          if (signError || !signed) continue;
+          for (let index = 0; index < selected.length; index++) {
+            const image = signed[index];
+            if (!image?.error && typeof image?.signedUrl === "string") {
+              selected[index].avatar_url = image.signedUrl;
+            }
+          }
+        }
+      } catch {
+        // Pictures are optional. Never fail the account listing if Storage is down.
+      }
       return respond(200, { users: result });
     }
 

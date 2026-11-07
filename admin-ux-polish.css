@@ -404,3 +404,22 @@ body.support-preview-open .admin-back-top {display:none!important}
     max-width:100%;
   }
 }
+
+/* Other administrator accounts remain visible but their login credentials
+   cannot be reset by a different administrator. */
+#accountsSection .account-admin-protected {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  width:100%;
+  padding:8px 12px;
+  border:1px solid #cfdde5;
+  border-radius:10px;
+  background:#f2f6f8;
+  color:#526b7b;
+  font-size:12px;
+  font-weight:800;
+  text-align:center;
+  line-height:1.5;
+}

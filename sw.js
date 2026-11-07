@@ -1,4 +1,5 @@
-const CACHE_NAME="mawaeidi-shell-v81";
+const CACHE_PREFIX="mawaeidi-shell-";
+const CACHE_NAME=CACHE_PREFIX+"v82";
 const APP_SHELL=[
   "./",
   "./index.html",
@@ -34,7 +35,7 @@ self.addEventListener("install",event=>{
 self.addEventListener("activate",event=>{
   event.waitUntil(
     caches.keys()
-      .then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key))))
+      .then(keys=>Promise.all(keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_NAME).map(key=>caches.delete(key))))
       .then(()=>self.clients.claim())
   );
 });
@@ -46,28 +47,49 @@ self.addEventListener("fetch",event=>{
   if(url.origin!==self.location.origin)return;
 
   if(request.mode==="navigate"){
-    const pagePath=url.pathname.replace(/\/$/,"/index.html");
-    const fallback=pagePath.endsWith("/students/index.html")?"./students/index.html":"./index.html";
-    const fetched=fetch(request).then(response=>({response,copy:response.clone()}));
-    event.respondWith(fetched.then(({response})=>response).catch(()=>caches.match(fallback)));
-    event.waitUntil(
-      fetched
-        .then(({copy})=>caches.open(CACHE_NAME).then(cache=>cache.put(fallback,copy)))
-        .catch(()=>undefined)
-    );
+    const homePath=new URL("./",self.registration.scope).pathname;
+    const indexPath=new URL("./index.html",self.registration.scope).pathname;
+    const studentsPath=new URL("./students/index.html",self.registration.scope).pathname;
+    const fallback=url.pathname===studentsPath?"./students/index.html":
+      (url.pathname===homePath||url.pathname===indexPath)?"./index.html":null;
+
+    // Never cache admin.html (or another route) under the main site's offline
+    // fallback. A manager visiting the admin page must not replace index.html.
+    if(!fallback)return;
+    event.respondWith((async()=>{
+      try{
+        const response=await fetch(request,{cache:"no-cache"});
+        if(response.ok){
+          try{
+            const cache=await caches.open(CACHE_NAME);
+            await cache.put(fallback,response.clone());
+          }catch{/* Network response is usable even if offline caching fails. */}
+        }
+        return response;
+      }catch{
+        return await caches.match(fallback)||Response.error();
+      }
+    })());
     return;
   }
 
   if(APP_SHELL.some(path=>new URL(path,self.registration.scope).href===url.href)){
-    const update=fetch(request).then(async response=>{
-      if(response.ok){
-        const cache=await caches.open(CACHE_NAME);
-        await cache.put(request,response.clone());
+    // Network-first for versioned assets avoids flashing an older application
+    // build on the first load after publishing an update.
+    event.respondWith((async()=>{
+      try{
+        const response=await fetch(request,{cache:"no-cache"});
+        if(response.ok){
+          try{
+            const cache=await caches.open(CACHE_NAME);
+            await cache.put(request,response.clone());
+          }catch{/* Ignore quota/cache errors without dropping fresh content. */}
+        }
+        return response;
+      }catch{
+        return await caches.match(request)||Response.error();
       }
-      return response;
-    });
-    event.waitUntil(update.then(()=>undefined).catch(()=>undefined));
-    event.respondWith(caches.match(request).then(cached=>cached||update));
+    })());
   }
 });
 

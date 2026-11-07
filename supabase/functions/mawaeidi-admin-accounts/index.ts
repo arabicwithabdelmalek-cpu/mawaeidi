@@ -158,11 +158,15 @@ Deno.serve(async (req: Request) => {
       // Remove those objects via Storage API, never direct DELETE from storage.objects.
       const { data: buckets, error: bucketsError } = await supabaseAdmin.storage.listBuckets();
       if (bucketsError) return respond(503, { error: "storage_check_failed" });
-      let removedFiles = 0;
       const MAX_FILES = 2000;
+      const filesByBucket: Array<{ bucket: string; paths: string[] }> = [];
+      let totalFiles = 0;
+
+      // Complete the inventory before removing any file, so a listing error
+      // cannot cause partial cleanup before we know the target is manageable.
       for (const bucket of buckets || []) {
         const prefixes = [id];
-        const files: string[] = [];
+        const paths: string[] = [];
         let directories = 0;
         while (prefixes.length) {
           const prefix = prefixes.shift()!;
@@ -177,21 +181,27 @@ Deno.serve(async (req: Request) => {
             const batch = entries || [];
             for (const entry of batch) {
               const path = prefix + "/" + entry.name;
-              if (!entry.id) prefixes.push(path); else files.push(path);
-              if (removedFiles + files.length > MAX_FILES) {
-                return respond(409, { error: "storage_too_large" });
+              if (!entry.id) prefixes.push(path);
+              else {
+                paths.push(path);
+                if (++totalFiles > MAX_FILES) return respond(409, { error: "storage_too_large" });
               }
             }
             if (batch.length < 100) break;
             offset += 100;
           }
         }
-        for (let i = 0; i < files.length; i += 100) {
-          const group = files.slice(i, i + 100);
+        filesByBucket.push({ bucket: bucket.id, paths });
+      }
+
+      let removedFiles = 0;
+      for (const group of filesByBucket) {
+        for (let offset = 0; offset < group.paths.length; offset += 100) {
+          const files = group.paths.slice(offset, offset + 100);
           const { error: removeError } =
-            await supabaseAdmin.storage.from(bucket.id).remove(group);
+            await supabaseAdmin.storage.from(group.bucket).remove(files);
           if (removeError) return respond(503, { error: "storage_cleanup_failed" });
-          removedFiles += group.length;
+          removedFiles += files.length;
         }
       }
 

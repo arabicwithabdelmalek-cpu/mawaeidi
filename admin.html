@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./admin-ui.css?v=9">
+<link rel="stylesheet" href="./admin-ui.css?v=10">
 </head>
 <body>
 <main class="shell">
@@ -331,6 +331,58 @@
       <div class="account-list" id="accountsList">
         <p class="empty-state">جارٍ تحميل الحسابات…</p>
       </div>
+      <section class="support-panel" id="supportPanel" hidden aria-label="المعاينة الإدارية للحساب">
+        <form id="supportRequestForm" class="support-request" autocomplete="off">
+          <div class="support-head">
+            <div>
+              <h3>معاينة حساب كمسؤول <span class="support-readonly">قراءة فقط</span></h3>
+              <p id="supportSelectedUser">—</p>
+            </div>
+            <button type="button" class="view" id="supportCancelRequest">إلغاء</button>
+          </div>
+          <label for="supportReason">سبب المعاينة (يسجَّل في سجل الإدارة)</label>
+          <textarea id="supportReason" required minlength="8" maxlength="240"
+            placeholder="مثال: مراجعة مشكلة في عرض مواعيد العضو" rows="2"></textarea>
+          <div class="support-buttons">
+            <button type="submit" class="btn primary" id="supportPreviewButton">عرض الحساب — قراءة فقط</button>
+            <span>لن تسجّل الدخول باسم العضو أو تغيّر بياناته.</span>
+          </div>
+        </form>
+        <p id="supportError" class="support-error" role="alert" hidden></p>
+        <div id="supportResult" hidden>
+          <div class="support-result-head">
+            <div>
+              <strong id="supportResultTitle">—</strong>
+              <p>معاينة إدارية مؤقتة · لا تظهر كلمات المرور أو بيانات الاتصال.</p>
+            </div>
+            <button type="button" class="btn" id="supportCloseResult">إنهاء المعاينة</button>
+          </div>
+          <div class="support-stat-grid">
+            <div><small>الحصص</small><strong id="supportLessonCount">٠</strong></div>
+            <div><small>الطلاب</small><strong id="supportStudentCount">٠</strong></div>
+            <div><small>التوقيت الأساسي</small><strong id="supportTimeZone">—</strong></div>
+          </div>
+          <div class="support-detail-columns">
+            <section>
+              <h4>المواعيد</h4>
+              <div id="supportLessons" class="support-detail-list"></div>
+            </section>
+            <section>
+              <h4>ملخص الطلاب</h4>
+              <div id="supportStudents" class="support-detail-list"></div>
+            </section>
+          </div>
+          <p id="supportClockZones" class="support-clock-zones"></p>
+        </div>
+      </section>
+
+      <div class="support-history-box">
+        <button type="button" class="view" id="supportHistoryButton">سجل المعاينات الإدارية</button>
+        <section id="supportHistory" hidden aria-label="سجل المعاينات">
+          <p>كل معاينة تُسجَّل باسم حساب المدير مع وقتها وسببها.</p>
+          <div id="supportHistoryList"></div>
+        </section>
+      </div>
     </section>
 
     <section class="panel" aria-labelledby="recentTitle">
@@ -355,7 +407,8 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js" defer></script>
 <script src="./admin-dashboard.js?v=3" defer></script>
-<script src="./admin-accounts.js?v=7" defer></script>
+<script src="./admin-accounts.js?v=8" defer></script>
+<script src="./admin-support.js?v=1" defer></script>
 <script src="./admin-credentials.js?v=1" defer></script>
 </body>
 </html>

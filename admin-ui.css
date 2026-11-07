@@ -690,3 +690,131 @@ tbody tr:hover {background:#f8fbfd}
     font-size:12px;
   }
 }
+
+/* Audited account preview, separate from the account's actual login session. */
+#accountsSection .account-support-link {
+  display:inline-flex;align-items:center;justify-content:center;
+  align-self:center;min-height:24px;padding:2px 8px;margin:0;
+  border:1px solid #c9ded7;border-radius:7px;
+  background:#f3faf7;color:#1d7061;
+  font:inherit;font-size:10px;font-weight:800;line-height:1.4;
+  cursor:pointer;
+}
+#accountsSection .account-support-link:hover {background:#e6f5ee}
+#accountsSection .account-support-link:focus-visible {
+  outline:2px solid #5aa48c;outline-offset:2px;
+}
+#accountsSection .support-panel {
+  margin-top:17px;border:1px solid #bbd5d7;border-radius:15px;
+  padding:19px;background:#f8fcfb;
+}
+#accountsSection .support-head,
+#accountsSection .support-result-head {
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:14px;flex-wrap:wrap;margin-bottom:13px;
+}
+#accountsSection .support-head h3 {
+  margin:0;font-size:18px;font-weight:800;
+}
+#accountsSection .support-head p,
+#accountsSection .support-result-head p {
+  margin:2px 0 0;color:#607787;font-size:12px;
+}
+#accountsSection .support-readonly {
+  display:inline-block;padding:2px 9px;
+  border-radius:999px;border:1px solid #b7d4cb;
+  color:#196d5c;background:#ebf6f1;
+  font-size:10px;font-weight:800;white-space:nowrap;
+}
+#accountsSection .support-request {
+  display:grid;gap:10px;
+}
+#accountsSection .support-request > label {
+  font-size:12px;font-weight:800;color:var(--ink);
+}
+#accountsSection .support-request textarea {
+  display:block;width:100%;max-width:100%;min-height:75px;
+  padding:11px 13px;border:1px solid #cfdee6;
+  border-radius:10px;background:#fff;color:var(--ink);
+  font:inherit;font-size:13px;resize:vertical;
+}
+#accountsSection .support-buttons {
+  display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+}
+#accountsSection .support-buttons > span {
+  color:var(--muted);font-size:11px;
+}
+#accountsSection .support-error {
+  padding:10px 13px;border:1px solid #e9c2c2;
+  border-radius:9px;background:#fff3f3;color:#963e46;
+  font-size:12px;
+}
+#accountsSection .support-result-head strong {
+  display:block;font-size:16px;font-weight:800;
+  overflow-wrap:anywhere;
+}
+#accountsSection .support-stat-grid {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;margin:15px 0;
+}
+#accountsSection .support-stat-grid > div {
+  background:white;border:1px solid #dfebef;
+  border-radius:10px;padding:13px;
+}
+#accountsSection .support-stat-grid small {
+  color:var(--muted);display:block;font-size:11px;
+}
+#accountsSection .support-stat-grid strong {
+  display:block;font-size:18px;font-weight:800;overflow-wrap:anywhere;
+}
+#accountsSection .support-detail-columns {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+}
+#accountsSection .support-detail-columns > section {
+  min-width:0;background:white;border:1px solid #e1e9ee;
+  padding:14px;border-radius:12px;
+}
+#accountsSection .support-detail-columns h4 {
+  font-size:14px;margin:0 0 8px;font-weight:800;
+}
+#accountsSection .support-detail-list {display:grid;gap:7px}
+#accountsSection .support-entry {
+  min-width:0;padding:9px 12px;border:1px solid #e2ebf0;
+  border-radius:9px;background:#fbfdfe;
+}
+#accountsSection .support-entry strong {
+  display:block;font-size:12px;font-weight:800;
+  overflow-wrap:anywhere;
+}
+#accountsSection .support-entry p {
+  margin:3px 0 0;font-size:11px;color:var(--muted);
+  line-height:1.7;overflow-wrap:anywhere;
+}
+#accountsSection .support-empty {
+  margin:0;color:var(--muted);font-size:12px;
+  padding:10px 0;
+}
+#accountsSection .support-clock-zones {
+  margin:12px 0 0;color:var(--muted);
+  font-size:11px;overflow-wrap:anywhere;
+}
+#accountsSection .support-history-box {
+  margin-top:12px;display:grid;gap:10px;
+}
+#accountsSection #supportHistory {
+  border-radius:12px;border:1px solid #e2e9ed;
+  padding:14px;background:#f9fbfd;
+}
+#accountsSection #supportHistory > p {
+  margin:0 0 10px;font-size:11px;color:var(--muted);
+}
+#accountsSection #supportHistoryList {display:grid;gap:7px}
+@media(max-width:700px) {
+  #accountsSection .support-panel {padding:13px}
+  #accountsSection .support-stat-grid {gap:7px}
+  #accountsSection .support-stat-grid > div {padding:9px}
+  #accountsSection .support-stat-grid strong {font-size:15px}
+  #accountsSection .support-detail-columns {grid-template-columns:minmax(0,1fr)}
+  #accountsSection .support-head h3 {font-size:15px}
+}

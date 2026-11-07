@@ -168,6 +168,14 @@
         changed.title = "تم تسجيل وقت التغيير فقط، ولا يمكن كشف الكلمة الجديدة لصاحب الموقع.";
         subline.append(changed);
       }
+      const preview = create("button", "account-support-link", "معاينة كمسؤول");
+      preview.type = "button";
+      preview.setAttribute("aria-label", "معاينة حساب " + (user.email || "المستخدم") + " للقراءة فقط");
+      preview.addEventListener("click", () => {
+        if (window.mawaeidiAdminSupport) window.mawaeidiAdminSupport.open(user);
+        else feedback("تعذّر تحميل أداة معاينة الحساب. حدّث الصفحة.", true);
+      });
+      subline.append(preview);
       identity.append(subline);
 
       const pass = create("div", "account-password-meta");

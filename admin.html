@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./admin-ui.css?v=1">
+<link rel="stylesheet" href="./admin-ui.css?v=2">
 </head>
 <body>
 <main class="shell">
@@ -178,6 +178,77 @@
       <div class="detail" id="userDetail" hidden aria-live="polite"></div>
     </section>
 
+    <section class="panel" id="accountsSection" aria-labelledby="accountsTitle">
+      <div class="user-toolbar">
+        <div>
+          <h2 id="accountsTitle">إدارة حسابات مواعيدي</h2>
+          <p>إضافة حسابات جديدة وتعيين كلمات مرور جديدة للحسابات الحالية.</p>
+        </div>
+        <div class="account-actions">
+          <span class="panel-meta" id="accountsCount">—</span>
+          <button type="button" class="btn primary" id="openCreateAccount">+ إضافة حساب</button>
+        </div>
+      </div>
+      <p class="account-security-note">لأمان المستخدمين، لا يمكن عرض كلمة المرور الحالية لأي حساب. يمكنك إنشاء كلمة مرور جديدة أو تغييرها، دون تخزينها في لوحة الإدارة.</p>
+
+      <form class="account-edit-form" id="createAccountForm" hidden autocomplete="off">
+        <div class="account-form-top">
+          <h3>إنشاء حساب جديد</h3>
+          <button type="button" class="view" id="closeCreateAccount">إغلاق</button>
+        </div>
+        <div class="account-fields">
+          <label>اسم المستخدم <span>اختياري</span>
+            <input type="text" id="newAccountName" maxlength="100" autocomplete="off" placeholder="اسم صاحب الحساب">
+          </label>
+          <label>البريد الإلكتروني
+            <input type="email" id="newAccountEmail" required maxlength="254" dir="ltr" autocomplete="off" placeholder="name@example.com">
+          </label>
+          <label>كلمة مرور الحساب
+            <span class="password-control">
+              <input type="password" id="newAccountPassword" required minlength="10" maxlength="128" autocomplete="new-password" placeholder="10 أحرف على الأقل بدون مسافات">
+              <button type="button" class="password-toggle" data-toggle-password="newAccountPassword" aria-label="إظهار أو إخفاء كلمة المرور">إظهار</button>
+            </span>
+          </label>
+        </div>
+        <div class="account-form-actions">
+          <button type="submit" id="createAccountSubmit" class="btn primary">إنشاء الحساب</button>
+          <span class="account-hint">سيكون البريد مؤكدًا وسيتمكن صاحب الحساب من تسجيل الدخول فورًا.</span>
+        </div>
+      </form>
+
+      <form class="account-edit-form" id="resetPasswordForm" hidden autocomplete="off">
+        <div class="account-form-top">
+          <div>
+            <h3>تغيير كلمة المرور</h3>
+            <p id="resetAccountLabel"></p>
+          </div>
+          <button type="button" class="view" id="closeResetPassword">إلغاء</button>
+        </div>
+        <input type="hidden" id="resetAccountId">
+        <div class="account-fields single">
+          <label>كلمة المرور الجديدة
+            <span class="password-control">
+              <input type="password" id="resetAccountPassword" required minlength="10" maxlength="128" autocomplete="new-password" placeholder="10 أحرف على الأقل بدون مسافات">
+              <button type="button" class="password-toggle" data-toggle-password="resetAccountPassword" aria-label="إظهار أو إخفاء كلمة المرور">إظهار</button>
+            </span>
+          </label>
+        </div>
+        <div class="account-form-actions">
+          <button type="submit" class="btn primary" id="resetPasswordSubmit">حفظ كلمة المرور الجديدة</button>
+          <span class="account-hint">كلمة المرور القديمة لن تظهر، والتغيير سيُطبَّق فورًا.</span>
+        </div>
+      </form>
+
+      <div id="accountsFeedback" class="account-feedback" hidden role="status" aria-live="polite"></div>
+      <div class="table-filters account-toolbar">
+        <input type="search" id="accountSearch" class="search" aria-label="البحث عن الحسابات" placeholder="ابحث عن حساب بالاسم أو البريد…" autocomplete="off">
+        <button type="button" class="btn" id="refreshAccounts">تحديث الحسابات</button>
+      </div>
+      <div class="account-list" id="accountsList">
+        <p class="empty-state">جارٍ تحميل الحسابات…</p>
+      </div>
+    </section>
+
     <section class="panel" aria-labelledby="recentTitle">
       <div class="panel-heading">
         <div>
@@ -199,6 +270,7 @@
   </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js" defer></script>
-<script src="./admin-dashboard.js?v=2" defer></script>
+<script src="./admin-dashboard.js?v=3" defer></script>
+<script src="./admin-accounts.js?v=1" defer></script>
 </body>
 </html>

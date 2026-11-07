@@ -1,5 +1,15 @@
-/* Keep the original Mawaeidi header layout, logo size and typography.
-   Remove only the oversized decorative background behind the top-right logo. */
+/* Preserve the original Mawaeidi header: font, sizes, spacing and app branding.
+   The site's ornamental calligraphy remains visible. The header icon alone
+   uses a transparent cutout of the existing artwork instead of its photo backdrop. */
 .shell > .hurufiyat > span:nth-child(1) {
-  display: none !important;
+  display: block !important;
+}
+
+/* Suppress only visual backing on the logo; don't alter wordmark typography. */
+.app > .header .identity > .site-logo-image {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  filter: none;
+  object-fit: contain;
 }

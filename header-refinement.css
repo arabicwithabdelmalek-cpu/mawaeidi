@@ -1,0 +1,122 @@
+/* Mawaeidi header refinement (2026-11-07).
+   Keep the existing app artwork and the current site palette.
+   Only calm the brand area and the decorative top-right watermark. */
+
+/* The oversized manuscript ornament was competing with the brand. */
+.shell > .hurufiyat > span:nth-child(1) {
+  display: none !important;
+}
+
+/* An unframed, understated app icon next to a clear typographic wordmark. */
+.app > .header .identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-block: 3px;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+}
+
+.app > .header .identity > .site-logo-image {
+  display: block;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  max-width: 42px;
+  flex: 0 0 42px;
+  object-fit: contain;
+  border: 0;
+  border-radius: 10px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+}
+
+.app > .header .identity > .brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.app > .header .identity > .brand h1 {
+  margin: 0;
+  font-family: "Noto Kufi Arabic", var(--font);
+  font-size: clamp(28px, 2.5vw, 34px);
+  line-height: 1.32;
+  font-weight: 800;
+  letter-spacing: -.7px;
+  color: var(--primary);
+  text-shadow: none;
+}
+
+.app > .header .identity > .brand h1::after {
+  display: none;
+}
+
+.app > .header .identity > .brand small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 600;
+  opacity: .90;
+}
+
+.app > .header {
+  border-bottom-color: rgba(47,93,124,.12);
+}
+
+/* Compact layouts retain the established stacked header/action controls. */
+@media (max-width: 760px) {
+  .app > .header .identity {
+    gap: 9px;
+    padding-block: 2px;
+  }
+
+  .app > .header .identity > .site-logo-image {
+    width: 39px;
+    height: 39px;
+    min-width: 39px;
+    max-width: 39px;
+    flex-basis: 39px;
+    border-radius: 9px;
+  }
+
+  .app > .header .identity > .brand h1 {
+    font-size: 28px;
+    line-height: 1.33;
+  }
+
+  .app > .header .identity > .brand small {
+    display: block;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+}
+
+/* On the narrowest phones, prioritise the brand title and navigation. */
+@media (max-width: 420px) {
+  .app > .header .identity > .site-logo-image {
+    width: 35px;
+    height: 35px;
+    min-width: 35px;
+    max-width: 35px;
+    flex-basis: 35px;
+    border-radius: 8px;
+  }
+
+  .app > .header .identity > .brand h1 {
+    font-size: 26px;
+  }
+
+  .app > .header .identity > .brand small {
+    display: none;
+  }
+}

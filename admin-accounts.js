@@ -131,6 +131,21 @@
     button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
     return button;
   }
+  function accountAvatar(user) {
+    const first = [...(user.name || user.email || "م")][0] || "م";
+    const avatar = create("span", "account-user-avatar", first);
+    if (typeof user.avatar_url === "string" && user.avatar_url.startsWith("https://")) {
+      const img = create("img", "account-user-avatar-photo");
+      img.alt = "الصورة الشخصية";
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.referrerPolicy = "no-referrer";
+      img.addEventListener("error", () => img.remove(), { once: true });
+      img.src = user.avatar_url;
+      avatar.append(img);
+    }
+    return avatar;
+  }
   function render() {
     const people = users.filter(matches);
     $("accountsCount").textContent = new Intl.NumberFormat("ar-EG").format(users.length) + " حساب";
@@ -159,7 +174,10 @@
       emailLine.append(email,copyEmail);
       identity.append(emailLine);
       const subline = create("div", "account-compact-secondary");
-      if (user.name) subline.append(create("span", "", user.name));
+      const profile = create("span", "account-user-profile");
+      profile.append(accountAvatar(user));
+      profile.append(create("span", "account-user-profile-name", user.name || user.email || "مستخدم"));
+      subline.append(profile);
       if (user.is_owner) subline.append(create("span", "account-owner-tag", "حسابك"));
       const change = passwordChanges.get(user.id);
       if (change) {

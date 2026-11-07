@@ -233,3 +233,9 @@ tbody tr:hover {background:#f8fbfd}
   #accountsSection .account-actions {width:100%;justify-content:space-between}
   #accountsSection .account-edit-form {padding:14px}
 }
+
+.admin-section-links {display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:14px}
+.admin-section-links a {display:inline-flex;align-items:center;justify-content:center;min-height:39px;border:1px solid #cfdee7;border-radius:10px;background:#fff;color:var(--primary);padding:8px 13px;font-size:12px;font-weight:800;transition:background .15s}
+.admin-section-links a:hover {background:#eaf3f8}
+#accountsSection {scroll-margin-top:16px}
+@media(max-width:520px){.admin-section-links {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.admin-section-links a{padding:7px 6px;font-size:10px;text-align:center}}

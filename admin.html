@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./admin-ui.css?v=11">
+<link rel="stylesheet" href="./admin-support-preview.css?v=1">
 </head>
 <body>
 <main class="shell">
@@ -331,55 +332,10 @@
       <div class="account-list" id="accountsList">
         <p class="empty-state">جارٍ تحميل الحسابات…</p>
       </div>
-      <section class="support-panel" id="supportPanel" hidden aria-label="المعاينة الإدارية للحساب">
-        <form id="supportRequestForm" class="support-request" autocomplete="off">
-          <div class="support-head">
-            <div>
-              <h3>معاينة حساب كمسؤول <span class="support-readonly">قراءة فقط</span></h3>
-              <p id="supportSelectedUser">—</p>
-            </div>
-            <button type="button" class="view" id="supportCancelRequest">إلغاء</button>
-          </div>
-          <label for="supportReason">سبب المعاينة (يسجَّل في سجل الإدارة)</label>
-          <textarea id="supportReason" required minlength="8" maxlength="240"
-            placeholder="مثال: مراجعة مشكلة في عرض مواعيد العضو" rows="2"></textarea>
-          <div class="support-buttons">
-            <button type="submit" class="btn primary" id="supportPreviewButton">عرض الحساب — قراءة فقط</button>
-            <span>لن تسجّل الدخول باسم العضو أو تغيّر بياناته.</span>
-          </div>
-        </form>
-        <p id="supportError" class="support-error" role="alert" hidden></p>
-        <div id="supportResult" hidden>
-          <div class="support-result-head">
-            <div>
-              <strong id="supportResultTitle">—</strong>
-              <p>معاينة إدارية مؤقتة · لا تظهر كلمات المرور أو بيانات الاتصال.</p>
-            </div>
-            <button type="button" class="btn" id="supportCloseResult">إنهاء المعاينة</button>
-          </div>
-          <div class="support-stat-grid">
-            <div><small>الحصص</small><strong id="supportLessonCount">٠</strong></div>
-            <div><small>الطلاب</small><strong id="supportStudentCount">٠</strong></div>
-            <div><small>التوقيت الأساسي</small><strong id="supportTimeZone">—</strong></div>
-          </div>
-          <div class="support-detail-columns">
-            <section>
-              <h4>المواعيد</h4>
-              <div id="supportLessons" class="support-detail-list"></div>
-            </section>
-            <section>
-              <h4>ملخص الطلاب</h4>
-              <div id="supportStudents" class="support-detail-list"></div>
-            </section>
-          </div>
-          <p id="supportClockZones" class="support-clock-zones"></p>
-        </div>
-      </section>
-
       <div class="support-history-box">
         <button type="button" class="view" id="supportHistoryButton">سجل المعاينات الإدارية</button>
         <section id="supportHistory" hidden aria-label="سجل المعاينات">
-          <p>كل معاينة تُسجَّل باسم حساب المدير مع وقتها وسببها.</p>
+          <p>يُسجَّل فتح كل معاينة باسم حساب المدير ووقتها تلقائيًا.</p>
           <div id="supportHistoryList"></div>
         </section>
       </div>
@@ -405,10 +361,120 @@
     <p class="notice" id="limitedDataNotice" hidden>تنبيه: تم الوصول إلى الحد الأقصى للزيارات التي يعيدها التقرير، وقد تكون بعض المجاميع جزئية.</p>
   </div>
 </main>
+
+<!-- A read-only rendition of Mawaeidi, never a login as the viewed member. -->
+<section id="supportPanel" class="support-app-preview" role="dialog"
+  aria-modal="true" aria-labelledby="supportOverlayTitle" tabindex="-1" hidden>
+  <div class="support-app-shell" dir="rtl">
+    <header class="support-app-header">
+      <div class="support-app-brand">
+        <img src="./icons/logo-cutout.svg?v=1" alt="" width="56" height="56">
+        <div>
+          <strong id="supportOverlayTitle">مواعيدي</strong>
+          <small>حصصك ودروسك في مكان واحد</small>
+        </div>
+      </div>
+      <div class="support-app-header-right">
+        <div class="support-app-identity">
+          <strong id="supportSelectedUser">—</strong>
+          <span>معاينة حساب عضو الفريق</span>
+        </div>
+        <span class="support-app-readonly">للعرض فقط</span>
+        <button type="button" id="supportCloseResult" class="support-app-close">
+          <span aria-hidden="true">✕</span> رجوع للإدارة
+        </button>
+      </div>
+    </header>
+
+    <div id="supportLoading" class="support-app-loading" role="status">
+      <span class="support-app-loader" aria-hidden="true"></span>
+      جارٍ فتح واجهة الحساب…
+    </div>
+    <p id="supportError" class="support-app-error" role="alert" hidden></p>
+
+    <div id="supportResult" hidden>
+      <nav class="support-app-nav" aria-label="أقسام حساب العضو">
+        <button id="supportTabSchedule" class="active" type="button" aria-pressed="true" data-support-tab="schedule">المواعيد</button>
+        <button id="supportTabWorld" type="button" aria-pressed="false" data-support-tab="world">الساعة العالمية</button>
+        <button id="supportTabStudents" type="button" aria-pressed="false" data-support-tab="students">الطلاب</button>
+      </nav>
+      <main class="support-app-body">
+        <section id="supportViewSchedule" class="support-app-view" aria-label="مواعيد العضو">
+          <div class="support-app-hero">
+            <div class="support-app-hero-copy">
+              <span class="support-app-kicker">الوقت أمانة</span>
+              <h2>مواعيد الحصص</h2>
+              <p>نظرة على جدول هذا الحساب، بنفس تنظيم أقسام مواعيدي، دون أي أدوات للتعديل.</p>
+            </div>
+            <div class="support-app-hero-metric">
+              <small>الحصص المسجلة</small>
+              <strong id="supportLessonCount">٠</strong>
+            </div>
+          </div>
+          <div class="support-app-section-title">
+            <div>
+              <h3>الجدول الأسبوعي</h3>
+              <p>مواعيد الدروس بحسب أيام الأسبوع</p>
+            </div>
+            <span>قراءة فقط</span>
+          </div>
+          <div id="supportWeek" class="support-app-week"></div>
+        </section>
+
+        <section id="supportViewWorld" class="support-app-view" aria-label="الساعة العالمية للعضو" hidden>
+          <div class="support-app-hero world">
+            <div class="support-app-hero-copy">
+              <span class="support-app-kicker">الوقت حول العالم</span>
+              <h2>الساعة العالمية</h2>
+              <p>المناطق الزمنية التي اختارها صاحب الحساب وأوقاتها الحالية.</p>
+            </div>
+            <div class="support-app-hero-metric">
+              <small>التوقيت الأساسي</small>
+              <strong id="supportTimeZone">—</strong>
+            </div>
+          </div>
+          <div class="support-app-section-title">
+            <div>
+              <h3>المدن والتوقيت</h3>
+              <p>الساعة تتحدث أثناء فتح المعاينة</p>
+            </div>
+          </div>
+          <div id="supportWorldClocks" class="support-app-clocks"></div>
+        </section>
+
+        <section id="supportViewStudents" class="support-app-view" aria-label="طلاب العضو" hidden>
+          <div class="support-app-hero students">
+            <div class="support-app-hero-copy">
+              <span class="support-app-kicker">إدارة الطلاب</span>
+              <h2>الطلاب</h2>
+              <p>ملخص السجلات الأساسية دون إظهار بيانات التواصل أو كلمات المرور.</p>
+            </div>
+            <div class="support-app-hero-metric">
+              <small>إجمالي الطلاب</small>
+              <strong id="supportStudentCount">٠</strong>
+            </div>
+          </div>
+          <div class="support-app-section-title">
+            <div>
+              <h3>قائمة الطلاب</h3>
+              <p>الاسم والمستوى والحالة والدولة</p>
+            </div>
+          </div>
+          <div id="supportStudents" class="support-app-students"></div>
+        </section>
+      </main>
+      <footer class="support-app-footer">
+        <span>معاينة إدارية مسجّلة • بدون تسجيل دخول باسم العضو</span>
+        <span>لا يمكنك إضافة أو تغيير أو حذف أي بيانات من هنا.</span>
+      </footer>
+    </div>
+  </div>
+</section>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js" defer></script>
 <script src="./admin-dashboard.js?v=3" defer></script>
 <script src="./admin-accounts.js?v=8" defer></script>
-<script src="./admin-support.js?v=1" defer></script>
+<script src="./admin-support.js?v=2" defer></script>
 <script src="./admin-credentials.js?v=1" defer></script>
 </body>
 </html>

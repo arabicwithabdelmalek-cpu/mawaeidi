@@ -1057,3 +1057,28 @@ tbody tr:hover {background:#f8fbfd}
   border-radius:inherit;
   background:#e7f0f5;
 }
+
+.detail-person-identity {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.detail-person-identity .avatar {
+  position:relative;
+  overflow:hidden;
+  flex:0 0 45px;
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  isolation:isolate;
+}
+.detail-person-identity .avatar-photo {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:inherit;
+}
+.detail-person-identity > div {min-width:0}

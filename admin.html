@@ -11,26 +11,29 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./admin-ui.css?v=11">
+<link rel="stylesheet" href="./admin-ui.css?v=12">
 <link rel="stylesheet" href="./admin-support-preview.css?v=1">
 </head>
 <body>
 <main class="shell">
-  <header class="top">
+  <header class="top admin-header">
     <div class="brand">
-      <img class="mark" src="./icons/icon-192.png?v=2" alt="شعار مواعيدي" width="60" height="60">
+      <img class="mark" src="./icons/logo-cutout.svg?v=1" alt="شعار مواعيدي" width="68" height="68" decoding="async">
       <div>
         <div class="brand-name">
           <h1>لوحة إدارة مواعيدي</h1>
           <span class="admin-pill">حساب المدير فقط</span>
         </div>
-        <p class="subtitle">نظرة واضحة على زيارات الحسابات ونشاط المستخدمين</p>
+        <p class="subtitle">إدارة الحسابات ومتابعة استخدام مواعيدي في مكان واحد</p>
       </div>
     </div>
-    <div class="actions">
-      <a class="btn ghost" href="./index.html">العودة إلى مواعيدي</a>
-      <button class="btn" id="exportBtn" type="button" disabled>تصدير التقرير CSV</button>
-      <button class="btn primary" id="refreshBtn" type="button">تحديث البيانات</button>
+    <div class="actions admin-header-actions">
+      <a class="btn ghost admin-return" href="./index.html" aria-label="العودة إلى موقع مواعيدي">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+        <span>العودة إلى مواعيدي</span>
+      </a>
+      <button class="btn admin-export" id="exportBtn" type="button" disabled>تصدير التقرير CSV</button>
+      <button class="btn primary admin-refresh" id="refreshBtn" type="button">تحديث البيانات</button>
     </div>
   </header>
 

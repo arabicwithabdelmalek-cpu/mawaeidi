@@ -14,15 +14,66 @@ async function accountCompressImage(file){if(!/^image\/(png|jpeg|webp)$/.test(fi
 async function accountUploadAvatar(input){const file=input.files?.[0];input.value="";if(!file||!currentUser||!cloud)return;accountMessage("جارٍ تجهيز الصورة وحفظها…");try{const blob=await accountCompressImage(file);const {error}=await cloud.storage.from(ACCOUNT_AVATAR_BUCKET).upload(currentUser.id+"/avatar.jpg",blob,{contentType:"image/jpeg",cacheControl:"60",upsert:true});if(error)throw error;await accountLoadAvatar();accountMessage("اتحفظت الصورة الشخصية بنجاح.");}catch(e){console.error(e);accountMessage(e.message||"تعذّر رفع الصورة.",true);}}
 async function accountRemoveAvatar(){if(!currentUser||!cloud||!confirm("هل تريد حذف صورتك الشخصية؟"))return;const {error}=await cloud.storage.from(ACCOUNT_AVATAR_BUCKET).remove([currentUser.id+"/avatar.jpg"]);if(error){accountMessage("تعذّر حذف الصورة. حاول مرة أخرى.",true);return;}accountRevokeImage();accountUpdateHeader();accountMessage("اتحذفت الصورة الشخصية.");}
 async function accountSaveName(){if(!cloud||!currentUser||accountBusy)return;const name=accountEl("accountNameInput").value.trim();if(name.length<2||name.length>65){accountMessage("اكتب اسمًا من حرفين إلى 65 حرفًا.",true);return;}accountBusy=true;accountMessage("جارٍ حفظ الاسم…");try{const {data,error}=await cloud.auth.updateUser({data:{full_name:name}});if(error)throw error;currentUser=data.user||currentUser;accountFill();accountMessage("اتحفظ الاسم بنجاح.");}catch(e){accountMessage("تعذّر حفظ الاسم. حاول مرة أخرى.",true);}finally{accountBusy=false;}}
-async function accountChangePassword(){if(!cloud||!currentUser||accountBusy)return;const pass=accountEl("accountNewPassword").value,verify=accountEl("accountConfirmPassword").value;if(pass.length<10){accountMessage("اختار كلمة مرور من 10 أحرف على الأقل.",true);return;}if(pass!==verify){accountMessage("كلمتا المرور غير متطابقتين.",true);return;}accountBusy=true;accountMessage("جارٍ تغيير كلمة المرور…");try{const {error}=await cloud.auth.updateUser({password:pass});if(error)throw error;accountEl("accountNewPassword").value="";accountEl("accountConfirmPassword").value="";
-let eventSaved=false;
-try {
-  const {error:auditError}=await cloud.from("mawaeidi_password_change_events")
-    .upsert({user_id:currentUser.id},{onConflict:"user_id"});
-  eventSaved=!auditError;
-} catch { /* Password change itself already succeeded. */ }
-accountMessage(eventSaved
-  ? "اتغيّرت كلمة المرور بنجاح. وتم تسجيل وقت التغيير (بدون كشف الكلمة لأي شخص)."
-  : "اتغيّرت كلمة المرور بنجاح، لكن تعذّر تحديث سجل التغيير في لوحة الإدارة.");}catch(e){accountMessage("تعذّر تغيير كلمة المرور. قد تحتاج إلى تسجيل الدخول مجددًا لحماية حسابك.",true);}finally{accountBusy=false;}}
+async function accountChangePassword(){
+  if(!cloud||!currentUser||accountBusy)return;
+  const pass=accountEl("accountNewPassword").value;
+  const verify=accountEl("accountConfirmPassword").value;
+  const userId=currentUser.id;
+  if(pass.length<10||pass.length>128){
+    accountMessage("اختار كلمة مرور من ١٠ إلى ١٢٨ حرفًا.",true);
+    return;
+  }
+  if(pass!==verify){
+    accountMessage("كلمتا المرور غير متطابقتين.",true);
+    return;
+  }
+  accountBusy=true;
+  accountMessage("جارٍ فحص أمان كلمة المرور…");
+  try{
+    // This supplementary check is available on the current hosting plan.
+    // Its server sends HIBP only 5 hex characters of a SHA-1 digest.
+    const {data:check,error:checkError}=await cloud.functions.invoke(
+      "mawaeidi-admin-accounts",
+      {body:{action:"check_password",password:pass}}
+    );
+    if(!currentUser||currentUser.id!==userId)return;
+    if(checkError||check?.error||check?.ok!==true){
+      let code=check?.error||"password_check_unavailable";
+      if(checkError){
+        try{
+          const detail=await checkError.context?.json?.();
+          code=detail?.error||code;
+        }catch{/* Keep safe generic message if network response is unavailable. */}
+      }
+      accountMessage(code==="compromised_password"
+        ?"كلمة المرور دي ظهرت في تسريبات سابقة. اختار كلمة مختلفة وقوية."
+        :code==="weak_password"
+          ?"اختار كلمة مرور من ١٠ إلى ١٢٨ حرفًا."
+          :"تعذّر التأكد من أمان كلمة المرور. لم يتغير شيء؛ حاول مرة أخرى.",true);
+      return;
+    }
+    if(!currentUser||currentUser.id!==userId)return;
+    accountMessage("جارٍ تغيير كلمة المرور…");
+    const {error}=await cloud.auth.updateUser({password:pass});
+    if(error)throw error;
+    accountEl("accountNewPassword").value="";
+    accountEl("accountConfirmPassword").value="";
+    let eventSaved=false;
+    try{
+      const {error:auditError}=await cloud.from("mawaeidi_password_change_events")
+        .upsert({user_id:userId},{onConflict:"user_id"});
+      eventSaved=!auditError;
+    }catch{/* Password change itself already succeeded. */}
+    accountMessage(eventSaved
+      ?"اتغيّرت كلمة المرور بنجاح. وتم تسجيل وقت التغيير (بدون كشف الكلمة لأي شخص)."
+      :"اتغيّرت كلمة المرور بنجاح، لكن تعذّر تحديث سجل التغيير في لوحة الإدارة.");
+  }catch(error){
+    accountMessage(error?.code==="weak_password"
+      ?"كلمة المرور ضعيفة. اختار كلمة أقوى ومختلفة."
+      :"تعذّر تغيير كلمة المرور. قد تحتاج إلى تسجيل الدخول مجددًا لحماية حسابك.",true);
+  }finally{
+    accountBusy=false;
+  }
+}
 async function accountChangeEmail(){if(!cloud||!currentUser||accountBusy)return;const email=accountEl("accountEmailInput").value.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){accountMessage("اكتب بريدًا إلكترونيًا صحيحًا.",true);return;}if(email===(currentUser.email||"").toLowerCase()){accountMessage("ده بريدك الحالي بالفعل.");return;}if(!confirm("هنرسل رسالة لتأكيد البريد الجديد، وقد تحتاج لتأكيد البريد القديم أيضًا. هل تريد الاستمرار؟"))return;accountBusy=true;accountMessage("جارٍ إرسال طلب تغيير البريد…");try{const {error}=await cloud.auth.updateUser({email});if(error)throw error;accountMessage("اترسل طلب تغيير البريد. افحص صندوق الوارد وأكّد التغيير من الرسائل المطلوبة.");}catch(e){accountMessage("تعذّر تغيير البريد. تأكد إنه غير مستخدم في حساب آخر.",true);}finally{accountBusy=false;}}
 function accountReset(){accountRevokeImage();const header=accountEl("accountMenuAvatar");if(header)header.textContent="م";const name=accountEl("accountMenuName");if(name)name.textContent="حسابي";accountMessage("");}

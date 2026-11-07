@@ -170,7 +170,7 @@
       if (window.mawaeidiCredentials?.buildPasswordCell) {
         window.mawaeidiCredentials.buildPasswordCell(pass,user,change || null);
       } else {
-        pass.append(create("small", "", "كلمة المرور"),create("span", "", "جارٍ تحميل الخزنة…"));
+        pass.append(create("small", "", "كلمة المرور"),create("span", "", "جارٍ تحميل البيانات…"));
       }
 
       const actions = create("div", "account-row-actions");
@@ -270,7 +270,7 @@
   $("accountSearch").addEventListener("input", render);
   $("refreshAccounts").addEventListener("click", () => load(true));
   $("dismissOneTimeCredentials").addEventListener("click", clearOneTimeCredentials);
-  $("saveOneTimeToVault").addEventListener("click", async () => {
+  $("saveOneTimeWithAccount").addEventListener("click", async () => {
     const password = $("oneTimePassword").value;
     if (!oneTimeTargetId || !password) {
       $("oneTimeCopyStatus").textContent = "لا توجد بيانات حالية للحفظ.";
@@ -278,7 +278,7 @@
     }
     const ok = await window.mawaeidiCredentials?.saveOneTime(oneTimeTargetId,password);
     $("oneTimeCopyStatus").textContent = ok
-      ? "تم حفظ الكلمة مشفّرة في خزنتك."
+      ? "تم حفظ الكلمة مشفّرة مع الحساب."
       : "تعذّر الحفظ؛ حاول مرة أخرى.";
   });
   $("copyOneTimePassword").addEventListener("click", async () => {
@@ -323,11 +323,11 @@
       closeForms();
       await load();
       showOneTimeCredentials(email, password, created.user?.id || null);
-      let savedInVault = false;
+      let savedWithAccount = false;
       try {
-        savedInVault = !!(await window.mawaeidiCredentials?.recordPasswordIfOpen(created.user?.id,password));
-      } catch { /* The account exists even if vault synchronization fails. */ }
-      feedback(savedInVault
+        savedWithAccount = !!(await window.mawaeidiCredentials?.recordPasswordIfOpen(created.user?.id,password));
+      } catch { /* The account exists even if saved-credential synchronization fails. */ }
+      feedback(savedWithAccount
         ? "تم إنشاء الحساب وحفظ كلمته بشكل مشفّر مع الحساب."
         : "تم إنشاء الحساب. انسخ الكلمة أو اضغط حفظ مع الحساب قبل إغلاق البطاقة.");
     } catch (error) {
@@ -355,11 +355,11 @@
       await invoke({ action:"set_password", user_id:id, password });
       closeForms();
       showOneTimeCredentials(user.email || "", password, id);
-      let savedInVault = false;
+      let savedWithAccount = false;
       try {
-        savedInVault = !!(await window.mawaeidiCredentials?.recordPasswordIfOpen(id,password));
-      } catch { /* A vault failure must not falsely report a failed Auth reset. */ }
-      feedback(savedInVault
+        savedWithAccount = !!(await window.mawaeidiCredentials?.recordPasswordIfOpen(id,password));
+      } catch { /* A saved-credential failure must not falsely report a failed Auth reset. */ }
+      feedback(savedWithAccount
         ? "تم تغيير كلمة المرور وتحديث الكلمة المحفوظة مع الحساب."
         : "تم تغيير كلمة المرور. انسخها أو احفظها مع الحساب قبل إغلاق البطاقة.");
     } catch (error) {

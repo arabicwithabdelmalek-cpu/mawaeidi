@@ -18,6 +18,7 @@
   let users = [];
   let sessions = [];
   let selectedUserId = null;
+  let detailReturnFocus = null;
   let pending = false;
   let current = null;
   let adminAvatarOwner = null;
@@ -255,6 +256,7 @@
     b.type = "button";
     b.setAttribute("aria-label", "عرض تفاصيل " + (user.name || user.email || "المستخدم"));
     b.addEventListener("click", () => {
+      detailReturnFocus = b;
       selectedUserId = user.id;
       renderDetails(true);
     });
@@ -333,7 +335,15 @@
       selectedUserId = null;
       panel.replaceChildren();
       panel.hidden = true;
-      $("usersTitle").scrollIntoView({behavior:"smooth",block:"start"});
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+      const heading = $("usersTitle");
+      heading.scrollIntoView({behavior:reduce ? "auto":"smooth",block:"start"});
+      if (detailReturnFocus?.isConnected) detailReturnFocus.focus({preventScroll:true});
+      else {
+        heading.setAttribute("tabindex","-1");
+        heading.focus({preventScroll:true});
+      }
+      detailReturnFocus = null;
     });
     heroTop.append(close);
     hero.append(heroTop);
@@ -520,7 +530,7 @@
   function fail(message, accessDenied = false) {
     avatarCache.clear();
     adminAvatarOwner = null;
-    users = []; sessions = []; current = null; selectedUserId = null;
+    users = []; sessions = []; current = null; selectedUserId = null; detailReturnFocus = null;
     $("loading").hidden = true;
     $("dashboard").hidden = true;
     $("errorBox").hidden = false;

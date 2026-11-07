@@ -1,0 +1,333 @@
+/* Mawaeidi administration / UX refinement — additive, scoped rules.
+   The existing Cairo typeface, colors, cards and account actions remain intact. */
+
+/* Clear section navigation stays available on longer admin pages. */
+#dashboard .admin-section-links {
+  position:sticky;
+  top:8px;
+  z-index:45;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  width:max-content;
+  max-width:100%;
+  margin:16px 0 8px;
+  padding:6px;
+  border:1px solid #d9e5eb;
+  border-radius:13px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 8px 25px rgba(24,57,79,.07);
+  overflow-x:auto;
+  overscroll-behavior-x:contain;
+  scrollbar-width:thin;
+}
+#dashboard .admin-section-links a {
+  flex:0 0 auto;
+  min-height:41px;
+  padding:8px 15px;
+  border:1px solid transparent;
+  border-radius:9px;
+  background:transparent;
+  color:#567083;
+  font-size:12px;
+  line-height:1.5;
+  font-weight:800;
+  white-space:nowrap;
+  box-shadow:none;
+}
+#dashboard .admin-section-links a:hover {
+  background:#f0f6f8;
+  color:var(--primary);
+}
+#dashboard .admin-section-links a[aria-current="location"] {
+  background:#e8f3f1;
+  color:#176a5d;
+  border-color:#c9e2da;
+  box-shadow:inset 0 0 0 1px rgba(37,126,107,.025);
+}
+#dashboard #overview,
+#dashboard #usersSection,
+#dashboard #accountsSection,
+#dashboard #usersTitle,
+#dashboard .account-edit-form {
+  scroll-margin-top:88px;
+}
+#dashboard .controls {
+  align-items:center;
+  gap:16px;
+  margin:18px 0 19px;
+}
+#dashboard .controls h2 {letter-spacing:-.2px;line-height:1.4}
+#dashboard .period-wrap {
+  min-height:47px;
+  border-color:#d4e1e9;
+  box-shadow:0 2px 7px rgba(29,70,95,.035);
+}
+#dashboard .period-wrap select {min-height:36px;color:#274f69}
+
+/* Statistics retain the existing color palette but gain consistent rhythm. */
+#dashboard .metrics {gap:12px}
+#dashboard .metric {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-height:139px;
+  padding:17px 19px;
+  border-color:#dde7ed;
+  box-shadow:0 5px 19px rgba(23,58,80,.04);
+}
+#dashboard .metric .metric-title {font-size:12px;line-height:1.65}
+#dashboard .metric .metric-value {
+  margin-top:5px;
+  font-size:clamp(27px,2.8vw,35px);
+  line-height:1.38;
+}
+#dashboard .metric .metric-note {font-size:11px;line-height:1.65;margin-top:5px}
+#dashboard .panel {border-color:#dbe5eb;box-shadow:0 5px 20px rgba(23,58,80,.04)}
+#dashboard .panel-heading h2,
+#dashboard .user-toolbar h2 {line-height:1.45;letter-spacing:-.2px}
+#dashboard .user-toolbar {align-items:flex-start}
+#dashboard .user-toolbar > div:first-child {min-width:0}
+#dashboard .user-toolbar p {line-height:1.75}
+#dashboard .plot-foot {gap:10px;line-height:1.7}
+#dashboard .plot-foot span {min-width:0}
+
+/* Search fields: easy to clear, predictable size on mobile and desktop. */
+#dashboard .table-filters {align-items:stretch;gap:10px;margin:17px 0}
+#dashboard .admin-search-control {
+  display:flex;
+  align-items:center;
+  flex:1 1 260px;
+  gap:7px;
+  min-width:0;
+  max-width:100%;
+}
+#dashboard .admin-search-control .search {
+  flex:1 1 auto;
+  width:100%;
+  min-width:0;
+  max-width:none;
+  min-height:45px;
+  padding-inline:13px;
+  border-color:#d4e0e8;
+  font-size:13px;
+  border-radius:10px;
+}
+#dashboard .admin-search-control .admin-clear-search {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  min-height:43px;
+  padding:7px 12px;
+  border:1px solid #d0e0e9;
+  border-radius:9px;
+  background:#f5fafc;
+  color:#36617b;
+  font-size:12px;
+  font-weight:800;
+}
+#dashboard .admin-search-control .admin-clear-search:hover {
+  background:#eaf3f8;
+}
+#dashboard .table-filters .choice {
+  min-height:45px;
+  padding-inline:12px;
+  border-color:#d4e0e8;
+  border-radius:10px;
+  font-size:12px;
+}
+#dashboard .search:focus-visible,
+#dashboard .choice:focus-visible,
+#dashboard .period-wrap select:focus-visible {
+  outline:2px solid #8bb3c7;
+  outline-offset:2px;
+}
+#dashboard .admin-table-hint {
+  margin:-5px 1px 10px;
+  color:#5b7788;
+  font-size:11px;
+  font-weight:700;
+}
+#dashboard .table-wrap {scrollbar-width:thin;scrollbar-color:#b2c7d4 transparent}
+#dashboard .table-wrap:focus-within {border-color:#b2cedd}
+#dashboard .user-card {padding:16px;border-color:#d9e5eb}
+#dashboard .user-card-top {align-items:flex-start}
+#dashboard .user-card .person,
+#dashboard .user-card-top .person {min-width:0}
+#dashboard .user-card-top .status {flex:0 0 auto}
+#dashboard .user-card-details {gap:11px 13px}
+#dashboard .detail {margin-top:15px}
+#dashboard .detail-person-identity {min-width:0}
+#dashboard .detail-person-identity > div {min-width:0;overflow-wrap:anywhere}
+
+/* Form and account fields: no fixed minimum width that causes sideways overflow. */
+#accountsSection .account-actions {align-items:center}
+#accountsSection .account-toolbar {gap:9px}
+#accountsSection .account-toolbar .admin-search-control {flex:1 1 240px}
+#accountsSection .account-toolbar #refreshAccounts {min-height:45px}
+#accountsSection .account-edit-form {
+  padding:19px;
+  border-radius:13px;
+  scroll-margin-top:88px;
+}
+#accountsSection .account-fields {
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+#accountsSection .account-fields.single {grid-template-columns:minmax(0,440px)}
+#accountsSection .account-fields label {min-width:0;line-height:1.65}
+#accountsSection .account-fields input {
+  min-width:0;
+  max-width:100%;
+  font-size:13px;
+}
+#accountsSection .password-control {min-width:0}
+#accountsSection .password-control input {flex:1 1 auto;min-width:0}
+#accountsSection .password-toggle {min-height:44px}
+#accountsSection .account-form-actions {gap:9px 14px}
+#accountsSection .account-row.account-row-compact {row-gap:9px}
+#accountsSection .account-row-compact .account-compact-secondary {
+  align-content:center;
+  gap:6px 10px;
+}
+#accountsSection .account-row-compact .account-user-profile {
+  flex:0 1 auto;
+}
+#accountsSection .account-compact-email {
+  font-size:13px;
+  line-height:1.45;
+}
+#accountsSection .account-row-compact .vault-secret-line {
+  min-width:0;
+}
+#accountsSection .account-row-compact .vault-masked-password {
+  min-width:0;
+}
+#accountsSection .account-security-note {line-height:1.9}
+#accountsSection .account-feedback {overflow-wrap:anywhere}
+#accountsSection .one-time-secret {min-width:0}
+#accountsSection .one-time-secret input {max-width:100%}
+#accountsSection .account-delete-warning {line-height:1.9}
+
+/* On narrow displays the list and its controls stack without becoming tiny. */
+@media(max-width:1050px) {
+  #dashboard .content-grid {grid-template-columns:minmax(0,1fr)}
+  #dashboard .metric {min-height:130px}
+  #dashboard .plot {min-width:0}
+}
+@media(max-width:760px) {
+  #dashboard .admin-section-links {
+    position:sticky;
+    top:4px;
+    width:100%;
+    justify-content:space-between;
+    margin-top:15px;
+    padding:5px;
+    gap:4px;
+  }
+  #dashboard .admin-section-links a {
+    flex:1 1 0;
+    min-width:0;
+    padding:9px 5px;
+    min-height:42px;
+    font-size:11px;
+    text-align:center;
+    white-space:normal;
+    line-height:1.35;
+  }
+  #dashboard .metrics {gap:9px}
+  #dashboard .metric {min-height:131px;padding:15px}
+  #dashboard .metric .metric-title {font-size:12px}
+  #dashboard .metric .metric-note {font-size:10.5px}
+  #dashboard .panel {padding:16px}
+  #dashboard .table-filters {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  #dashboard .table-filters > .admin-search-control {grid-column:1/-1;width:100%}
+  #dashboard .table-filters > .choice {width:100%;min-width:0}
+  #dashboard .table-filters.account-toolbar {grid-template-columns:minmax(0,1fr) auto}
+  #dashboard .table-filters.account-toolbar > .admin-search-control {
+    grid-column:1;min-width:0;
+  }
+  #dashboard .table-filters.account-toolbar > #refreshAccounts {
+    min-height:45px;white-space:nowrap;
+  }
+  #dashboard .user-card {padding:14px}
+  #dashboard .detail-grid {gap:8px}
+  #accountsSection .account-fields {grid-template-columns:repeat(2,minmax(0,1fr))}
+  #accountsSection .account-fields.single {grid-template-columns:minmax(0,1fr)}
+  #accountsSection .account-row-compact .account-row-actions .btn {min-height:43px}
+  #dashboard .feed-item {align-items:flex-start;gap:9px}
+  #dashboard .feed-time {white-space:normal;min-width:0;max-width:115px;font-size:10.5px;line-height:1.5}
+}
+@media(max-width:540px) {
+  #dashboard .controls {align-items:stretch;margin:16px 0}
+  #dashboard .controls > div:first-child {width:100%}
+  #dashboard .period-wrap {justify-content:space-between;width:100%}
+  #dashboard .period-wrap select {flex:1;min-width:0;max-width:210px}
+  #dashboard .metric .metric-value {font-size:clamp(26px,7vw,31px)}
+  #dashboard .user-card-top {flex-wrap:wrap;align-items:center}
+  #dashboard .user-card-top .person {flex:1 1 175px}
+  #dashboard .user-card-top .status {flex:0 1 auto}
+  #dashboard .table-filters.account-toolbar {grid-template-columns:minmax(0,1fr)}
+  #dashboard .table-filters.account-toolbar > .admin-search-control {grid-column:1}
+  #dashboard .table-filters.account-toolbar > #refreshAccounts {width:100%}
+  #accountsSection .account-fields {grid-template-columns:minmax(0,1fr)}
+  #accountsSection .account-edit-form {padding:13px}
+  #accountsSection .account-form-actions .btn {width:100%;min-width:0}
+  #accountsSection .account-row.account-row-compact {padding:12px}
+  #accountsSection .account-row-compact .account-compact-secondary {gap:7px}
+  #accountsSection .account-row-compact .account-row-actions {display:flex;gap:8px}
+  #accountsSection .account-row-compact .account-row-actions .btn {
+    flex:1 1 0;
+    min-width:0;
+    white-space:normal;
+    line-height:1.4;
+    padding-inline:7px;
+  }
+  #dashboard .feed-item {flex-wrap:wrap}
+  #dashboard .feed-content {flex:1 1 140px}
+  #dashboard .feed-time {flex:0 1 100%;text-align:right;max-width:none}
+}
+@media(max-width:380px) {
+  #dashboard .metric {padding:12px;min-height:127px}
+  #dashboard .metric .metric-title {font-size:11px}
+  #dashboard .metric .metric-value {font-size:26px}
+  #dashboard .metric .metric-note {font-size:10px}
+  #dashboard .detail-grid {grid-template-columns:minmax(0,1fr)}
+  #dashboard .detail-header {align-items:stretch}
+  #dashboard .user-card-details {gap:8px}
+  #dashboard .user-card-details strong {font-size:12px}
+}
+
+/* A small utility for navigating long admin reports. Hidden under the member
+   preview overlay, and fully disabled when reduced motion is requested. */
+.admin-back-top {
+  position:fixed;
+  bottom:max(19px,env(safe-area-inset-bottom));
+  left:max(18px,env(safe-area-inset-left));
+  z-index:60;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  justify-content:center;
+  min-height:43px;
+  padding:9px 13px;
+  border:1px solid #bfcfda;
+  border-radius:999px;
+  color:#234d69;
+  background:#fff;
+  box-shadow:0 7px 22px rgba(25,59,81,.13);
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.admin-back-top:hover {background:#f1f7fa}
+body.support-preview-open .admin-back-top {display:none!important}
+@media(max-width:540px) {
+  .admin-back-top {
+    min-height:42px;
+    left:12px;
+    bottom:max(12px,env(safe-area-inset-bottom));
+    padding:8px 11px;
+  }
+}

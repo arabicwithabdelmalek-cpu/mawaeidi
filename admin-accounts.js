@@ -7,6 +7,7 @@
   const client = window.mawaeidiAdminClient;
   const list = $("accountsList");
   let users = [];
+  let passwordChanges = new Map();
   let loading = false;
   let submitting = false;
   let oneTimeTargetId = null;
@@ -115,6 +116,19 @@
     return !query || [user.email, user.name].some(item =>
       (item || "").toLocaleLowerCase().includes(query));
   }
+  function shortDate(value) {
+    if (!value) return "";
+    return new Intl.DateTimeFormat("ar-EG", {
+      timeZone:"Africa/Cairo", day:"numeric", month:"short", hour:"numeric", minute:"2-digit"
+    }).format(new Date(value));
+  }
+  function iconButton(title, symbol) {
+    const button = create("button", "account-inline-icon", symbol);
+    button.type = "button";
+    button.title = title;
+    button.setAttribute("aria-label", title);
+    return button;
+  }
   function render() {
     const people = users.filter(matches);
     $("accountsCount").textContent = new Intl.NumberFormat("ar-EG").format(users.length) + " حساب";
@@ -124,41 +138,55 @@
         users.length ? "لا توجد حسابات مطابقة للبحث." : "لا توجد حسابات."));
       return;
     }
-    people.forEach(user => {
-      const row = create("article", "account-row");
-      const person = create("div", "account-person");
-      const avatar = create("span", "account-avatar",
-        [...(user.name || user.email || "م")][0]);
-      const nameBlock = create("div", "account-name-block");
-      const label = create("strong", "", user.name || "مستخدم مواعيدي");
-      const email = create("span", "account-email", user.email || "بدون بريد");
-      nameBlock.append(label, email);
-      if (user.is_owner) nameBlock.append(create("small", "account-owner-tag", "حسابك"));
-      person.append(avatar,nameBlock);
-      const meta = create("div", "account-meta");
-      meta.append(create("small", "", "آخر تسجيل دخول"),
-        create("span", "", formatDate(user.last_sign_in_at)));
+    for (const user of people) {
+      const row = create("article", "account-row account-row-compact");
+
+      const identity = create("div", "account-identity-col");
+      const emailLine = create("div", "account-compact-email-line");
+      const email = create("span", "account-compact-email", user.email || "بدون بريد");
+      email.dir = "ltr";
+      const copyEmail = iconButton("نسخ البريد الإلكتروني", "⧉");
+      copyEmail.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(user.email || "");
+          feedback("تم نسخ البريد الإلكتروني.");
+        } catch { feedback("تعذر نسخ البريد. حدده وانسخه يدويًا.",true); }
+      });
+      emailLine.append(email,copyEmail);
+      identity.append(emailLine);
+      const subline = create("div", "account-compact-secondary");
+      if (user.name) subline.append(create("span", "", user.name));
+      if (user.is_owner) subline.append(create("span", "account-owner-tag", "حسابك"));
+      const change = passwordChanges.get(user.id);
+      if (change) {
+        const changed = create("span", "account-change-tag",
+          "تغيّرت من صفحة الحساب: " + shortDate(change));
+        changed.title = "تم تسجيل وقت التغيير فقط، ولا يمكن كشف الكلمة الجديدة لصاحب الموقع.";
+        subline.append(changed);
+      }
+      identity.append(subline);
+
       const pass = create("div", "account-password-meta");
       if (window.mawaeidiVault?.buildPasswordCell) {
-        window.mawaeidiVault.buildPasswordCell(pass,user);
+        window.mawaeidiVault.buildPasswordCell(pass,user,change || null);
       } else {
-        pass.append(create("small", "", "كلمة المرور"),
-          create("span", "", "جارٍ تحميل الخزنة…"));
+        pass.append(create("small", "", "كلمة المرور"),create("span", "", "جارٍ تحميل الخزنة…"));
       }
+
       const actions = create("div", "account-row-actions");
-      const action = create("button", "btn account-edit-btn", "تغيير كلمة المرور");
+      const action = create("button", "btn account-edit-btn", "تغيير الكلمة");
       action.type = "button";
       action.addEventListener("click", () => openReset(user));
       actions.append(action);
       if (!user.is_owner && !user.is_admin) {
-        const remove = create("button", "btn account-remove-btn", "حذف الحساب");
+        const remove = create("button", "btn account-remove-btn", "حذف");
         remove.type = "button";
         remove.addEventListener("click", () => openDelete(user));
         actions.append(remove);
       }
-      row.append(person,meta,pass,actions);
+      row.append(identity,pass,actions);
       list.append(row);
-    });
+    }
   }
 
   window.mawaeidiRenderAccounts = render;
@@ -169,6 +197,15 @@
     try {
       const data = await invoke({ action: "list" });
       users = Array.isArray(data.users) ? data.users : [];
+      passwordChanges = new Map();
+      // Timestamp-only audit, not a copy of another person's password.
+      try {
+        const { data: changes, error: changeError } = await client
+          .from("mawaeidi_password_change_events").select("user_id,changed_at");
+        if (!changeError) passwordChanges = new Map((changes || []).map(item => [
+          item.user_id,item.changed_at
+        ]));
+      } catch { /* Account list is still useful when the audit is unavailable. */ }
       render();
       if (showMessage) feedback("تم تحديث قائمة الحسابات.");
       else clearFeedback();

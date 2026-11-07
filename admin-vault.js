@@ -305,8 +305,14 @@
     finally { busy = false; $("vaultEntrySave").disabled = false; }
   });
 
-  client?.auth.onAuthStateChange(event => {
-    if (event === "SIGNED_OUT") { lockVault(); ownerId = null; config = null; }
+  client?.auth.onAuthStateChange((event, session) => {
+    // Never carry decrypted secrets across an account switch.
+    if (event === "SIGNED_OUT" || (ownerId && session?.user?.id !== ownerId)) {
+      lockVault(); ownerId = null; config = null;
+      $("vaultLocked").hidden = true;
+      $("vaultNotConfigured").hidden = true;
+      $("vaultStatus").textContent = "غير متاحة";
+    }
   });
   window.addEventListener("pagehide", lockVault);
   ["keydown","pointerdown","touchstart"].forEach(name =>

@@ -818,3 +818,39 @@ tbody tr:hover {background:#f8fbfd}
   #accountsSection .support-detail-columns {grid-template-columns:minmax(0,1fr)}
   #accountsSection .support-head h3 {font-size:15px}
 }
+
+/* Make the administrative preview action discoverable in every account row. */
+#accountsSection .account-row-compact .account-compact-secondary {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px 10px;
+  min-height:33px;
+}
+#accountsSection .account-row-compact .account-support-link {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:auto;
+  min-height:32px;
+  padding:5px 13px;
+  border:1px solid #9dc9ba;
+  border-radius:8px;
+  background:#e7f5ef;
+  color:#185f4f;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.5;
+  box-shadow:0 1px 2px #103f2a12;
+  white-space:nowrap;
+}
+#accountsSection .account-row-compact .account-support-link:hover {
+  background:#d7efe5;
+  border-color:#7ab7a1;
+}
+@media(max-width:670px) {
+  #accountsSection .account-row-compact .account-support-link {
+    min-height:36px;
+    padding-inline:14px;
+  }
+}

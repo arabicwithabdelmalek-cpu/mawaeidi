@@ -12,6 +12,8 @@
   let loading = true;
   let busy = false;
   let editing = null;
+  // Invalidate in-flight credential requests when the admin session changes.
+  let authGeneration = 0;
 
   function element(tag, name = "", value = null) {
     const el = document.createElement(tag);
@@ -41,6 +43,7 @@
     $("credentialNote").value = "";
   }
   function wipe() {
+    authGeneration++;
     saved.clear();
     currentOwner = null;
     loading = true;
@@ -63,19 +66,24 @@
   }
 
   async function initialize() {
+    const generation = ++authGeneration;
     try {
       const { data: auth, error } = await client.auth.getUser();
+      if (generation !== authGeneration) return;
       if (error || !auth?.user) throw Error("not_authenticated");
       currentOwner = auth.user.id;
       const data = await invoke("list");
+      if (generation !== authGeneration || currentOwner !== auth.user.id) return;
       if (Array.isArray(data)) saved = new Map(data.map(entry =>
         [entry.user_id,entry]));
       else throw Error("invalid_data");
       loading = false;
       repaint();
     } catch (error) {
+      if (generation !== authGeneration) return;
       loading = false;
       saved.clear();
+      currentOwner = null;
       feedback("تعذّر تحميل كلمات المرور المحفوظة. حاول تحديث صفحة الإدارة.", true);
       repaint();
     }
@@ -104,7 +112,7 @@
     return button;
   }
   function openEditor(user) {
-    if (busy) return;
+    if (busy || loading || !currentOwner) return;
     clearFeedback();
     editing = user.id;
     const row = saved.get(user.id);
@@ -171,7 +179,8 @@
   }
 
   async function recordPasswordIfOpen(id,password) {
-    if (!id || !password) return false;
+    if (!id || !password || !currentOwner || loading) return false;
+    const generation = authGeneration, owner = currentOwner;
     const prev = saved.get(id);
     try {
       await invoke("save",{
@@ -179,6 +188,7 @@
         website:prev?.website || DEFAULT_SITE,
         note:prev?.note || ""
       });
+      if (generation !== authGeneration || currentOwner !== owner) return false;
       saved.set(id,{
         user_id:id,password,website:prev?.website || DEFAULT_SITE,
         note:prev?.note || "",updated_at:new Date().toISOString()
@@ -188,7 +198,9 @@
     } catch { return false; }
   }
   async function saveOneTime(id,password) {
+    const generation = authGeneration;
     const ok = await recordPasswordIfOpen(id,password);
+    if (generation !== authGeneration) return false;
     feedback(ok ? "تم حفظ كلمة المرور بشكل مشفّر مع الحساب." :
       "لم تنجح عملية حفظ الكلمة؛ حاول مرة أخرى.",!ok);
     return ok;
@@ -196,28 +208,31 @@
 
   $("credentialsEditForm").addEventListener("submit", async event => {
     event.preventDefault();
-    if (busy || !editing) return;
+    if (busy || !editing || !currentOwner || loading) return;
+    const generation = authGeneration, owner = currentOwner;
     const id = editing, password = $("credentialPassword").value;
     if (!password || password.length > 256) {
       feedback("أدخل كلمة مرور صالحة للحفظ.",true); return;
     }
     busy = true; $("credentialSave").disabled = true;
+    const website = $("credentialWebsite").value.trim() || DEFAULT_SITE;
+    const note = $("credentialNote").value.trim();
     try {
       const { error } = await client.rpc("mawaeidi_admin_credentials", {
         p_action:"save",p_user_id:id,p_password:password,
-        p_website:$("credentialWebsite").value.trim() || DEFAULT_SITE,
-        p_note:$("credentialNote").value.trim()
+        p_website:website,p_note:note
       });
+      if (generation !== authGeneration || currentOwner !== owner) return;
       if (error) throw error;
       saved.set(id,{
-        user_id:id,password,website:$("credentialWebsite").value.trim() || DEFAULT_SITE,
-        note:$("credentialNote").value.trim(),updated_at:new Date().toISOString()
+        user_id:id,password,website,note,updated_at:new Date().toISOString()
       });
       closeEditor();
       repaint();
       feedback("اتحفظت كلمة المرور مع الحساب، من غير كلمة رئيسية إضافية. الحفظ هنا لا يغيّر كلمة دخوله الفعلية.");
     } catch {
-      feedback("تعذّر حفظ كلمة المرور. تحقق من الاتصال وحاول مرة أخرى.",true);
+      if (generation === authGeneration)
+        feedback("تعذّر حفظ كلمة المرور. تحقق من الاتصال وحاول مرة أخرى.",true);
     } finally {
       busy = false; $("credentialSave").disabled = false;
     }

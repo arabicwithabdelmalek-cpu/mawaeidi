@@ -90,6 +90,7 @@
     confirmation_mismatch: "البريد الإلكتروني المدخل لا يطابق الحساب المحدد.",
     cannot_delete_self: "لا يمكنك حذف حسابك الإداري من لوحة الإدارة.",
     cannot_delete_admin: "لا يمكن حذف الحسابات ذات صلاحية الإدارة من هذه الصفحة.",
+    cannot_change_admin: "لا يمكن تغيير كلمة مرور مدير آخر من لوحة الإدارة. يمكن للمدير تغيير كلمة مروره من حسابه.",
     storage_check_failed: "تعذر التحقق من الصور والملفات الخاصة بالحساب. لم يُحذف الحساب.",
     storage_cleanup_failed: "تعذر حذف بعض الصور والملفات المرتبطة بالحساب. لم يُحذف الحساب، وقد تكون بعض الملفات حُذفت.",
     storage_too_large: "يحتوي هذا الحساب على ملفات أكثر مما يسمح به الحذف المباشر؛ يرجى تنظيف ملفاته أولًا.",
@@ -204,10 +205,15 @@
       }
 
       const actions = create("div", "account-row-actions");
-      const action = create("button", "btn account-edit-btn", "تغيير الكلمة");
-      action.type = "button";
-      action.addEventListener("click", () => openReset(user));
-      actions.append(action);
+      if (user.is_admin && !user.is_owner) {
+        actions.append(create("span", "account-admin-protected",
+          "حساب إداري محمي"));
+      } else {
+        const action = create("button", "btn account-edit-btn", "تغيير الكلمة");
+        action.type = "button";
+        action.addEventListener("click", () => openReset(user));
+        actions.append(action);
+      }
       if (!user.is_owner && !user.is_admin) {
         const remove = create("button", "btn account-remove-btn", "حذف");
         remove.type = "button";
@@ -251,7 +257,7 @@
   }
 
   function openReset(user) {
-    if (submitting) return;
+    if (submitting || (user.is_admin && !user.is_owner)) return;
     closeForms();
     clearFeedback();
     clearOneTimeCredentials();

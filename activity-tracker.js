@@ -22,23 +22,24 @@
   let accountLink = null;
   function removeAdminLink() {
     accountLink?.remove();
+    document.querySelector(".header-actions")?.classList.remove("has-admin-shortcut");
     accountLink = null;
   }
   function insertAdminLink() {
-    const logout = document.querySelector("#dataMenu .data-action.logout");
-    if (!logout || accountLink) return;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "data-action";
-    button.id = "adminUsageLink";
-    const heading = document.createElement("strong");
-    heading.textContent = "لوحة الإدارة — نشاط المستخدمين";
-    const detail = document.createElement("small");
-    detail.textContent = "عدد مرات الدخول وآخر زيارة ومدة الاستخدام";
-    button.append(heading, detail);
-    button.addEventListener("click", () => { location.href = "./admin.html"; });
-    logout.before(button);
-    accountLink = button;
+    const actions = document.querySelector(".header .header-actions");
+    const sync = actions?.querySelector("#syncStatus");
+    if (!actions || !sync || accountLink) return;
+    const link = document.createElement("a");
+    link.href = "./admin.html";
+    link.className = "admin-shortcut";
+    link.id = "adminUsageLink";
+    link.title = "لوحة إدارة حسابات مواعيدي ومتابعة الفريق";
+    link.setAttribute("aria-label", "فتح لوحة إدارة مواعيدي");
+    // This is a fixed decorative icon, not injected account content.
+    link.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg><span>الإدارة</span>';
+    sync.before(link);
+    actions.classList.add("has-admin-shortcut");
+    accountLink = link;
   }
   function storedVisit() {
     try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "null"); }

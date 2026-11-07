@@ -13,3 +13,129 @@
   filter: none;
   object-fit: contain;
 }
+
+
+/* Header layout v4: coherent toolbar, with a real admin-only section next to
+   the account control (never inside the Tools menu). */
+.app > .header {
+  align-items:center;
+  column-gap:22px;
+  row-gap:14px;
+  padding-inline:4px;
+  padding-bottom:19px;
+}
+.app > .header .header-actions {
+  align-items:center;
+  gap:9px;
+  min-width:0;
+}
+.app > .header .header-actions .account-menu-trigger,
+.app > .header .header-actions .data-menu > summary,
+.app > .header .header-actions #primaryActionButton {
+  min-height:44px;
+}
+.app > .header .header-actions .account-menu-trigger {
+  max-width:210px;
+  border-color:rgba(47,93,124,.20);
+}
+.app > .header .header-actions .data-menu > summary {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 13px;
+}
+.app > .header .header-actions .admin-shortcut {
+  display:inline-flex;
+  flex:0 0 auto;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:44px;
+  padding:8px 14px;
+  border:1px solid #b9d6cc;
+  border-radius:11px;
+  color:#1d6157;
+  background:#eaf5f0;
+  text-decoration:none;
+  font-size:12.5px;
+  font-weight:800;
+  white-space:nowrap;
+  transition:background .16s,border-color .16s,transform .16s;
+}
+.app > .header .header-actions .admin-shortcut svg {
+  width:17px;
+  height:17px;
+  flex:0 0 auto;
+}
+.app > .header .header-actions .admin-shortcut:hover {
+  background:#dff0e9;
+  border-color:#83b7a7;
+  transform:translateY(-1px);
+}
+.app > .header .header-actions .admin-shortcut:focus-visible {
+  outline:3px solid #85bbad;
+  outline-offset:2px;
+}
+@media (min-width:761px) and (max-width:1100px) {
+  .app > .header {flex-wrap:wrap;}
+  .app > .header .identity {flex:1 1 100%;}
+  .app > .header .header-actions {
+    flex:1 1 100%;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+  }
+}
+@media (max-width:760px) {
+  .app > .header {padding-inline:2px;gap:12px;}
+  .app > .header .header-actions .admin-shortcut {
+    min-height:44px;
+    padding:8px 13px;
+  }
+}
+@media (max-width:520px) {
+  /* Preserve the existing first row: account, sync and tools.
+     Second row: add lesson and the separate administration entry. */
+  .app > .header .header-actions.has-admin-shortcut {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 44px max-content;
+    align-items:stretch;
+    gap:8px;
+  }
+  .app > .header .header-actions.has-admin-shortcut > .account-menu-trigger {
+    grid-column:1;
+    grid-row:1;
+    min-width:0;
+    width:100%;
+    max-width:none !important;
+  }
+  .app > .header .header-actions.has-admin-shortcut > #syncStatus {
+    grid-column:2;
+    grid-row:1;
+  }
+  .app > .header .header-actions.has-admin-shortcut > .data-menu {
+    grid-column:3;
+    grid-row:1;
+    align-self:stretch;
+  }
+  .app > .header .header-actions.has-admin-shortcut > .data-menu > summary {
+    height:100%;
+    min-height:44px;
+  }
+  .app > .header .header-actions.has-admin-shortcut > #primaryActionButton {
+    grid-column:1;
+    grid-row:2;
+    width:100%;
+    min-width:0;
+    padding-inline:7px;
+  }
+  .app > .header .header-actions.has-admin-shortcut > .admin-shortcut {
+    grid-column:2 / 4;
+    grid-row:2;
+    width:100%;
+    padding-inline:8px;
+    font-size:12px;
+  }
+  .app > .header .header-actions.has-admin-shortcut > #backupFile {
+    display:none;
+  }
+}

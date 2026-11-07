@@ -173,3 +173,69 @@ tbody tr:hover {background:#f8fbfd}
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after {scroll-behavior:auto!important;animation:none!important;transition:none!important}
 }
+
+
+/* Owner-only account management — scoped to the administration panel */
+#accountsSection .account-actions {display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#accountsSection .account-security-note {
+  margin:18px 0;padding:11px 14px;border:1px solid #dce8ef;
+  border-radius:10px;background:#f4f8fb;color:var(--muted);font-size:12px;line-height:1.8;
+}
+#accountsSection .account-toolbar {align-items:center}
+#accountsSection .account-toolbar .search {max-width:420px}
+#accountsSection .account-list {display:grid;gap:10px}
+#accountsSection .account-row {
+  display:grid;grid-template-columns:minmax(180px,2fr) minmax(135px,1.1fr) minmax(125px,.9fr) auto;
+  align-items:center;gap:16px;padding:15px;
+  background:#fff;border:1px solid #dfe8ee;border-radius:12px;
+}
+#accountsSection .account-person {display:flex;align-items:center;gap:11px;min-width:0}
+#accountsSection .account-avatar {width:39px;height:39px;border-radius:11px;display:grid;place-items:center;flex:none;background:#e8f1f6;color:var(--primary);font-size:16px;font-weight:800}
+#accountsSection .account-name-block {display:grid;gap:2px;min-width:0}
+#accountsSection .account-name-block strong {font-size:13px;font-weight:800;overflow-wrap:anywhere;line-height:1.6}
+#accountsSection .account-email {font-size:12px;color:var(--muted);direction:ltr;text-align:right;overflow-wrap:anywhere}
+#accountsSection .account-owner-tag {display:inline-block;color:var(--teal);font-size:10px;font-weight:800}
+#accountsSection .account-meta, #accountsSection .account-password-meta {min-width:0;display:grid;gap:2px}
+#accountsSection .account-meta small,#accountsSection .account-password-meta small {color:var(--muted);font-size:11px}
+#accountsSection .account-meta span {font-size:12px;color:var(--ink)}
+#accountsSection .account-password-meta strong {letter-spacing:1px;color:var(--ink);font-size:14px;direction:ltr;text-align:right}
+#accountsSection .account-password-meta span {font-size:10px;color:var(--muted)}
+#accountsSection .account-edit-btn {color:var(--primary);border-color:#cfdfe9;background:#f7fafc;min-height:39px}
+#accountsSection .account-feedback {padding:13px 15px;margin:14px 0;border:1px solid #b7d9c8;background:#eff9f3;border-radius:11px;color:#19654e;font-size:12px;font-weight:700;line-height:1.9}
+#accountsSection .account-feedback.error {border-color:#e6c8c8;background:#fff5f5;color:#914b4b}
+#accountsSection .account-edit-form {background:#f7fafc;border:1px solid #d6e5ee;padding:19px;border-radius:13px;margin:17px 0}
+#accountsSection .account-form-top {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+#accountsSection .account-form-top h3 {font-size:16px;font-weight:800;margin:0}
+#accountsSection .account-form-top p {font-size:11px;color:var(--muted);margin:2px 0 0;overflow-wrap:anywhere}
+#accountsSection .account-fields {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+#accountsSection .account-fields.single {grid-template-columns:minmax(240px,440px)}
+#accountsSection .account-fields label {display:grid;align-content:start;gap:7px;font-size:12px;color:var(--ink);font-weight:800}
+#accountsSection .account-fields label > span:not(.password-control) {display:inline;color:var(--muted);font-size:10px;font-weight:600}
+#accountsSection .account-fields input {width:100%;min-width:0;min-height:44px;border-radius:9px;border:1px solid #cddce7;padding:10px 12px;background:#fff;color:var(--ink);font-size:13px}
+#accountsSection .account-fields input:focus {border-color:#6b9fbd;outline:2px solid rgba(65,135,183,.18)}
+#accountsSection .password-control {display:flex;align-items:stretch;gap:5px;min-width:0}
+#accountsSection .password-control input {flex:1}
+#accountsSection .password-toggle {flex:none;border:1px solid #cddce7;border-radius:9px;background:#fff;color:var(--primary);padding:0 10px;font-size:11px;font-weight:800}
+#accountsSection .account-form-actions {display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:17px}
+#accountsSection .account-hint {font-size:11px;color:var(--muted);line-height:1.7}
+@media(max-width:970px) {
+  #accountsSection .account-row {grid-template-columns:minmax(160px,1.8fr) minmax(135px,1fr) auto}
+  #accountsSection .account-password-meta {display:none}
+}
+@media(max-width:760px) {
+  #accountsSection .account-row {grid-template-columns:minmax(0,1fr) auto;gap:9px 13px;padding:13px}
+  #accountsSection .account-person {grid-column:1 / -1}
+  #accountsSection .account-meta {grid-column:1}
+  #accountsSection .account-edit-btn {grid-column:2;align-self:end}
+  #accountsSection .account-fields {grid-template-columns:1fr}
+  #accountsSection .account-fields.single {grid-template-columns:1fr}
+  #accountsSection .account-toolbar .search {max-width:none}
+  #accountsSection .account-actions {width:100%;justify-content:space-between}
+  #accountsSection .account-edit-form {padding:14px}
+}
+
+.admin-section-links {display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:14px}
+.admin-section-links a {display:inline-flex;align-items:center;justify-content:center;min-height:39px;border:1px solid #cfdee7;border-radius:10px;background:#fff;color:var(--primary);padding:8px 13px;font-size:12px;font-weight:800;transition:background .15s}
+.admin-section-links a:hover {background:#eaf3f8}
+#accountsSection {scroll-margin-top:16px}
+@media(max-width:520px){.admin-section-links {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.admin-section-links a{padding:7px 6px;font-size:10px;text-align:center}}

@@ -6,6 +6,7 @@
   const PUBLISHABLE_KEY = "sb_publishable_t0pqtkV0-3Wj0htl-eGR9w_BsifiUDE";
   const $ = id => document.getElementById(id);
   const client = window.supabase?.createClient(SUPABASE_URL, PUBLISHABLE_KEY);
+  window.mawaeidiAdminClient = client;
   const cairoKeyFormat = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit"
   });

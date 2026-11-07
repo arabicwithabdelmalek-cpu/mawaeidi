@@ -29,6 +29,20 @@
     $("accountsFeedback").hidden = true;
     $("accountsFeedback").textContent = "";
   }
+  function clearOneTimeCredentials() {
+    // Do not persist readable passwords in storage, logs, URLs, or account records.
+    $("oneTimePassword").value = "";
+    $("oneTimeEmail").value = "";
+    $("oneTimeCopyStatus").textContent = "";
+    $("oneTimeCredentials").hidden = true;
+  }
+  function showOneTimeCredentials(email, password) {
+    clearOneTimeCredentials();
+    $("oneTimeEmail").value = email;
+    $("oneTimePassword").value = password;
+    $("oneTimeCredentials").hidden = false;
+    $("oneTimeCredentials").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
   function clearPassword(form) {
     form.querySelectorAll('input[type="password"], input[data-secret="true"]')
       .forEach(input => { input.value = ""; input.type = "password"; });
@@ -124,7 +138,7 @@
       const pass = create("div", "account-password-meta");
       pass.append(create("small", "", "كلمة المرور"),
         create("strong", "", "••••••••"),
-        create("span", "", "مخفية لأمان الحساب"));
+        create("span", "", "القديمة غير قابلة للاسترجاع"));
       const actions = create("div", "account-row-actions");
       const action = create("button", "btn account-edit-btn", "تغيير كلمة المرور");
       action.type = "button";
@@ -166,6 +180,7 @@
     if (submitting) return;
     closeForms();
     clearFeedback();
+    clearOneTimeCredentials();
     $("resetAccountId").value = user.id;
     $("resetAccountLabel").textContent = (user.name || "مستخدم") +
       " — " + (user.email || "");
@@ -188,6 +203,7 @@
     if (submitting || user.is_owner || user.is_admin) return;
     closeForms();
     clearFeedback();
+    clearOneTimeCredentials();
     $("deleteAccountId").value = user.id;
     $("deleteAccountLabel").textContent =
       (user.name || "مستخدم") + " — " + (user.email || "");
@@ -198,7 +214,7 @@
   }
 
   $("openCreateAccount").addEventListener("click", () => {
-    closeForms(); clearFeedback();
+    closeForms(); clearFeedback(); clearOneTimeCredentials();
     $("createAccountForm").hidden = false;
     $("newAccountEmail").focus();
   });
@@ -209,6 +225,20 @@
   $("deleteAccountAcknowledged").addEventListener("change", validateDeleteConfirmation);
   $("accountSearch").addEventListener("input", render);
   $("refreshAccounts").addEventListener("click", () => load(true));
+  $("dismissOneTimeCredentials").addEventListener("click", clearOneTimeCredentials);
+  $("copyOneTimePassword").addEventListener("click", async () => {
+    if ($("oneTimeCredentials").hidden || !$("oneTimePassword").value) return;
+    try {
+      await navigator.clipboard.writeText($("oneTimePassword").value);
+      $("oneTimeCopyStatus").textContent =
+        "تم نسخ كلمة المرور. انتبه إلى أن الحافظة قد تظل محتفظة بها حتى تنسخ شيئًا آخر.";
+    } catch {
+      $("oneTimeCopyStatus").textContent =
+        "تعذر النسخ تلقائيًا؛ حدد كلمة المرور وانسخها يدويًا.";
+      $("oneTimePassword").focus();
+      $("oneTimePassword").select();
+    }
+  });
 
   document.querySelectorAll("[data-toggle-password]").forEach(button => {
     button.addEventListener("click", () => {
@@ -237,7 +267,8 @@
       $("createAccountForm").reset();
       closeForms();
       await load();
-      feedback("تم إنشاء الحساب بنجاح. يمكنك إرسال البريد وكلمة المرور الجديدة لصاحب الحساب بطريقة آمنة.");
+      showOneTimeCredentials(email, password);
+      feedback("تم إنشاء الحساب بنجاح. تظهر كلمة المرور الجديدة مؤقتًا أعلاه لنسخها.");
     } catch (error) {
       feedback(friendly(error.message),true);
     } finally {
@@ -262,7 +293,8 @@
     try {
       await invoke({ action:"set_password", user_id:id, password });
       closeForms();
-      feedback("تم تعيين كلمة المرور الجديدة للحساب بنجاح. بلّغ صاحب الحساب بالكلمة الجديدة بطريقة آمنة.");
+      showOneTimeCredentials(user.email || "", password);
+      feedback("تم تغيير كلمة المرور بنجاح. تظهر الكلمة الجديدة مؤقتًا أعلاه لنسخها.");
     } catch (error) {
       feedback(friendly(error.message),true);
     } finally {
@@ -293,6 +325,7 @@
         confirm_email: $("deleteAccountEmail").value.trim().toLowerCase(),
         confirm_phrase: "حذف نهائي"
       });
+      clearOneTimeCredentials();
       users = users.filter(person => person.id !== id);
       closeForms();
       render();
@@ -308,6 +341,7 @@
   if (client) {
     client.auth.onAuthStateChange(event => {
       if (event === "SIGNED_OUT") {
+        clearOneTimeCredentials();
         users = [];
         closeForms();
         list.replaceChildren(create("p","empty-state","سجّل الدخول مرة أخرى."));
@@ -315,5 +349,6 @@
       }
     });
   }
+  window.addEventListener("pagehide", clearOneTimeCredentials);
   load();
 })();

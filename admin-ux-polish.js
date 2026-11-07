@@ -57,7 +57,7 @@
   });
   back.addEventListener("click",() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.scrollTo({top:0,behavior:reduce?"instant":"smooth"});
+    window.scrollTo({top:0,behavior:reduce?"auto":"smooth"});
     setCurrent("overview");
   });
 

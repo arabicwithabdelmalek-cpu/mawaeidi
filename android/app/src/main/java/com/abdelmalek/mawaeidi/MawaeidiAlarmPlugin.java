@@ -9,8 +9,12 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.media.AudioAttributes;
+import android.media.Ringtone;
 import android.media.RingtoneManager;
-import androidx.activity.result.ActivityResult;
+import android.database.Cursor;
+import androidx.appcompat.app.AlertDialog;
+import java.util.ArrayList;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
@@ -22,7 +26,6 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.Permission;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -42,40 +45,110 @@ public class MawaeidiAlarmPlugin extends Plugin {
 
     @PluginMethod
     public void chooseAlarmTone(PluginCall call) {
-        try {
-            Intent picker = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
-            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM);
-            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "اختر صوت منبّه مواعيدي");
-            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
-            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
-            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_DEFAULT_URI, AlarmTone.defaultUri());
-            picker.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, AlarmTone.selectedUri(getContext()));
-            startActivityForResult(call, picker, "onAlarmToneChosen");
-        } catch (Exception error) {
-            call.reject("تعذّر فتح قائمة نغمات الهاتف.", "alarm_tone_picker_unavailable", error);
+        Activity activity = getActivity();
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
+            call.reject("تعذّر فتح قائمة النغمات حاليًا.", "alarm_tone_picker_unavailable");
+            return;
         }
-    }
 
-    @ActivityCallback
-    private void onAlarmToneChosen(PluginCall call, ActivityResult result) {
-        if (call == null) return;
-        Intent data = result.getData();
-        if (result.getResultCode() != Activity.RESULT_OK || data == null) {
-            JSObject response = stateObject();
-            response.put("changed", false);
-            call.resolve(response);
-            return;
-        }
-        Uri chosen = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
-        if (chosen == null || (!"content".equalsIgnoreCase(chosen.getScheme())
-            && !"android.resource".equalsIgnoreCase(chosen.getScheme()))) {
-            call.reject("لم يتم اختيار نغمة صالحة.", "invalid_alarm_tone");
-            return;
-        }
-        AlarmTone.save(getContext(), chosen);
-        JSObject response = stateObject();
-        response.put("changed", true);
-        call.resolve(response);
+        activity.runOnUiThread(() -> {
+            try {
+                // In-app list: never hand the user to a third-party ringtone-picker app.
+                RingtoneManager manager = new RingtoneManager(activity);
+                manager.setType(RingtoneManager.TYPE_ALARM);
+                ArrayList<Uri> toneUris = new ArrayList<>();
+                ArrayList<String> toneTitles = new ArrayList<>();
+                Uri defaultTone = AlarmTone.defaultUri();
+                Uri savedTone = AlarmTone.selectedUri(activity);
+                toneUris.add(defaultTone);
+                toneTitles.add("نغمة المنبّه الافتراضية");
+
+                Cursor cursor = manager.getCursor();
+                if (cursor != null) {
+                    int count = Math.min(cursor.getCount(), 250);
+                    for (int i = 0; i < count; i++) {
+                        try {
+                            if (!cursor.moveToPosition(i)) continue;
+                            String title = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX);
+                            Uri uri = manager.getRingtoneUri(i);
+                            if (uri == null || (!"content".equalsIgnoreCase(uri.getScheme())
+                                && !"android.resource".equalsIgnoreCase(uri.getScheme()))) continue;
+                            if (toneUris.contains(uri)) continue;
+                            toneUris.add(uri);
+                            toneTitles.add(title == null || title.trim().isEmpty() ? "نغمة " + (i + 1) : title);
+                        } catch (Exception ignored) {
+                            // A single inaccessible device tone must not hide the whole picker.
+                        }
+                    }
+                }
+
+                // Preserve a previously selected custom ringtone even if Android no longer lists it.
+                if (savedTone != null && !toneUris.contains(savedTone)) {
+                    toneUris.add(savedTone);
+                    toneTitles.add("النغمة المختارة حاليًا");
+                }
+
+                int selected = toneUris.indexOf(savedTone);
+                final int[] choice = { selected < 0 ? 0 : selected };
+                final Ringtone[] preview = { null };
+                final boolean[] saved = { false };
+                String[] options = toneTitles.toArray(new String[0]);
+
+                AlertDialog dialog = new AlertDialog.Builder(activity)
+                    .setTitle("اختر صوت منبّه مواعيدي")
+                    .setSingleChoiceItems(options, choice[0], (view, position) -> {
+                        choice[0] = position;
+                        if (preview[0] != null) {
+                            preview[0].stop();
+                            preview[0] = null;
+                        }
+                        try {
+                            Ringtone sound = RingtoneManager.getRingtone(activity, toneUris.get(position));
+                            if (sound != null) {
+                                sound.setAudioAttributes(new AudioAttributes.Builder()
+                                    .setUsage(AudioAttributes.USAGE_ALARM)
+                                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                    .build());
+                                preview[0] = sound;
+                                sound.play();
+                            }
+                        } catch (Exception ignored) {
+                            // Keep the selection usable even if preview playback is restricted.
+                        }
+                    })
+                    .setPositiveButton("حفظ النغمة", (view, which) -> {
+                        Uri chosen = toneUris.get(choice[0]);
+                        boolean changed = !chosen.equals(AlarmTone.selectedUri(activity));
+                        AlarmTone.save(activity, chosen);
+                        saved[0] = true;
+                        JSObject response = stateObject();
+                        response.put("changed", changed);
+                        call.resolve(response);
+                    })
+                    .setNegativeButton("إلغاء", (view, which) -> {})
+                    .create();
+
+                dialog.setOnDismissListener(view -> {
+                    if (preview[0] != null) {
+                        preview[0].stop();
+                        preview[0] = null;
+                    }
+                    if (!saved[0]) {
+                        JSObject response = stateObject();
+                        response.put("changed", false);
+                        call.resolve(response);
+                    }
+                });
+                dialog.setOnShowListener(view -> {
+                    if (dialog.getWindow() != null) {
+                        dialog.getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+                    }
+                });
+                dialog.show();
+            } catch (Exception error) {
+                call.reject("تعذّر تحميل نغمات الهاتف.", "alarm_tone_picker_unavailable", error);
+            }
+        });
     }
 
     @PluginMethod

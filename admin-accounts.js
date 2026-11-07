@@ -122,11 +122,13 @@
       timeZone:"Africa/Cairo", day:"numeric", month:"short", hour:"numeric", minute:"2-digit"
     }).format(new Date(value));
   }
-  function iconButton(title, symbol) {
-    const button = create("button", "account-inline-icon", symbol);
+  function iconButton(title) {
+    const button = create("button", "account-inline-icon");
     button.type = "button";
     button.title = title;
     button.setAttribute("aria-label", title);
+    // Static SVG artwork, never derived from an email or any account input.
+    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
     return button;
   }
   function render() {
@@ -142,10 +144,11 @@
       const row = create("article", "account-row account-row-compact");
 
       const identity = create("div", "account-identity-col");
+      identity.append(create("small", "account-field-label", "البريد الإلكتروني"));
       const emailLine = create("div", "account-compact-email-line");
       const email = create("span", "account-compact-email", user.email || "بدون بريد");
       email.dir = "ltr";
-      const copyEmail = iconButton("نسخ البريد الإلكتروني", "⧉");
+      const copyEmail = iconButton("نسخ البريد الإلكتروني");
       copyEmail.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(user.email || "");

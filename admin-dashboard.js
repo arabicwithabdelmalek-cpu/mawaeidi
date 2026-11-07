@@ -301,60 +301,188 @@
     });
   }
 
+  // One focused read-only member profile, reusing the authorized statistics.
+  // Clicking "معاينة حسابه" opens the existing audited support preview.
   function renderDetails(scroll = false) {
     const panel = $("userDetail");
-    const person = users.find(u => u.id === selectedUserId);
-    if (!person) { panel.hidden = true; return; }
+    const person = users.find(user => user.id === selectedUserId);
+    if (!person || !current) {
+      panel.hidden = true;
+      panel.replaceChildren();
+      return;
+    }
     const stats = current.userStats.get(person.id);
-    const all = current.periodSessions.filter(s => s.user_id === person.id)
+    if (!stats) {
+      panel.hidden = true;
+      panel.replaceChildren();
+      return;
+    }
+    const visits = current.periodSessions.filter(session => session.user_id === person.id)
       .sort((a,b) => toMs(b.started_at) - toMs(a.started_at));
+
     panel.replaceChildren();
     panel.hidden = false;
-    const top = makeEl("div", "detail-header");
-    const title = makeEl("div", "detail-person-identity");
-    title.append(makeProfileAvatar(person));
-    const text = makeEl("div");
-    text.append(makeEl("h3", "", person.name || person.email || "تفاصيل المستخدم"),
-      makeEl("p", "", person.email || "بيانات الحساب"));
-    title.append(text);
-    const close = makeEl("button", "view", "إغلاق التفاصيل");
+    const page = makeEl("div", "member-profile");
+    const hero = makeEl("header", "member-profile-hero");
+    const heroTop = makeEl("div", "member-profile-headerline");
+    heroTop.append(makeEl("span", "member-profile-kicker", "ملف المستخدم"));
+    const close = makeEl("button", "member-profile-back", "العودة إلى المستخدمين");
     close.type = "button";
+    close.setAttribute("aria-label","إغلاق ملف المستخدم والعودة إلى القائمة");
     close.addEventListener("click", () => {
-      panel.hidden = true; selectedUserId = null;
+      selectedUserId = null;
+      panel.replaceChildren();
+      panel.hidden = true;
+      $("usersTitle").scrollIntoView({behavior:"smooth",block:"start"});
     });
-    top.append(title,close);
-    panel.append(top);
-    const grid = makeEl("div", "detail-grid");
+    heroTop.append(close);
+    hero.append(heroTop);
+
+    const heroMain = makeEl("div", "member-profile-hero-main");
+    const identity = makeEl("div", "member-profile-identity");
+    const avatar = makeProfileAvatar(person);
+    avatar.classList.add("member-profile-avatar");
+    identity.append(avatar);
+    const identityText = makeEl("div", "member-profile-identity-text");
+    const heading = makeEl("h3", "member-profile-name",person.name || person.email || "مستخدم مواعيدي");
+    heading.id = "memberDetailHeading";
+    identityText.append(heading);
+    if (person.email) {
+      const email = makeEl("span", "member-profile-email",person.email);
+      email.dir = "ltr";
+      identityText.append(email);
+    }
+    identityText.append(makeStatus(stats));
+    identity.append(identityText);
+    heroMain.append(identity);
+    const actions = makeEl("div", "member-profile-actions");
+    const preview = makeEl("button", "member-profile-preview", "معاينة حسابه");
+    preview.type = "button";
+    preview.title = "فتح واجهة مواعيدي لهذا العضو للقراءة فقط";
+    preview.addEventListener("click", () => {
+      if (window.mawaeidiAdminSupport?.open) {
+        window.mawaeidiAdminSupport.open(person);
+      } else {
+        preview.textContent = "المعاينة غير متاحة حاليًا";
+        preview.disabled = true;
+      }
+    });
+    actions.append(preview);
+    heroMain.append(actions);
+    hero.append(heroMain);
+    page.append(hero);
+
+    const statsGrid = makeEl("div", "member-profile-metrics");
     [
-      ["زيارات اليوم", number(stats.todayVisits)],
-      ["زيارات الفترة", number(stats.visits)],
-      ["الوقت النشط", stats.visits ? duration(stats.activeSeconds) : "—"],
-      ["آخر استخدام مسجل", stats.lastSeen ? relativeTime(stats.lastSeen) : "غير مسجل"]
-    ].forEach(([label, value]) => grid.append(field(label, value)));
-    grid.querySelectorAll("div").forEach(el => el.className = "detail-stat");
-    panel.append(grid);
-    const meta = makeEl("div", "detail-meta");
+      ["زيارات اليوم",number(stats.todayVisits),"الجلسات التي بدأت اليوم"],
+      ["زيارات الفترة",number(stats.visits),"خلال آخر "+number(periodDays())+" يومًا"],
+      ["وقت الاستخدام",stats.visits ? duration(stats.activeSeconds) : "—","نشاط تقريبي مسجّل"],
+      ["آخر نشاط",stats.lastSeen ? relativeTime(stats.lastSeen) : "غير مسجل",
+        stats.lastSeen ? displayDate(stats.lastSeen) : "لا توجد زيارات مسجلة"]
+    ].forEach(([label,value,note]) => {
+      const card = makeEl("div", "member-profile-metric");
+      card.append(makeEl("small","",label),makeEl("strong","",value),
+        makeEl("span","",note));
+      statsGrid.append(card);
+    });
+    page.append(statsGrid);
+
+    const columns = makeEl("div", "member-profile-columns");
+    const primary = makeEl("div", "member-profile-main-column");
+    const secondary = makeEl("aside", "member-profile-side-column");
+
+    const timeline = makeEl("section", "member-profile-card member-profile-history");
+    const timelineHead = makeEl("div","member-profile-card-heading");
+    const timelineTitle = makeEl("div");
+    timelineTitle.append(makeEl("h4","","الزيارات الأخيرة"),
+      makeEl("p","","سجل جلسات الاستخدام خلال الفترة المحددة"));
+    timelineHead.append(timelineTitle,makeEl("span","member-profile-count",
+      number(visits.length)+" زيارة"));
+    timeline.append(timelineHead);
+    const visitList = makeEl("div","member-profile-visit-list");
+    if (!visits.length) {
+      visitList.append(makeEl("p","member-profile-empty",
+        "لم تُسجّل زيارات لهذا الحساب خلال الفترة المختارة."));
+    }
+    visits.slice(0,12).forEach(session => {
+      const item = makeEl("div","member-profile-visit");
+      const mark = makeEl("span","member-profile-visit-mark");
+      mark.setAttribute("aria-hidden","true");
+      const info = makeEl("div","member-profile-visit-info");
+      info.append(makeEl("strong","",displayDate(session.started_at)),
+        makeEl("span","",clientLabel(session.client_type)));
+      const durationValue = makeEl("span","member-profile-visit-duration",
+        duration(session.active_seconds));
+      item.append(mark,info,durationValue);
+      visitList.append(item);
+    });
+    timeline.append(visitList);
+    primary.append(timeline);
+
+    const activity = makeEl("section", "member-profile-card member-profile-week");
+    const activityHead = makeEl("div","member-profile-card-heading");
+    const activityTitles = makeEl("div");
+    activityTitles.append(makeEl("h4","","نشاط آخر ٧ أيام"),
+      makeEl("p","","عدد الزيارات التي بدأت في كل يوم"));
+    activityHead.append(activityTitles);
+    activity.append(activityHead);
+    const days = lastCalendarDays(7);
+    const daily = new Map(days.map(day => [day,0]));
+    for (const visit of visits) {
+      const started = toMs(visit.started_at);
+      if (!started) continue;
+      const key = dateKey(new Date(started));
+      if (daily.has(key)) daily.set(key,daily.get(key)+1);
+    }
+    const maxVisits = Math.max(1,...daily.values());
+    const bars = makeEl("div","member-profile-bars");
+    bars.setAttribute("role","img");
+    bars.setAttribute("aria-label","رسم يوضح عدد زيارات المستخدم خلال آخر سبعة أيام");
+    const weekday = new Intl.DateTimeFormat("ar-EG",{
+      timeZone:"Africa/Cairo",weekday:"short"
+    });
+    days.forEach(day => {
+      const value = daily.get(day) || 0;
+      const label = weekday.format(new Date(day+"T12:00:00Z"));
+      const column = makeEl("div","member-profile-bar-col");
+      column.setAttribute("title",label+": "+number(value)+" زيارة");
+      const barTrack = makeEl("div","member-profile-bar-track");
+      const bar = makeEl("span","member-profile-bar"+(value ? " has-visits" : ""));
+      bar.style.height = value ? Math.max(9,Math.round(100*value/maxVisits))+"%" : "5px";
+      barTrack.append(bar);
+      column.append(makeEl("span","member-profile-bar-number",number(value)),
+        barTrack,makeEl("span","member-profile-bar-day",label));
+      bars.append(column);
+    });
+    activity.append(bars);
+    secondary.append(activity);
+
+    const account = makeEl("section", "member-profile-card member-profile-account");
+    account.append(makeEl("h4","","بيانات الحساب"));
+    const details = makeEl("div","member-profile-facts");
     [
-      ["تاريخ إنشاء الحساب", displayDate(person.created_at)],
-      ["آخر تسجيل دخول للمصادقة", displayDate(person.last_sign_in_at)]
-    ].forEach(([label, value]) => {
-      const item = makeEl("span");
-      item.append(makeEl("strong", "", label + ": "), document.createTextNode(value));
-      meta.append(item);
+      ["تاريخ إنشاء الحساب",displayDate(person.created_at)],
+      ["آخر تسجيل دخول",displayDate(person.last_sign_in_at)],
+      ["آخر زيارة مسجلة",stats.lastSeen ? displayDate(stats.lastSeen) : "غير مسجلة"]
+    ].forEach(([label,value]) => {
+      const item = makeEl("div","member-profile-fact");
+      item.append(makeEl("span","",label),makeEl("strong","",value));
+      details.append(item);
     });
-    panel.append(meta);
-    panel.append(makeEl("h4", "detail-session-title", "الزيارات الأخيرة خلال الفترة"));
-    const list = makeEl("div", "session-list");
-    if (!all.length) list.append(makeEl("p", "empty-state", "لم تُسجَّل زيارات لهذا الحساب خلال الفترة."));
-    all.slice(0,12).forEach(session => {
-      const item = makeEl("div", "session-item"), left = makeEl("div");
-      left.append(makeEl("strong", "", displayDate(session.started_at)),
-        makeEl("small", "", clientLabel(session.client_type)));
-      item.append(left, makeEl("strong", "", duration(session.active_seconds)));
-      list.append(item);
-    });
-    panel.append(list);
-    if (scroll) panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    account.append(details);
+    secondary.append(account);
+
+    columns.append(primary,secondary);
+    page.append(columns);
+    page.append(makeEl("p","member-profile-disclaimer",
+      "الوقت النشط تقديري، والمعاينة لا تتيح تعديل حساب العضو أو الاطلاع على كلمة مروره."));
+    panel.append(page);
+    panel.setAttribute("aria-labelledby","memberDetailHeading");
+    if (scroll) {
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+      panel.scrollIntoView({behavior:reduce ? "auto":"smooth",block:"start"});
+      panel.focus({preventScroll:true});
+    }
   }
 
   function renderFeed() {

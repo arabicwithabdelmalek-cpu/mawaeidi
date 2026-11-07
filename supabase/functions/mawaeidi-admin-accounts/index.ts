@@ -20,6 +20,46 @@ const validPassword = (value: unknown) => typeof value === "string" &&
 const validUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 
+/* Free, privacy-preserving Pwned Passwords check.
+ * Only the first 5 hexadecimal digits of SHA-1 are sent to HIBP, never the
+ * password, its complete digest, or an email address. SHA-1 here is a lookup
+ * identifier required by HIBP, not a password storage algorithm. */
+type PasswordExposure = "clean" | "compromised" | "unavailable";
+async function checkPasswordExposure(password: string): Promise<PasswordExposure> {
+  try {
+    const digest = await crypto.subtle.digest(
+      "SHA-1", new TextEncoder().encode(password),
+    );
+    const hex = Array.from(new Uint8Array(digest), (b) =>
+      b.toString(16).padStart(2, "0")).join("").toUpperCase();
+    const prefix = hex.slice(0, 5);
+    const suffix = hex.slice(5);
+    const response = await fetch("https://api.pwnedpasswords.com/range/" + prefix, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Mawaeidi-Password-Security/1.0",
+        "Add-Padding": "true",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) return "unavailable";
+    const body = await response.text();
+    if (body.length > 200000) return "unavailable";
+    for (const line of body.split(/\r?\n/)) {
+      const separator = line.indexOf(":");
+      if (separator < 0) continue;
+      if (line.slice(0, separator).toUpperCase() === suffix &&
+          Number(line.slice(separator + 1)) > 0) return "compromised";
+    }
+    return "clean";
+  } catch {
+    return "unavailable";
+  }
+}
+const passwordRiskError = (risk: PasswordExposure) =>
+  risk === "compromised" ? { status: 422, error: "compromised_password" } :
+  risk === "unavailable" ? { status: 503, error: "password_check_unavailable" } : null;
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return respond(405, { error: "method_not_allowed" });
@@ -52,18 +92,29 @@ Deno.serve(async (req: Request) => {
       return respond(401, { error: "invalid_session" });
     }
 
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return respond(400, { error: "invalid_request" });
+    }
+    const action = text((body as Record<string, unknown>).action);
+
+    // Any authenticated member may check their own proposed password before
+    // calling Supabase Auth. No account data or administrative action is exposed.
+    if (action === "check_password") {
+      const password = (body as Record<string, unknown>).password;
+      if (typeof password !== "string" || password.length < 10 ||
+          password.length > 128) return respond(400, { error: "weak_password" });
+      const error = passwordRiskError(await checkPasswordExposure(password));
+      return error ? respond(error.status, { error: error.error }) :
+        respond(200, { ok: true });
+    }
+
     // Direct database membership check; never trust client flags, email, or user metadata.
     const { data: membership, error: membershipError } = await supabaseAdmin
       .from("mawaeidi_usage_admins")
       .select("user_id").eq("user_id", identity.user.id).maybeSingle();
     if (membershipError) return respond(503, { error: "permission_check_failed" });
     if (!membership) return respond(403, { error: "admin_only" });
-
-    const body = await req.json().catch(() => null);
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return respond(400, { error: "invalid_request" });
-    }
-    const action = text((body as Record<string, unknown>).action);
 
     if (action === "list") {
       const { data: admins, error: adminsError } = await supabaseAdmin
@@ -132,6 +183,8 @@ Deno.serve(async (req: Request) => {
       if (!validEmail(email)) return respond(400, { error: "invalid_email" });
       if (!validPassword(password)) return respond(400, { error: "weak_password" });
       if (name.length > 100) return respond(400, { error: "name_too_long" });
+      const passwordRisk = passwordRiskError(await checkPasswordExposure(password as string));
+      if (passwordRisk) return respond(passwordRisk.status, { error: passwordRisk.error });
       const { data, error } = await supabaseAdmin.auth.admin.createUser({
         email, password: password as string, email_confirm: true,
         user_metadata: { full_name: name },
@@ -168,6 +221,8 @@ Deno.serve(async (req: Request) => {
       const { data: target, error: targetError } =
         await supabaseAdmin.auth.admin.getUserById(id);
       if (targetError || !target.user) return respond(404, { error: "user_not_found" });
+      const passwordRisk = passwordRiskError(await checkPasswordExposure(password as string));
+      if (passwordRisk) return respond(passwordRisk.status, { error: passwordRisk.error });
       const { error } = await supabaseAdmin.auth.admin.updateUserById(
         id, { password: password as string }
       );

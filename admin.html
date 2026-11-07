@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./admin-ui.css?v=13">
 <link rel="stylesheet" href="./admin-support-preview.css?v=1">
+<link rel="stylesheet" href="./admin-ux-polish.css?v=1">
 </head>
 <body>
 <main class="shell">
@@ -49,11 +50,11 @@
 
   <div id="dashboard" hidden>
   <nav class="admin-section-links" aria-label="التنقل داخل لوحة الإدارة">
-    <a href="#dashboard">نظرة عامة</a>
-    <a href="#usersTitle">المستخدمون والنشاط</a>
+    <a href="#overview" aria-current="location">نظرة عامة</a>
+    <a href="#usersSection">المستخدمون والنشاط</a>
     <a href="#accountsSection">إدارة الحسابات</a>
   </nav>
-    <section class="controls" aria-label="نظرة عامة">
+    <section class="controls" id="overview" aria-label="نظرة عامة">
       <div>
         <div class="eyebrow">لوحة المتابعة</div>
         <h2>نشاط المستخدمين</h2>
@@ -144,7 +145,7 @@
       </aside>
     </div>
 
-    <section class="panel" aria-labelledby="usersTitle">
+    <section class="panel" id="usersSection" aria-labelledby="usersTitle">
       <div class="user-toolbar">
         <div>
           <h2 id="usersTitle">المستخدمون</h2>
@@ -153,8 +154,12 @@
         <span class="panel-meta" id="usersCount">—</span>
       </div>
       <div class="table-filters">
-        <input id="userSearch" class="search" type="search" autocomplete="off"
-          aria-label="بحث باسم المستخدم أو البريد" placeholder="ابحث بالاسم أو البريد الإلكتروني…">
+        <div class="admin-search-control">
+          <input id="userSearch" class="search" type="search" autocomplete="off"
+            aria-label="بحث باسم المستخدم أو البريد" placeholder="ابحث بالاسم أو البريد الإلكتروني…">
+          <button type="button" class="admin-clear-search" id="clearUserSearch" hidden
+            aria-label="مسح بحث المستخدمين">مسح</button>
+        </div>
         <select id="userFilter" class="choice" aria-label="تصفية الحسابات">
           <option value="all">كل المستخدمين</option>
           <option value="active">دخلوا اليوم</option>
@@ -168,7 +173,8 @@
         </select>
       </div>
 
-      <div class="table-wrap">
+      <p class="admin-table-hint" id="usersTableHint" hidden>مرّر الجدول أفقيًا لعرض جميع الأعمدة.</p>
+      <div class="table-wrap" tabindex="0" aria-label="جدول المستخدمين، يمكن تمريره أفقيًا">
         <table>
           <thead>
             <tr>
@@ -329,7 +335,11 @@
 
       <div id="accountsFeedback" class="account-feedback" hidden role="status" aria-live="polite"></div>
       <div class="table-filters account-toolbar">
-        <input type="search" id="accountSearch" class="search" aria-label="البحث عن الحسابات" placeholder="ابحث عن حساب بالاسم أو البريد…" autocomplete="off">
+        <div class="admin-search-control">
+          <input type="search" id="accountSearch" class="search" aria-label="البحث عن الحسابات" placeholder="ابحث عن حساب بالاسم أو البريد…" autocomplete="off">
+          <button type="button" class="admin-clear-search" id="clearAccountSearch" hidden
+            aria-label="مسح بحث الحسابات">مسح</button>
+        </div>
         <button type="button" class="btn" id="refreshAccounts">تحديث الحسابات</button>
       </div>
       <div class="account-list" id="accountsList">
@@ -364,6 +374,8 @@
     <p class="notice" id="limitedDataNotice" hidden>تنبيه: تم الوصول إلى الحد الأقصى للزيارات التي يعيدها التقرير، وقد تكون بعض المجاميع جزئية.</p>
   </div>
 </main>
+<button type="button" id="adminBackToTop" class="admin-back-top" hidden
+  aria-label="الرجوع إلى أعلى لوحة الإدارة"><span aria-hidden="true">↑</span> إلى أعلى</button>
 
 <!-- A read-only rendition of Mawaeidi, never a login as the viewed member. -->
 <section id="supportPanel" class="support-app-preview" role="dialog"
@@ -479,5 +491,6 @@
 <script src="./admin-accounts.js?v=9" defer></script>
 <script src="./admin-support.js?v=2" defer></script>
 <script src="./admin-credentials.js?v=1" defer></script>
+<script src="./admin-ux-polish.js?v=1" defer></script>
 </body>
 </html>

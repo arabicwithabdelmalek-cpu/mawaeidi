@@ -473,6 +473,33 @@ tbody tr:hover {background:#f8fbfd}
   direction:ltr;
   padding-inline:12px 7px;
 }
+/* Keep eye/copy/edit INSIDE the 46px password field on every viewport.
+   The old flex-wrap:wrap rule forced these buttons beneath the input. */
+#accountsSection .account-row-compact .vault-secret-line {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) repeat(3,32px);
+  grid-template-rows:minmax(0,1fr);
+  gap:5px;
+  align-items:center;
+  direction:rtl;
+  flex-wrap:nowrap;
+  overflow:hidden;
+}
+#accountsSection .account-row-compact .vault-secret-line > .vault-masked-password {
+  grid-column:1;
+  min-width:0;
+  max-width:100%;
+  width:100%;
+  box-sizing:border-box;
+}
+#accountsSection .account-row-compact .vault-secret-line > .vault-icon-btn {
+  align-self:center;
+  justify-self:center;
+  min-width:32px;
+  max-width:32px;
+  box-sizing:border-box;
+}
+
 #accountsSection .account-compact-email {
   display:block;
   flex:1 1 auto;

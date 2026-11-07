@@ -239,3 +239,47 @@ tbody tr:hover {background:#f8fbfd}
 .admin-section-links a:hover {background:#eaf3f8}
 #accountsSection {scroll-margin-top:16px}
 @media(max-width:520px){.admin-section-links {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.admin-section-links a{padding:7px 6px;font-size:10px;text-align:center}}
+
+
+/* Permanent account deletion: highly deliberate, but visually consistent. */
+#accountsSection .account-row-actions {
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:7px;min-width:0;
+}
+#accountsSection .account-remove-btn {
+  min-height:39px;padding:8px 11px;border:1px solid #e5c2c2;
+  background:#fff7f7;color:#963f45;font-size:11px;font-weight:800;
+  white-space:nowrap;
+}
+#accountsSection .account-remove-btn:hover {background:#fcecec;border-color:#d8999f;}
+#accountsSection .account-delete-form {
+  background:#fffafb;border-color:#e9c6c6;
+}
+#accountsSection .account-delete-form .account-form-top h3 {color:#963f45;}
+#accountsSection .account-delete-warning {
+  margin:0 0 15px;padding:12px 14px;border-radius:10px;border:1px solid #efd2d2;
+  background:#fff1f1;color:#7f3d40;font-size:12px;line-height:1.85;
+}
+#accountsSection .account-delete-warning strong {font-weight:800;}
+#accountsSection .account-delete-consent {
+  display:flex;align-items:flex-start;gap:10px;margin:15px 0 0;
+  font-size:12px;font-weight:700;line-height:1.8;cursor:pointer;
+}
+#accountsSection .account-delete-consent input {
+  width:19px;height:19px;min-width:19px;accent-color:#ae4a51;margin-top:4px;
+}
+#accountsSection .danger-btn {
+  border-color:#9e4249;color:#fff;background:#9e4249;font-weight:800;
+}
+#accountsSection .danger-btn:hover:not(:disabled) {background:#803238;border-color:#803238;}
+#accountsSection .danger-btn:disabled {opacity:.48;cursor:not-allowed;}
+@media(max-width:970px) {
+  #accountsSection .account-row-actions {justify-content:flex-end;flex-direction:column;align-items:stretch;}
+}
+@media(max-width:760px) {
+  #accountsSection .account-row-actions {
+    grid-column:1 / -1;flex-direction:row;justify-content:stretch;gap:8px;
+  }
+  #accountsSection .account-row-actions .btn {
+    flex:1 1 140px;min-width:0;grid-column:auto;white-space:normal;
+  }
+}

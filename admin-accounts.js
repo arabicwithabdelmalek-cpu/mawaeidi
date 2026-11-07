@@ -9,6 +9,7 @@
   let users = [];
   let loading = false;
   let submitting = false;
+  let oneTimeTargetId = null;
 
   const create = (tag, className = "", value = null) => {
     const el = document.createElement(tag);
@@ -30,14 +31,16 @@
     $("accountsFeedback").textContent = "";
   }
   function clearOneTimeCredentials() {
+    oneTimeTargetId = null;
     // Do not persist readable passwords in storage, logs, URLs, or account records.
     $("oneTimePassword").value = "";
     $("oneTimeEmail").value = "";
     $("oneTimeCopyStatus").textContent = "";
     $("oneTimeCredentials").hidden = true;
   }
-  function showOneTimeCredentials(email, password) {
+  function showOneTimeCredentials(email, password, userId = null) {
     clearOneTimeCredentials();
+    oneTimeTargetId = userId;
     $("oneTimeEmail").value = email;
     $("oneTimePassword").value = password;
     $("oneTimeCredentials").hidden = false;
@@ -136,9 +139,12 @@
       meta.append(create("small", "", "آخر تسجيل دخول"),
         create("span", "", formatDate(user.last_sign_in_at)));
       const pass = create("div", "account-password-meta");
-      pass.append(create("small", "", "كلمة المرور"),
-        create("strong", "", "••••••••"),
-        create("span", "", "القديمة غير قابلة للاسترجاع"));
+      if (window.mawaeidiVault?.buildPasswordCell) {
+        window.mawaeidiVault.buildPasswordCell(pass,user);
+      } else {
+        pass.append(create("small", "", "كلمة المرور"),
+          create("span", "", "جارٍ تحميل الخزنة…"));
+      }
       const actions = create("div", "account-row-actions");
       const action = create("button", "btn account-edit-btn", "تغيير كلمة المرور");
       action.type = "button";
@@ -155,6 +161,7 @@
     });
   }
 
+  window.mawaeidiRenderAccounts = render;
   async function load(showMessage = false) {
     if (loading || !client) return;
     loading = true;
@@ -226,6 +233,17 @@
   $("accountSearch").addEventListener("input", render);
   $("refreshAccounts").addEventListener("click", () => load(true));
   $("dismissOneTimeCredentials").addEventListener("click", clearOneTimeCredentials);
+  $("saveOneTimeToVault").addEventListener("click", async () => {
+    const password = $("oneTimePassword").value;
+    if (!oneTimeTargetId || !password) {
+      $("oneTimeCopyStatus").textContent = "لا توجد بيانات حالية للحفظ.";
+      return;
+    }
+    const ok = await window.mawaeidiVault?.saveOneTime(oneTimeTargetId,password);
+    $("oneTimeCopyStatus").textContent = ok
+      ? "تم حفظ الكلمة مشفّرة في خزنتك."
+      : "افتح الخزنة أولًا، ثم اضغط حفظ مرة أخرى.";
+  });
   $("copyOneTimePassword").addEventListener("click", async () => {
     if ($("oneTimeCredentials").hidden || !$("oneTimePassword").value) return;
     try {
@@ -263,12 +281,18 @@
     clearFeedback();
     setBusy(true);
     try {
-      await invoke({ action:"create", email, name, password });
+      const created = await invoke({ action:"create", email, name, password });
       $("createAccountForm").reset();
       closeForms();
       await load();
-      showOneTimeCredentials(email, password);
-      feedback("تم إنشاء الحساب بنجاح. تظهر كلمة المرور الجديدة مؤقتًا أعلاه لنسخها.");
+      showOneTimeCredentials(email, password, created.user?.id || null);
+      let savedInVault = false;
+      try {
+        savedInVault = !!(await window.mawaeidiVault?.recordPasswordIfOpen(created.user?.id,password));
+      } catch { /* The account exists even if vault synchronization fails. */ }
+      feedback(savedInVault
+        ? "تم إنشاء الحساب وحفظ كلمته في الخزنة المشفّرة."
+        : "تم إنشاء الحساب. انسخ الكلمة أو افتح الخزنة واحفظها قبل إغلاق البطاقة.");
     } catch (error) {
       feedback(friendly(error.message),true);
     } finally {
@@ -293,8 +317,14 @@
     try {
       await invoke({ action:"set_password", user_id:id, password });
       closeForms();
-      showOneTimeCredentials(user.email || "", password);
-      feedback("تم تغيير كلمة المرور بنجاح. تظهر الكلمة الجديدة مؤقتًا أعلاه لنسخها.");
+      showOneTimeCredentials(user.email || "", password, id);
+      let savedInVault = false;
+      try {
+        savedInVault = !!(await window.mawaeidiVault?.recordPasswordIfOpen(id,password));
+      } catch { /* A vault failure must not falsely report a failed Auth reset. */ }
+      feedback(savedInVault
+        ? "تم تغيير كلمة المرور وتحديث الخزنة المشفّرة."
+        : "تم تغيير كلمة المرور. انسخها أو افتح الخزنة واحفظها قبل إغلاق البطاقة.");
     } catch (error) {
       feedback(friendly(error.message),true);
     } finally {

@@ -317,3 +317,91 @@ tbody tr:hover {background:#f8fbfd}
   #accountsSection .account-one-time-credentials {padding:14px;}
   #accountsSection .one-time-secret .account-copy-btn {width:100%;}
 }
+
+/* Owner-only encrypted password vault. */
+#accountsSection .account-vault {
+  margin:16px 0 21px;padding:19px;border:1px solid #b9d9d0;
+  border-radius:15px;background:linear-gradient(140deg,#f8fcfa,#eef8f5);
+}
+#accountsSection .account-vault-heading {
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;
+}
+#accountsSection .account-vault-heading h3 {
+  margin:0;font-size:17px;color:#215e56;font-weight:800;
+}
+#accountsSection .account-vault-heading p {
+  color:#54786c;font-size:12px;margin:3px 0 0;line-height:1.8;
+}
+#accountsSection .vault-state {
+  display:inline-flex;align-items:center;background:#fff;border:1px solid #c7e1d9;color:#186858;
+  padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;
+}
+#accountsSection .vault-access-form {
+  display:flex;flex-wrap:wrap;align-items:center;gap:9px;
+}
+#accountsSection .vault-access-form label {
+  flex:0 0 100%;font-size:12px;font-weight:800;color:var(--ink);
+}
+#accountsSection .vault-access-form input {
+  flex:1 1 245px;max-width:450px;min-width:160px;min-height:43px;
+  border:1px solid #c5dcd4;background:#fff;border-radius:10px;padding:9px 12px;
+  font-size:13px;color:var(--ink);
+}
+#accountsSection .vault-access-form button {min-height:43px}
+#accountsSection .vault-access-form p {flex:0 0 100%;color:#6c746f;font-size:11px;margin:4px 0 0}
+#accountsSection .vault-unlocked-toolbar {display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+#accountsSection .vault-unlocked-toolbar p {margin:0;color:#315f54;font-size:12px}
+#accountsSection .vault-muted {font-size:11px;color:var(--muted);white-space:normal}
+#accountsSection .vault-small-btn {
+  display:inline-flex;justify-content:center;align-items:center;align-self:start;max-width:100%;
+  min-height:30px;padding:5px 9px;border:1px solid #bad9cc;background:#fff;
+  color:#246b56;border-radius:8px;font-size:10px;font-weight:800;margin-top:5px;
+}
+#accountsSection .vault-secret-line {display:flex;align-items:center;gap:5px;min-width:0;flex-wrap:wrap}
+#accountsSection .vault-masked-password {
+  min-width:100px;max-width:145px;width:100%;flex:1 1 100px;
+  font-family:ui-monospace,Consolas,monospace;font-size:12px;
+  border:1px solid #d7e4dd;border-radius:7px;padding:6px 7px;min-height:33px;
+  color:var(--ink);background:#fff;direction:ltr;text-align:left;
+}
+#accountsSection .vault-icon-btn {
+  border:1px solid #d3e1da;background:#fff;color:#246b56;border-radius:7px;
+  padding:5px 8px;min-height:32px;font-size:10px;font-weight:800;
+}
+#accountsSection .vault-record-meta {
+  color:#5a8173;font-size:10px;overflow-wrap:anywhere;white-space:normal;
+}
+#accountsSection .vault-note {
+  display:block;max-width:100%;color:var(--muted);font-size:11px;overflow-wrap:anywhere;
+}
+#accountsSection .vault-edit-form {
+  margin-top:15px;padding:16px;border:1px solid #b5dacf;border-radius:12px;background:#fff;
+}
+#accountsSection .vault-edit-form .account-form-top h3 {margin:0;font-size:15px}
+#accountsSection .vault-edit-form .account-hint {display:block;margin-top:12px}
+#accountsSection .account-vault-message {
+  padding:10px 13px;margin:11px 0 0;border:1px solid #b6d8c6;background:#f6fffa;
+  color:#246d51;font-size:12px;border-radius:9px;
+}
+#accountsSection .account-vault-message.error {
+  border-color:#eac7c7;background:#fff5f5;color:#9b4343;
+}
+@media(max-width:970px) {
+  #accountsSection .account-row {
+    grid-template-columns:minmax(170px,1.8fr) minmax(130px,1fr) minmax(150px,1.1fr) auto;
+  }
+  #accountsSection .account-password-meta {display:grid}
+}
+@media(max-width:760px) {
+  #accountsSection .account-vault {padding:13px}
+  #accountsSection .account-row {grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+  #accountsSection .account-person {grid-column:1 / -1}
+  #accountsSection .account-meta {grid-column:1}
+  #accountsSection .account-password-meta {grid-column:2}
+  #accountsSection .account-row-actions {grid-column:1 / -1}
+  #accountsSection .vault-secret-line {gap:4px}
+  #accountsSection .vault-access-form input {max-width:100%;flex:1 1 100%}
+}
+@media(max-width:420px) {
+  #accountsSection .account-meta,#accountsSection .account-password-meta {grid-column:1 / -1}
+}

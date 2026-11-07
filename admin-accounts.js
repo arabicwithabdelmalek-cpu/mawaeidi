@@ -37,15 +37,21 @@
   function closeForms() {
     $("createAccountForm").hidden = true;
     $("resetPasswordForm").hidden = true;
+    $("deleteAccountForm").hidden = true;
+    $("deleteAccountId").value = "";
+    $("deleteAccountEmail").value = "";
+    $("deleteAccountAcknowledged").checked = false;
+    $("deleteAccountSubmit").disabled = true;
     clearPassword($("createAccountForm"));
     clearPassword($("resetPasswordForm"));
   }
   function setBusy(value) {
     submitting = value;
-    ["createAccountSubmit", "resetPasswordSubmit"].forEach(id => {
+    ["createAccountSubmit", "resetPasswordSubmit", "deleteAccountSubmit"].forEach(id => {
       $(id).disabled = value;
     });
     $("openCreateAccount").disabled = value;
+    if (!value) validateDeleteConfirmation();
   }
   const friendly = code => ({
     invalid_session: "انتهت جلسة الدخول. سجّل الدخول من جديد.",
@@ -62,6 +68,14 @@
     permission_check_failed: "تعذر التحقق من الصلاحيات الآن.",
     service_unavailable: "خدمة إدارة الحسابات غير متاحة حاليًا.",
     users_unavailable: "تعذر استرجاع قائمة الحسابات.",
+    confirmation_required: "يلزم تأكيد الحذف نهائيًا.",
+    confirmation_mismatch: "البريد الإلكتروني المدخل لا يطابق الحساب المحدد.",
+    cannot_delete_self: "لا يمكنك حذف حسابك الإداري من لوحة الإدارة.",
+    cannot_delete_admin: "لا يمكن حذف الحسابات ذات صلاحية الإدارة من هذه الصفحة.",
+    storage_check_failed: "تعذر التحقق من الصور والملفات الخاصة بالحساب. لم يُحذف الحساب.",
+    storage_cleanup_failed: "تعذر حذف بعض الصور والملفات المرتبطة بالحساب. لم يُحذف الحساب، وقد تكون بعض الملفات حُذفت.",
+    storage_too_large: "يحتوي هذا الحساب على ملفات أكثر مما يسمح به الحذف المباشر؛ يرجى تنظيف ملفاته أولًا.",
+    delete_failed: "تعذر حذف الحساب. قد تكون هناك ملفات أخرى مرتبطة به. لم يكتمل حذف الحساب.",
   })[code] || "تعذر إتمام العملية. تحقق من اتصال الإنترنت وجرّب مجددًا.";
 
   async function invoke(payload) {
@@ -111,10 +125,18 @@
       pass.append(create("small", "", "كلمة المرور"),
         create("strong", "", "••••••••"),
         create("span", "", "مخفية لأمان الحساب"));
+      const actions = create("div", "account-row-actions");
       const action = create("button", "btn account-edit-btn", "تغيير كلمة المرور");
       action.type = "button";
       action.addEventListener("click", () => openReset(user));
-      row.append(person,meta,pass,action);
+      actions.append(action);
+      if (!user.is_owner && !user.is_admin) {
+        const remove = create("button", "btn account-remove-btn", "حذف الحساب");
+        remove.type = "button";
+        remove.addEventListener("click", () => openDelete(user));
+        actions.append(remove);
+      }
+      row.append(person,meta,pass,actions);
       list.append(row);
     });
   }
@@ -152,6 +174,29 @@
     $("resetPasswordForm").scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
+  function validateDeleteConfirmation() {
+    const id = $("deleteAccountId").value;
+    const user = users.find(item => item.id === id && !item.is_owner && !item.is_admin);
+    const matches = !!user && $("deleteAccountEmail").value.trim().toLowerCase() ===
+      (user.email || "").trim().toLowerCase();
+    $("deleteAccountSubmit").disabled =
+      submitting || !matches || !$("deleteAccountAcknowledged").checked;
+    return matches && $("deleteAccountAcknowledged").checked;
+  }
+
+  function openDelete(user) {
+    if (submitting || user.is_owner || user.is_admin) return;
+    closeForms();
+    clearFeedback();
+    $("deleteAccountId").value = user.id;
+    $("deleteAccountLabel").textContent =
+      (user.name || "مستخدم") + " — " + (user.email || "");
+    $("deleteAccountForm").hidden = false;
+    validateDeleteConfirmation();
+    $("deleteAccountEmail").focus();
+    $("deleteAccountForm").scrollIntoView({ behavior:"smooth", block:"nearest" });
+  }
+
   $("openCreateAccount").addEventListener("click", () => {
     closeForms(); clearFeedback();
     $("createAccountForm").hidden = false;
@@ -159,6 +204,9 @@
   });
   $("closeCreateAccount").addEventListener("click", closeForms);
   $("closeResetPassword").addEventListener("click", closeForms);
+  $("closeDeleteAccount").addEventListener("click", closeForms);
+  $("deleteAccountEmail").addEventListener("input", validateDeleteConfirmation);
+  $("deleteAccountAcknowledged").addEventListener("change", validateDeleteConfirmation);
   $("accountSearch").addEventListener("input", render);
   $("refreshAccounts").addEventListener("click", () => load(true));
 
@@ -217,6 +265,41 @@
       feedback("تم تعيين كلمة المرور الجديدة للحساب بنجاح. بلّغ صاحب الحساب بالكلمة الجديدة بطريقة آمنة.");
     } catch (error) {
       feedback(friendly(error.message),true);
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  $("deleteAccountForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    if (submitting || !validateDeleteConfirmation()) return;
+    const id = $("deleteAccountId").value;
+    const user = users.find(person => person.id === id);
+    if (!user || user.is_owner || user.is_admin) {
+      feedback("لا يُسمح بحذف حساب الإدارة.", true);
+      return;
+    }
+    const email = user.email || "";
+    if (!window.confirm(
+      "تحذير أخير: هل تريد حذف الحساب نهائيًا؟\\n" + email +
+      "\\nسيتم حذف الحساب والمواعيد والطلاب وبياناته المرتبطة، ولن يمكن التراجع عن العملية."
+    )) return;
+    clearFeedback();
+    setBusy(true);
+    try {
+      await invoke({
+        action: "delete",
+        user_id: id,
+        confirm_email: $("deleteAccountEmail").value.trim().toLowerCase(),
+        confirm_phrase: "حذف نهائي"
+      });
+      users = users.filter(person => person.id !== id);
+      closeForms();
+      render();
+      feedback("تم حذف حساب " + email + " نهائيًا وإزالة بياناته المرتبطة. يمكن تحديث القائمة للتأكد.");
+      await load();
+    } catch (error) {
+      feedback(friendly(error.message), true);
     } finally {
       setBusy(false);
     }

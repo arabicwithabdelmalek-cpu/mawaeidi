@@ -1,11 +1,11 @@
 /* Mawaeidi administration / UX refinement — additive, scoped rules.
    The existing Cairo typeface, colors, cards and account actions remain intact. */
 
-/* Clear section navigation stays available on longer admin pages. */
+/* Keep navigation in normal document flow so it never covers charts or cards. */
 #dashboard .admin-section-links {
-  position:sticky;
-  top:8px;
-  z-index:45;
+  position:relative;
+  top:auto;
+  z-index:auto;
   display:flex;
   align-items:center;
   gap:7px;
@@ -50,7 +50,7 @@
 #dashboard #accountsSection,
 #dashboard #usersTitle,
 #dashboard .account-edit-form {
-  scroll-margin-top:88px;
+  scroll-margin-top:22px;
 }
 #dashboard .controls {
   align-items:center;
@@ -169,7 +169,7 @@
 #accountsSection .account-edit-form {
   padding:19px;
   border-radius:13px;
-  scroll-margin-top:88px;
+  scroll-margin-top:22px;
 }
 #accountsSection .account-fields {
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -218,8 +218,8 @@
 }
 @media(max-width:760px) {
   #dashboard .admin-section-links {
-    position:sticky;
-    top:4px;
+    position:relative;
+    top:auto;
     width:100%;
     justify-content:space-between;
     margin-top:15px;

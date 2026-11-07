@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./admin-ui.css?v=3">
+<link rel="stylesheet" href="./admin-ui.css?v=4">
 </head>
 <body>
 <main class="shell">
@@ -194,7 +194,7 @@
           <button type="button" class="btn primary" id="openCreateAccount">+ إضافة حساب</button>
         </div>
       </div>
-      <p class="account-security-note">لأمان المستخدمين، لا يمكن عرض كلمة المرور الحالية لأي حساب. يمكنك إنشاء كلمة مرور جديدة أو تغييرها، دون تخزينها في لوحة الإدارة.</p>
+      <p class="account-security-note">كلمات المرور الحالية لا يمكن استرجاعها. بعد إنشاء حساب أو تغيير كلمة مروره ستظهر لك الكلمة الجديدة مرة واحدة لنسخها، من دون حفظ نسخة مقروءة منها في الموقع.</p>
 
       <form class="account-edit-form" id="createAccountForm" hidden autocomplete="off">
         <div class="account-form-top">
@@ -274,6 +274,24 @@
         </div>
       </form>
 
+      <section id="oneTimeCredentials" class="account-one-time-credentials" hidden aria-labelledby="oneTimeCredentialsTitle">
+        <div class="account-form-top">
+          <div>
+            <h3 id="oneTimeCredentialsTitle">كلمة المرور الجديدة — عرض لمرة واحدة</h3>
+            <p>انسخ البيانات الآن. ستختفي عند إغلاق البطاقة أو إعادة تحميل الصفحة، ولا يمكن استرجاع الكلمة القديمة.</p>
+          </div>
+          <button class="view" id="dismissOneTimeCredentials" type="button">إغلاق ومسح الكلمة</button>
+        </div>
+        <label class="credential-label" for="oneTimeEmail">البريد الإلكتروني</label>
+        <input id="oneTimeEmail" type="text" readonly autocomplete="off" dir="ltr">
+        <label class="credential-label" for="oneTimePassword">كلمة المرور التي عيّنتها</label>
+        <div class="one-time-secret">
+          <input id="oneTimePassword" type="text" readonly autocomplete="off" dir="ltr" spellcheck="false">
+          <button class="btn account-copy-btn" type="button" id="copyOneTimePassword">نسخ كلمة المرور</button>
+        </div>
+        <p id="oneTimeCopyStatus" class="account-hint" role="status" aria-live="polite"></p>
+      </section>
+
       <div id="accountsFeedback" class="account-feedback" hidden role="status" aria-live="polite"></div>
       <div class="table-filters account-toolbar">
         <input type="search" id="accountSearch" class="search" aria-label="البحث عن الحسابات" placeholder="ابحث عن حساب بالاسم أو البريد…" autocomplete="off">
@@ -306,6 +324,6 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js" defer></script>
 <script src="./admin-dashboard.js?v=3" defer></script>
-<script src="./admin-accounts.js?v=2" defer></script>
+<script src="./admin-accounts.js?v=3" defer></script>
 </body>
 </html>

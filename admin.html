@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./admin-ui.css?v=6">
+<link rel="stylesheet" href="./admin-ui.css?v=7">
 </head>
 <body>
 <main class="shell">
@@ -194,65 +194,37 @@
           <button type="button" class="btn primary" id="openCreateAccount">+ إضافة حساب</button>
         </div>
       </div>
-      <p class="account-security-note">كلمات المرور هنا تُعرض فقط إذا حفظتها في خزنتك المشفّرة. لو غيّر المستخدم كلمة مروره بنفسه، سيظهر وقت التغيير فقط، ولن تظهر كلمته الجديدة أو تُحدّث الخزنة تلقائيًا. يمكنك تعيين كلمة جديدة من الإدارة إذا احتجت.</p>
+      <p class="account-security-note">كلمات المرور التي تحفظها أنت فقط هي التي تظهر بالعين والنسخ، وبمجرد تسجيل الدخول بحسابك الإداري. تُحفظ بتشفير على الخادم. إذا غيّر المستخدم كلمته بنفسه يظهر وقت التغيير، ولا تُكشف لك كلمته الجديدة.</p>
 
-      <section class="account-vault" id="accountVault" aria-labelledby="vaultHeading">
-        <div class="account-vault-heading">
+      <form class="account-edit-form" id="credentialsEditForm" hidden autocomplete="off">
+        <div class="account-form-top">
           <div>
-            <h3 id="vaultHeading">خزنة كلمات المرور</h3>
-            <p>عرض ونسخ كلمات المرور التي تحفظها بنفسك. محفوظة مشفّرة ولا تُفتح إلا بكلمتك الرئيسية.</p>
+            <h3>حفظ كلمة المرور مع الحساب</h3>
+            <p id="credentialEmail"></p>
           </div>
-          <span id="vaultStatus" class="vault-state">جارٍ التحقق…</span>
+          <button class="view" type="button" id="credentialCancel">إلغاء</button>
         </div>
-        <div id="vaultNotConfigured" hidden>
-          <form id="vaultCreateForm" autocomplete="off" class="vault-access-form">
-            <label for="vaultCreateMaster">أنشئ كلمة رئيسية للخزنة (١٤ حرفًا على الأقل)</label>
-            <input id="vaultCreateMaster" type="password" autocomplete="new-password" required minlength="14" maxlength="256" placeholder="كلمة قوية مختلفة عن كلمات حسابات الموقع">
-            <label for="vaultCreateMasterAgain">تأكيد الكلمة الرئيسية</label>
-            <input id="vaultCreateMasterAgain" type="password" autocomplete="new-password" required minlength="14" maxlength="256" placeholder="أعد كتابة الكلمة">
-            <button class="btn primary" type="submit" id="vaultCreateButton">إنشاء الخزنة المشفّرة</button>
-            <p>احفظ كلمتك الرئيسية جيدًا؛ نسيانها يعني عدم إمكانية استرجاع كلمات المرور المحفوظة.</p>
-          </form>
+        <input id="credentialUserId" type="hidden">
+        <div class="account-fields">
+          <label>كلمة المرور المحفوظة
+            <span class="password-control">
+              <input id="credentialPassword" type="password" autocomplete="off" required maxlength="256" placeholder="الكلمة التي تعرفها أو عيّنتها">
+              <button type="button" class="password-toggle" id="credentialReveal">إظهار</button>
+            </span>
+          </label>
+          <label>الموقع
+            <input id="credentialWebsite" type="text" maxlength="300" placeholder="مواعيدي">
+          </label>
+          <label>ملاحظة (اختيارية)
+            <input id="credentialNote" type="text" maxlength="500" placeholder="ملاحظة خاصة بالحساب">
+          </label>
         </div>
-        <div id="vaultLocked" hidden>
-          <form id="vaultUnlockForm" class="vault-access-form" autocomplete="off">
-            <label for="vaultUnlockMaster">الكلمة الرئيسية لفتح الخزنة</label>
-            <input id="vaultUnlockMaster" type="password" autocomplete="off" required placeholder="كلمة الخزنة الرئيسية">
-            <button class="btn primary" type="submit" id="vaultUnlockButton">فتح الخزنة</button>
-          </form>
+        <div class="account-form-actions">
+          <button type="submit" class="btn primary" id="credentialSave">حفظ الكلمة</button>
+          <span class="account-hint">الحفظ هنا لا يغير كلمة دخول المستخدم. لتغييرها فعليًا استخدم زر تغيير الكلمة.</span>
         </div>
-        <div id="vaultUnlocked" hidden class="vault-unlocked-toolbar">
-          <p>الخزنة مفتوحة. تقدر تعرض أو تنسخ الكلمات المحفوظة من قائمة الحسابات بالأسفل.</p>
-          <button type="button" class="btn" id="vaultLockButton">قفل الخزنة</button>
-        </div>
-        <form class="vault-edit-form" id="vaultEntryForm" hidden autocomplete="off">
-          <div class="account-form-top">
-            <div>
-              <h3>إضافة أو تحديث كلمة محفوظة</h3>
-              <p id="vaultEntryLabel"></p>
-            </div>
-            <button class="view" id="vaultEntryCancel" type="button">إلغاء</button>
-          </div>
-          <input type="hidden" id="vaultTargetId">
-          <div class="account-fields">
-            <label>كلمة المرور المعروفة
-              <span class="password-control">
-                <input id="vaultEntryPassword" type="password" autocomplete="off" required maxlength="256" placeholder="اكتب كلمة المرور التي تعرفها">
-                <button class="password-toggle" id="vaultEntryReveal" type="button">إظهار</button>
-              </span>
-            </label>
-            <label>الموقع
-              <input id="vaultEntryWebsite" type="text" maxlength="300" placeholder="مواعيدي">
-            </label>
-            <label>ملاحظة (اختيارية)
-              <input id="vaultEntryNote" type="text" maxlength="500" placeholder="أي ملاحظة خاصة بالحساب">
-            </label>
-          </div>
-          <p class="account-hint">الحفظ هنا لا يغير كلمة المرور الفعلية للحساب. لتغييرها استخدم «تغيير كلمة المرور».</p>
-          <div class="account-form-actions"><button class="btn primary" id="vaultEntrySave" type="submit">حفظ في الخزنة</button></div>
-        </form>
-        <p class="account-vault-message" id="vaultFeedback" hidden role="status" aria-live="polite"></p>
-      </section>
+      </form>
+      <p id="credentialsFeedback" class="account-feedback" hidden role="status" aria-live="polite"></p>
 
       <form class="account-edit-form" id="createAccountForm" hidden autocomplete="off">
         <div class="account-form-top">
@@ -346,7 +318,7 @@
         <div class="one-time-secret">
           <input id="oneTimePassword" type="text" readonly autocomplete="off" dir="ltr" spellcheck="false">
           <button class="btn account-copy-btn" type="button" id="copyOneTimePassword">نسخ كلمة المرور</button>
-          <button class="btn account-copy-btn" type="button" id="saveOneTimeToVault">حفظ في الخزنة</button>
+          <button class="btn account-copy-btn" type="button" id="saveOneTimeWithAccount">حفظ مع الحساب</button>
         </div>
         <p id="oneTimeCopyStatus" class="account-hint" role="status" aria-live="polite"></p>
       </section>
@@ -383,7 +355,7 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js" defer></script>
 <script src="./admin-dashboard.js?v=3" defer></script>
-<script src="./admin-accounts.js?v=5" defer></script>
-<script src="./admin-vault.js?v=2" defer></script>
+<script src="./admin-accounts.js?v=6" defer></script>
+<script src="./admin-credentials.js?v=1" defer></script>
 </body>
 </html>

@@ -167,10 +167,10 @@
       identity.append(subline);
 
       const pass = create("div", "account-password-meta");
-      if (window.mawaeidiVault?.buildPasswordCell) {
-        window.mawaeidiVault.buildPasswordCell(pass,user,change || null);
+      if (window.mawaeidiCredentials?.buildPasswordCell) {
+        window.mawaeidiCredentials.buildPasswordCell(pass,user,change || null);
       } else {
-        pass.append(create("small", "", "كلمة المرور"),create("span", "", "جارٍ تحميل الخزنة…"));
+        pass.append(create("small", "", "كلمة المرور"),create("span", "", "جارٍ تحميل البيانات…"));
       }
 
       const actions = create("div", "account-row-actions");
@@ -270,16 +270,16 @@
   $("accountSearch").addEventListener("input", render);
   $("refreshAccounts").addEventListener("click", () => load(true));
   $("dismissOneTimeCredentials").addEventListener("click", clearOneTimeCredentials);
-  $("saveOneTimeToVault").addEventListener("click", async () => {
+  $("saveOneTimeWithAccount").addEventListener("click", async () => {
     const password = $("oneTimePassword").value;
     if (!oneTimeTargetId || !password) {
       $("oneTimeCopyStatus").textContent = "لا توجد بيانات حالية للحفظ.";
       return;
     }
-    const ok = await window.mawaeidiVault?.saveOneTime(oneTimeTargetId,password);
+    const ok = await window.mawaeidiCredentials?.saveOneTime(oneTimeTargetId,password);
     $("oneTimeCopyStatus").textContent = ok
-      ? "تم حفظ الكلمة مشفّرة في خزنتك."
-      : "افتح الخزنة أولًا، ثم اضغط حفظ مرة أخرى.";
+      ? "تم حفظ الكلمة مشفّرة مع الحساب."
+      : "تعذّر الحفظ؛ حاول مرة أخرى.";
   });
   $("copyOneTimePassword").addEventListener("click", async () => {
     if ($("oneTimeCredentials").hidden || !$("oneTimePassword").value) return;
@@ -323,13 +323,13 @@
       closeForms();
       await load();
       showOneTimeCredentials(email, password, created.user?.id || null);
-      let savedInVault = false;
+      let savedWithAccount = false;
       try {
-        savedInVault = !!(await window.mawaeidiVault?.recordPasswordIfOpen(created.user?.id,password));
-      } catch { /* The account exists even if vault synchronization fails. */ }
-      feedback(savedInVault
-        ? "تم إنشاء الحساب وحفظ كلمته في الخزنة المشفّرة."
-        : "تم إنشاء الحساب. انسخ الكلمة أو افتح الخزنة واحفظها قبل إغلاق البطاقة.");
+        savedWithAccount = !!(await window.mawaeidiCredentials?.recordPasswordIfOpen(created.user?.id,password));
+      } catch { /* The account exists even if saved-credential synchronization fails. */ }
+      feedback(savedWithAccount
+        ? "تم إنشاء الحساب وحفظ كلمته بشكل مشفّر مع الحساب."
+        : "تم إنشاء الحساب. انسخ الكلمة أو اضغط حفظ مع الحساب قبل إغلاق البطاقة.");
     } catch (error) {
       feedback(friendly(error.message),true);
     } finally {
@@ -355,13 +355,13 @@
       await invoke({ action:"set_password", user_id:id, password });
       closeForms();
       showOneTimeCredentials(user.email || "", password, id);
-      let savedInVault = false;
+      let savedWithAccount = false;
       try {
-        savedInVault = !!(await window.mawaeidiVault?.recordPasswordIfOpen(id,password));
-      } catch { /* A vault failure must not falsely report a failed Auth reset. */ }
-      feedback(savedInVault
-        ? "تم تغيير كلمة المرور وتحديث الخزنة المشفّرة."
-        : "تم تغيير كلمة المرور. انسخها أو افتح الخزنة واحفظها قبل إغلاق البطاقة.");
+        savedWithAccount = !!(await window.mawaeidiCredentials?.recordPasswordIfOpen(id,password));
+      } catch { /* A saved-credential failure must not falsely report a failed Auth reset. */ }
+      feedback(savedWithAccount
+        ? "تم تغيير كلمة المرور وتحديث الكلمة المحفوظة مع الحساب."
+        : "تم تغيير كلمة المرور. انسخها أو احفظها مع الحساب قبل إغلاق البطاقة.");
     } catch (error) {
       feedback(friendly(error.message),true);
     } finally {
@@ -393,6 +393,7 @@
         confirm_phrase: "حذف نهائي"
       });
       clearOneTimeCredentials();
+      window.mawaeidiCredentials?.forget(id);
       users = users.filter(person => person.id !== id);
       closeForms();
       render();

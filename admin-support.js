@@ -286,21 +286,38 @@
     }
   });
   document.addEventListener("keydown",event => {
-    if (!PANEL.hidden && event.key === "Escape") {
+    if (PANEL.hidden) return;
+    if (event.key === "Escape") {
       event.preventDefault();
       close();
+      return;
+    }
+    // Prevent keyboard focus from escaping to the interactive admin page behind.
+    if (event.key === "Tab") {
+      const buttons = Array.from(PANEL.querySelectorAll("button"))
+        .filter(el => !el.disabled && !el.closest("[hidden]") && el.getClientRects().length);
+      if (!buttons.length) { event.preventDefault(); PANEL.focus(); return; }
+      const first = buttons[0], last = buttons[buttons.length-1];
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === PANEL)) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus();
+      }
     }
   });
   document.addEventListener("visibilitychange",() => {
     if (document.hidden && !PANEL.hidden) close();
   });
   window.addEventListener("pagehide",close);
-  client?.auth.onAuthStateChange(event => {
-    if (event === "SIGNED_OUT") {
+  let lastSessionUserId = null;
+  client?.auth.onAuthStateChange((event,session) => {
+    if (event === "SIGNED_OUT" ||
+        (lastSessionUserId && session?.user?.id && session.user.id !== lastSessionUserId)) {
       close();
       $("supportHistory").hidden = true;
       $("supportHistoryList").replaceChildren();
     }
+    lastSessionUserId = session?.user?.id || null;
   });
   window.mawaeidiAdminSupport = {open,close};
 })();

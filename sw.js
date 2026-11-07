@@ -50,7 +50,8 @@ self.addEventListener("fetch",event=>{
     const homePath=new URL("./",self.registration.scope).pathname;
     const indexPath=new URL("./index.html",self.registration.scope).pathname;
     const studentsPath=new URL("./students/index.html",self.registration.scope).pathname;
-    const fallback=url.pathname===studentsPath?"./students/index.html":
+    const studentsDirectoryPath=new URL("./students/",self.registration.scope).pathname;
+    const fallback=(url.pathname===studentsPath||url.pathname===studentsDirectoryPath)?"./students/index.html":
       (url.pathname===homePath||url.pathname===indexPath)?"./index.html":null;
 
     // Never cache admin.html (or another route) under the main site's offline

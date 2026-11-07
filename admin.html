@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./admin-ui.css?v=2">
+<link rel="stylesheet" href="./admin-ui.css?v=3">
 </head>
 <body>
 <main class="shell">
@@ -244,6 +244,36 @@
         </div>
       </form>
 
+      <form class="account-edit-form account-delete-form" id="deleteAccountForm" hidden autocomplete="off">
+        <div class="account-form-top">
+          <div>
+            <h3>حذف الحساب نهائيًا</h3>
+            <p id="deleteAccountLabel"></p>
+          </div>
+          <button type="button" class="view" id="closeDeleteAccount">إلغاء</button>
+        </div>
+        <p class="account-delete-warning">
+          <strong>تنبيه: هذا الحذف نهائي ولا يمكن التراجع عنه.</strong>
+          سيُحذف حساب المستخدم وبياناته المرتبطة بمواعيدي، بما فيها المواعيد والطلاب والساعة العالمية وسجل النشاط والصور المخزنة ضمن مجلد حسابه.
+          إذا احتجت بياناته، أنشئ نسخة احتياطية قبل الحذف.
+        </p>
+        <input type="hidden" id="deleteAccountId">
+        <div class="account-fields single">
+          <label>اكتب البريد الإلكتروني لهذا الحساب لتأكيد الحذف
+            <input type="email" id="deleteAccountEmail" required dir="ltr" autocomplete="off"
+              spellcheck="false" placeholder="اكتب البريد الإلكتروني كاملًا">
+          </label>
+        </div>
+        <label class="account-delete-consent">
+          <input type="checkbox" id="deleteAccountAcknowledged" required>
+          <span>أفهم أن هذه العملية تحذف الحساب وبياناته نهائيًا.</span>
+        </label>
+        <div class="account-form-actions">
+          <button type="submit" class="btn danger-btn" id="deleteAccountSubmit" disabled>حذف الحساب نهائيًا</button>
+          <span class="account-hint">لن يتم حذف أي حساب قبل كتابة بريده وتأكيد العملية.</span>
+        </div>
+      </form>
+
       <div id="accountsFeedback" class="account-feedback" hidden role="status" aria-live="polite"></div>
       <div class="table-filters account-toolbar">
         <input type="search" id="accountSearch" class="search" aria-label="البحث عن الحسابات" placeholder="ابحث عن حساب بالاسم أو البريد…" autocomplete="off">
@@ -276,6 +306,6 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js" defer></script>
 <script src="./admin-dashboard.js?v=3" defer></script>
-<script src="./admin-accounts.js?v=1" defer></script>
+<script src="./admin-accounts.js?v=2" defer></script>
 </body>
 </html>

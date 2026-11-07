@@ -311,9 +311,12 @@
     panel.replaceChildren();
     panel.hidden = false;
     const top = makeEl("div", "detail-header");
-    const title = makeEl("div");
-    title.append(makeEl("h3", "", person.name || person.email || "تفاصيل المستخدم"),
+    const title = makeEl("div", "detail-person-identity");
+    title.append(makeProfileAvatar(person));
+    const text = makeEl("div");
+    text.append(makeEl("h3", "", person.name || person.email || "تفاصيل المستخدم"),
       makeEl("p", "", person.email || "بيانات الحساب"));
+    title.append(text);
     const close = makeEl("button", "view", "إغلاق التفاصيل");
     close.type = "button";
     close.addEventListener("click", () => {
@@ -451,6 +454,7 @@
         avatarCache = next;
         for (const user of users) user.avatar_url = avatarCache.get(user.id) || null;
         renderUsers();
+        renderDetails(false);
         renderFeed();
       }).catch(() => {});
     } catch (error) {

@@ -23,6 +23,9 @@
   let current = null;
   let adminAvatarOwner = null;
   let avatarCache = new Map();
+  let avatarLoadedAt = 0;
+  let avatarRetryAfter = 0;
+  let avatarRequest = null;
 
   const toMs = value => {
     if (!value) return 0;
@@ -42,7 +45,7 @@
   const number = value => arabicNumber.format(Number(value) || 0);
   const duration = seconds => {
     const minutes = Math.floor(Math.max(0, Number(seconds) || 0) / 60);
-    if (!minutes) return "٠ دقيقة";
+    if (!minutes) return Number(seconds) > 0 ? "أقل من دقيقة" : "٠ دقيقة";
     const hours = Math.floor(minutes / 60), rest = minutes % 60;
     return hours
       ? number(hours) + " ساعة" + (rest ? " و" + number(rest) + " د" : "")
@@ -530,6 +533,9 @@
   function fail(message, accessDenied = false) {
     avatarCache.clear();
     adminAvatarOwner = null;
+    avatarLoadedAt = 0;
+    avatarRetryAfter = 0;
+    avatarRequest = null;
     users = []; sessions = []; current = null; selectedUserId = null; detailReturnFocus = null;
     $("loading").hidden = true;
     $("dashboard").hidden = true;
@@ -539,7 +545,44 @@
     $("errorText").textContent = message;
   }
 
-  async function loadReport() {
+  function refreshAvatarLinks(ownerId, force = false) {
+    if (!client || !current || adminAvatarOwner !== ownerId || avatarRequest)
+      return;
+    const now = Date.now();
+    if (!force && (now - avatarLoadedAt < 20 * 60000 || now < avatarRetryAfter))
+      return;
+    const request = client.functions.invoke("mawaeidi-admin-accounts", {
+      body: { action: "list" }
+    });
+    avatarRequest = request;
+    request.then(({data: pictured, error: avatarError}) => {
+      if (adminAvatarOwner !== ownerId || !current) return;
+      if (avatarError || !Array.isArray(pictured?.users)) {
+        avatarRetryAfter = Date.now() + 60000;
+        return;
+      }
+      const next = new Map();
+      for (const entry of pictured.users) {
+        if (typeof entry.avatar_url === "string" && entry.avatar_url.startsWith("https://"))
+          next.set(entry.id, entry.avatar_url);
+      }
+      avatarCache = next;
+      avatarLoadedAt = Date.now();
+      avatarRetryAfter = 0;
+      for (const user of users) user.avatar_url = avatarCache.get(user.id) || null;
+      // Preserve the current account detail/filters, only update visible avatars.
+      renderUsers();
+      renderDetails(false);
+      renderFeed();
+    }).catch(() => {
+      if (adminAvatarOwner === ownerId)
+        avatarRetryAfter = Date.now() + 60000;
+    }).finally(() => {
+      if (avatarRequest === request) avatarRequest = null;
+    });
+  }
+
+  async function loadReport(forceAvatarRefresh = false) {
     if (pending) return;
     if (!client) { fail("تعذّر الاتصال بخدمة الحساب. تحقق من اتصال الإنترنت."); return; }
     pending = true;
@@ -564,6 +607,9 @@
       }
       if (adminAvatarOwner !== auth.user.id) {
         avatarCache.clear();
+        avatarLoadedAt = 0;
+        avatarRetryAfter = 0;
+        avatarRequest = null;
         adminAvatarOwner = auth.user.id;
       }
       users = (Array.isArray(data?.users) ? data.users : []).map(user => ({
@@ -575,26 +621,10 @@
       $("dashboard").hidden = false; $("exportBtn").disabled = false;
       $("updatedAt").textContent = "آخر تحديث: " + cairoDateFormat.format(new Date());
       renderAll();
-      // Images are private. Fetch temporary links only after the admin report
-      // has passed authorization; a picture failure never blocks statistics.
-      const callerId = auth.user.id;
-      client.functions.invoke("mawaeidi-admin-accounts", {
-        body: { action: "list" }
-      }).then(({data: pictured, error: avatarError}) => {
-        if (avatarError || !Array.isArray(pictured?.users) ||
-            !current || adminAvatarOwner !== callerId) return;
-        const next = new Map();
-        for (const item of pictured.users) {
-          if (typeof item.avatar_url === "string" && item.avatar_url.startsWith("https://")) {
-            next.set(item.id, item.avatar_url);
-          }
-        }
-        avatarCache = next;
-        for (const user of users) user.avatar_url = avatarCache.get(user.id) || null;
-        renderUsers();
-        renderDetails(false);
-        renderFeed();
-      }).catch(() => {});
+      // Signed photo links are private and expire after 30 minutes. Reuse them
+      // for 20 minutes instead of asking Edge Function on every 2-minute poll.
+      // The manual refresh button always requests updated photos.
+      refreshAvatarLinks(auth.user.id, forceAvatarRefresh);
     } catch (error) {
       console.error("Mawaeidi admin report:", error);
       fail("حدث خطأ في الاتصال. حاول تحديث البيانات مرة أخرى.");
@@ -631,7 +661,7 @@
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
-  $("refreshBtn").addEventListener("click", loadReport);
+  $("refreshBtn").addEventListener("click", () => loadReport(true));
   $("exportBtn").addEventListener("click", exportCsv);
   $("period").addEventListener("change", () => {
     if (!users.length) return;

@@ -331,3 +331,76 @@ body.support-preview-open .admin-back-top {display:none!important}
     padding:8px 11px;
   }
 }
+
+/* Mobile QA: keep editable fields at a readable size on iOS, where
+   smaller form fonts can trigger unexpected viewport zoom on focus.
+   Read-only password displays remain untouched to preserve compact rows. */
+@media (max-width:760px) {
+  #dashboard input[type="search"],
+  #dashboard .table-filters select,
+  #dashboard #period,
+  #accountsSection .account-edit-form input:not([type="hidden"]):not([readonly]),
+  #accountsSection .vault-access-form input:not([readonly]),
+  #accountsSection .vault-edit-form input:not([readonly]),
+  #accountsSection .vault-edit-form textarea {
+    font-size:16px;
+  }
+
+  /* Tap areas and readable controls without changing desktop layouts. */
+  #dashboard .admin-section-links a {
+    min-height:44px;
+    font-size:12px;
+  }
+  .admin-header .admin-header-actions .btn {
+    min-height:44px;
+    font-size:12px;
+  }
+  #dashboard .admin-search-control .admin-clear-search,
+  #dashboard .table-filters.account-toolbar > #refreshAccounts {
+    min-height:44px;
+    font-size:12px;
+  }
+  #accountsSection .account-compact-email {
+    font-size:13px;
+  }
+  #accountsSection .account-row-compact .account-user-profile-name {
+    font-size:12px;
+  }
+  #accountsSection .account-row-compact .account-compact-secondary {
+    min-width:0;
+    overflow-wrap:anywhere;
+  }
+  #accountsSection .account-row-compact .account-support-link {
+    min-height:42px;
+    max-width:100%;
+    white-space:normal;
+  }
+  #accountsSection .account-row-compact .account-row-actions .btn {
+    min-height:44px;
+  }
+
+  /* Larger eye/copy affordances still fit inside the 46px secret field. */
+  #accountsSection .account-row-compact .account-compact-email-line > .account-inline-icon,
+  #accountsSection .account-row-compact .vault-secret-line > .vault-icon-btn {
+    width:38px;
+    min-width:38px;
+    max-width:38px;
+    height:38px;
+    min-height:38px;
+    flex:0 0 38px;
+    padding:7px;
+  }
+  #accountsSection .account-row-compact .vault-masked-password,
+  #accountsSection .account-row-compact .vault-secret-line,
+  #accountsSection .account-row-compact .account-password-meta,
+  #accountsSection .account-row-compact .account-identity-col {
+    min-width:0;
+  }
+  #accountsSection .account-fields label {
+    min-width:0;
+  }
+  #accountsSection .account-fields .password-control {
+    min-width:0;
+    max-width:100%;
+  }
+}

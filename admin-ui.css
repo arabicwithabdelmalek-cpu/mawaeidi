@@ -854,3 +854,140 @@ tbody tr:hover {background:#f8fbfd}
     padding-inline:14px;
   }
 }
+
+/* Admin header v12 — share the website's actual transparent logo and
+   keep navigation / reporting actions visually grouped. */
+.admin-header.top {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px 22px;
+  padding:6px 2px 21px;
+  border-bottom:1px solid #cfdde5;
+}
+.admin-header .brand {
+  display:flex;
+  align-items:center;
+  gap:16px;
+  min-width:0;
+}
+.admin-header .mark {
+  display:block;
+  width:68px;
+  height:68px;
+  min-width:68px;
+  flex:0 0 68px;
+  padding:0;
+  margin:0;
+  border:0;
+  border-radius:0;
+  outline:0;
+  background:transparent;
+  box-shadow:none;
+  filter:none;
+  object-fit:contain;
+}
+.admin-header .brand-name {
+  display:flex;
+  align-items:center;
+  gap:8px 12px;
+  flex-wrap:wrap;
+}
+.admin-header .brand-name h1 {
+  margin:0;
+  color:#18394f;
+  font-size:clamp(21px,2.15vw,28px);
+  font-weight:800;
+  line-height:1.4;
+}
+.admin-header .admin-pill {
+  border:1px solid #bedbd2;
+  border-radius:999px;
+  padding:3px 10px;
+  color:#206b60;
+  background:#eef8f3;
+  font-weight:800;
+  font-size:10px;
+}
+.admin-header .subtitle {
+  margin-top:4px;
+  color:#698091;
+  font-size:12px;
+  line-height:1.7;
+}
+.admin-header .admin-header-actions {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:9px;
+  flex-wrap:wrap;
+  width:auto;
+}
+.admin-header .admin-header-actions .btn {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:45px;
+  padding:9px 14px;
+  border-radius:11px;
+  font-size:12px;
+  line-height:1.5;
+  font-weight:800;
+}
+.admin-header .admin-header-actions .admin-return {
+  background:#f6fafd;
+  border-color:#c6d9e5;
+  color:#245778;
+}
+.admin-header .admin-header-actions .admin-return:hover {
+  background:#eaf3f8;
+  border-color:#a9c8da;
+}
+.admin-header .admin-header-actions .admin-return svg {
+  width:17px;height:17px;flex:none;
+}
+.admin-header .admin-header-actions .admin-export {
+  border-color:#d6e2e9;
+  background:#fff;
+}
+.admin-header .admin-header-actions .admin-refresh {
+  box-shadow:0 4px 12px rgba(35,75,110,.10);
+}
+@media(max-width:1050px) {
+  .admin-header.top {grid-template-columns:minmax(0,1fr);gap:12px;}
+  .admin-header .admin-header-actions {
+    width:100%;
+    justify-content:flex-start;
+  }
+}
+@media(max-width:640px) {
+  .admin-header.top {
+    gap:13px;
+    padding-bottom:16px;
+  }
+  .admin-header .brand {gap:10px;align-items:center;}
+  .admin-header .mark {
+    width:51px;height:51px;min-width:51px;flex-basis:51px;
+  }
+  .admin-header .brand-name {gap:5px 8px;}
+  .admin-header .brand-name h1 {font-size:20px;}
+  .admin-header .subtitle {font-size:11px;}
+  .admin-header .admin-header-actions {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+  .admin-header .admin-header-actions .btn {
+    min-width:0;
+    width:100%;
+    padding:9px 8px;
+    min-height:44px;
+    font-size:11px;
+    white-space:normal;
+    text-align:center;
+  }
+  .admin-header .admin-header-actions .admin-return {
+    grid-column:1/-1;
+  }
+}

@@ -99,23 +99,53 @@
     $("vaultEntryForm").scrollIntoView({behavior:"smooth",block:"nearest"});
   }
 
-  function buildPasswordCell(container, user) {
+  const ICONS = Object.freeze({
+    eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeOff: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.7 5.1A11 11 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.3 4.2M6.1 6.2C3.4 8.2 2 12 2 12s3.5 7 10 7c1.8 0 3.4-.5 4.7-1.2"/><path d="M10 10a3 3 0 0 0 4 4"/></svg>',
+    copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>'
+  });
+  function iconButton(label, iconName) {
+    const button = make("button","vault-icon-btn");
+    button.type = "button";
+    button.innerHTML = ICONS[iconName];
+    button.title = label;
+    button.setAttribute("aria-label",label);
+    return button;
+  }
+
+  function buildPasswordCell(container, user, passwordChangedAt = null) {
     container.replaceChildren(make("small", "", "كلمة المرور"));
     if (!key) {
-      container.append(make("span", "vault-muted", "الخزنة مقفلة"));
+      const line = make("div", "vault-password-shortline");
+      line.append(make("span", "vault-compact-placeholder", "••••••••"));
       const open = make("button", "vault-small-btn", "فتح الخزنة");
       open.type = "button";
-      open.addEventListener("click", () => $("accountVault").scrollIntoView({behavior:"smooth",block:"start"}));
-      container.append(open);
+      open.addEventListener("click", () =>
+        $("accountVault").scrollIntoView({behavior:"smooth",block:"start"}));
+      line.append(open);
+      container.append(line);
       return;
     }
     const record = saved.get(user.id);
     if (!record) {
-      container.append(make("span", "vault-muted", "غير محفوظة"));
-      const add = make("button", "vault-small-btn", "إدخال كلمة المرور");
+      const line = make("div", "vault-password-shortline");
+      line.append(make("span", "vault-compact-placeholder", "غير محفوظة"));
+      const add = make("button", "vault-small-btn", "إضافة");
       add.type = "button";
       add.addEventListener("click", () => openEntry(user));
-      container.append(add);
+      line.append(add);
+      container.append(line);
+      return;
+    }
+    const changeTime = passwordChangedAt ? Date.parse(passwordChangedAt) : NaN;
+    const savedTime = record.savedAt ? Date.parse(record.savedAt) : 0;
+    const stale = Number.isFinite(changeTime) && changeTime > savedTime + 1000;
+    if (stale) {
+      const status = make("div","vault-stale-password","تغيّرت من حساب المستخدم؛ المحفوظة قديمة");
+      const edit = make("button", "vault-small-btn", "تحديث المحفوظة");
+      edit.type = "button";
+      edit.addEventListener("click", () => openEntry(user));
+      container.append(status, edit);
       return;
     }
     const line = make("div", "vault-secret-line");
@@ -125,31 +155,27 @@
     input.readOnly = true;
     input.autocomplete = "off";
     input.setAttribute("aria-label", "كلمة مرور محفوظة لـ " + (user.name || user.email));
-    const toggle = make("button", "vault-icon-btn", "إظهار");
-    toggle.type = "button";
+    const toggle = iconButton("إظهار كلمة المرور","eye");
     toggle.addEventListener("click", () => {
       const visible = input.type === "text";
       input.type = visible ? "password" : "text";
-      toggle.textContent = visible ? "إظهار" : "إخفاء";
+      toggle.title = visible ? "إظهار كلمة المرور" : "إخفاء كلمة المرور";
+      toggle.setAttribute("aria-label",toggle.title);
+      toggle.innerHTML = visible ? ICONS.eye : ICONS.eyeOff;
     });
-    const copy = make("button", "vault-icon-btn", "نسخ");
-    copy.type = "button";
+    const copy = iconButton("نسخ كلمة المرور","copy");
     copy.addEventListener("click", async () => {
       if (!key) return;
       try {
         await navigator.clipboard.writeText(record.password);
-        notify("تم نسخ كلمة مرور الحساب. انتبه إلى أن الحافظة قد تحتفظ بالكلمة.");
-      } catch { notify("تعذر النسخ، يمكنك إظهار الكلمة ونسخها يدويًا.", true); }
+        notify("تم نسخ كلمة المرور من الخزنة. قد تبقى في حافظة الجهاز.");
+      } catch { notify("تعذّر النسخ، يمكنك إظهار الكلمة ونسخها يدويًا.", true); }
     });
-    line.append(input,toggle,copy);
-    container.append(line);
-    const info = make("small","vault-record-meta",record.website || "مواعيدي");
-    container.append(info);
-    if (record.note) container.append(make("span","vault-note",record.note));
-    const edit = make("button", "vault-small-btn", "تعديل المحفوظة");
-    edit.type = "button";
+    const edit = iconButton("تعديل كلمة المرور المحفوظة","eyeOff");
+    edit.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.5-1 11-11a2.2 2.2 0 0 0-3.2-3.2l-11 11L4 20Z"/><path d="m15 6 3 3"/></svg>';
     edit.addEventListener("click", () => openEntry(user));
-    container.append(edit);
+    line.append(input,toggle,copy,edit);
+    container.append(line);
   }
 
   async function saveRecord(id, payload) {
@@ -162,14 +188,15 @@
     if (!data.password) throw new Error("empty_password");
     if (data.password.length > 256) throw new Error("password_too_long");
     const encrypted = await encrypt(JSON.stringify(data), key, id);
+    const savedAt = new Date().toISOString();
     const { error } = await client.from("mawaeidi_admin_vault_entries")
       .upsert({
         owner_user_id: ownerId, target_user_id: id,
         iv: encrypted.iv, ciphertext: encrypted.ciphertext,
-        updated_at: new Date().toISOString()
+        updated_at: savedAt
       }, { onConflict: "owner_user_id,target_user_id" });
     if (error) throw error;
-    saved.set(id, data);
+    saved.set(id, { ...data, savedAt });
     redraw();
     return true;
   }
@@ -257,7 +284,7 @@
       },candidate);
       if (verified !== MARKER) throw new Error("bad_key");
       const { data, error } = await client.from("mawaeidi_admin_vault_entries")
-        .select("target_user_id,iv,ciphertext")
+        .select("target_user_id,iv,ciphertext,updated_at")
         .eq("owner_user_id",ownerId).limit(2000);
       if (error) throw error;
       const loaded = new Map();
@@ -265,7 +292,7 @@
         const clear = await decrypt(entry,candidate,entry.target_user_id);
         const payload = JSON.parse(clear);
         if (typeof payload.password !== "string") throw new Error("invalid_entry");
-        loaded.set(entry.target_user_id,payload);
+        loaded.set(entry.target_user_id,{ ...payload,savedAt:entry.updated_at });
       }
       key = candidate; saved = loaded;
       $("vaultUnlockMaster").value = "";

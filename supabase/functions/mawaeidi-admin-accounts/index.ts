@@ -66,6 +66,10 @@ Deno.serve(async (req: Request) => {
     const action = text((body as Record<string, unknown>).action);
 
     if (action === "list") {
+      const { data: admins, error: adminsError } = await supabaseAdmin
+        .from("mawaeidi_usage_admins").select("user_id");
+      if (adminsError) return respond(503, { error: "permission_check_failed" });
+      const protectedIds = new Set((admins || []).map((entry) => entry.user_id));
       const result: Array<Record<string, unknown>> = [];
       for (let page = 1; page <= 10; page++) {
         const { data, error } = await supabaseAdmin.auth.admin.listUsers({page, perPage:100});
@@ -80,6 +84,7 @@ Deno.serve(async (req: Request) => {
           last_sign_in_at: user.last_sign_in_at || null,
           email_confirmed_at: user.email_confirmed_at || null,
           is_owner: user.id === identity.user.id,
+          is_admin: protectedIds.has(user.id),
         });
         if (batch.length < 100) break;
       }
@@ -122,6 +127,79 @@ Deno.serve(async (req: Request) => {
       );
       if (error) return respond(400, { error: "password_change_failed" });
       return respond(200, { ok: true });
+    }
+
+    if (action === "delete") {
+      const input = body as Record<string, unknown>;
+      const id = text(input.user_id);
+      const confirmedEmail = text(input.confirm_email).toLowerCase();
+      const phrase = text(input.confirm_phrase);
+      if (!validUuid(id)) return respond(400, { error: "invalid_user" });
+      if (id === identity.user.id) return respond(403, { error: "cannot_delete_self" });
+      if (phrase !== "حذف نهائي") return respond(400, { error: "confirmation_required" });
+
+      // Protect every account with administrator status, including future admins.
+      // This check MUST be server-side and cannot rely on the UI's is_owner flag.
+      const { data: protectedAccount, error: roleError } = await supabaseAdmin
+        .from("mawaeidi_usage_admins").select("user_id").eq("user_id", id).maybeSingle();
+      if (roleError) return respond(503, { error: "permission_check_failed" });
+      if (protectedAccount) return respond(403, { error: "cannot_delete_admin" });
+
+      const { data: target, error: targetError } =
+        await supabaseAdmin.auth.admin.getUserById(id);
+      if (targetError || !target.user) return respond(404, { error: "user_not_found" });
+      const actualEmail = (target.user.email || "").trim().toLowerCase();
+      if (!actualEmail || confirmedEmail !== actualEmail) {
+        return respond(400, { error: "confirmation_mismatch" });
+      }
+
+      // Storage objects owned by the user can block Auth deletion.
+      // The app places user files under the UUID prefix, e.g. UUID/avatar.jpg.
+      // Remove those objects via Storage API, never direct DELETE from storage.objects.
+      const { data: buckets, error: bucketsError } = await supabaseAdmin.storage.listBuckets();
+      if (bucketsError) return respond(503, { error: "storage_check_failed" });
+      let removedFiles = 0;
+      const MAX_FILES = 2000;
+      for (const bucket of buckets || []) {
+        const prefixes = [id];
+        const files: string[] = [];
+        let directories = 0;
+        while (prefixes.length) {
+          const prefix = prefixes.shift()!;
+          if (++directories > 250) return respond(409, { error: "storage_too_large" });
+          let offset = 0;
+          while (true) {
+            const { data: entries, error: listError } =
+              await supabaseAdmin.storage.from(bucket.id).list(prefix, {
+                limit: 100, offset, sortBy: { column: "name", order: "asc" },
+              });
+            if (listError) return respond(503, { error: "storage_check_failed" });
+            const batch = entries || [];
+            for (const entry of batch) {
+              const path = prefix + "/" + entry.name;
+              if (!entry.id) prefixes.push(path); else files.push(path);
+              if (removedFiles + files.length > MAX_FILES) {
+                return respond(409, { error: "storage_too_large" });
+              }
+            }
+            if (batch.length < 100) break;
+            offset += 100;
+          }
+        }
+        for (let i = 0; i < files.length; i += 100) {
+          const group = files.slice(i, i + 100);
+          const { error: removeError } =
+            await supabaseAdmin.storage.from(bucket.id).remove(group);
+          if (removeError) return respond(503, { error: "storage_cleanup_failed" });
+          removedFiles += group.length;
+        }
+      }
+
+      // False means hard deletion, not a reversible soft-delete.
+      // All linked Mawaeidi tables use ON DELETE CASCADE.
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(id, false);
+      if (deleteError) return respond(409, { error: "delete_failed" });
+      return respond(200, { ok: true, deleted_user_id: id, removed_files: removedFiles });
     }
 
     return respond(400, { error: "unsupported_action" });

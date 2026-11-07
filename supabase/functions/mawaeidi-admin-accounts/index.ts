@@ -153,6 +153,18 @@ Deno.serve(async (req: Request) => {
       const password = (body as Record<string, unknown>).password;
       if (!validUuid(id)) return respond(400, { error: "invalid_user" });
       if (!validPassword(password)) return respond(400, { error: "weak_password" });
+
+      // A manager may reset member passwords (and their own), but must not
+      // silently take over another administrator account, even if the UI hides
+      // that action. Authorize this on the server for every request.
+      if (id !== identity.user.id) {
+        const { data: protectedAccount, error: roleError } = await supabaseAdmin
+          .from("mawaeidi_usage_admins").select("user_id")
+          .eq("user_id", id).maybeSingle();
+        if (roleError) return respond(503, { error: "permission_check_failed" });
+        if (protectedAccount) return respond(403, { error: "cannot_change_admin" });
+      }
+
       const { data: target, error: targetError } =
         await supabaseAdmin.auth.admin.getUserById(id);
       if (targetError || !target.user) return respond(404, { error: "user_not_found" });

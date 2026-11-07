@@ -20,6 +20,8 @@
   let selectedUserId = null;
   let pending = false;
   let current = null;
+  let adminAvatarOwner = null;
+  let avatarCache = new Map();
 
   const toMs = value => {
     if (!value) return 0;
@@ -218,10 +220,24 @@
     if (!stats.lastSeen) return ["warn", "بلا زيارة مسجلة"];
     return ["", relativeTime(stats.lastSeen)];
   }
+  function makeProfileAvatar(user) {
+    const initials = [...(user.name || user.email || "م")][0] || "م";
+    const avatar = makeEl("span", "avatar", initials);
+    if (typeof user.avatar_url === "string" && user.avatar_url.startsWith("https://")) {
+      const img = makeEl("img", "avatar-photo");
+      img.alt = "الصورة الشخصية";
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.referrerPolicy = "no-referrer";
+      img.addEventListener("error", () => img.remove(), { once: true });
+      img.src = user.avatar_url;
+      avatar.append(img);
+    }
+    return avatar;
+  }
   function appendPerson(root, user) {
     const box = makeEl("div", "person");
-    const initials = [...(user.name || user.email || "م")][0] || "م";
-    box.append(makeEl("span", "avatar", initials));
+    box.append(makeProfileAvatar(user));
     const names = makeEl("div");
     names.append(makeEl("div", "person-name", user.name || "مستخدم"),
       makeEl("div", "person-email", user.email || ""));
@@ -295,9 +311,12 @@
     panel.replaceChildren();
     panel.hidden = false;
     const top = makeEl("div", "detail-header");
-    const title = makeEl("div");
-    title.append(makeEl("h3", "", person.name || person.email || "تفاصيل المستخدم"),
+    const title = makeEl("div", "detail-person-identity");
+    title.append(makeProfileAvatar(person));
+    const text = makeEl("div");
+    text.append(makeEl("h3", "", person.name || person.email || "تفاصيل المستخدم"),
       makeEl("p", "", person.email || "بيانات الحساب"));
+    title.append(text);
     const close = makeEl("button", "view", "إغلاق التفاصيل");
     close.type = "button";
     close.addEventListener("click", () => {
@@ -352,7 +371,7 @@
       const person = lookup.get(session.user_id);
       if (!person) return;
       const item = makeEl("div", "feed-item");
-      item.append(makeEl("span", "avatar", [...(person.name || person.email || "م")][0]));
+      item.append(makeProfileAvatar(person));
       const body = makeEl("div", "feed-content");
       body.append(makeEl("strong", "", person.name || person.email || "مستخدم"),
         makeEl("span", "", clientLabel(session.client_type) + " · " +
@@ -371,6 +390,8 @@
     renderFeed();
   }
   function fail(message, accessDenied = false) {
+    avatarCache.clear();
+    adminAvatarOwner = null;
     users = []; sessions = []; current = null; selectedUserId = null;
     $("loading").hidden = true;
     $("dashboard").hidden = true;
@@ -403,13 +424,39 @@
         }
         return;
       }
-      users = Array.isArray(data?.users) ? data.users : [];
+      if (adminAvatarOwner !== auth.user.id) {
+        avatarCache.clear();
+        adminAvatarOwner = auth.user.id;
+      }
+      users = (Array.isArray(data?.users) ? data.users : []).map(user => ({
+        ...user, avatar_url: avatarCache.get(user.id) || null
+      }));
       sessions = Array.isArray(data?.sessions) ? data.sessions : [];
       current = buildSummary();
       $("loading").hidden = true; $("errorBox").hidden = true;
       $("dashboard").hidden = false; $("exportBtn").disabled = false;
       $("updatedAt").textContent = "آخر تحديث: " + cairoDateFormat.format(new Date());
       renderAll();
+      // Images are private. Fetch temporary links only after the admin report
+      // has passed authorization; a picture failure never blocks statistics.
+      const callerId = auth.user.id;
+      client.functions.invoke("mawaeidi-admin-accounts", {
+        body: { action: "list" }
+      }).then(({data: pictured, error: avatarError}) => {
+        if (avatarError || !Array.isArray(pictured?.users) ||
+            !current || adminAvatarOwner !== callerId) return;
+        const next = new Map();
+        for (const item of pictured.users) {
+          if (typeof item.avatar_url === "string" && item.avatar_url.startsWith("https://")) {
+            next.set(item.id, item.avatar_url);
+          }
+        }
+        avatarCache = next;
+        for (const user of users) user.avatar_url = avatarCache.get(user.id) || null;
+        renderUsers();
+        renderDetails(false);
+        renderFeed();
+      }).catch(() => {});
     } catch (error) {
       console.error("Mawaeidi admin report:", error);
       fail("حدث خطأ في الاتصال. حاول تحديث البيانات مرة أخرى.");

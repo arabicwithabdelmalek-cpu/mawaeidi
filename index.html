@@ -2016,6 +2016,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 <link rel="stylesheet" href="./ipad-pwa.css?v=1">
 <link rel="stylesheet" href="./iphone-pwa.css?v=1">
 <link rel="stylesheet" href="./header-refinement.css?v=4">
+<link rel="stylesheet" href="./smart-today-dashboard.css?v=1">
 </head>
 <body class="auth-pending">
 
@@ -2125,17 +2126,27 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
     <div class="workspace" id="scheduleWorkspace">
 
     <section class="hero">
-      <div class="hero-copy">
+      <div class="hero-copy smart-today" id="todayOverview">
         <div class="kufi-quote" role="img" aria-label="الوقت أمانة"></div>
-</div>
+        <div class="smart-today-content">
+          <div class="smart-today-kicker">ملخص اليوم</div>
+          <h2 class="smart-today-title" id="todayOverviewTitle">جارٍ تجهيز يومك…</h2>
+          <p class="smart-today-note" id="todayOverviewNote">سنرتّب حصص اليوم بمجرد تحميل جدولك.</p>
+          <div class="smart-today-stats" aria-label="إحصاءات اليوم">
+            <div class="smart-today-stat"><span>حصص اليوم</span><strong id="todayOverviewTotal">٠</strong></div>
+            <div class="smart-today-stat"><span>المتبقي</span><strong id="todayOverviewRemaining">٠</strong></div>
+            <div class="smart-today-stat"><span>تمت</span><strong id="todayOverviewCompleted">٠</strong></div>
+          </div>
+        </div>
+      </div>
 
       <div class="next" id="nextCard">
-        <div class="dot"></div>
-        <div class="label">الحصة القادمة</div>
+        <div class="next-topline"><div class="label">الحصة القادمة</div><div class="next-status">في انتظار الجدول</div></div>
         <div class="time">—</div>
         <div class="name">لا توجد حصة قادمة</div>
         <div class="meta">أضف أول موعد لتبدأ أجندتك.</div>
-</div>
+        <div class="next-actions next-empty-action"><button type="button" class="next-action-primary" onclick="openQuickAddForToday()">＋ إضافة سريعة</button></div>
+      </div>
     </section>
 
     <div class="controls">
@@ -2550,7 +2561,8 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 <script src="./students/student-registry.js?v=16" defer></script>
 <script src="./ipad-pwa.js?v=1" defer></script>
 <script src="./iphone-pwa.js?v=1" defer></script>
-<script src="./app-main.js?v=8" defer></script>
+<script src="./smart-today-dashboard.js?v=1" defer></script>
+<script src="./app-main.js?v=9" defer></script>
 <script src="./account.js?v=3" defer></script>
 <script src="./account-page.js?v=6" defer></script>
 <script src="./day-order.js?v=3" defer></script>

@@ -1656,12 +1656,14 @@ function requestAutoRefresh(){
 function finishAuthBootstrap(){document.body.classList.remove("auth-pending")}
 function showAuth(){
   document.getElementById("authGate").classList.remove("hidden");
+  document.body.classList.add("auth-locked");
   finishAuthBootstrap();
   const target=authMode==="update"?document.getElementById("authPassword"):document.getElementById("authEmail");
   target.focus();
 }
 function hideAuth(){
   document.getElementById("authGate").classList.add("hidden");
+  document.body.classList.remove("auth-locked");
   finishAuthBootstrap();
 }
 function setAuthMode(mode){
@@ -2306,8 +2308,123 @@ function render(){
   renderWeek();
 }
 
+function dashboardNumber(value){return new Intl.NumberFormat("ar-EG").format(Number(value)||0)}
+function dashboardOccurrenceModel(occurrence){
+  return {
+    time:occurrence.time,
+    displayTime:fmt(occurrence.time),
+    timeMinutes:mins(occurrence.time),
+    duration:Number(occurrence.lesson?.duration||60),
+    status:occurrenceStatus(occurrence)
+  };
+}
+function dashboardDateLabel(date,today=currentDateKey()){
+  if(date===today)return "اليوم";
+  if(date===addDaysToDateKey(today,1))return "غدًا";
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString("ar-EG",{weekday:"long",day:"numeric",month:"short",timeZone:"UTC"});
+}
+function nextDashboardOccurrence(list=filtered(),nowMinutes=mins(currentTimeKey())){
+  const today=currentDateKey();
+  for(let offset=0;offset<8;offset++){
+    const date=addDaysToDateKey(today,offset);
+    const candidates=datedOccurrencesForDate(date,list).filter(occurrence=>{
+      if(occurrenceIsInactive(occurrence))return false;
+      const status=occurrenceStatus(occurrence);
+      if(status==="completed"||status==="free")return false;
+      if(offset>0)return status==="upcoming"||status==="ongoing";
+      return status==="ongoing"||(status==="upcoming"&&mins(occurrence.time)+Number(occurrence.lesson?.duration||60)>=nowMinutes);
+    });
+    if(candidates.length)return candidates[0];
+  }
+  return null;
+}
+function lessonMeetingUrl(lesson){
+  const text=[lesson?.platform,lesson?.notes].filter(Boolean).join(" ");
+  const match=text.match(/(?:https?:\/\/|www\.)[^\s<]+/i);
+  if(!match)return "";
+  const candidate=match[0].replace(/[)\],،؛.]+$/g,"");
+  try{
+    const url=new URL(candidate.startsWith("www.")?`https://${candidate}`:candidate);
+    return ["http:","https:"].includes(url.protocol)?url.href:"";
+  }catch{return ""}
+}
+function lessonPlatformLabel(lesson){
+  const platform=String(lesson?.platform||"")
+    .replace(/(?:https?:\/\/|www\.)[^\s<]+/ig," ")
+    .replace(/[·|—–-]+/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+  return platform||(lessonMeetingUrl(lesson)?"درس أونلاين":"");
+}
+function renderTodayOverview(items,nowMinutes){
+  const dashboard=window.MawaeidiSmartToday;
+  const fallback={
+    total:items.filter(item=>!occurrenceIsInactive(item)).length,
+    remaining:items.filter(item=>["upcoming","ongoing"].includes(occurrenceStatus(item))).length,
+    completed:items.filter(item=>["completed","free"].includes(occurrenceStatus(item))).length,
+    title:"ملخص حصص اليوم",
+    note:"راجع مواعيدك وحالات الحصص من مكان واحد."
+  };
+  const state=dashboard?.buildDayState
+    ?dashboard.buildDayState(items.map(dashboardOccurrenceModel),nowMinutes)
+    :fallback;
+  document.getElementById("todayOverviewTitle").textContent=state.title;
+  document.getElementById("todayOverviewNote").textContent=state.note;
+  document.getElementById("todayOverviewTotal").textContent=dashboardNumber(state.total);
+  document.getElementById("todayOverviewRemaining").textContent=dashboardNumber(state.remaining);
+  document.getElementById("todayOverviewCompleted").textContent=dashboardNumber(state.completed);
+}
+function dashboardOccurrenceArgs(occurrence){
+  return `'${occurrence.lesson.id}','${occurrence.date}','${occurrence.time}','${occurrence.kind}','${occurrence.recordId||""}'`;
+}
+function renderNextDashboardCard(card,next,nowMinutes){
+  if(!next){
+    card.innerHTML=`
+      <div class="next-topline"><div class="label">الحصة القادمة</div><div class="next-status">لا توجد مواعيد قريبة</div></div>
+      <div class="time">—</div>
+      <div class="name">لا توجد حصة قادمة</div>
+      <div class="meta">أضف موعدًا جديدًا أو راجع الأسبوع القادم.</div>
+      <div class="next-actions next-empty-action"><button type="button" class="next-action-primary" onclick="openQuickAddForToday()">＋ إضافة سريعة</button><button type="button" onclick="document.querySelector('.tab[aria-controls=\"weekView\"]')?.click()">عرض الأسبوع</button></div>`;
+    return;
+  }
+  const lesson=next.lesson,status=occurrenceStatus(next),today=currentDateKey(),isToday=next.date===today;
+  const dashboard=window.MawaeidiSmartToday;
+  const countdown=isToday&&dashboard?.countdownLabel?dashboard.countdownLabel(dashboardOccurrenceModel(next),nowMinutes):`موعدها ${dashboardDateLabel(next.date,today)}`;
+  const dateLabel=dashboardDateLabel(next.date,today);
+  const meetingUrl=lessonMeetingUrl(lesson),args=dashboardOccurrenceArgs(next);
+  const statusText=status==="ongoing"?"جارية الآن":dateLabel;
+  const meta=[lesson.subject,lessonPlatformLabel(lesson),`${Number(lesson.duration||60)} دقيقة`,studentTimeInline(next)].filter(Boolean).map(esc).join(" · ");
+  const linkAction=meetingUrl?`<a class="next-action-primary" href="${esc(meetingUrl)}" target="_blank" rel="noopener noreferrer">فتح رابط الدرس</a>`:"";
+  const completeAction=isToday?`<button type="button" class="${meetingUrl?"":"next-action-primary"}" onclick="completeDashboardOccurrence(${args},this)">تسجيل «تمت»</button>`:"";
+  card.innerHTML=`
+    <div class="next-topline"><div class="label">${status==="ongoing"?"الحصة الجارية":"الحصة القادمة"}</div><div class="next-status ${status==="ongoing"?"ongoing":""}">${esc(statusText)}</div></div>
+    <div class="next-date">${esc(formatSessionDate(next.date,true))}</div>
+    <div class="time">${fmt(next.time)}</div>
+    <div class="name">${esc(lesson.name||"بدون اسم")}</div>
+    <div class="meta">${meta||"تفاصيل الحصة متاحة من زر التعديل."}</div>
+    <div class="next-countdown">${esc(countdown)}</div>
+    <div class="next-actions">${linkAction}${completeAction}<button type="button" onclick="openSessionStatus(${args})">تغيير الحالة</button><button type="button" onclick="openEdit('${lesson.id}')">تعديل الحصة</button></div>`;
+}
+async function completeDashboardOccurrence(lessonId,date,time,kind="base",recordId="",button=null){
+  const occurrence=findSessionOccurrence(lessonId,date,time,kind,recordId);if(!occurrence)return;
+  const index=lessons.findIndex(item=>item.id===lessonId);if(index<0)return;
+  const previous=lessons;
+  if(button){button.disabled=true;button.textContent="جارٍ الحفظ…"}
+  try{
+    const updated=lessonWithSessionStatus(lessons[index],{lessonId,date,time,kind,recordId},"completed");
+    lessons=lessons.map((item,itemIndex)=>itemIndex===index?updated:item);
+    if(!await persist()){lessons=previous;if(button){button.disabled=false;button.textContent="تسجيل «تمت»"}return}
+    render();
+  }catch(error){
+    lessons=previous;
+    console.error("تعذّر تسجيل اكتمال الحصة.",error);
+    if(button){button.disabled=false;button.textContent="تسجيل «تمت»"}
+    alert("تعذّر تحديث حالة الحصة. حدّث الصفحة وحاول مرة أخرى.");
+  }
+}
+
 function renderHeader(){
-  const d=new Date(),tn=todayName(),today=currentDateKey();
+  const tn=todayName(),today=currentDateKey();
   const cairoDate=new Date(`${today}T12:00:00Z`);
   const items=datedOccurrencesForDate(today,filtered());
   const activeItems=items.filter(item=>!occurrenceIsInactive(item));
@@ -2315,37 +2432,11 @@ function renderHeader(){
   document.getElementById("todayHeading").textContent=`${tn} — ${cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"long",timeZone:"UTC"})}`;
   document.getElementById("todayCount").textContent=`${activeItems.length} حصة`;
 
-  const now=mins(currentTimeKey(d));
-  const next=activeItems.find(o=>occurrenceRawStatus(o)!=="completed"&&mins(o.time)+Number(o.lesson.duration||60)>=now);
+  const now=mins(currentTimeKey());
+  renderTodayOverview(items,now);
+  const next=nextDashboardOccurrence(filtered(),now);
   const card=document.getElementById("nextCard");
-  if(next){
-    const l=next.lesson;
-    card.innerHTML=`
-      <div class="dot"></div>
-      <div class="label">الحصة القادمة</div>
-      <div class="time">${fmt(next.time)}</div>
-      <div class="name">${esc(l.name||"بدون اسم")}</div>
-      <div class="meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة${studentTimeInline(next)?" · "+esc(studentTimeInline(next)):""}</div>
-`;
-    card.onclick=()=>openEdit(l.id);
-    card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit(l.id)}};
-    card.setAttribute("role","button");
-    card.setAttribute("tabindex","0");
-    card.setAttribute("aria-label",`فتح الحصة القادمة: ${l.name||"بدون اسم"}`);
-  }else{
-    card.onclick=null;
-    card.onkeydown=null;
-    card.removeAttribute("role");
-    card.removeAttribute("tabindex");
-    card.removeAttribute("aria-label");
-    card.innerHTML=`
-      <div class="dot"></div>
-      <div class="label">الحصة القادمة</div>
-      <div class="time">—</div>
-      <div class="name">لا توجد حصة قادمة اليوم</div>
-      <div class="meta">يمكنك الانتقال إلى الأسبوع أو إضافة موعد جديد.</div>
-`;
-  }
+  renderNextDashboardCard(card,next,now);
 }
 
 function renderTimeline(){
@@ -2923,6 +3014,9 @@ window.addEventListener("appinstalled",()=>{
   deferredInstallPrompt=null;
   refreshInstallAction();
 });
+setInterval(()=>{
+  if(currentUser&&cloudReady&&currentSection==="schedule")renderHeader();
+},60000);
 
 async function initApp(){
   refreshInstallAction();

@@ -9,8 +9,8 @@ const html=read("index.html"),app=read("app-main.js"),css=read("iphone-pwa.css")
 
 assert.match(html,/iphone-pwa\.js\?v=1/);
 assert.match(html,/iphone-pwa\.css\?v=1/);
-assert.ok(html.indexOf("iphone-pwa.js?v=1")<html.indexOf("app-main.js?v=6"));
-assert.match(sw,/mawaeidi-shell-v72/);
+assert.ok(html.indexOf("iphone-pwa.js?v=1")<html.indexOf("app-main.js?v=9"));
+assert.match(sw,/CACHE_NAME=CACHE_PREFIX\+"v84"/);
 assert.match(sw,/iphone-pwa\.css\?v=1/);
 assert.match(sw,/iphone-pwa\.js\?v=1/);
 assert.match(app,/async function testNotificationFromServer\(/);

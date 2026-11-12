@@ -1,0 +1,300 @@
+/* Smart daily dashboard: enrich the existing hero without changing Mawaeidi's identity. */
+body.auth-pending,
+body.auth-locked{
+  overflow:hidden;
+}
+
+.auth-gate{
+  min-height:100dvh;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+
+.hero-copy.smart-today{
+  position:relative;
+  display:block;
+  min-width:0;
+  padding:24px 26px;
+  color:#fff;
+  isolation:isolate;
+}
+
+.smart-today > .kufi-quote{
+  position:absolute;
+  inset:auto -8% -34% auto;
+  z-index:-1;
+  width:68%;
+  height:190px;
+  opacity:.11;
+  background-size:145% auto;
+  pointer-events:none;
+}
+
+.smart-today-content{
+  display:grid;
+  align-content:center;
+  gap:8px;
+  min-height:140px;
+}
+
+.smart-today-kicker{
+  display:inline-flex;
+  width:max-content;
+  align-items:center;
+  gap:7px;
+  padding:5px 10px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.86);
+  font-size:12px;
+  font-weight:800;
+}
+
+.smart-today-kicker::before{
+  content:"";
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#E4BE70;
+  box-shadow:0 0 0 4px rgba(228,190,112,.13);
+}
+
+.smart-today-title{
+  margin:2px 0 0;
+  color:#fff;
+  font-size:25px;
+  line-height:1.45;
+}
+
+.smart-today-note{
+  margin:0;
+  color:rgba(255,255,255,.75);
+  font-size:13px;
+  font-weight:600;
+  line-height:1.75;
+}
+
+.smart-today-stats{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:7px;
+}
+
+.smart-today-stat{
+  display:flex;
+  min-width:0;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:8px;
+  padding:9px 11px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:9px;
+  background:rgba(255,255,255,.075);
+}
+
+.smart-today-stat span{
+  overflow:hidden;
+  color:rgba(255,255,255,.72);
+  font-size:11px;
+  font-weight:700;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.smart-today-stat strong{
+  color:#fff;
+  font-size:20px;
+  line-height:1;
+}
+
+.next{
+  display:flex;
+  flex-direction:column;
+}
+
+.next-topline{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.next-status{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:800;
+}
+
+.next-status::before{
+  content:"";
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#7F9BAD;
+}
+
+.next-status.ongoing{
+  color:var(--teach);
+}
+
+.next-status.ongoing::before{
+  background:var(--teach);
+  box-shadow:0 0 0 4px rgba(47,118,111,.12);
+}
+
+.next-date{
+  position:relative;
+  z-index:1;
+  margin-top:10px;
+  color:#526A79;
+  font-size:12px;
+  font-weight:800;
+}
+
+.next-countdown{
+  position:relative;
+  z-index:1;
+  margin-top:8px;
+  color:var(--primary);
+  font-size:13px;
+  font-weight:800;
+}
+
+.next .meta{
+  overflow-wrap:anywhere;
+}
+
+.next-actions{
+  position:relative;
+  z-index:1;
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:auto;
+  padding-top:15px;
+}
+
+.next-actions button,
+.next-actions a{
+  display:inline-flex;
+  min-height:36px;
+  align-items:center;
+  justify-content:center;
+  padding:7px 11px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+  color:#516674;
+  font-size:11px;
+  font-weight:800;
+  line-height:1.4;
+  text-decoration:none;
+}
+
+.next-actions button:hover,
+.next-actions a:hover{
+  border-color:#A7BBC8;
+  color:var(--primary);
+}
+
+.next-actions .next-action-primary{
+  border-color:var(--primary);
+  background:var(--primary);
+  color:#fff;
+}
+
+.next-actions .next-action-primary:hover{
+  background:var(--primary-hover);
+  color:#fff;
+}
+
+.next-actions button:disabled{
+  cursor:wait;
+  opacity:.62;
+}
+
+.next-empty-action{
+  margin-top:auto;
+}
+
+@media(max-width:1000px){
+  .hero-copy.smart-today,
+  .next{
+    min-height:210px;
+  }
+}
+
+@media(max-width:760px){
+  .hero-copy.smart-today{
+    min-height:0;
+    padding:18px;
+  }
+
+  .smart-today-content{
+    min-height:0;
+  }
+
+  .smart-today-title{
+    font-size:21px;
+  }
+
+  .smart-today-note{
+    font-size:12px;
+  }
+
+  .smart-today-stats{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+
+  .smart-today-stat{
+    display:grid;
+    gap:4px;
+    padding:8px 9px;
+  }
+
+  .smart-today-stat strong{
+    font-size:18px;
+  }
+
+  .next{
+    min-height:0;
+    padding:19px;
+  }
+
+  .next .time{
+    font-size:31px;
+  }
+
+  .next-actions button,
+  .next-actions a{
+    flex:1 1 calc(50% - 4px);
+    min-height:42px;
+  }
+
+  .auth-gate{
+    padding:14px;
+  }
+}
+
+@media(max-height:720px){
+  .auth-gate{
+    place-items:start center;
+  }
+
+  .auth-card{
+    margin-block:auto;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .next-status.ongoing::before{
+    box-shadow:none;
+  }
+}

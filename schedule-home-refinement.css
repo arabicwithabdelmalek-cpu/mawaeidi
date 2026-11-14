@@ -1,0 +1,128 @@
+/* Schedule home hierarchy v1
+   Keeps the approved Mawaeidi identity while putting the next actionable
+   lesson before the decorative calligraphy on desktop and mobile. */
+
+#scheduleWorkspace .hero {
+  grid-template-columns:minmax(360px,1.08fr) minmax(0,.92fr);
+  gap:14px;
+}
+
+#scheduleWorkspace .next,
+#scheduleWorkspace .hero-copy {
+  min-height:176px;
+}
+
+#scheduleWorkspace .next {
+  border-top-width:4px;
+  padding:22px 25px;
+  box-shadow:0 16px 38px rgba(28,65,88,.11);
+}
+
+#scheduleWorkspace .next::before {
+  opacity:.72;
+}
+
+#scheduleWorkspace .next .time {
+  margin-top:10px;
+}
+
+#scheduleWorkspace .next .name {
+  margin-top:4px;
+}
+
+#scheduleWorkspace .hero-copy {
+  padding:14px 20px;
+  box-shadow:0 13px 32px rgba(28,65,88,.14);
+}
+
+#scheduleWorkspace .kufi-quote {
+  height:132px;
+  background-size:142% auto;
+  opacity:.92;
+}
+
+#scheduleWorkspace .controls {
+  margin-block:14px 12px;
+}
+
+#scheduleWorkspace .tabs,
+#scheduleWorkspace .filters {
+  min-width:0;
+}
+
+@media (max-width:1000px) {
+  #scheduleWorkspace .hero {
+    grid-template-columns:1fr;
+    gap:11px;
+  }
+}
+
+@media (max-width:760px) {
+  .workspace-switch {
+    margin-top:10px;
+  }
+
+  #scheduleWorkspace .hero {
+    margin-top:12px;
+    gap:9px;
+  }
+
+  #scheduleWorkspace .next {
+    min-height:0;
+    padding:17px 18px;
+    border-radius:11px;
+  }
+
+  #scheduleWorkspace .next .time {
+    margin-top:8px;
+    line-height:1.25;
+  }
+
+  #scheduleWorkspace .next .meta {
+    margin-top:4px;
+    line-height:1.65;
+  }
+
+  #scheduleWorkspace .hero-copy {
+    min-height:78px;
+    padding:8px 14px;
+    border-radius:10px;
+  }
+
+  #scheduleWorkspace .kufi-quote {
+    height:62px;
+    background-size:154% auto;
+    opacity:.86;
+  }
+
+  #scheduleWorkspace .controls {
+    margin-block:11px 10px;
+  }
+}
+
+@media (max-width:520px) {
+  #scheduleWorkspace .hero-copy {
+    min-height:68px;
+    padding-block:6px;
+  }
+
+  #scheduleWorkspace .kufi-quote {
+    height:54px;
+    background-size:166% auto;
+  }
+
+  #scheduleWorkspace .controls {
+    gap:8px;
+  }
+
+  #scheduleWorkspace .controls > .tabs,
+  #scheduleWorkspace .controls > .filters {
+    min-height:52px;
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  #scheduleWorkspace .next::before {
+    animation:none;
+  }
+}

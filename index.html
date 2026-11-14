@@ -2015,7 +2015,8 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 </style>
 <link rel="stylesheet" href="./ipad-pwa.css?v=1">
 <link rel="stylesheet" href="./iphone-pwa.css?v=1">
-<link rel="stylesheet" href="./header-refinement.css?v=4">
+<link rel="stylesheet" href="./header-refinement.css?v=5">
+<link rel="stylesheet" href="./schedule-home-refinement.css?v=1">
 </head>
 <body class="auth-pending">
 
@@ -2125,28 +2126,28 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
     <div class="workspace" id="scheduleWorkspace">
 
     <section class="hero">
-      <div class="hero-copy">
-        <div class="kufi-quote" role="img" aria-label="الوقت أمانة"></div>
-</div>
-
       <div class="next" id="nextCard">
         <div class="dot"></div>
         <div class="label">الحصة القادمة</div>
         <div class="time">—</div>
         <div class="name">لا توجد حصة قادمة</div>
         <div class="meta">أضف أول موعد لتبدأ أجندتك.</div>
-</div>
+      </div>
+
+      <div class="hero-copy">
+        <div class="kufi-quote" role="img" aria-label="الوقت أمانة"></div>
+      </div>
     </section>
 
     <div class="controls">
-      <div class="filters">
+      <div class="tabs" role="group" aria-label="طريقة عرض المواعيد">
+        <button type="button" class="tab active" aria-pressed="true" aria-controls="todayView" onclick="setView('today',this)">اليوم</button>
+        <button type="button" class="tab" aria-pressed="false" aria-controls="weekView" onclick="setView('week',this)">الأسبوع</button>
+      </div>
+      <div class="filters" role="group" aria-label="تصفية الحصص حسب النوع">
         <button type="button" class="filter active" aria-pressed="true" onclick="setFilter('all',this)">الكل</button>
         <button type="button" class="filter teach-filter" aria-pressed="false" onclick="setFilter('teach',this)">أُدرِّس</button>
         <button type="button" class="filter learn-filter" aria-pressed="false" onclick="setFilter('learn',this)">أدرس</button>
-      </div>
-      <div class="tabs">
-        <button type="button" class="tab active" aria-pressed="true" aria-controls="todayView" onclick="setView('today',this)">اليوم</button>
-        <button type="button" class="tab" aria-pressed="false" aria-controls="weekView" onclick="setView('week',this)">الأسبوع</button>
       </div>
     </div>
 

@@ -86,7 +86,17 @@
   }
 }
 @media (max-width:760px) {
-  .app > .header {padding-inline:2px;gap:12px;}
+  .app > .header {
+    padding-inline:2px;
+    padding-bottom:13px;
+    gap:9px;
+  }
+  .app > .header .identity {gap:8px;}
+  .app > .header .identity > .site-logo-image {
+    width:42px;
+    height:42px;
+  }
+  .app > .header .brand h1 {font-size:25px;}
   .app > .header .header-actions .admin-shortcut {
     min-height:44px;
     padding:8px 13px;
@@ -99,7 +109,7 @@
     display:grid;
     grid-template-columns:minmax(0,1fr) 44px max-content;
     align-items:stretch;
-    gap:8px;
+    gap:7px;
   }
   .app > .header .header-actions.has-admin-shortcut > .account-menu-trigger {
     grid-column:1;

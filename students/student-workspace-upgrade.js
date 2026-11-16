@@ -11,7 +11,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
   const clean=v=>String(v??"").trim();
   const show=(msg,error=false)=>{
     const toast=$("toast");if(!toast)return;
-    toast.textContent=msg;toast.className="toast visible"+(error?" error":"");
+    toast.textContent=msg;toast.className="toast show"+(error?" error":"");
     clearTimeout(show.timer);show.timer=setTimeout(()=>{toast.className="toast";},4000);
   };
   const owned=()=>Boolean(cloud&&getUser()?.id);
@@ -106,6 +106,36 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
     }
     applyControls();
     const selectAll=root.querySelector('[data-sw="select-all"]');if(selectAll)selectAll.disabled=!visibleIds.size;
+  }
+
+  async function onCloudLoaded(){
+    if(!owned())return;
+    const uid=getUser().id;
+    let slot=$("swDueReminders");
+    if(!slot){
+      slot=document.createElement("div");
+      slot.id="swDueReminders";slot.className="sw-due-reminders";slot.hidden=true;
+      const summary=$("studentSummary");
+      if(summary)summary.after(slot);
+    }
+    const now=new Date(),today=[now.getFullYear(),String(now.getMonth()+1).padStart(2,"0"),String(now.getDate()).padStart(2,"0")].join("-");
+    const {data,error}=await cloud.from(FOLLOWUPS_TABLE).select("student_id,due_on").eq("user_id",uid).lte("due_on",today).is("done_at",null).order("due_on",{ascending:true}).limit(100);
+    if(uid!==getUser()?.id||!slot)return;
+    if(error||!(data||[]).length){slot.hidden=true;return}
+    const valid=(data||[]).filter(item=>allStudents().some(student=>student.id===item.student_id));
+    if(!valid.length){slot.hidden=true;return}
+    const first=allStudents().find(student=>student.id===valid[0].student_id);
+    slot.replaceChildren();
+    const text=document.createElement("span");
+    text.textContent="لديك "+valid.length+" متابعة مستحقة حتى اليوم.";
+    slot.append(text);
+    if(first){
+      const button=document.createElement("button");button.type="button";
+      button.dataset.sw="open-due";button.dataset.studentId=first.id;
+      button.textContent="عرض "+clean([first.first_name,first.last_name].filter(Boolean).join(" "));
+      slot.append(button);
+    }
+    slot.hidden=false;
   }
   function reset(){
     selected.clear();selectionMode=false;profileRequest++;accountId="";quickStatus="";group="";institute="";viewMode="list";followupReady=null;
@@ -209,7 +239,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
       const {error}=await cloud.from(FOLLOWUPS_TABLE).insert({user_id:getUser().id,student_id:student.id,kind,body:body.slice(0,2000),due_on:due});
       if(error)throw error;
       $("swFollowupBody").value="";$("swFollowupDue").value="";
-      await loadFollowups(student.id);show("تم حفظ المتابعة.");
+      await loadFollowups(student.id);void onCloudLoaded();show("تم حفظ المتابعة.");
     }catch(e){show("تعذّر حفظ المتابعة. تأكد من تفعيل جدول البيانات.",true)}
     finally{button.disabled=false}
   }
@@ -221,7 +251,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
       :cloud.from(FOLLOWUPS_TABLE).update({done_at:new Date().toISOString()});
     const {error}=await query.eq("id",id).eq("student_id",student.id).eq("user_id",getUser().id);
     if(error){show("تعذّر تعديل المتابعة.",true);return}
-    await loadFollowups(student.id);
+    await loadFollowups(student.id);void onCloudLoaded();
   }
   async function bulkChange(field,value){
     const uid=getUser()?.id,ids=[...selected].filter(id=>allStudents().some(s=>s.id===id));
@@ -254,7 +284,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
   async function handleClick(event){
     const b=event.target.closest("[data-sw]");if(!b||!root.contains(b))return;
     const action=b.dataset.sw;
-    if(action==="quick"){quickStatus=b.dataset.status;requestRender()}
+    if(action==="quick"){quickStatus=b.dataset.status;if($("statusFilter"))$("statusFilter").value="";requestRender()}
     else if(action==="view"){viewMode=b.dataset.view;store({...preferences(),viewMode});applyControls()}
     else if(action==="selection"){selectionMode=!selectionMode;if(!selectionMode)selected.clear();requestRender()}
     else if(action==="select-all"){
@@ -267,6 +297,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
     else if(action==="apply-status")await bulkChange("status",$("swStatus")?.value||"");
     else if(action==="apply-group")await bulkChange("study_group",clean($("swNewGroup")?.value).slice(0,160));
     else if(action==="export-selected")exportSelected();
+    else if(action==="open-due")openProfile(b.dataset.studentId);
     else if(action==="copy-message")contactMessage(false);
     else if(action==="open-whatsapp")contactMessage(true);
     else if(action==="complete-followup")await mutateFollowup(b.dataset.followupId,false);
@@ -281,7 +312,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
   root.addEventListener("change",handleChange);
   root.addEventListener("submit",e=>{if(e.target.id==="swFollowupForm")void addFollowup(e)});
   makeControls();
-  return Object.freeze({filterStudent,afterRowsRendered,reset,clearFilters,prepareEditor,renderProfile});
+  return Object.freeze({filterStudent,afterRowsRendered,onCloudLoaded,reset,clearFilters,prepareEditor,renderProfile});
 }
 window.MawaeidiStudentWorkspace=Object.freeze({create});
 })();

@@ -1199,6 +1199,7 @@ async function loadCloudData(showSuccess=false){
     summaryLoaded=true;
     refreshCountryFilter();
     renderAll();
+    void upgrade?.onCloudLoaded();
     applyInitialRoute();
     await purgeExpiredTrash();
     if(currentUser?.id===userId&&sequence===cloudLoadSequence)await cleanupDeletedStudentPhotos();

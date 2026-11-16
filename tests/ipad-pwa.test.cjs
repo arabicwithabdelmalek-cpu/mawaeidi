@@ -18,7 +18,7 @@ assert.ok(index.indexOf("ipad-pwa.js?v=1")<index.indexOf("app-main.js?v=9"),
 assert.match(app,/window\.mawaeidiIPadRenderAgenda\?\.\(occ\)/);
 assert.match(app,/navigator\.platform==="MacIntel"&&navigator\.maxTouchPoints>1/);
 assert.match(order,/window\.mawaeidiIPadArrangeAgenda\?\.\(\)/);
-assert.match(worker,/mawaeidi-shell-v85/);
+assert.match(worker,/CACHE_NAME=CACHE_PREFIX\+"v85"/);
 assert.match(worker,/ipad-pwa\.css\?v=1/);
 assert.match(worker,/ipad-pwa\.js\?v=1/);
 assert.match(ipad,/sessionStatusButtonMarkup\(item\)/);

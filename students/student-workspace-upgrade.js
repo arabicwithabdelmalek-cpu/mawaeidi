@@ -32,6 +32,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
     const next=getUser()?.id||"";
     if(accountId===next)return;
     accountId=next;selected.clear();selectionMode=false;quickStatus="";group="";institute="";viewMode="list";followupReady=null;
+    if($("swDueReminders"))$("swDueReminders").hidden=true;
     const saved=read();
     if(saved){
       viewMode=saved.viewMode==="cards"?"cards":"list";
@@ -140,6 +141,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
   function reset(){
     selected.clear();selectionMode=false;profileRequest++;accountId="";quickStatus="";group="";institute="";viewMode="list";followupReady=null;
     if($("swBulk"))$("swBulk").hidden=true;
+    if($("swDueReminders")){$("swDueReminders").hidden=true;$("swDueReminders").replaceChildren()}
   }
   function clearFilters(){quickStatus="";group="";institute="";selected.clear();applyControls()}
   function prepareEditor(isEditing){

@@ -1,0 +1,186 @@
+/* Student workspace UX refresh, scoped to avoid affecting other Mawaeidi sections. */
+#studentsView{
+  --sw-line:#dce5e9;
+  --sw-ink:#234254;
+  --sw-muted:#657887;
+  --sw-focus:#2f5d7c;
+}
+#studentsView .student-workspace-bar{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+  gap:12px;padding:13px 18px;border-bottom:1px solid var(--sw-line);
+  background:#fff;
+}
+#studentsView .student-quick-filters,#studentsView .student-view-actions{
+  display:flex;align-items:center;flex-wrap:wrap;gap:7px;
+}
+#studentsView .student-workspace-bar button,
+#studentsView .student-bulk-bar button,
+#studentsView .sw-followup-actions button{
+  min-height:38px;max-width:100%;padding:8px 13px;
+  border:1px solid var(--sw-line);border-radius:11px;background:#f9fbfc;
+  color:var(--sw-ink);font-family:"Cairo",sans-serif;font-size:13px;font-weight:750;line-height:1.45;
+  cursor:pointer;transition:background .17s ease,border-color .17s ease,transform .17s ease;
+}
+#studentsView .student-workspace-bar button:hover,
+#studentsView .student-bulk-bar button:hover,
+#studentsView .sw-followup-actions button:hover{
+  background:#eef5f8;border-color:#acc5d3;transform:translateY(-1px);
+}
+#studentsView .student-workspace-bar button.active{
+  background:#e8f1f5;border-color:#84b1c9;color:#204e69;
+}
+#studentsView .student-view-actions{margin-inline-start:auto}
+#studentsView .student-view-actions button{font-size:12.5px}
+#studentsView .student-workspace-extra{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-column:1/-1;
+  align-items:end;gap:9px;
+}
+#studentsView .student-workspace-extra label{
+  display:grid;gap:5px;color:#526c7b;font-size:12px;font-weight:800;
+}
+#studentsView .student-workspace-extra select,
+#studentsView .student-bulk-bar select,
+#studentsView .student-bulk-bar input,
+#studentsView .sw-followup-shell input,
+#studentsView .sw-followup-shell select,
+#studentsView .sw-followup-shell textarea,
+#studentsView .sw-message-row select{
+  width:100%;min-width:0;min-height:41px;padding:8px 11px;
+  border:1px solid var(--sw-line);border-radius:10px;
+  background:#fff;color:var(--sw-ink);font:600 13px/1.6 "Cairo",sans-serif;
+}
+#studentsView .student-bulk-bar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  padding:12px 18px;border-bottom:1px solid #b3c9d5;background:#edf5f8;
+}
+#studentsView .student-bulk-bar #swBulkCount{
+  min-width:75px;color:#244b61;font-size:14px;font-weight:900;
+}
+#studentsView .student-bulk-bar select{width:min(180px,100%);background:white}
+#studentsView .student-bulk-bar input{width:min(200px,100%)}
+#studentsView .student-bulk-bar button{background:white}
+#studentsView #studentRows[data-view="cards"]{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:11px 0;
+}
+#studentsView #studentRows[data-view="cards"] .student-row{
+  display:flex;flex-direction:column;align-items:stretch;gap:0;
+  min-width:0;border:1px solid var(--sw-line);border-radius:17px;
+  background:#fff;box-shadow:0 5px 16px rgba(30,62,82,.045);
+}
+#studentsView #studentRows[data-view="cards"] .student-open{
+  display:grid;width:100%;grid-template-columns:52px minmax(0,1fr);
+  gap:8px 12px;padding:16px 16px 10px;
+}
+#studentsView #studentRows[data-view="cards"] .student-avatar{
+  width:50px;height:50px;border-radius:14px;grid-row:1/3;
+}
+#studentsView #studentRows[data-view="cards"] .student-identity{grid-column:2;grid-row:1}
+#studentsView #studentRows[data-view="cards"] .student-study{grid-column:2;grid-row:2}
+#studentsView #studentRows[data-view="cards"] .row-actions{
+  justify-content:flex-start;flex-wrap:wrap;white-space:normal;gap:7px;
+  border-top:1px solid #ecf1f4;padding:11px 15px 13px;
+}
+#studentsView #studentRows[data-view="cards"] .student-name{white-space:normal;overflow-wrap:anywhere}
+#studentsView .student-row.sw-selectable{
+  position:relative;grid-template-columns:32px minmax(0,1fr) auto;
+}
+#studentsView .student-row.sw-selectable .sw-select-box{
+  display:grid;place-items:center;width:32px;min-height:45px;margin-inline:4px 0;
+}
+#studentsView .sw-select-box input{
+  width:19px;height:19px;accent-color:#2f5d7c;cursor:pointer;
+}
+#studentsView #studentRows[data-view="cards"] .student-row.sw-selectable{
+  padding-inline-start:9px;
+}
+#studentsView #studentRows[data-view="cards"] .student-row.sw-selectable .sw-select-box{
+  position:absolute;inset-inline-start:8px;top:5px;z-index:2;
+}
+#studentsView .sw-advanced{
+  border:1px solid var(--sw-line);border-radius:15px;background:#fbfcfd;
+  margin:10px 0 2px;
+}
+#studentsView .sw-advanced summary{
+  padding:16px 20px;font-size:14px;font-weight:900;color:#315b74;cursor:pointer;
+}
+#studentsView .sw-advanced[open] summary{
+  border-bottom:1px solid var(--sw-line);
+}
+#studentsView .sw-advanced-body{display:grid;gap:16px;padding:15px}
+#studentsView .sw-advanced-body .form-section{margin:0}
+#studentsView .sw-followup-section,#studentsView .sw-message-section{
+  border:1px solid #e1e9ed;border-radius:15px;
+}
+#studentsView .sw-followup-shell{
+  display:grid;gap:14px;padding:14px 16px 18px;
+}
+#studentsView #swFollowupForm{
+  display:grid;grid-template-columns:minmax(120px,1fr) minmax(0,2fr);gap:10px;align-items:end;
+  padding:14px;border:1px solid #e1e9ed;border-radius:13px;background:#f9fbfc;
+}
+#studentsView #swFollowupForm label{
+  display:grid;min-width:0;gap:4px;font-size:12.5px;font-weight:800;color:#466278;
+}
+#studentsView #swFollowupForm label:nth-child(2){grid-column:2;grid-row:1/3}
+#studentsView #swFollowupForm textarea{resize:vertical;min-height:100px}
+#studentsView #swFollowupForm .btn{justify-self:start;min-height:41px;font-size:13px}
+#studentsView #swFollowupStatus{color:#6a7e88;font-size:13px;line-height:1.75}
+#studentsView .sw-followup-items{display:grid;gap:10px}
+#studentsView .sw-followup-item{
+  padding:13px 14px;border:1px solid #e3eaef;border-radius:12px;
+  background:#fff;
+}
+#studentsView .sw-followup-head{
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:7px;
+  font-size:13px;color:#34566a;
+}
+#studentsView .sw-followup-head time{color:#7c8b97;font-size:12px}
+#studentsView .sw-followup-item p{
+  margin:9px 0;color:#304a5b;font-size:13.5px;line-height:1.85;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+#studentsView .sw-followup-item .sw-due{
+  display:inline-flex;margin-top:5px;padding:4px 9px;border-radius:8px;
+  background:#edf5f8;color:#315b76;font-size:12px;font-weight:800;
+}
+#studentsView .sw-followup-item .sw-due.overdue{
+  background:#fff0e5;color:#a15e24;
+}
+#studentsView .sw-followup-actions{
+  display:flex;gap:7px;justify-content:flex-end;margin-top:8px;
+}
+#studentsView .sw-followup-actions button{font-size:12px;min-height:33px;padding:5px 11px}
+#studentsView .sw-message-row{
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:14px 16px 5px;
+}
+#studentsView .sw-message-row select{width:min(260px,100%)}
+#studentsView .sw-message-row .btn{font-size:13px}
+#studentsView .sw-message-hint{padding:0 16px 12px;font-size:12px;color:#71828e}
+#studentsView .student-workspace-bar button:focus-visible,
+#studentsView .student-bulk-bar button:focus-visible,
+#studentsView .sw-select-box input:focus-visible,
+#studentsView .sw-advanced summary:focus-visible{
+  outline:3px solid rgba(47,93,124,.3);outline-offset:2px;
+}
+@media(max-width:980px){
+  #studentsView #studentRows[data-view="cards"]{grid-template-columns:minmax(0,1fr)}
+  #studentsView .student-row.sw-selectable{grid-template-columns:34px minmax(0,1fr)}
+  #studentsView .student-row.sw-selectable .row-actions{grid-column:2}
+}
+@media(max-width:700px){
+  #studentsView .student-workspace-bar{padding:12px;gap:9px}
+  #studentsView .student-quick-filters{width:100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px}
+  #studentsView .student-quick-filters button{white-space:nowrap;flex-shrink:0}
+  #studentsView .student-view-actions{width:100%;justify-content:flex-start;margin:0}
+  #studentsView .student-view-actions button{min-height:37px;padding:6px 9px;font-size:12px}
+  #studentsView .student-workspace-extra{grid-template-columns:minmax(0,1fr)}
+  #studentsView .student-bulk-bar{padding:11px}
+  #studentsView .student-bulk-bar input{flex:1;min-width:165px}
+  #studentsView #swFollowupForm{grid-template-columns:minmax(0,1fr)}
+  #studentsView #swFollowupForm label:nth-child(2){grid-column:auto;grid-row:auto}
+  #studentsView .student-row.sw-selectable .row-actions{padding-inline-start:0}
+}
+@media(prefers-reduced-motion:reduce){
+  #studentsView .student-workspace-bar button,
+  #studentsView .student-bulk-bar button{transition:none}
+}

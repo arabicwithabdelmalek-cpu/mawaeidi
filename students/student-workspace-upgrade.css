@@ -184,3 +184,14 @@
   #studentsView .student-workspace-bar button,
   #studentsView .student-bulk-bar button{transition:none}
 }
+
+#studentsView .sw-due-reminders{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:12px 19px;border-bottom:1px solid #efd9b7;background:#fff9ee;
+  color:#735321;font-size:14px;font-weight:800;
+}
+#studentsView .sw-due-reminders button{
+  min-height:38px;padding:7px 13px;border:1px solid #d6ba83;
+  border-radius:10px;background:#fff;color:#714d17;font:800 13px "Cairo",sans-serif;
+  cursor:pointer;
+}

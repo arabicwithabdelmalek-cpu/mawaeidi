@@ -171,7 +171,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
   }
   function renderProfile(student){
     const container=$("profileContent");if(!container||!student)return;
-    const section=document.createElement("section");section.className="profile-section sw-followup-section";
+    const section=document.createElement("section");section.className="profile-section sw-followup-section";section.hidden=true;
     section.innerHTML='<header class="profile-section-head"><h3>المتابعة والتذكيرات</h3><span>سجل مستقل عن الجدول الأسبوعي</span></header><div class="sw-followup-shell"><form id="swFollowupForm"><label>نوع المتابعة<select id="swFollowupKind"><option value="note">ملاحظة</option><option value="contact">تواصل مع الطالب</option><option value="reminder">تذكير متابعة</option></select></label><label>تفاصيل المتابعة<textarea id="swFollowupBody" maxlength="2000" rows="2" required placeholder="ماذا حدث أو ماذا تريد أن تتذكر؟"></textarea></label><label>موعد التذكير (اختياري)<input id="swFollowupDue" type="date"></label><button type="submit" class="btn primary" id="swFollowupSave">حفظ المتابعة</button></form><div id="swFollowupStatus" role="status">جارٍ تحميل سجل المتابعة…</div><div id="swFollowupItems" class="sw-followup-items"></div></div>';
     container.append(section);
     const contact=document.createElement("section");contact.className="profile-section sw-message-section";
@@ -207,11 +207,13 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
     if(token!==profileRequest||getActiveStudentId()!==studentId||getUser()?.id!==uid)return;
     if(error){
       followupReady=false;
-      showReminderStatus("سجل المتابعة يحتاج تفعيل جدول البيانات الجديد في Supabase قبل استخدامه.");
-      const form=$("swFollowupForm");if(form)form.querySelector("button").disabled=true;
+      // Hide the inactive feature until the Mawaeidi follow-ups table is installed.
+      const section=$("profileContent")?.querySelector(".sw-followup-section");if(section)section.hidden=true;
       return;
     }
-    followupReady=true;showReminderStatus((data||[]).length?"":"لا توجد متابعات مسجّلة بعد.");
+    followupReady=true;
+    const section=$("profileContent")?.querySelector(".sw-followup-section");if(section)section.hidden=false;
+    showReminderStatus((data||[]).length?"":"لا توجد متابعات مسجّلة بعد.");
     const list=$("swFollowupItems");if(!list)return;list.replaceChildren();
     for(const item of data||[]){
       const article=document.createElement("article");article.className="sw-followup-item";
@@ -307,6 +309,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
   }
   function handleChange(e){
     if(e.target.matches('[data-sw-check]')){if(e.target.checked)selected.add(e.target.dataset.swCheck);else selected.delete(e.target.dataset.swCheck);applyControls()}
+    if(e.target.id==="statusFilter"&&quickStatus){quickStatus="";requestRender()}
     if(e.target.id==="swGroup"){group=e.target.value;requestRender()}
     if(e.target.id==="swInstitute"){institute=e.target.value;requestRender()}
   }

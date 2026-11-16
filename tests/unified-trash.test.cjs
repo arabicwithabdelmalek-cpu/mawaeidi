@@ -29,7 +29,7 @@ assert.match(appMain,/name:"trash\.json"/);
 assert.match(appMain,/function inspectTrashBackup\(payload\)/);
 assert.match(appMain,/function mergeTrashBackupRows\(items\)/);
 assert.match(appMain,/trash:archivedItems\.length/);
-assert.match(worker,/mawaeidi-shell-v85/);
+assert.match(worker,/CACHE_NAME=CACHE_PREFIX\+"v85"/);
 assert.match(worker,/student-registry\.js\?v=17/);
 assert.match(html,/student-registry\.js\?v=17/);
 assert.match(migration,/enable row level security/);

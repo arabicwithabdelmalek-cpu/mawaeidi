@@ -187,6 +187,7 @@ const STUDENT_FIELD_GROUPS=[
 const CSV_HEADERS=STUDENT_FIELDS.map(field=>field.label);
 const CSV_KEY_BY_HEADER=Object.fromEntries(STUDENT_FIELDS.map(field=>[field.label,field.key]));
 
+let upgrade=null;
 let mode="gate";
 let accountSequence=0;
 let currentUser=null;
@@ -395,6 +396,7 @@ function currentFilters(){
 function filterAndSortStudents(source=students){
   const filters=currentFilters();
   const list=source.filter(student=>{
+    if(upgrade&&!upgrade.filterStudent(student))return false;
     const searchable=normalizeKey(STUDENT_FIELDS.filter(field=>field.key!=="login_password").map(field=>student[field.key]).join(" "));
     return (!filters.query||searchable.includes(filters.query))
       &&(!filters.status||student.status===filters.status)
@@ -738,6 +740,7 @@ function renderStudents(){
   const empty=!filteredStudents.length;
   byId("tableWrap").hidden=empty;
   byId("emptyState").hidden=!empty;
+  upgrade?.afterRowsRendered(filteredStudents);
 }
 function renderAll(){renderStudents();renderStudentSummary()}
 
@@ -874,6 +877,7 @@ function renderProfile(){
         <div class="detail-grid">${profileDetails(notes)}</div>
       </section>
     </div>`;
+  upgrade?.renderProfile(student);
 }
 function openProfile(id){
   const student=students.find(item=>item.id===id);
@@ -900,8 +904,9 @@ function openStudentEditor(student=null){
   updateStudentPhotoEditor();
   setMessage("studentFormMessage","");
   closeDialog("studentProfile");
+  upgrade?.prepareEditor(Boolean(student));
   openDialog("studentEditor");
-  setTimeout(()=>byId("student_username").focus(),0);
+  setTimeout(()=>byId("student_first_name").focus(),0);
 }
 function readStudentForm(){
   const result={};
@@ -1194,6 +1199,7 @@ async function loadCloudData(showSuccess=false){
     summaryLoaded=true;
     refreshCountryFilter();
     renderAll();
+    void upgrade?.onCloudLoaded();
     applyInitialRoute();
     await purgeExpiredTrash();
     if(currentUser?.id===userId&&sequence===cloudLoadSequence)await cleanupDeletedStudentPhotos();
@@ -1624,6 +1630,7 @@ async function confirmCsvImport(){
 function clearFilters(){
   for(const id of ["search","statusFilter","levelFilter","typeFilter","countryFilter"])byId(id).value="";
   byId("sortStudents").value="newest";
+  upgrade?.clearFilters();
   renderStudents();
 }
 function handleRowAction(event){
@@ -1666,6 +1673,7 @@ function deactivate(){
 }
 
 function reset(){
+  upgrade?.reset();
   accountSequence++;
   cloudLoadSequence++;
   photoSelectionSequence++;
@@ -1718,6 +1726,15 @@ function initialize(){
   buildStudentForm();
   populateStaticOptions();
   bindEvents();
+  upgrade=window.MawaeidiStudentWorkspace?.create({
+    root,cloud,
+    getStudents:()=>students,
+    getUser:()=>currentUser,
+    getActiveStudentId:()=>activeStudentId,
+    getTrashMode:()=>listMode==="trash",
+    refresh:()=>loadCloudData(true),
+    openProfile
+  })||null;
   renderAll();
 }
 

@@ -32,12 +32,11 @@ select count(*) as history_rows_with_login_password
 from public.mawaeidi_student_history
 where changes ? 'login_password';
 
-select table_name, row_security
-from information_schema.tables
-join pg_catalog.pg_class c on c.relname = table_name
+select c.relname as table_name, c.relrowsecurity as rls_enabled
+from pg_catalog.pg_class c
 join pg_catalog.pg_namespace n on n.oid = c.relnamespace
-where table_schema = 'public'
-  and table_name in ('mawaeidi_students','mawaeidi_student_history');
+where n.nspname = 'public'
+  and c.relname in ('mawaeidi_students','mawaeidi_student_history');
 ```
 هذا الملف **للتدقيق فقط**. لا يشمل كلمات المرور أو بيانات الطلاب الفعلية ولا يجب نسخه إلى قناة عامة إن حُوِّل إلى نتائج تحمل بيانات شخصية.
 

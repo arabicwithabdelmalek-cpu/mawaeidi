@@ -70,3 +70,59 @@ docker exec "$PG_CONTAINER" psql -X -Atq -v ON_ERROR_STOP=1 \
    \$test\$;"
 
 echo "Real PostgreSQL concurrent first-write test passed (one saved, one conflict)."
+
+
+# Concurrent edits to an EXISTING schedule using the same baseline:
+# exactly one update may be accepted; the other must preserve that update.
+docker exec "$PG_CONTAINER" psql -X -Atq -v ON_ERROR_STOP=1 \
+  -U postgres -d mawaeidi_test -c \
+  "update public.mawaeidi_data
+    set lessons='[{\"id\":\"shared\",\"name\":\"baseline\"}]'::jsonb,
+        updated_at=clock_timestamp()
+   where user_id='33333333-3333-4333-8333-333333333333';"
+
+call_update() {
+  local lesson_id="$1"
+  docker exec "$PG_CONTAINER" psql -X -Atq -v ON_ERROR_STOP=1 \
+    -U postgres -d mawaeidi_test -c \
+    "set role authenticated;
+     set request.jwt.claim.sub='33333333-3333-4333-8333-333333333333';
+     select (public.mawaeidi_save_schedule_if_unchanged(
+       '[{\"id\":\"shared\",\"name\":\"baseline\"}]'::jsonb,
+       '[{\"id\":\"shared\",\"name\":\"baseline\"},{\"id\":\"$lesson_id\"}]'::jsonb
+     ))->>'status';"
+}
+
+call_update "update-a" > "$result_a" &
+pid_a=$!
+call_update "update-b" > "$result_b" &
+pid_b=$!
+wait "$pid_a"
+wait "$pid_b"
+
+both="$(cat "$result_a" "$result_b")"
+if [[ "$(printf '%s\n' "$both" | grep -cx 'saved' || true)" != "1" ]] ||
+   [[ "$(printf '%s\n' "$both" | grep -cx 'conflict' || true)" != "1" ]]; then
+  echo >&2 "Concurrent existing schedule edits did not produce saved+conflict:"
+  cat "$result_a" "$result_b" >&2
+  exit 1
+fi
+
+docker exec "$PG_CONTAINER" psql -X -Atq -v ON_ERROR_STOP=1 \
+  -U postgres -d mawaeidi_test -c \
+  "do \$test\$
+   declare stored jsonb; history_count integer;
+   begin
+     select lessons into stored from public.mawaeidi_data
+       where user_id='33333333-3333-4333-8333-333333333333';
+     select count(*) into history_count from public.mawaeidi_history
+       where user_id='33333333-3333-4333-8333-333333333333';
+     if jsonb_array_length(stored)<>2 or
+        not stored @> '[{\"id\":\"shared\"}]'::jsonb or
+        not (stored @> '[{\"id\":\"update-a\"}]'::jsonb or stored @> '[{\"id\":\"update-b\"}]'::jsonb)
+        or history_count<>3 then
+       raise exception 'Concurrent schedule edit lost data or wrote multiple history entries';
+     end if;
+   end
+   \$test\$;"
+echo "Real PostgreSQL concurrent existing-schedule edits passed (one saved, one conflict)."

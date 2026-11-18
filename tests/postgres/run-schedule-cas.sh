@@ -18,8 +18,10 @@ run_sql_file() {
 run_sql_file tests/postgres/schedule-schema-fixture.sql
 # Test the REAL schedule history migration, not a fake replacement trigger.
 run_sql_file supabase/migrations/20260908_history_and_push.sql
+run_sql_file supabase/migrations/20261028160500_unified_trash.sql
 run_sql_file docs/reviews/sql/schedule-cas-proposal.sql
 run_sql_file tests/postgres/schedule-cas.test.sql
+run_sql_file tests/postgres/schedule-trash.test.sql
 
 # Exactly one concurrent first write must win; the other must see a conflict.
 call_first_write() {

@@ -1618,15 +1618,16 @@ function remoteRowIsNewer(row){
   return remote!==lastCloudUpdatedAt;
 }
 function applyRemoteRow(row,message="تم تحديث المواعيد"){
-  if(!row||!currentUser||row.user_id!==currentUser.id||!Array.isArray(row.lessons)||!remoteRowIsNewer(row))return false;
+  if(pendingScheduleConflict||!row||!currentUser||row.user_id!==currentUser.id||!Array.isArray(row.lessons)||!remoteRowIsNewer(row))return false;
   lessons=normalizeLessons(row.lessons);
+  lastCloudLessons=cloneBackupValue(row.lessons);
   lastCloudUpdatedAt=textValue(row.updated_at)||lastCloudUpdatedAt;
   render();
   setSync("saved",message);
   return true;
 }
 function handleRemoteRow(row){
-  if(!row||!currentUser||row.user_id!==currentUser.id||saveInFlight||!remoteRowIsNewer(row))return;
+  if(pendingScheduleConflict||!row||!currentUser||row.user_id!==currentUser.id||saveInFlight||!remoteRowIsNewer(row))return;
   if(isDrawerVisible()){
     pendingRemoteRow=row;
     setSync("saving","تحديث جديد ينتظر");
@@ -1673,6 +1674,7 @@ function startRealtime(user){
     });
 }
 async function refreshFromCloud(silent=false){
+  if(pendingScheduleConflict){if(!silent)showScheduleConflict();return false}
   if(currentSection==="world"&&currentUser&&cloudReady)return refreshWorldClockFromCloud();
   if(currentSection==="students"&&currentUser&&cloudReady)return studentsWorkspace.refresh();
   if(!cloud||!currentUser||!cloudReady){
@@ -1811,7 +1813,9 @@ async function activateSession(user){
   if(loadingUserId===user.id)return;
   if(currentUser?.id===user.id&&cloudReady){if(!realtimeChannel)startRealtime(user);hideAuth();refreshNotificationMenuStatus();if(!worldClockSettings)initializeWorldClockForUser(user,sessionSequence).catch(error=>console.warn("Clock sync retry failed.",error));if(currentSection==="students")studentsWorkspace.activate(user);return}
   stopRealtime();
+  resetScheduleConflict();
   lastCloudUpdatedAt=null;
+  lastCloudLessons=null;
   loadingUserId=user.id;
   const sequence=++sessionSequence;
   resetStudentWorkspace();
@@ -1827,7 +1831,9 @@ async function activateSession(user){
       .maybeSingle();
     if(error)throw error;
     if(sequence!==sessionSequence)return;
+    if(data&&!Array.isArray(data.lessons))throw new Error("invalid_remote_schedule");
     lessons=normalizeLessons(data?.lessons||[]);
+    lastCloudLessons=data?cloneBackupValue(data.lessons):null;
     lastCloudUpdatedAt=textValue(data?.updated_at)||null;
     let needsInitialSave=!data;
 
@@ -1871,10 +1877,11 @@ async function logout(){
   const {error}=await cloud.auth.signOut();
   if(error){alert("تعذّر تسجيل الخروج. حاول مرة أخرى.");return}
   stopRealtime();
+  resetScheduleConflict();
   sessionSequence++;
   resetStudentWorkspace();
   resetWorldClockSync();
-  loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;lastCloudUpdatedAt=null;
+  loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;lastCloudUpdatedAt=null;lastCloudLessons=null;
   closeDrawer();closeToolDialog();render();showAuth();
   setAuthMessage("تم تسجيل الخروج.");
 }
@@ -3025,10 +3032,11 @@ async function initApp(){
     }else if(event==="SIGNED_OUT"){
       setTimeout(()=>{
         stopRealtime();
+        resetScheduleConflict();
         resetStudentWorkspace();
         resetWorldClockSync();
         sessionSequence++;loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;
-        recoveryUser=null;lastCloudUpdatedAt=null;setAuthMode("signin");closeDrawer();closeToolDialog();updateNotificationMenuStatus(false);render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
+        recoveryUser=null;lastCloudUpdatedAt=null;lastCloudLessons=null;setAuthMode("signin");closeDrawer();closeToolDialog();updateNotificationMenuStatus(false);render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
       },0);
     }else if(event==="SIGNED_IN"&&session?.user&&authMode!=="update"){
       if(recoveryLinkDetected){enterPasswordUpdate(session.user);return}

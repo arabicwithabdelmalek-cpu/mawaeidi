@@ -1584,7 +1584,7 @@ function downloadScheduleConflictDraft(){
     const data={format:"mawaeidi-schedule",version:1,lesson_count:pending.draft.length,
       exported_at:new Date().toISOString(),lessons:cloneBackupValue(pending.draft)};
     const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});
-    window.MawaeidiBackup.download(blob,fullBackupFilename("mawaeidi-unsaved-schedule").replace(/\\.zip$/,".json"));
+    window.MawaeidiBackup.download(blob,fullBackupFilename("mawaeidi-unsaved-schedule").replace(/\.zip$/,".json"));
     pending.downloaded=true;
     const button=document.getElementById("scheduleConflictRefresh");
     if(button)button.disabled=false;

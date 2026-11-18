@@ -984,6 +984,7 @@ async function openHistory(){
   }
 }
 async function restoreHistory(id,button){
+ if(!scheduleWriteAllowed())return;
  const snapshot=historySnapshots.get(String(id));
  if(!snapshot||!Array.isArray(snapshot.before_lessons))return;
  if(!confirm("ستعود المواعيد إلى حالتها قبل هذا التغيير. وسيُسجَّل الاسترجاع نفسه في السجل. هل تريد المتابعة؟"))return;
@@ -1469,7 +1470,7 @@ async function importBackup(event){
 }
 async function confirmBackupRestore(){
   const plan=pendingBackupRestorePlan;
-  if(!plan||backupInFlight||!currentUser||!cloudReady)return;
+  if(!plan||backupInFlight||!currentUser||!cloudReady||!scheduleWriteAllowed())return;
   const button=document.getElementById("confirmBackupRestore");
   if(button){button.disabled=true;button.textContent="جارٍ إنشاء نسخة الأمان…"}
   backupInFlight=true;
@@ -1566,6 +1567,15 @@ function resetScheduleConflict(){
   pendingScheduleConflict=null;
   const layer=document.getElementById("scheduleConflictLayer");
   if(layer)layer.hidden=true;
+  const button=document.getElementById("scheduleConflictRefresh");
+  if(button)button.disabled=true;
+  const hint=document.getElementById("scheduleConflictHint");
+  if(hint)hint.textContent="احفظ نسخة من تعديلك أولًا، ثم حمّل الجدول الأحدث من السحابة.";
+}
+function scheduleWriteAllowed(){
+  if(pendingScheduleConflict){showScheduleConflict();return false}
+  if(saveInFlight){alert("هناك عملية حفظ جارية. انتظر اكتمالها قبل تعديل الجدول مرة أخرى.");return false}
+  return true;
 }
 function downloadScheduleConflictDraft(){
   const pending=pendingScheduleConflict;
@@ -2268,6 +2278,7 @@ function lessonWithSessionStatus(lesson,context,status,newDate="",newTime="",not
   return normalizeLesson({...lesson,sessionRecords:records});
 }
 async function saveSessionStatus(button){
+  if(!scheduleWriteAllowed())return;
   const context=activeSessionContext,status=document.querySelector('input[name="sessionStatusChoice"]:checked')?.value;
   if(!context||!["automatic","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"].includes(status))return;
   let newDate="",newTime="",note=document.getElementById("sessionNote")?.value||"";
@@ -2785,6 +2796,7 @@ function openQuickAdd(day,time){
   openToolDialog("إضافة سريعة",`${safeDay} · ${fmt(safeTime)}`,content);setTimeout(()=>{document.getElementById("quickName")?.focus();updateQuickAddConflict()},0);
 }
 async function saveQuickAdd(button){
+  if(!scheduleWriteAllowed())return;
   const name=document.getElementById("quickName")?.value.trim()||"",candidate=quickAddCandidate();
   if(!name){alert("اكتب اسم الطالب أو عنوان الحصة.");document.getElementById("quickName")?.focus();return}
   if(!Number.isFinite(candidate.duration)||candidate.duration<15||candidate.duration>720){alert("اختر مدة صحيحة.");return}
@@ -2835,6 +2847,7 @@ function openWeekMoveDialog(context,presetDay,presetTime){
   openToolDialog("نقل الموعد",`${lesson.name||"بدون اسم"} · ${formatSessionDate(context.date)} · ${fmt(context.time)}`,content);activeWeekMoveContext={...context};setTimeout(updateWeekMoveConflict,0);
 }
 async function saveWeekMove(button){
+  if(!scheduleWriteAllowed())return;
   const context=activeWeekMoveContext;if(!context)return;
   const targetDay=document.getElementById("weekMoveDay")?.value,targetTime=document.getElementById("weekMoveTime")?.value,scope=document.querySelector('input[name="weekMoveScope"]:checked')?.value||"single",conflict=weekMoveConflict(context,targetDay,targetTime,scope);
   if(conflict){updateWeekMoveConflict();return}
@@ -2900,7 +2913,7 @@ function conflicts(candidate){
 }
 
 async function saveLesson(){
-  if(lessonSaveInFlight)return;
+  if(lessonSaveInFlight||!scheduleWriteAllowed())return;
   const st=document.getElementById("studentType").value;
   const src=document.getElementById("lessonSource").value;
   const existingLesson=editingId?lessons.find(item=>item.id===editingId):null;
@@ -2969,6 +2982,7 @@ function copyLessonById(id){
 }
 function copyLesson(){if(editingId)copyLessonById(editingId)}
 async function deleteLesson(){
+ if(!scheduleWriteAllowed())return;
  if(!editingId||!confirm("نقل هذه الحصة وكل مواعيدها إلى سلة المحذوفات لمدة 30 يومًا؟ يمكنك استعادتها لاحقًا."))return;
  const old=lessons;lessons=lessons.filter(l=>l.id!==editingId);
  if(!await persist()){lessons=old;return}
@@ -2991,6 +3005,22 @@ function keepToolDialogKeyboardFocus(event){
   }
 }
 document.addEventListener("keydown",e=>{
+  const conflictLayer=document.getElementById("scheduleConflictLayer");
+  if(conflictLayer&&!conflictLayer.hidden){
+    if(e.key==="Escape"){e.preventDefault();dismissScheduleConflict();return}
+    if(e.key==="Tab"){
+      const buttons=[...conflictLayer.querySelectorAll("button:not([disabled])")];
+      const first=buttons[0],last=buttons[buttons.length-1];
+      if(!first){e.preventDefault();return}
+      if(e.shiftKey&&(document.activeElement===first||!conflictLayer.contains(document.activeElement))){
+        e.preventDefault();last.focus();return;
+      }
+      if(!e.shiftKey&&(document.activeElement===last||!conflictLayer.contains(document.activeElement))){
+        e.preventDefault();first.focus();return;
+      }
+      return;
+    }
+  }
   if(e.key==="Tab")keepToolDialogKeyboardFocus(e);
   if(e.key==="Escape"){
     if(document.getElementById("toolBackdrop").classList.contains("show")){closeToolDialog();return}

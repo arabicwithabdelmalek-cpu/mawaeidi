@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.view.View;
 import android.media.AudioAttributes;
 import android.media.Ringtone;
 import android.media.RingtoneManager;

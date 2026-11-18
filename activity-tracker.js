@@ -4,7 +4,29 @@
 (function () {
   "use strict";
   const sb = typeof cloud !== "undefined" ? cloud : null;
-  if (!sb || !window.crypto?.randomUUID || !window.sessionStorage) return;
+  if (!sb) return;
+
+  const sessionStore = (() => {
+    try { return window.sessionStorage || null; }
+    catch { return null; }
+  })();
+  function makeVisitKey() {
+    try {
+      if (typeof window.crypto?.randomUUID === "function") return window.crypto.randomUUID();
+      if (typeof window.crypto?.getRandomValues === "function") {
+        const bytes = new Uint8Array(16);
+        window.crypto.getRandomValues(bytes);
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        const hex = [...bytes].map(value => value.toString(16).padStart(2, "0"));
+        return hex.slice(0,4).join("") + "-" + hex.slice(4,6).join("") + "-" +
+          hex.slice(6,8).join("") + "-" + hex.slice(8,10).join("") + "-" +
+          hex.slice(10).join("");
+      }
+    } catch { /* Fall through to a non-cryptographic visit identifier. */ }
+    return "visit-" + Date.now().toString(36) + "-" +
+      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  }
 
   const STORAGE_KEY = "mawaeidi:usage-visit:v1";
   const GAP_MS = 30 * 60 * 1000;
@@ -42,21 +64,24 @@
     accountLink = link;
   }
   function storedVisit() {
-    try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "null"); }
+    if (!sessionStore) return null;
+    try { return JSON.parse(sessionStore.getItem(STORAGE_KEY) || "null"); }
     catch { return null; }
   }
   function selectVisit(id) {
+    if (!id) { visitKey = null; return; }
     const previous = storedVisit();
     if (previous?.userId === id && typeof previous.visitKey === "string"
       && Date.now() - Number(previous.lastSeen || 0) < GAP_MS) {
       visitKey = previous.visitKey;
     } else {
-      visitKey = crypto.randomUUID();
+      visitKey = makeVisitKey();
     }
   }
   function recordVisit() {
+    if (!sessionStore) return;
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+      sessionStore.setItem(STORAGE_KEY, JSON.stringify({
         userId, visitKey, lastSeen: Date.now()
       }));
     } catch { /* Browser storage might be blocked. */ }
@@ -66,15 +91,35 @@
     const previous = storedVisit();
     if (!previous || previous.userId !== userId
       || Date.now() - Number(previous.lastSeen || 0) >= GAP_MS) {
-      visitKey = crypto.randomUUID();
+      visitKey = makeVisitKey();
     }
   }
-  const clientType = /capacitor/i.test(navigator.userAgent) && /android/i.test(navigator.userAgent)
-    ? "android" : /capacitor/i.test(navigator.userAgent) && /iphone|ipad|ios/i.test(navigator.userAgent)
-    ? "ios" : "web";
+  function detectClientType() {
+    const ua = String(navigator.userAgent || "");
+    try {
+      const platform = window.Capacitor?.getPlatform?.();
+      if (platform === "android" || platform === "ios") return platform;
+      if (window.Capacitor?.isNativePlatform?.()) {
+        if (/android/i.test(ua)) return "android";
+        if (/iphone|ipad|ipod|ios/i.test(ua)) return "ios";
+      }
+    } catch { /* Use the safe hints below. */ }
+    const nativeHint = String(location.protocol || "") + " " + String(document.referrer || "");
+    if (/capacitor:|ionic:|android-app:\/\/com\.abdelmalek\.mawaeidi/i.test(nativeHint)) {
+      if (/android/i.test(ua)) return "android";
+      if (/iphone|ipad|ipod|ios/i.test(ua)) return "ios";
+    }
+    if (/capacitor/i.test(ua) && /android/i.test(ua)) return "android";
+    if (/capacitor/i.test(ua) && /iphone|ipad|ipod|ios/i.test(ua)) return "ios";
+    return "web";
+  }
+  const clientType = detectClientType();
 
   async function ping(force = false) {
-    if (!userId || busy || document.hidden || !navigator.onLine) return;
+    if (!userId || busy) return;
+    // A native WebView can briefly report hidden/offline while it is starting.
+    // Forced pings still attempt the first write; normal heartbeats remain conservative.
+    if (!force && (document.hidden || !navigator.onLine)) return;
     if (!force && Date.now() - lastInteraction > IDLE_MS) return;
     if (!force && Date.now() - lastRequestAt < PING_MS - 2000) return;
     renewAfterLongGap();

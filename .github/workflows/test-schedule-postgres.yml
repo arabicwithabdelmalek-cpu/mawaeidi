@@ -1,0 +1,35 @@
+name: Schedule save PostgreSQL integration
+on:
+  pull_request:
+    branches:
+      - main
+      - review/foundation-security-ci-20261118
+  push:
+    branches:
+      - review/schedule-concurrency-20261118
+permissions:
+  contents: read
+jobs:
+  schedule-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mawaeidi_test
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run all existing web and student regression checks
+        run: npm run test:students
+      - name: Execute real PostgreSQL CAS/RLS/trigger/concurrency integration checks
+        run: bash tests/postgres/run-schedule-cas.sh

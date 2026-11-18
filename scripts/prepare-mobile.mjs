@@ -7,6 +7,7 @@ const output = join(root, "mobile-dist");
 
 const rootFiles = [
   "account-page.js",
+  "activity-tracker.js",
   "account.js",
   "app-main.js",
   "backup-manager.js",

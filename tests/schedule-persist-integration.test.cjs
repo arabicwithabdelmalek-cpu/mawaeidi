@@ -7,6 +7,14 @@ const path=require("node:path");
 const root=path.resolve(__dirname,"..");
 const app=fs.readFileSync(path.join(root,"app-main.js"),"utf8");
 const moduleJs=fs.readFileSync(path.join(root,"schedule-concurrency.js"),"utf8");
+const draftDownload=app.split("\n").find(line=>line.includes('fullBackupFilename("mawaeidi-unsaved-schedule")'));
+assert.ok(draftDownload,"Conflict dialog must offer a draft download");
+const filenameExpression=draftDownload.match(/fullBackupFilename\("mawaeidi-unsaved-schedule"\)\.replace\(\/.*?\/,"\.json"\)/);
+assert.ok(filenameExpression,"Unsaved schedule filename must explicitly replace .zip with .json");
+const makeDraftName=new Function("fullBackupFilename","return "+filenameExpression[0]+";");
+assert.equal(makeDraftName(()=>"mawaeidi-unsaved-schedule-2026.zip"),
+  "mawaeidi-unsaved-schedule-2026.json");
+
 const sandbox={window:{}};
 vm.runInNewContext(moduleJs,sandbox);
 const api=sandbox.window.MawaeidiScheduleSync;

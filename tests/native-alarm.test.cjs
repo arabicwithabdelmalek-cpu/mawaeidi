@@ -14,6 +14,14 @@ const index=read("index.html");
 assert.match(index,/native-bridge\.js/);
 assert.match(index,/mobile-app\.css/);
 
+assert.match(index,/activity-tracker\\.js\\?v=1/, "Native app must load usage tracker");
+const prepareScript=read("scripts/prepare-mobile.mjs");
+assert.match(prepareScript,/"activity-tracker\\.js"/, "Native bundle must contain the tracker");
+const tracker=read("activity-tracker.js");
+assert.match(tracker,/mawaeidi_usage_sessions/, "Usage tracking must write to shared Supabase sessions");
+assert.match(tracker,/getPlatform/, "Usage tracking must identify Android via Capacitor");
+assert.match(tracker,/auth\\.onAuthStateChange/, "Usage tracking must react to sign-in");
+
 const app=read("app-main.js");
 assert.match(app,/function nativeAlarmPayload\(/);
 assert.match(app,/NATIVE_ALARM_HORIZON_DAYS=42/);

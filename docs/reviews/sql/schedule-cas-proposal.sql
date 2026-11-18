@@ -51,7 +51,7 @@ begin
     end if;
     update public.mawaeidi_data
        set lessons=p_lessons,
-           updated_at=pg_catalog.greatest(
+           updated_at=greatest(
              pg_catalog.clock_timestamp(),
              current_row.updated_at + interval '1 microsecond')
      where user_id=owner_id

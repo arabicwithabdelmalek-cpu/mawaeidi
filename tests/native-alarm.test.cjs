@@ -124,10 +124,14 @@ assert.match(tone,/SharedPreferences/);
 assert.match(tone,/selectedUri\(Context context\)/);
 assert.match(tone,/RingtoneManager\.TYPE_ALARM/);
 const pluginTone=read("android/app/src/main/java/com/abdelmalek/mawaeidi/MawaeidiAlarmPlugin.java");
-assert.match(pluginTone,/startActivityForResult\(call, picker, "onAlarmToneChosen"\)/);
-assert.match(pluginTone,/@ActivityCallback/);
+assert.match(pluginTone,/new RingtoneManager\(activity\)/);
+assert.match(pluginTone,/new AlertDialog\.Builder\(activity\)/);
+assert.match(pluginTone,/setSingleChoiceItems\(/);
+assert.match(pluginTone,/RingtoneManager\.getRingtone\(activity,/);
+assert.match(pluginTone,/AlarmTone\.save\(activity, chosen\)/);
 assert.match(pluginTone,/soundTitle/);
-assert.match(pluginTone,/EXTRA_RINGTONE_SHOW_SILENT, false/);
+assert.doesNotMatch(pluginTone,/startActivityForResult\(/, "In-app ringtone selection must not open an external activity");
+
 const alarmService=read("android/app/src/main/java/com/abdelmalek/mawaeidi/AlarmRingService.java");
 assert.match(alarmService,/AlarmTone\.selectedUri\(this\)/);
 assert.match(alarmService,/AlarmTone\.defaultUri\(\)/);

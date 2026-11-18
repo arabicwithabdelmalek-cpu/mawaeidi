@@ -25,10 +25,9 @@ assert.match(legacy,/target\.searchParams\.set\("section","students"\)/);
 assert.match(legacy,/\["student","new"\]/);
 assert.match(main,/backup-manager\.js\?v=1/);
 assert.match(main,/student-registry\.js\?v=17/);
-assert.match(sw,/CACHE_NAME=CACHE_PREFIX\\+"v[1-9]\\d*"/);
-// Match the exact asset version referenced by index.html: stale cache tests should
-// not fail merely because the cache revision is bumped.
-const assetReferences=[...main.matchAll(/(?:src|href)="(\\.\\/[^"]+\\.(?:js|css)\\?v=\\d+)"/g)].map(match=>match[1]);
+assert.match(sw,/CACHE_NAME=CACHE_PREFIX\+"v[1-9]\d*"/);
+// Ensure precached asset revisions match the HTML references.
+const assetReferences=[...main.matchAll(/(?:src|href)="(\.\/[^"]+\.(?:js|css)\?v=\d+)"/g)].map(match=>match[1]);
 for(const assetName of [
   "./backup-manager.js","./app-main.js","./students/student-registry.js",
   "./students/student-workspace-upgrade.js","./activity-tracker.js"

@@ -43,6 +43,17 @@ assert.match(source,/importPlan\.includesLoginPassword\?item\.login_password:\(e
 assert.match(source,/filter\(\(\[key\]\)=>key!=="login_password"\)\.map/);
 assert.match(source,/if\(key==="login_password"\)return "بيانات محجوبة"/);
 
-// Full encrypted/unencrypted backup behavior is deliberately unchanged here.
-// Removing its sensitive fields requires a separate migration and review.
+// Existing history rows can contain the pre-fix credential values. A reviewed,
+// non-deployed SQL plan removes only that field, and records future changes as a
+// boolean marker without persisting the old or new password value.
+const redaction=fs.readFileSync(path.join(root,"docs/reviews/sql/student-history-redaction-proposal.sql"),"utf8");
+assert.match(redaction,/DRAFT FOR REVIEW ONLY/);
+assert.match(redaction,/prior := to_jsonb\(old\) - array\[[^\]]*'login_password'/);
+assert.match(redaction,/after_value := to_jsonb\(new\) - array\[[^\]]*'login_password'/);
+assert.match(redaction,/credential_updated/);
+assert.match(redaction,/set changes = changes - 'login_password'/);
+assert.match(source,/if\(key==="credential_updated"\)return/);
+
+// Full backup behavior is deliberately unchanged: it can retain student passwords.
+// Its UI and README must clearly warn that the ZIP is not encrypted.
 console.log("Student CSV credential protection checks passed.");

@@ -25,7 +25,17 @@ assert.match(legacy,/target\.searchParams\.set\("section","students"\)/);
 assert.match(legacy,/\["student","new"\]/);
 assert.match(main,/backup-manager\.js\?v=1/);
 assert.match(main,/student-registry\.js\?v=17/);
-assert.match(sw,/CACHE_NAME=CACHE_PREFIX\+"v85"/);
+assert.match(sw,/CACHE_NAME=CACHE_PREFIX\+"v[1-9]\d*"/);
+// Ensure precached asset revisions match the HTML references.
+const assetReferences=[...main.matchAll(/(?:src|href)="(\.\/[^"]+\.(?:js|css)\?v=\d+)"/g)].map(match=>match[1]);
+for(const assetName of [
+  "./backup-manager.js","./app-main.js","./students/student-registry.js",
+  "./students/student-workspace-upgrade.js","./activity-tracker.js"
+]){
+  const asset=assetReferences.find(value=>value.split("?")[0]===assetName);
+  assert.ok(asset,"Missing versioned HTML asset: "+assetName);
+  assert.ok(sw.includes(JSON.stringify(asset)),"Service-worker asset version mismatch: "+asset);
+}
 assert.match(sw,/backup-manager\.js\?v=1/);
 assert.match(sw,/student-registry\.js\?v=17/);
 console.log("student production integration checks passed");

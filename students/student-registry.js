@@ -186,6 +186,10 @@ const STUDENT_FIELD_GROUPS=[
 ];
 const CSV_HEADERS=STUDENT_FIELDS.map(field=>field.label);
 const CSV_KEY_BY_HEADER=Object.fromEntries(STUDENT_FIELDS.map(field=>[field.label,field.key]));
+// Ordinary CSV exports are for sharing/analysis: never include saved login secrets.
+// Legacy CSV imports may still contain the old password column for compatibility.
+const CSV_EXPORT_FIELDS=STUDENT_FIELDS.filter(field=>field.key!=="login_password");
+const CSV_EXPORT_HEADERS=CSV_EXPORT_FIELDS.map(field=>field.label);
 
 let upgrade=null;
 let mode="gate";
@@ -1142,6 +1146,7 @@ const HISTORY_FIELD_LABELS={...Object.fromEntries(STUDENT_FIELDS.map(field=>[fie
 function humanHistoryValue(value,key){
   if(key==="photo_path")return value?"توجد صورة":"لا توجد صورة";
   if(key==="deleted_at")return value?"في السلة":"نشط";
+  if(key==="login_password")return "بيانات محجوبة";
   if(value===null||value===undefined||value==="")return "—";
   return String(value).slice(0,600);
 }
@@ -1164,9 +1169,10 @@ async function openStudentHistory(studentId=null){
       const action=HISTORY_ACTION_LABELS[entry.action]||"تغيير";
       const date=new Date(entry.changed_at);
       const when=Number.isFinite(date.getTime())?new Intl.DateTimeFormat("ar-EG",{dateStyle:"medium",timeStyle:"short"}).format(date):"";
-      const details=Object.entries(entry.changes&&typeof entry.changes==="object"?entry.changes:{}).map(([key,values])=>{
+      const details=Object.entries(entry.changes&&typeof entry.changes==="object"?entry.changes:{}).filter(([key])=>key!=="login_password").map(([key,values])=>{
         const label=HISTORY_FIELD_LABELS[key]||key;
         if(key==="photo_path")return '<li>تم تغيير صورة الطالب</li>';
+        if(key==="credential_updated")return '<li>تم تغيير كلمة سر الطالب، دون تسجيل قيمتها.</li>';
         const before=humanHistoryValue(values?.before,key),after=humanHistoryValue(values?.after,key);
         return `<li><strong>${escapeHtml(label)}:</strong> قبل: ${escapeHtml(before)}، بعد: ${escapeHtml(after)}</li>`;
       }).join("");
@@ -1293,8 +1299,8 @@ function csvEscape(value){
   return `"${output.replace(/"/g,'""')}"`;
 }
 function buildStudentsCsv(list){
-  const rows=[CSV_HEADERS.map(csvEscape).join(",")];
-  for(const student of list)rows.push(STUDENT_FIELDS.map(field=>csvEscape(student[field.key]||"")).join(","));
+  const rows=[CSV_EXPORT_HEADERS.map(csvEscape).join(",")];
+  for(const student of list)rows.push(CSV_EXPORT_FIELDS.map(field=>csvEscape(student[field.key]||"")).join(","));
   return "\uFEFF"+rows.join("\r\n");
 }
 function downloadBlob(blob,filename){
@@ -1312,7 +1318,7 @@ function exportFilteredCsv(){
   if(!list.length){showToast("لا توجد نتائج لتصديرها.",true);return}
   const blob=new Blob([buildStudentsCsv(list)],{type:"text/csv;charset=utf-8"});
   downloadBlob(blob,`mawaeidi-students-${todayKey()}.csv`);
-  showToast(`تم تصدير ${list.length} ملف طالب.`);
+  showToast(`تم تصدير ${list.length} ملف طالب دون كلمات السر.`);
 }
 
 function backupSafeFilePart(value){
@@ -1538,7 +1544,8 @@ async function prepareCsvImport(file){
     const rows=parseCsv(await file.text());
     if(rows.length<2)throw new Error("empty");
     const headers=rows[0].map(value=>clean(value.replace(/^'/,""),200));
-    const missing=CSV_HEADERS.filter(header=>!headers.includes(header));
+    // New exports omit passwords; old CSV files with the password column remain importable.
+    const missing=CSV_EXPORT_HEADERS.filter(header=>!headers.includes(header));
     if(missing.length){
       importPlan=null;
       byId("importContent").innerHTML=`<div class="import-errors"><strong>الأعمدة المطلوبة غير مكتملة:</strong><br>${missing.map(escapeHtml).join("<br>")}</div>`;
@@ -1576,7 +1583,8 @@ async function prepareCsvImport(file){
       const usernameKey=normalizeKey(item.username);
       return usernameKey&&existingNames.has(usernameKey);
     }).length;
-    importPlan={items,errors,updates,creates:items.length-updates};
+    importPlan={items,errors,updates,creates:items.length-updates,
+      includesLoginPassword:headers.includes(STUDENT_FIELDS.find(field=>field.key==="login_password").label)};
     byId("importContent").innerHTML=`
       <div class="import-summary">
         <article><span>إجمالي الصفوف</span><strong>${items.length}</strong></article>
@@ -1603,7 +1611,9 @@ async function confirmCsvImport(){
     const payload=importPlan.items.map(item=>{
       const usernameKey=normalizeKey(item.username);
       const existing=usernameKey?existingByName.get(usernameKey):null;
-      return normalizeStudent({...item,id:existing?.id||makeId(),created_at:existing?.created_at||now,updated_at:now});
+      // The absent CSV password column must never overwrite an existing secret.
+      const loginPassword=importPlan.includesLoginPassword?item.login_password:(existing?.login_password||"");
+      return normalizeStudent({...item,login_password:loginPassword,id:existing?.id||makeId(),created_at:existing?.created_at||now,updated_at:now});
     });
       const cloudPayload=payload.map(item=>{
         const data={user_id:currentUser.id,id:item.id};

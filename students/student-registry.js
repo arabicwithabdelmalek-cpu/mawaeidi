@@ -1172,6 +1172,7 @@ async function openStudentHistory(studentId=null){
       const details=Object.entries(entry.changes&&typeof entry.changes==="object"?entry.changes:{}).filter(([key])=>key!=="login_password").map(([key,values])=>{
         const label=HISTORY_FIELD_LABELS[key]||key;
         if(key==="photo_path")return '<li>تم تغيير صورة الطالب</li>';
+        if(key==="credential_updated")return '<li>تم تغيير كلمة سر الطالب، دون تسجيل قيمتها.</li>';
         const before=humanHistoryValue(values?.before,key),after=humanHistoryValue(values?.after,key);
         return `<li><strong>${escapeHtml(label)}:</strong> قبل: ${escapeHtml(before)}، بعد: ${escapeHtml(after)}</li>`;
       }).join("");

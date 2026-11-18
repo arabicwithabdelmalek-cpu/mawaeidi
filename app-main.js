@@ -161,6 +161,7 @@ let sessionSequence=0;
 let loadingUserId=null;
 let recoveryUser=null;
 let lastCloudUpdatedAt=null;
+let lastCloudLessons=null;
 let realtimeChannel=null;
 let refreshInFlight=false;
 let saveInFlight=false;
@@ -177,6 +178,7 @@ function showBackupStatus(message,{error=false,persistent=false}={}){
 }
 let pendingBackupRestorePlan=null;
 let pendingRemoteRow=null;
+let pendingScheduleConflict=null;
 let lastAutoRefreshAt=0;
 let deferredInstallPrompt=null;
 let serviceWorkerRegistration=null;
@@ -1549,6 +1551,64 @@ function setSync(state,message){
   box.setAttribute("aria-label",`${message}؛ اضغط لتحديث المواعيد من السحابة`);
 }
 function isDrawerVisible(){return document.getElementById("drawer").classList.contains("show")||Boolean(document.querySelector("#toolBackdrop.show .session-status-form"))}
+function showScheduleConflict(){
+  if(!pendingScheduleConflict)return;
+  const layer=document.getElementById("scheduleConflictLayer");
+  if(layer){layer.hidden=false;layer.querySelector("#scheduleConflictDownload")?.focus({preventScroll:true})}
+  setSync("error","تعارض في تعديلات الجدول");
+}
+function dismissScheduleConflict(){
+  const layer=document.getElementById("scheduleConflictLayer");
+  if(layer)layer.hidden=true;
+  if(pendingScheduleConflict)setSync("error","تعارض محفوظ — اضغط للمراجعة");
+}
+function resetScheduleConflict(){
+  pendingScheduleConflict=null;
+  const layer=document.getElementById("scheduleConflictLayer");
+  if(layer)layer.hidden=true;
+}
+function downloadScheduleConflictDraft(){
+  const pending=pendingScheduleConflict;
+  if(!pending||pending.userId!==currentUser?.id)return;
+  try{
+    const data={format:"mawaeidi-schedule",version:1,lesson_count:pending.draft.length,
+      exported_at:new Date().toISOString(),lessons:cloneBackupValue(pending.draft)};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});
+    window.MawaeidiBackup.download(blob,fullBackupFilename("mawaeidi-unsaved-schedule").replace(/\\.zip$/,".json"));
+    pending.downloaded=true;
+    const button=document.getElementById("scheduleConflictRefresh");
+    if(button)button.disabled=false;
+    const hint=document.getElementById("scheduleConflictHint");
+    if(hint)hint.textContent="تم تنزيل نسخة التعديلات غير المحفوظة. يمكنك الآن تحميل أحدث جدول من السحابة.";
+  }catch(error){
+    console.error("تعذّر تنزيل مسودة الجدول بعد التعارض.",error);
+    alert("تعذّر تنزيل النسخة. لا تحدّث الجدول قبل حفظ التعديلات غير المحفوظة.");
+  }
+}
+async function reloadScheduleAfterConflict(){
+  const pending=pendingScheduleConflict;
+  if(!pending||!pending.downloaded||pending.userId!==currentUser?.id||!cloud||!cloudReady)return;
+  const button=document.getElementById("scheduleConflictRefresh");
+  if(button)button.disabled=true;
+  try{
+    const {data,error}=await cloud.from("mawaeidi_data").select("user_id,lessons,updated_at")
+      .eq("user_id",pending.userId).maybeSingle();
+    if(error)throw error;
+    if(pending!==pendingScheduleConflict||currentUser?.id!==pending.userId)return;
+    if(data&&(data.user_id!==pending.userId||!Array.isArray(data.lessons)))throw new Error("invalid_remote_schedule");
+    const remote=data?.lessons||[];
+    resetScheduleConflict();
+    lessons=normalizeLessons(remote);
+    lastCloudLessons=data?cloneBackupValue(remote):null;
+    lastCloudUpdatedAt=textValue(data?.updated_at)||null;
+    closeDrawer();closeToolDialog();
+    render();setSync("saved","تم تحميل أحدث جدول");
+  }catch(error){
+    console.error("تعذّر تحميل الجدول بعد التعارض.",error);
+    setSync("error","تعذّر تحميل أحدث جدول");
+    alert("تعذّر التحديث. لا تزال التعديلات غير المحفوظة متاحة من نافذة التعارض.");
+  }finally{if(button&&pendingScheduleConflict===pending)button.disabled=false}
+}
 function remoteRowIsNewer(row){
   const remote=textValue(row?.updated_at);
   if(!remote)return !lastCloudUpdatedAt;
@@ -1823,27 +1883,39 @@ async function persist(silent=false){
     if(!silent)alert("لم يكتمل الاتصال بحسابك بعد.");
     return false;
   }
+  if(pendingScheduleConflict){showScheduleConflict();return false}
+  if(saveInFlight){
+    if(!silent)alert("هناك عملية حفظ جارية. انتظر اكتمالها قبل أي تعديل آخر.");
+    return false;
+  }
+  const ownerId=currentUser.id,sequence=sessionSequence;
+  const draft=cloneBackupValue(lessons);
+  const expected=lastCloudLessons===null?null:cloneBackupValue(lastCloudLessons);
   saveInFlight=true;
   setSync("saving","جارٍ الحفظ");
   try{
-    const updatedAt=new Date().toISOString();
-    const {data,error}=await cloud.from("mawaeidi_data").upsert({
-      user_id:currentUser.id,
-      lessons,
-      updated_at:updatedAt
-    },{onConflict:"user_id"}).select("updated_at").single();
-    if(error)throw error;
-    lastCloudUpdatedAt=textValue(data?.updated_at)||updatedAt;
-    setSync("saved","تم الحفظ");
+    if(!window.MawaeidiScheduleSync)throw new Error("schedule_guard_unavailable");
+    const result=await window.MawaeidiScheduleSync.save(cloud,expected,draft);
+    if(sequence!==sessionSequence||currentUser?.id!==ownerId)return false;
+    if(result.status==="conflict"){
+      pendingScheduleConflict={userId:ownerId,draft,downloaded:false};
+      showScheduleConflict();
+      return false;
+    }
+    lastCloudLessons=cloneBackupValue(draft);
+    lastCloudUpdatedAt=result.updatedAt;
+    setSync("saved","تم الحفظ دون تعارض");
     return true;
   }catch(error){
-    console.error("تعذّر حفظ بيانات مواعيدي.",error);
-    setSync("error","لم يُحفظ");
-    if(!silent)alert("تعذّر حفظ البيانات سحابيًا. تحقق من اتصال الإنترنت وحاول مرة أخرى.");
+    console.error("تعذّر الحفظ المحمي لمواعيدي.",error);
+    const missing=/schedule_guard_unavailable|PGRST202|42883|function .* does not exist/i.test(
+      String(error?.code||"")+" "+String(error?.message||""));
+    setSync("error",missing?"حماية التعارض غير مفعّلة":"لم يُحفظ");
+    if(!silent)alert(missing?
+      "لم تُفعّل حماية التعارض بعد في قاعدة مواعيدي. لم يُحفظ التعديل.":
+      "تعذّر حفظ البيانات سحابيًا. لم نكتب فوق أي تعديل آخر. حاول مرة أخرى.");
     return false;
-  }finally{
-    saveInFlight=false;
-  }
+  }finally{saveInFlight=false}
 }
 function getOccurrences(list=lessons){
   return list.flatMap(l=>(Array.isArray(l.schedules)?l.schedules:[])

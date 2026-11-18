@@ -26,5 +26,10 @@ jobs:
           --health-retries 12
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run all existing web and student regression checks
+        run: npm run test:students
       - name: Execute real PostgreSQL CAS/RLS/trigger/concurrency integration checks
         run: bash tests/postgres/run-schedule-cas.sh

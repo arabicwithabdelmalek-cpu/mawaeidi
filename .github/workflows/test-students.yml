@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main, feature/student-trash-audit-20261028]
+    branches: [main, feature/student-trash-audit-20261028, diagnose-supabase-20261124]
 jobs:
   student-tests:
     runs-on: ubuntu-latest
@@ -12,5 +12,29 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Probe Mawaeidi Supabase
+        shell: bash
+        env:
+          SUPABASE_URL: https://nvefdkkjkyalpsrgoffj.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_t0pqtkV0-3Wj0htl-eGR9w_BsifiUDE
+        run: |
+          set +e
+          echo "=== DNS ==="
+          getent hosts nvefdkkjkyalpsrgoffj.supabase.co || true
+          echo "=== Auth health ==="
+          status=$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/auth-health.txt -w "%{http_code}" "$SUPABASE_URL/auth/v1/health")
+          echo "curl_rc=$? http_status=$status"
+          cat /tmp/auth-health.txt 2>/dev/null || true
+          echo
+          echo "=== Auth settings ==="
+          status=$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/auth-settings.txt -w "%{http_code}" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" "$SUPABASE_URL/auth/v1/settings")
+          echo "curl_rc=$? http_status=$status"
+          head -c 1000 /tmp/auth-settings.txt 2>/dev/null || true
+          echo
+          echo "=== Data API ==="
+          status=$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/rest.txt -w "%{http_code}" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" "$SUPABASE_URL/rest/v1/mawaeidi_data?select=user_id&limit=1")
+          echo "curl_rc=$? http_status=$status"
+          head -c 1000 /tmp/rest.txt 2>/dev/null || true
+          echo
       - name: Run student registry and backup checks
         run: npm run test:students

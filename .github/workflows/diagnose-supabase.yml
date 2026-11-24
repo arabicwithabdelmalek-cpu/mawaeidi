@@ -1,0 +1,46 @@
+name: Diagnose Supabase connectivity
+
+on:
+  push:
+    branches:
+      - diagnose-supabase-20261124
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe Mawaeidi Supabase endpoints
+        shell: bash
+        env:
+          SUPABASE_URL: https://nvefdkkjkyalpsrgoffj.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_t0pqtkV0-3Wj0htl-eGR9w_BsifiUDE
+        run: |
+          set +e
+          echo "=== DNS ==="
+          getent hosts nvefdkkjkyalpsrgoffj.supabase.co || true
+
+          echo "=== Auth health ==="
+          status=$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/auth-health.txt -w "%{http_code}" "$SUPABASE_URL/auth/v1/health")
+          rc=$?
+          echo "curl_rc=$rc http_status=$status"
+          head -c 1000 /tmp/auth-health.txt 2>/dev/null || true
+          echo
+
+          echo "=== Auth settings (publishable key) ==="
+          status=$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/auth-settings.txt -w "%{http_code}" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            "$SUPABASE_URL/auth/v1/settings")
+          rc=$?
+          echo "curl_rc=$rc http_status=$status"
+          head -c 1000 /tmp/auth-settings.txt 2>/dev/null || true
+          echo
+
+          echo "=== Data API ==="
+          status=$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/rest.txt -w "%{http_code}" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" \
+            "$SUPABASE_URL/rest/v1/mawaeidi_data?select=user_id&limit=1")
+          rc=$?
+          echo "curl_rc=$rc http_status=$status"
+          head -c 1000 /tmp/rest.txt 2>/dev/null || true
+          echo

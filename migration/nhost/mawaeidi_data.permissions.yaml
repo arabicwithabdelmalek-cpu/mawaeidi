@@ -1,0 +1,32 @@
+# Reference Hasura metadata for the pilot only.
+# Track in the project's existing default database source; do not overwrite other metadata.
+table:
+  schema: public
+  name: mawaeidi_data
+select_permissions:
+  - role: user
+    permission:
+      columns: [user_id, lessons, updated_at]
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+insert_permissions:
+  - role: user
+    permission:
+      columns: [lessons, updated_at]
+      set:
+        user_id: x-hasura-user-id
+      check:
+        user_id:
+          _eq: X-Hasura-User-Id
+update_permissions:
+  - role: user
+    permission:
+      columns: [lessons, updated_at]
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+      check:
+        user_id:
+          _eq: X-Hasura-User-Id
+# No public or delete permissions.

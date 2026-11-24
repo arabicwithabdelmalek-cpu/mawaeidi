@@ -1,0 +1,15 @@
+name: Nhost pilot unit checks
+on:
+  push:
+    branches: ['migration/nhost-pilot']
+permissions:
+  contents: read
+jobs:
+  pilot-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test migration/nhost/schedule-client.test.mjs

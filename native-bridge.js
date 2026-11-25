@@ -5,10 +5,31 @@
   let lastAlarmFingerprint="";
   let updateCheckPromise=null;
   const RELEASES_ENDPOINT="https://api.github.com/repos/arabicwithabdelmalek-cpu/mawaeidi/releases?per_page=10";
-  const UPDATE_CACHE_KEY="mawaeidi-native-update-cache-v1";
+  const UPDATE_CACHE_KEY="mawaeidi-native-update-cache-v2";
   const UPDATE_DISMISS_KEY="mawaeidi-native-update-dismissed-v1";
   const UPDATE_CHECK_INTERVAL=6*60*60*1000;
 
+  function mobilePlugin(){return window.Capacitor?.Plugins?.MawaeidiMobile||null}
+  const authStorage=native&&platform==="android"?{
+    async getItem(key){
+      const result=await mobilePlugin().getAuthItem({key});
+      if(typeof result?.value==="string")return result.value;
+      const previous=localStorage.getItem(key);
+      if(previous!==null){
+        await mobilePlugin().setAuthItem({key,value:previous});
+        localStorage.removeItem(key);
+      }
+      return previous;
+    },
+    async setItem(key,value){
+      await mobilePlugin().setAuthItem({key,value});
+      localStorage.removeItem(key);
+    },
+    async removeItem(key){
+      await mobilePlugin().removeAuthItem({key});
+      localStorage.removeItem(key);
+    }
+  }:null;
   function plugin(){return window.Capacitor?.Plugins?.MawaeidiAlarm||null}
   async function invoke(method,options={}){
     const target=plugin();
@@ -54,8 +75,8 @@
     return (Array.isArray(releases)?releases:[])
       .filter(item=>item&&!item.draft&&versionParts(item.tag_name))
       .map(item=>{
-        const asset=(Array.isArray(item.assets)?item.assets:[]).find(entry=>/\.apk$/i.test(entry?.name||"")&&trustedUpdateUrl(entry?.browser_download_url));
-        return asset?{available:true,currentVersion,latestVersion:normalizedVersion(item.tag_name),downloadUrl:asset.browser_download_url,releaseUrl:item.html_url||asset.browser_download_url,name:asset.name}:null;
+        const asset=(Array.isArray(item.assets)?item.assets:[]).find(entry=>/^Mawaeidi-[0-9A-Za-z.-]+\.apk$/i.test(entry?.name||"")&&trustedUpdateUrl(entry?.browser_download_url)&&/^sha256:[a-f0-9]{64}$/i.test(entry?.digest||""));
+        return asset?{available:true,currentVersion,latestVersion:normalizedVersion(item.tag_name),downloadUrl:asset.browser_download_url,releaseUrl:item.html_url||asset.browser_download_url,name:asset.name,sha256:asset.digest.slice(7),notes:String(item.body||"").slice(0,1200)}:null;
       })
       .filter(Boolean)
       .filter(item=>compareVersions(item.latestVersion,currentVersion)>0)
@@ -89,13 +110,20 @@
     const download=document.createElement("button");
     download.type="button";
     download.className="native-update-download";
-    download.textContent="تنزيل التحديث";
+    download.textContent="تحديث الآن";
+    const feedback=document.createElement("small");
+    feedback.setAttribute("role","status");
+    if(update.notes){const notes=document.createElement("span");notes.textContent=update.notes;copy.append(notes);}
+    copy.append(feedback);
     download.addEventListener("click",async()=>{
       download.disabled=true;
-      download.textContent="جارٍ فتح التنزيل…";
-      try{await api.openUpdate(update)}
-      catch(error){console.warn("تعذّر فتح تحديث مواعيدي.",error)}
-      finally{download.disabled=false;download.textContent="تنزيل التحديث"}
+      download.textContent="جارٍ التحديث…";
+      feedback.textContent="جارٍ تنزيل الإصدار والتحقق منه…";
+      try{
+        const result=await api.openUpdate(update);
+        feedback.textContent=result?.permissionRequired?"اسمح بالتثبيت من مواعيدي ثم ارجع واضغط تحديث الآن.":"وافق على تثبيت التحديث في نافذة أندرويد.";
+      }catch(error){feedback.textContent="تعذّر تنزيل التحديث أو التحقق منه. حاول مرة أخرى.";console.warn("Update failed",error)}
+      finally{download.disabled=false;download.textContent="تحديث الآن"}
     });
     const later=document.createElement("button");
     later.type="button";
@@ -116,6 +144,7 @@
   const api={
     isNative:native,
     platform,
+    authStorage,
     async getAlarmState(){
       if(!native)return {available:false,enabled:false,pendingCount:0};
       try{return {available:true,...await invoke("getState")}}
@@ -154,7 +183,7 @@
     async getAppInfo(){return native?invoke("getAppInfo"):{packageName:"web",versionName:"web",versionCode:0}},
     async checkForUpdates({force=false,render=true}={}){
       if(!native||platform!=="android")return {available:false,reason:"unsupported_platform"};
-      if(updateCheckPromise&&!force)return updateCheckPromise;
+      if(updateCheckPromise)return updateCheckPromise;
       updateCheckPromise=(async()=>{
         const info=await this.getAppInfo();
         const currentVersion=normalizedVersion(info?.versionName);
@@ -170,9 +199,9 @@
       return updateCheckPromise;
     },
     async openUpdate(update){
-      const url=update?.downloadUrl||update?.releaseUrl;
-      if(!trustedUpdateUrl(url))throw new Error("untrusted_update_url");
-      return invoke("openExternalUrl",{url});
+      const url=update?.downloadUrl;
+      if(!trustedUpdateUrl(url)||!/^([a-f0-9]{64})$/i.test(update?.sha256||""))throw new Error("untrusted_update_url");
+      return mobilePlugin().installUpdate({url,sha256:update.sha256});
     },
     async openExactAlarmSettings(){return invoke("openExactAlarmSettings")},
     async openFullScreenSettings(){return invoke("openFullScreenSettings")},
@@ -188,6 +217,25 @@
         api.checkForUpdates().catch(()=>{});
       }
     });
+    function setupUpdateMenu(){
+      if(platform!=="android")return;
+      const menu=document.querySelector("#dataMenu .data-popover");
+      if(!menu||document.getElementById("nativeUpdateAction"))return;
+      const button=document.createElement("button"),title=document.createElement("strong"),detail=document.createElement("small");
+      button.type="button";button.className="data-action";button.id="nativeUpdateAction";
+      title.textContent="تحديث التطبيق";detail.textContent="التحقق من وجود إصدار جديد";
+      button.append(title,detail);menu.prepend(button);
+      api.getAppInfo().then(info=>{detail.textContent="الإصدار الحالي: "+info.versionName+" • التحقق من التحديثات"}).catch(()=>{});
+      button.addEventListener("click",async()=>{
+        button.disabled=true;detail.textContent="جارٍ التحقق…";
+        const update=await api.checkForUpdates({force:true});
+        button.disabled=false;
+        if(update.available){document.getElementById("dataMenu").open=false;renderUpdateBanner(update,{force:true});document.getElementById("nativeUpdateBanner")?.scrollIntoView({block:"nearest"});detail.textContent="يتوفر إصدار "+update.latestVersion;}
+        else detail.textContent=update.reason==="check_failed"?"تعذّر التحقق؛ حاول مجددًا.":"لديك أحدث إصدار: "+(update.currentVersion||"");
+      });
+    }
+    setupUpdateMenu();
+    document.addEventListener("DOMContentLoaded",setupUpdateMenu,{once:true});
     window.setTimeout(()=>api.checkForUpdates().catch(()=>{}),1800);
   }
 })();

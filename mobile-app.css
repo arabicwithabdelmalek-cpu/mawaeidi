@@ -1223,3 +1223,8 @@ body.native-app .native-alarm-tone button {
   font-weight:800;
 }
 body.native-app .native-alarm-tone button:disabled {opacity:.55;}
+
+/* Native session recovery and update feedback */
+#nativeSessionRetry{display:block;margin:12px auto;padding:10px 16px;border-radius:10px;cursor:pointer;}
+.native-update-banner small{display:block;margin-top:6px;white-space:normal;overflow-wrap:anywhere;}
+.native-update-banner span{white-space:normal;overflow-wrap:anywhere;}

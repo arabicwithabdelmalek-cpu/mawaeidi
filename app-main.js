@@ -120,6 +120,7 @@ let nativeAlarmSyncTimer=null;
 let historySnapshots=new Map();
 let activeSessionContext=null;
 let worldClockInterval=null;
+const worldTimelineRenderKeys=new WeakMap();
 let worldClockSettings=null;
 let worldClockBusy=false;
 let worldClockLoadSequence=0;
@@ -255,7 +256,7 @@ function closeToolDialog(event){
   activeSessionContext=null;
   activeWeekMoveContext=null;
   pendingBackupRestorePlan=null;
-  if(worldClockInterval){clearInterval(worldClockInterval);worldClockInterval=null}
+  syncWorldClockTimer();
   const requestedFocus=toolReturnFocus;
   toolReturnFocus=null;
   const toolsSummary=document.querySelector("#dataMenu > summary");
@@ -419,18 +420,25 @@ function selectWorldTimelineHour(time){
 function renderWorldTimeline(){
   const box=document.getElementById("worldTimeline");if(!box)return;
   const base=savedWorldClockBase(),reference=worldTimelineReferenceInstant(),baseDate=dateKeyInZone(reference,base),selectedHour=zonedParts(reference,base).hour,zones=savedWorldClockZones();
+  const key=JSON.stringify([base,baseDate,selectedHour,zones,zones.map(zone=>zoneOffsetMinutes(reference,zone))]);
+  if(worldTimelineRenderKeys.get(box)===key)return;
+  const baseHours=Array.from({length:24},(_,hour)=>{
+    const time=`${String(hour).padStart(2,"0")}:00`;
+    return {time,instant:wallTimeToInstant(baseDate,time,base)};
+  });
   const baseLabel=timeZoneShortLabel(base)||base;
   const header=`<div class="world-timeline-row world-timeline-axis"><div class="world-timeline-label"><strong>الوقت</strong><small>نظام 12 ساعة</small></div>${Array.from({length:24},(_,hour)=>`<button type="button" class="world-hour-cell" tabindex="-1">${esc(worldHour12Label(hour))}</button>`).join("")}</div>`;
   const rows=zones.map(zone=>{
     const entry=timeZoneEntry(zone),label=entry?.label||zone;
-    const cells=Array.from({length:24},(_,hour)=>{
-      const baseTime=`${String(hour).padStart(2,"0")}:00`,instant=wallTimeToInstant(baseDate,baseTime,base);if(!instant)return "";
+    const cells=baseHours.map(({time:baseTime,instant},hour)=>{
+      if(!instant)return "";
       const p=zonedParts(instant,zone),state=worldClockState(p.hour),selected=hour===selectedHour?" selected":"";
       return `<button type="button" class="world-hour-cell ${state.className}${selected}" title="${esc(label)} · ${esc(worldHour12Label(p.hour))}" onclick="selectWorldTimelineHour('${baseTime}')">${esc(worldHour12Label(p.hour))}</button>`;
     }).join("");
     return `<div class="world-timeline-row"><div class="world-timeline-label"><strong>${esc(zone===base?baseLabel:label)}</strong><small>${zone===base?"التوقيت الأساسي":esc(worldOffsetText(reference,zone,base))}</small></div>${cells}</div>`;
   }).join("");
   box.innerHTML=header+rows;
+  worldTimelineRenderKeys.set(box,key);
 }
 function renderWorldClockCards(){
   const box=document.getElementById("worldClockCards");if(!box)return;
@@ -503,6 +511,17 @@ function ensureWorldClockOrderListener(){
   if(query.addEventListener)query.addEventListener("change",apply);else query.addListener?.(apply);
   ensureWorldClockOrderListener.bound=true;
 }
+function syncWorldClockTimer(refresh=false){
+  const view=document.getElementById("worldClockView"),cards=document.getElementById("worldClockCards");
+  const visible=Boolean(currentUser&&cloudReady&&currentSection==="world"&&document.visibilityState==="visible"&&view&&!view.hidden&&cards);
+  if(!visible){
+    if(worldClockInterval!==null)clearInterval(worldClockInterval);
+    worldClockInterval=null;
+    return;
+  }
+  if(refresh)renderWorldClockCards();
+  if(worldClockInterval===null)worldClockInterval=setInterval(()=>syncWorldClockTimer(true),30000);
+}
 function openWorldClock(){
   closeDataMenu();currentSection="world";updateSectionChrome();
   const ticks=Array.from({length:60},(_,index)=>{const angle=index*6*Math.PI/180,r=index%5===0?45.5:46.5,x=50+r*Math.sin(angle),y=50-r*Math.cos(angle);return `<i class="world-clock-tick${index%5===0?" major":""}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"></i>`}).join("");
@@ -537,7 +556,7 @@ function openWorldClock(){
   const mount=document.getElementById("worldClockPageMount");if(!mount)return;mount.innerHTML=content;syncWorldClockSectionOrder();ensureWorldClockOrderListener();populateTimeZoneDatalist("worldTimeZoneOptions");
   const base=savedWorldClockBase();setTimeZoneInput(document.getElementById("worldBaseZone"),base);setTimeZoneInput(document.getElementById("worldFromZone"),base);const target=savedWorldClockZones().find(zone=>zone!==base)||SCHEDULE_TIMEZONE;setTimeZoneInput(document.getElementById("worldToZone"),validTimeZone(target)?target:base);
   const now=new Date();document.getElementById("worldConvertDate").value=dateKeyInZone(now,base);document.getElementById("worldConvertTime").value=timeKeyInZone(now,base);renderWorldClockCards();convertWorldTime();
-  if(worldClockInterval)clearInterval(worldClockInterval);worldClockInterval=setInterval(renderWorldClockCards,30000);
+  syncWorldClockTimer();
 }
 function lessonTimeZoneInputChanged(){const input=document.getElementById("studentTimeZoneInput");if(input&&input.value!==input.dataset.zoneLabel){input.dataset.zone="";input.dataset.zoneLabel=""}updateStudentTimeZoneHint()}
 function readLessonTimeZone(){const input=document.getElementById("studentTimeZoneInput");if(!input||!input.value.trim())return "";return resolvedZoneFromInput(input).entry?.zone||""}
@@ -2283,7 +2302,7 @@ function updateSectionChrome(){
  });
  const btn=document.getElementById("primaryActionButton");btn.hidden=currentSection!=="schedule";
  if(!btn.hidden)btn.textContent="＋ إضافة حصة";
- if(currentSection!=="world"&&worldClockInterval){clearInterval(worldClockInterval);worldClockInterval=null}
+ syncWorldClockTimer();
 }
 function setSection(section){
  currentSection=["schedule","world","students"].includes(section)?section:"schedule";
@@ -3185,7 +3204,7 @@ document.addEventListener("click",e=>{
   const menu=document.getElementById("dataMenu");
   if(menu?.open&&!menu.contains(e.target))closeDataMenu();
 });
-document.addEventListener("visibilitychange",requestAutoRefresh);
+document.addEventListener("visibilitychange",()=>{syncWorldClockTimer(true);requestAutoRefresh()});
 window.addEventListener("focus",requestAutoRefresh);
 window.addEventListener("mawaeidi-native-resume",async()=>{
   if(window.MawaeidiNative?.isNative)await restoreNativeSession();

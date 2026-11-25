@@ -380,6 +380,7 @@ function refreshCountryFilter(){
   const select=byId("countryFilter");
   const previous=select.value;
   const countries=[...new Set((listMode==="trash"?trashedStudents:students).map(student=>student.country).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ar"));
+  if(select.options.length===countries.length+1&&countries.every((country,i)=>select.options[i+1].value===country))return;
   select.replaceChildren(new Option("كل الدول",""));
   for(const country of countries)select.append(new Option(country,country));
   select.value=countries.includes(previous)?previous:"";
@@ -401,12 +402,13 @@ function filterAndSortStudents(source=students){
   const filters=currentFilters();
   const list=source.filter(student=>{
     if(upgrade&&!upgrade.filterStudent(student))return false;
-    const searchable=normalizeKey(STUDENT_FIELDS.filter(field=>field.key!=="login_password").map(field=>student[field.key]).join(" "));
-    return (!filters.query||searchable.includes(filters.query))
-      &&(!filters.status||student.status===filters.status)
-      &&(!filters.level||student.current_level===filters.level)
-      &&(!filters.type||student.study_type===filters.type)
-      &&(!filters.country||student.country===filters.country);
+    if((filters.status&&student.status!==filters.status)
+      ||(filters.level&&student.current_level!==filters.level)
+      ||(filters.type&&student.study_type!==filters.type)
+      ||(filters.country&&student.country!==filters.country))return false;
+    if(!filters.query)return true;
+    const searchable=normalizeKey(CSV_EXPORT_FIELDS.map(field=>student[field.key]).join(" "));
+    return searchable.includes(filters.query);
   });
   list.sort((a,b)=>{
     if(filters.sort==="name")return studentName(a).localeCompare(studentName(b),"ar");

@@ -16,7 +16,7 @@ assert.ok(new vm.Script(registry));
 assert.ok(main.indexOf("student-workspace-upgrade.js")<main.indexOf("student-registry.js"),
   "enhancement must load before registry script");
 assert.match(main,/student-workspace-upgrade\.css\?v=1/);
-assert.match(sw,/student-workspace-upgrade\.js\?v=1/);
+assert.match(sw,/student-workspace-upgrade\.js\?v=2/);
 assert.match(sw,/student-workspace-upgrade\.css\?v=1/);
 assert.match(registry,/upgrade\?\.afterRowsRendered\(filteredStudents\)/);
 assert.match(registry,/upgrade\?\.prepareEditor\(Boolean\(student\)\)/);

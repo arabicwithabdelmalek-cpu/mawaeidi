@@ -1705,8 +1705,12 @@ function requestAutoRefresh(){
   const now=Date.now();
   if(now-lastAutoRefreshAt<AUTO_REFRESH_THROTTLE_MS)return;
   lastAutoRefreshAt=now;
-  refreshFromCloud(true);
-  if(currentSection!=="world")refreshWorldClockFromCloud();
+  if(currentSection==="world"){
+    refreshWorldClockFromCloud();
+  }else{
+    refreshFromCloud(true);
+    refreshWorldClockFromCloud();
+  }
 }
 function finishAuthBootstrap(){document.body.classList.remove("auth-pending")}
 function showAuth(){

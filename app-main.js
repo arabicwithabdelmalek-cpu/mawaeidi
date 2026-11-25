@@ -2220,8 +2220,8 @@ function occurrenceStatus(...args){return window.MawaeidiSessionState.occurrence
 function sessionStatusInfo(...args){return window.MawaeidiSessionState.sessionStatusInfo(...args)}
 function occurrenceIsInactive(...args){return window.MawaeidiSessionState.occurrenceIsInactive(...args)}
 function datedOccurrencesForDate(date,list=lessons){return window.MawaeidiSessionState.datedOccurrencesForDate(date,list)}
-function currentWeekOccurrences(list=filtered()){
-  return days.flatMap(day=>datedOccurrencesForDate(weekDateForDay(day),list));
+function currentWeekOccurrences(list=filtered(),anchor=selectedWeekAnchor()){
+  return days.flatMap(day=>datedOccurrencesForDate(weekDateForDay(day,anchor),list));
 }
 function sessionStatusButtonMarkup(occurrence){
   const info=sessionStatusInfo(occurrenceStatus(occurrence));
@@ -2358,23 +2358,23 @@ function renderNativeWeekChrome(){
   if(metricsButton)metricsButton.setAttribute("aria-pressed",String(nativeWeekMetricsVisible));
   return native;
 }
-function renderNativeWeekAgenda(occurrences){
+function renderNativeWeekAgenda(occurrences,anchor=selectedWeekAnchor(),today=todayName()){
   const mount=document.getElementById("nativeWeekAgenda");
   if(!mount||!window.MawaeidiNative?.isNative)return;
   mount.replaceChildren();
   const currentWeek=selectedWeekOffset===0;
   days.forEach(day=>{
-    const date=weekDateForDay(day);
+    const date=weekDateForDay(day,anchor);
     const items=occurrences.filter(item=>item.day===day);
     const activeCount=items.filter(item=>!occurrenceIsInactive(item)).length;
     const details=document.createElement("details");
     details.className="native-agenda-day";
-    if(currentWeek&&day===todayName())details.classList.add("is-today");
+    if(currentWeek&&day===today)details.classList.add("is-today");
     details.dataset.agendaDate=date;
     details.open=nativeWeekExpandedDays.has(date)?nativeWeekExpandedDays.get(date):items.length>0;
     details.addEventListener("toggle",()=>nativeWeekExpandedDays.set(date,details.open));
     const summary=document.createElement("summary");
-    summary.innerHTML=`<span class="native-agenda-heading"><strong>${esc(day)}</strong><small>${esc(formatSessionDate(date,true))}${currentWeek&&day===todayName()?" · اليوم":""}</small></span><span class="native-agenda-count">${activeCount?activeCount+" حصة":items.length?"لا توجد حصص نشطة":"لا توجد حصص"}</span><span class="native-agenda-chevron" aria-hidden="true"></span>`;
+    summary.innerHTML=`<span class="native-agenda-heading"><strong>${esc(day)}</strong><small>${esc(formatSessionDate(date,true))}${currentWeek&&day===today?" · اليوم":""}</small></span><span class="native-agenda-count">${activeCount?activeCount+" حصة":items.length?"لا توجد حصص نشطة":"لا توجد حصص"}</span><span class="native-agenda-chevron" aria-hidden="true"></span>`;
     details.appendChild(summary);
     const content=document.createElement("div");
     content.className="native-agenda-day-content";
@@ -2395,12 +2395,13 @@ function renderNativeWeekAgenda(occurrences){
       item.style.setProperty("--native-source-color",sourceColor(lesson));
       const meta=[lesson.subject,sourceLabel(lesson),lesson.platform,`${Number(lesson.duration)||60} دقيقة`]
         .filter(Boolean).map(esc).join(" · ");
+      const studentTime=studentTimeInline(occurrence);
       item.innerHTML=`
         <div class="native-agenda-clock">${esc(fmt(occurrence.time))}<small>بتوقيت مصر</small></div>
         <div class="native-agenda-lesson-copy">
           <h3>${esc(title)}</h3>
           <p>${meta}</p>
-          ${studentTimeInline(occurrence)?`<p class="native-agenda-student-time">${esc(studentTimeInline(occurrence))}</p>`:""}
+          ${studentTime?`<p class="native-agenda-student-time">${esc(studentTime)}</p>`:""}
           <div class="native-agenda-lesson-actions">
             <span class="native-agenda-kind ${typeClass}">${type}</span>
             ${sessionStatusButtonMarkup(occurrence)}
@@ -2450,8 +2451,8 @@ function shiftedWeekTime(time,deltaMinutes){
   return `${String(Math.floor(total/60)).padStart(2,"0")}:${String(total%60).padStart(2,"0")}`;
 }
 function fullDayWeekTimes(){return Array.from({length:24},(_,hour)=>`${String(hour).padStart(2,"0")}:00`)}
-function getWeekLayout(list=filtered()){
-  const occurrences=currentWeekOccurrences(list),occurrenceTimes=[...new Set(occurrences.map(o=>o.time))];
+function getWeekLayout(list=filtered(),anchor=selectedWeekAnchor()){
+  const occurrences=currentWeekOccurrences(list,anchor),occurrenceTimes=[...new Set(occurrences.map(o=>o.time))];
   let times=occurrenceTimes;
   if(weekTimeMode==="full")times=[...new Set([...fullDayWeekTimes(),...occurrenceTimes])];
   else if(expandedWeekTimes.size)times=[...new Set([...occurrenceTimes,...expandedWeekTimes])];
@@ -2635,13 +2636,14 @@ function appendWeekGapControl(grid,time){
   button.onclick=()=>revealWeekTime(time);gap.appendChild(button);grid.appendChild(gap);
 }
 function renderWeek(){
-  const list=filtered(),grid=document.getElementById("weekGrid"),legend=document.getElementById("sourceLegend"),layout=getWeekLayout(list),occ=layout.occurrences,tn=todayName();
+  const list=filtered(),grid=document.getElementById("weekGrid"),legend=document.getElementById("sourceLegend"),anchor=selectedWeekAnchor(),layout=getWeekLayout(list,anchor),occ=layout.occurrences,tn=todayName();
+  const dateByDay=new Map(days.map(day=>[day,weekDateForDay(day,anchor)]));
   const rangeLabel=document.getElementById("weekRangeLabel"),isCurrentWeek=selectedWeekOffset===0;
   if(rangeLabel)rangeLabel.textContent=`${selectedWeekRangeLabel()}${isCurrentWeek?" · الأسبوع الحالي":""}`;
   renderWeekTimeModeChrome();renderWeekDensityChrome();renderWeekSmartSummary(occ);
   const nativeWeek=renderNativeWeekChrome();
   if(nativeWeek){
-    renderNativeWeekAgenda(occ);
+    renderNativeWeekAgenda(occ,anchor,tn);
     grid.replaceChildren();
     grid.removeAttribute("aria-rowcount");grid.removeAttribute("aria-colcount");
     return;
@@ -2670,7 +2672,7 @@ function renderWeek(){
   corner.className="week-corner";corner.setAttribute("role","columnheader");corner.textContent="الوقت";
   head.appendChild(corner);
   days.forEach(day=>{
-    const count=occ.filter(o=>o.day===day&&!occurrenceIsInactive(o)).length,date=weekDateForDay(day);
+    const count=occ.filter(o=>o.day===day&&!occurrenceIsInactive(o)).length,date=dateByDay.get(day);
     const cell=document.createElement("div");
     cell.className="week-day-head"+(isCurrentWeek&&day===tn?" today":"");cell.setAttribute("role","columnheader");
     cell.innerHTML=`<span class="count">${count}</span><span class="week-day-label"><span>${day}</span><small>${esc(formatSessionDate(date,true))}</small></span>`;
@@ -2684,18 +2686,19 @@ function renderWeek(){
   }
 
   times.forEach((time,timeIndex)=>{
+    const timeLabel=fmt(time);
     const row=document.createElement("div");
     row.className="week-grid-row";row.setAttribute("role","row");row.dataset.weekTime=time;
     const timeCell=document.createElement("div");
-    timeCell.className="week-time-label";timeCell.setAttribute("role","rowheader");timeCell.dataset.weekTime=time;timeCell.textContent=fmt(time);
+    timeCell.className="week-time-label";timeCell.setAttribute("role","rowheader");timeCell.dataset.weekTime=time;timeCell.textContent=timeLabel;
     row.appendChild(timeCell);
     days.forEach(day=>{
       const items=layout.slots.get(`${time}|${day}`)||[];
       const slot=document.createElement("div");
       slot.className="week-slot"+(isCurrentWeek&&day===tn?" today":"")+(items.length?"":" is-empty");
-      slot.dataset.weekDay=day;slot.dataset.weekTime=time;slot.dataset.weekDate=weekDateForDay(day);
+      slot.dataset.weekDay=day;slot.dataset.weekTime=time;slot.dataset.weekDate=dateByDay.get(day);
       slot.setAttribute("role","cell");
-      slot.setAttribute("aria-label",items.length?`${day}، ${fmt(time)}، ${items.length} حصة`:`${day}، ${fmt(time)}، فارغ`);
+      slot.setAttribute("aria-label",items.length?`${day}، ${timeLabel}، ${items.length} حصة`:`${day}، ${timeLabel}، فارغ`);
       slot.ondragover=e=>{if(!draggedWeekContext)return;e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="move";slot.classList.add("drag-over")};
       slot.ondragleave=e=>{if(!slot.contains(e.relatedTarget))slot.classList.remove("drag-over")};
       slot.ondrop=e=>{e.preventDefault();slot.classList.remove("drag-over");if(draggedWeekContext)openWeekMoveDialog(draggedWeekContext,day,time)};
@@ -2703,7 +2706,7 @@ function renderWeek(){
         const add=document.createElement("button");
         add.type="button";
         add.className="quick-add-slot";
-        add.setAttribute("aria-label",`إضافة حصة يوم ${day} الساعة ${fmt(time)}`);
+        add.setAttribute("aria-label",`إضافة حصة يوم ${day} الساعة ${timeLabel}`);
         add.innerHTML='<span><b aria-hidden="true">＋</b> إضافة</span>';
         add.onclick=()=>openQuickAdd(day,time);
         slot.appendChild(add);
@@ -2711,10 +2714,11 @@ function renderWeek(){
       items.forEach(o=>{
         const l=o.lesson,kind=l.type==="teach"?"أُدرِّس":"أدرس",src=sourceLabel(l),srcColor=sourceColor(l);
         const details=[`${l.duration} دقيقة`,l.subject,l.platform].filter(Boolean).map(esc).join(" · ");
+        const studentTime=studentTimeInline(o);
         const card=document.createElement("article");
         card.className=`week-card ${l.type}${occurrenceIsInactive(o)?" session-inactive":""}`;card.style.setProperty("--source-color",srcColor);
         card.setAttribute("role","button");card.setAttribute("tabindex","0");
-        card.setAttribute("aria-label",`${kind}: ${l.name||"بدون اسم"}، ${day} ${fmt(time)}، ${src}`);
+        card.setAttribute("aria-label",`${kind}: ${l.name||"بدون اسم"}، ${day} ${timeLabel}، ${src}`);
         card.innerHTML=`
           <div class="week-card-top">
             <span class="week-kind ${l.type}">${kind}</span>
@@ -2725,8 +2729,8 @@ function renderWeek(){
           </div>
           <div class="week-name">${esc(l.name||"بدون اسم")}</div>
           <div class="week-meta">${details}</div>
-          ${studentTimeInline(o)?`<div class="week-student-time">${esc(studentTimeInline(o))}</div>`:""}
-          <div class="week-status-row"><div class="week-source"><i class="source-line" aria-hidden="true"></i>${esc(src)}</div>${sessionStatusButtonMarkup(o)}</div>`;
+          ${studentTime?`<div class="week-student-time">${esc(studentTime)}</div>`:""}
+          <div class="week-status-row${o.kind==="replacement"?" is-replacement":""}"><div class="week-source"><i class="source-line" aria-hidden="true"></i>${esc(src)}</div>${sessionStatusButtonMarkup(o)}</div>`;
         const moveContext={lessonId:l.id,date:o.date,time:o.time,day:o.day,kind:o.kind||"base",recordId:o.recordId||""};
         card.onclick=()=>openEdit(l.id);
         card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit(l.id)}};

@@ -48,7 +48,7 @@ assert.match(fix,/returning \* into archived/);
 
 // Exercise account-aware read helpers with the code shipped to browsers.
 const start=appMain.indexOf("function legacyWorldClockSnapshot(){");
-const stop=appMain.indexOf("function worldClockState(hour){",start);
+const stop=appMain.indexOf("function worldClockState(",start);
 assert.ok(start>0&&stop>start);
 const code=appMain.slice(start,stop);
 const local=new Map();

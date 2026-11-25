@@ -1,0 +1,3 @@
+# Student data security review — 2026-11-25
+
+Production read-only audit confirmed owner-only student and history RLS, a login_password column, and 4 of 29 history rows containing that JSON key. No secret values were read. This branch removes password fields from CSV exports and hides legacy credential history values; ZIP backups remain compatible and unencrypted with explicit warning. The SQL draft is not a migration and must be tested against a disposable schema before applying. It is intended to preserve all other history fields and original student credentials. Android port is pending. Existing CSV files and backups are not retroactively protected.

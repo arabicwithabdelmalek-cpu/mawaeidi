@@ -40,7 +40,7 @@ assert.match(photoPolicy,/s\.photo_path=storage\.objects\.name/);
 assert.match(photoPolicy,/after update of photo_path/);
 assert.match(js,/Detached student photo queued for cleanup/);
 assert.match(sw,/CACHE_NAME=CACHE_PREFIX\+"v[1-9]\d*"/);
-assert.match(sw,/student-registry\.js\?v=17/);
+assert.match(sw,/student-registry\.js\?v=18/);
 const fnText=js.match(/function isTrashExpired\(student\)\{[\s\S]*?\n\}/)[0];
 const expired=new Function("TRASH_RETENTION_MS",fnText+"; return isTrashExpired;")(30*24*60*60*1000);
 assert.equal(expired({deleted_at:new Date(Date.now()-31*86400000).toISOString()}),true);

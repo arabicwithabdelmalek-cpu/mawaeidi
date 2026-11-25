@@ -26,5 +26,11 @@ for(const saved of [false,true]){
 assert.match(read("scripts/prepare-mobile.mjs"),/"schedule-concurrency\.js"/);
 assert.match(read("index.html"),/schedule-concurrency\.js\?v=1/);
 assert.match(read("android/app/src/main/java/com/abdelmalek/mawaeidi/MawaeidiMobilePlugin.java"),/Intent\.ACTION_CREATE_DOCUMENT/);
-console.log("Native draft cancellation and successful save checks passed.");
+const html=read("index.html"),worker=read("sw.js");
+for(const name of ["app-main.js","schedule-concurrency.js"]){
+ const asset=html.split('"').find(x=>x.startsWith("./"+name+"?v="));
+ assert.ok(asset,"Missing versioned script "+name);
+ assert.ok(worker.includes(JSON.stringify(asset)),"Cached asset must match script: "+asset);
+}
+console.log("Native draft cancellation, successful save and asset consistency checks passed.");
 })().catch(e=>{console.error(e);process.exitCode=1});

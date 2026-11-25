@@ -93,7 +93,8 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
     ensureAccount();makeControls();
     refreshSelect("swGroup","study_group",group);refreshSelect("swInstitute","institute",institute);
     const visibleIds=new Set(visible.map(s=>s.id));
-    for(const id of [...selected])if(!allStudents().some(s=>s.id===id))selected.delete(id);
+    const activeIds=new Set(allStudents().map(s=>s.id));
+    for(const id of [...selected])if(!activeIds.has(id))selected.delete(id);
     if(!getTrashMode()&&selectionMode){
       const rows=$("studentRows")?.children||[];
       for(let i=0;i<rows.length;i++){
@@ -123,9 +124,10 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
     const {data,error}=await cloud.from(FOLLOWUPS_TABLE).select("student_id,due_on").eq("user_id",uid).lte("due_on",today).is("done_at",null).order("due_on",{ascending:true}).limit(100);
     if(uid!==getUser()?.id||!slot)return;
     if(error||!(data||[]).length){slot.hidden=true;return}
-    const valid=(data||[]).filter(item=>allStudents().some(student=>student.id===item.student_id));
+    const activeById=new Map(allStudents().map(student=>[student.id,student]));
+    const valid=(data||[]).filter(item=>activeById.has(item.student_id));
     if(!valid.length){slot.hidden=true;return}
-    const first=allStudents().find(student=>student.id===valid[0].student_id);
+    const first=activeById.get(valid[0].student_id);
     slot.replaceChildren();
     const text=document.createElement("span");
     text.textContent="لديك "+valid.length+" متابعة مستحقة حتى اليوم.";
@@ -258,7 +260,7 @@ function create({root,cloud,getStudents,getUser,getActiveStudentId,getTrashMode,
     await loadFollowups(student.id);void onCloudLoaded();
   }
   async function bulkChange(field,value){
-    const uid=getUser()?.id,ids=[...selected].filter(id=>allStudents().some(s=>s.id===id));
+    const uid=getUser()?.id,activeIds=new Set(allStudents().map(s=>s.id)),ids=[...selected].filter(id=>activeIds.has(id));
     if(!uid||!ids.length){show("حدّد طالبًا واحدًا على الأقل.",true);return}
     if(!value){show("اختر قيمة أولًا.",true);return}
     if(!confirm("تطبيق "+(field==="status"?"الحالة":"المجموعة")+" على "+ids.length+" طالب؟"))return;

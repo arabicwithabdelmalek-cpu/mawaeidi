@@ -44,7 +44,7 @@ async function main(){
   assert.match(html,/ملف ZIP غير مشفّر/);
   assert.match(fs.readFileSync(path.join(root,"app-main.js"),"utf8"),/قد تحتوي النسخة على كلمات سر الطلاب المحفوظة/);
   assert.match(html,/دمج البيانات دون حذف الموجود/);
-  assert.match(html,/backup-manager\.js\?v=2/);
+  assert.match(html,/backup-manager\.js\?v=3/);
   assert.match(html,/student-registry\.js\?v=20/);
   assert.doesNotMatch(html,/id="backupStudents"/);
   assert.match(students,/createBackupSnapshot/);
@@ -52,7 +52,7 @@ async function main(){
   assert.match(students,/restoreBackupSnapshot/);
   assert.doesNotMatch(students,/exportStudentsBackup/);
   assert.match(worker,/CACHE_NAME=CACHE_PREFIX\+"v[1-9]\d*"/);
-  assert.match(worker,/backup-manager\.js\?v=2/);
+  assert.match(worker,/backup-manager\.js\?v=3/);
 
   console.log("Full backup and restore checks passed.");
 }

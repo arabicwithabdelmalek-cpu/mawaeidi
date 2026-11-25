@@ -1,14 +1,14 @@
 const CACHE_PREFIX="mawaeidi-shell-";
-const CACHE_NAME=CACHE_PREFIX+"v88";
+const CACHE_NAME=CACHE_PREFIX+"v89";
 const APP_SHELL=[
   "./",
   "./index.html",
   "./students/index.html",
   "./students/student-registry.css?v=14",
   "./students/student-workspace-upgrade.css?v=1",
-  "./backup-manager.js?v=1",
+  "./backup-manager.js?v=2",
   "./schedule-concurrency.js?v=1",
-  "./app-main.js?v=11",
+  "./app-main.js?v=12",
   "./iphone-pwa.js?v=1",
   "./iphone-pwa.css?v=1",
   "./ipad-pwa.js?v=1",

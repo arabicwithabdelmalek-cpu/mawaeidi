@@ -35,10 +35,10 @@ const build=new Function("deps",[
   "const console={error:()=>{}};",
   "const cloneBackupValue=value=>JSON.parse(JSON.stringify(value));",
   "const setSync=(state,message)=>deps.sync.push([state,message]);",
-  "const showScheduleConflict=()=>{deps.conflicts++};",
+  "const showScheduleConflict=()=>{deps.conflicts++;deps.sync.push(['error',pendingScheduleConflict?.reason==='guard_unavailable'?'حماية التعارض غير مفعّلة':'مراجعة المسودة'])};",
   "const queueNativeAlarmSync=()=>{deps.alarmSync=(deps.alarmSync||0)+1};",
   source,
-  "return {persist,getState:()=>({lessons,lastCloudLessons,lastCloudUpdatedAt,pendingScheduleConflict,saveInFlight})};"
+  "return {persist,changeOwner:()=>{currentUser={id:'other-user'};sessionSequence++;pendingScheduleConflict=null},getState:()=>({lessons,lastCloudLessons,lastCloudUpdatedAt,pendingScheduleConflict,saveInFlight})};"
 ].join("\n"));
 function setup(opts){
  const deps={
@@ -94,7 +94,28 @@ async function main(){
  assert.equal(await missing.model.persist(),false);
  assert.equal(JSON.stringify(missing.model.getState().lastCloudLessons),JSON.stringify(base));
  assert.ok(missing.deps.sync.some(([state,label])=>state==="error"&&label.includes("غير مفعّلة")));
- assert.ok(missing.deps.alerts.length===1);
- console.log("Schedule browser persist success, conflict, reentrancy and RPC-missing tests passed");
+ assert.equal(missing.model.getState().pendingScheduleConflict.reason,"guard_unavailable");
+ assert.deepEqual(missing.model.getState().pendingScheduleConflict.draft,edit);
+ let retries=0;
+ const failed=setup({expected:base,lessons:edit,cloud:{async rpc(){retries++;throw new Error("Network disconnected")}}});
+ assert.equal(await failed.model.persist(),false);
+ assert.equal(failed.model.getState().pendingScheduleConflict.reason,"unconfirmed");
+ assert.deepEqual(failed.model.getState().pendingScheduleConflict.draft,edit);
+ assert.deepEqual(failed.model.getState().lastCloudLessons,base);
+ assert.equal(failed.model.getState().pendingScheduleConflict.downloaded,false);
+ assert.equal(await failed.model.persist(),false);
+ assert.equal(retries,1,"Network failure must not cause automatic retries or stale writes");
+ assert.equal(failed.deps.alarmSync,undefined,"Unconfirmed saves must not update native alarms");
+ let rejectRequest;
+ const switched=setup({expected:base,lessons:edit,cloud:{rpc(){return new Promise((_,reject)=>{rejectRequest=reject})}}});
+ const waiting=switched.model.persist();
+ switched.model.changeOwner();
+ rejectRequest(new Error("Network disconnected"));
+ assert.equal(await waiting,false);
+ assert.equal(switched.model.getState().pendingScheduleConflict,null,"Never expose the previous account draft after account switch");
+ assert.equal(switched.deps.conflicts,0);
+ assert.match(app,/if\(pendingScheduleConflict&&state==="saved"\)/);
+ assert.match(app,/if\(saveInFlight\|\|\(pendingScheduleConflict&&!pendingScheduleConflict.downloaded\)\)/);
+ console.log("Schedule browser persist success, conflict, reentrancy, network failure, account switch and RPC-missing tests passed");
 }
 main().catch(e=>{console.error(e);process.exitCode=1});

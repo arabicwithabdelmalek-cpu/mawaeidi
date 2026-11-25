@@ -1,4 +1,4 @@
-const CACHE_NAME="mawaeidi-shell-v82";
+const CACHE_NAME="mawaeidi-shell-v83";
 const APP_SHELL=[
   "./",
   "./index.html",
@@ -11,7 +11,7 @@ const APP_SHELL=[
   "./world-clock-model.js?v=1",
   "./app-main.js?v=18",
   "./schedule-concurrency.js?v=1",
-  "./students/student-registry.js?v=17",
+  "./students/student-registry.js?v=18",
   "./account.js?v=1",
   "./account-page.js?v=6",
   "./day-order.js?v=2",

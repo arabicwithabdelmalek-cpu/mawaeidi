@@ -50,77 +50,10 @@ function makeId(){
 }
 function textValue(value){return typeof value==="string"?value:""}
 function validTimeZone(...args){return window.MawaeidiScheduleTime.validTimeZone(...args)}
-function normalizeNotificationLeads(value,fallback=DEFAULT_NOTIFICATION_LEADS){
-  const values=Array.isArray(value)?value:[value];
-  const normalized=[...new Set(values.map(Number).filter(item=>NOTIFICATION_LEAD_OPTIONS.includes(item)))].sort((a,b)=>b-a).slice(0,MAX_NOTIFICATION_LEADS);
-  if(normalized.length)return normalized;
-  const safeFallback=Array.isArray(fallback)?fallback:[fallback];
-  return [...new Set(safeFallback.map(Number).filter(item=>NOTIFICATION_LEAD_OPTIONS.includes(item)))].sort((a,b)=>b-a).slice(0,MAX_NOTIFICATION_LEADS);
-}
-function normalizeSessionRecords(value){
-  const records=[],ids=new Set(),baseKeys=new Set();
-  for(const item of (Array.isArray(value)?value:[]).slice(0,MAX_SESSION_RECORDS)){
-    if(!item||typeof item!=="object")continue;
-    const kind=item.kind==="replacement"?"replacement":"base",date=textValue(item.date),time=textValue(item.time);
-    if(!validDateKey(date)||!TIME_RE.test(time))continue;
-    let status=SESSION_RECORD_STATUSES.includes(item.status)?item.status:"default";
-    const note=textValue(item.note).trim().slice(0,MAX_SESSION_NOTE_LENGTH);
-    if(kind==="base"&&status==="default"&&!note)continue;
-    if(kind==="replacement"&&status==="rescheduled")status="default";
-    const sourceDate=textValue(item.sourceDate),sourceTime=textValue(item.sourceTime);
-    if(kind==="replacement"&&(!validDateKey(sourceDate)||!TIME_RE.test(sourceTime)))continue;
-    const baseKey=`${date}|${time}`;
-    if(kind==="base"&&baseKeys.has(baseKey))continue;
-    let id=textValue(item.id);
-    if(!/^[A-Za-z0-9_-]{1,120}$/.test(id))id=kind==="base"?`base-${date}-${time.replace(":","")}`:makeId();
-    while(ids.has(id))id=makeId();
-    ids.add(id);
-    if(kind==="base")baseKeys.add(baseKey);
-    const record={id,kind,date,time,status,updatedAt:textValue(item.updatedAt)||new Date().toISOString()};
-    if(note)record.note=note;
-    if(kind==="base"&&status==="rescheduled"&&/^[A-Za-z0-9_-]{1,120}$/.test(textValue(item.replacementId)))record.replacementId=textValue(item.replacementId);
-    if(kind==="replacement"){record.sourceDate=sourceDate;record.sourceTime=sourceTime}
-    records.push(record);
-  }
-  const replacementIds=new Set(records.filter(item=>item.kind==="replacement").map(item=>item.id));
-  const linkedReplacementIds=new Set(records.filter(item=>item.kind==="base"&&item.status==="rescheduled"&&replacementIds.has(item.replacementId)).map(item=>item.replacementId));
-  return records.filter(item=>item.kind==="base"?(item.status!=="rescheduled"||linkedReplacementIds.has(item.replacementId)):linkedReplacementIds.has(item.id));
-}
-function normalizeLesson(item){
-  const duration=Number(item.duration);
-  const id=textValue(item.id);
-  const reminderMode=item.reminderMode==="off"||item.reminderMode==="custom"?item.reminderMode:"default";
-  return {
-    id:/^[A-Za-z0-9_-]{1,120}$/.test(id)?id:makeId(),
-    type:item.type==="learn"?"learn":"teach",
-    studentType:item.studentType==="group"?"group":"individual",
-    lessonSource:item.lessonSource==="center"?"center":"private",
-    name:textValue(item.name),
-    groupStudents:Array.isArray(item.groupStudents)?item.groupStudents.filter(x=>typeof x==="string"&&x.trim()).map(x=>x.trim()):[],
-    studentTimeZone:validTimeZone(item.studentTimeZone)?textValue(item.studentTimeZone).trim():"",
-    centerName:textValue(item.centerName),
-    subject:textValue(item.subject),
-    duration:Number.isFinite(duration)&&duration>=15&&duration<=720?duration:60,
-    platform:textValue(item.platform),
-    repeat:"أسبوعيًا",
-    reminderMode,
-    reminderLeads:normalizeNotificationLeads(item.reminderLeads,[DEFAULT_NOTIFICATION_LEAD]),
-    notes:textValue(item.notes),
-    sessionRecords:normalizeSessionRecords(item.sessionRecords),
-    schedules:Array.isArray(item.schedules)?item.schedules
-      .filter(s=>s&&days.includes(s.day)&&TIME_RE.test(textValue(s.time)))
-      .map(s=>({day:s.day,time:s.time})):[]
-  };
-}
-function normalizeLessons(list){
-  const seen=new Set();
-  return (Array.isArray(list)?list:[]).filter(item=>item&&typeof item==="object").map(item=>{
-    const lesson=normalizeLesson(item);
-    while(seen.has(lesson.id))lesson.id=makeId();
-    seen.add(lesson.id);
-    return lesson;
-  });
-}
+function normalizeNotificationLeads(...args){return window.MawaeidiLessonModel.normalizeNotificationLeads(...args)}
+function normalizeSessionRecords(...args){return window.MawaeidiLessonModel.normalizeSessionRecords(...args)}
+function normalizeLesson(...args){return window.MawaeidiLessonModel.normalizeLesson(...args)}
+function normalizeLessons(...args){return window.MawaeidiLessonModel.normalizeLessons(...args)}
 function validDateKey(...args){return window.MawaeidiScheduleTime.validDateKey(...args)}
 function loadLocalLessons(){
   try{
@@ -194,10 +127,7 @@ function closeDataMenu(restoreFocus=false){
 function isStandalone(){return window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone===true}
 function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||"")||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)}
 function vapidKeyIsConfigured(){return VAPID_PUBLIC_KEY&&!VAPID_PUBLIC_KEY.startsWith("__")}
-function validNotificationLead(value){
-  const lead=Number(value);
-  return NOTIFICATION_LEAD_OPTIONS.includes(lead)?lead:DEFAULT_NOTIFICATION_LEAD;
-}
+function validNotificationLead(...args){return window.MawaeidiLessonModel.validNotificationLead(...args)}
 function savedNotificationLeads(){
   try{
     const stored=localStorage.getItem(NOTIFICATION_LEADS_KEY);
@@ -1179,41 +1109,14 @@ async function applyBackupSettings(settings){
   renderWeek();
   if(currentSection==="world")openWorldClock();
 }
-function parseScheduleBackupObject(obj){
-  let source;
-  if(Array.isArray(obj))source=obj;
-  else if(obj&&obj.format===BACKUP_FORMAT&&[1,2,BACKUP_VERSION].includes(obj.version)&&Array.isArray(obj.lessons))source=obj.lessons;
-  else if(obj&&obj.format==="mawaeidi-schedule"&&obj.version===1&&Array.isArray(obj.lessons))source=obj.lessons;
-  else throw new Error("invalid_schedule_backup");
-  if(source.length>MAX_BACKUP_LESSONS)throw new Error("too_many_lessons");
-  if(source.some(item=>!item||typeof item!=="object"||Array.isArray(item)))throw new Error("invalid_lesson");
-  const normalized=normalizeLessons(source);
-  if(normalized.some(item=>!item.schedules.length))throw new Error("invalid_schedule");
-  return normalized;
-}
+function parseScheduleBackupObject(...args){return window.MawaeidiLessonModel.parseScheduleBackupObject(...args)}
 function parseBackupText(rawText){
   const clean=textValue(rawText).replace(/^\uFEFF/,"");
   let obj;
   try{obj=JSON.parse(clean)}catch{throw new Error("invalid_json")}
   return parseScheduleBackupObject(obj);
 }
-function mergeBackupLessons(current,incoming){
-  const merged=normalizeLessons(current);
-  const positions=new Map(merged.map((lesson,index)=>[lesson.id,index]));
-  let added=0;
-  let updated=0;
-  for(const lesson of incoming||[]){
-    if(positions.has(lesson.id)){
-      merged[positions.get(lesson.id)]=cloneBackupValue(lesson);
-      updated++;
-    }else{
-      positions.set(lesson.id,merged.length);
-      merged.push(cloneBackupValue(lesson));
-      added++;
-    }
-  }
-  return {lessons:normalizeLessons(merged),added,updated};
-}
+function mergeBackupLessons(...args){return window.MawaeidiLessonModel.mergeBackupLessons(...args)}
 function fullBackupFilename(prefix="mawaeidi-full-backup"){
   const stamp=new Date().toISOString().replace(/[:.]/g,"-").slice(0,19);
   return `${prefix}-${stamp}.zip`;

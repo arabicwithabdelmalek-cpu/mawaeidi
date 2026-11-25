@@ -52,8 +52,8 @@ async function main(){
   assert.match(app,/pendingBackupRestorePlan!==plan/);
   assert.match(app,/password===null\?result\.blob:await window\.MawaeidiBackup\.encryptBackup/);
   assert.match(app,/تم إلغاء الاستعادة/);
-  assert.match(html,/backup-manager\.js\?v=2/);
-  assert.match(sw,/backup-manager\.js\?v=2/);
+  assert.match(html,/backup-manager\.js\?v=3/);
+  assert.match(sw,/backup-manager\.js\?v=3/);
   assert.doesNotThrow(()=>new Function(app));
   console.log("Encrypted backup round trip, randomization, wrong password, tampering and legacy compatibility passed.");
 }

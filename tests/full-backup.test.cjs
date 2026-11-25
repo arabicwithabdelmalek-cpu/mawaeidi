@@ -45,7 +45,7 @@ async function main(){
   assert.match(fs.readFileSync(path.join(root,"app-main.js"),"utf8"),/قد تحتوي النسخة على كلمات سر الطلاب المحفوظة/);
   assert.match(html,/دمج البيانات دون حذف الموجود/);
   assert.match(html,/backup-manager\.js\?v=2/);
-  assert.match(html,/student-registry\.js\?v=19/);
+  assert.match(html,/student-registry\.js\?v=20/);
   assert.doesNotMatch(html,/id="backupStudents"/);
   assert.match(students,/createBackupSnapshot/);
   assert.match(students,/inspectBackupSnapshot/);

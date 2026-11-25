@@ -453,7 +453,7 @@ function makeQuickContact(label,url,kind,student){
 function studentInitials(student){
   return [student.first_name,student.last_name].filter(Boolean).map(value=>text(value).trim().charAt(0)).join("").slice(0,2)||"ط";
 }
-function setAvatarContent(element,student,url=student?.photo_url){
+function setAvatarContent(element,student,url=student?.photo_url,{lazy=false}={}){
   element.replaceChildren();
   const photoUrl=safePhotoUrl(url);
   const fallback=()=>{
@@ -463,10 +463,12 @@ function setAvatarContent(element,student,url=student?.photo_url){
   };
   if(!photoUrl){fallback();return}
   const image=document.createElement("img");
-  image.src=photoUrl;
   image.alt="";
-  image.addEventListener("error",fallback,{once:true});
+  image.decoding="async";
+  if(lazy)image.loading="lazy";
+  image.addEventListener("error",()=>{if(image.parentNode===element)fallback()},{once:true});
   element.append(image);
+  image.src=photoUrl;
 }
 function validateStudentPhotoFile(file){
   if(!file)return "اختر صورة أولًا.";
@@ -662,7 +664,7 @@ function renderStudents(){
       open.type="button";open.dataset.action="view";open.dataset.id=student.id;
       open.setAttribute("aria-label",`عرض بيانات ${studentName(student)}`);
     }
-    const avatar=document.createElement("span");avatar.className="student-avatar";avatar.setAttribute("aria-hidden","true");setAvatarContent(avatar,student);
+    const avatar=document.createElement("span");avatar.className="student-avatar";avatar.setAttribute("aria-hidden","true");setAvatarContent(avatar,student,student.photo_url,{lazy:true});
     const identity=document.createElement("span");identity.className="student-identity";
     const name=document.createElement("strong");name.className="student-name";name.textContent=studentName(student);
     identity.append(name);

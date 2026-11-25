@@ -17,6 +17,7 @@ const rootFiles = [
   "native-bridge.js",
   "schedule-concurrency.js",
   "schedule-time.js",
+  "lesson-model.js",
   "sw.js"
 ];
 

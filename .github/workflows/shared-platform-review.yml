@@ -1,0 +1,48 @@
+name: Shared platform drift review
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'config/shared-platform-files.json'
+      - 'scripts/check-shared-platform-files.mjs'
+      - 'tests/shared-platform-files.test.mjs'
+      - '.github/workflows/shared-platform-review.yml'
+      - '**/*.js'
+      - '**/*.cjs'
+      - 'icons/**'
+      - 'manifest.webmanifest'
+      - 'students/index.html'
+  push:
+    branches: [main, feature/shared-platform-foundation-20261125]
+  workflow_dispatch:
+    inputs:
+      strict:
+        description: 'Fail if any shared file differs from Android'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: web
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: android-app
+          path: android
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test drift detector
+        run: node web/tests/shared-platform-files.test.mjs
+      - name: Compare shared files (report only during staged porting)
+        if: ${{ inputs.strict != true }}
+        run: node web/scripts/check-shared-platform-files.mjs web android
+      - name: Enforce exact shared-file parity
+        if: ${{ inputs.strict == true }}
+        run: node web/scripts/check-shared-platform-files.mjs web android --strict

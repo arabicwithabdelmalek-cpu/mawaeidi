@@ -161,6 +161,7 @@ let sessionSequence=0;
 let loadingUserId=null;
 let recoveryUser=null;
 let lastCloudUpdatedAt=null;
+let lastCloudLessons=null;
 let realtimeChannel=null;
 let refreshInFlight=false;
 let saveInFlight=false;
@@ -177,6 +178,7 @@ function showBackupStatus(message,{error=false,persistent=false}={}){
 }
 let pendingBackupRestorePlan=null;
 let pendingRemoteRow=null;
+let pendingScheduleConflict=null;
 let lastAutoRefreshAt=0;
 let deferredInstallPrompt=null;
 let serviceWorkerRegistration=null;
@@ -982,6 +984,7 @@ async function openHistory(){
   }
 }
 async function restoreHistory(id,button){
+ if(!scheduleWriteAllowed())return;
  const snapshot=historySnapshots.get(String(id));
  if(!snapshot||!Array.isArray(snapshot.before_lessons))return;
  if(!confirm("ستعود المواعيد إلى حالتها قبل هذا التغيير. وسيُسجَّل الاسترجاع نفسه في السجل. هل تريد المتابعة؟"))return;
@@ -1466,7 +1469,7 @@ async function importBackup(event){
 }
 async function confirmBackupRestore(){
   const plan=pendingBackupRestorePlan;
-  if(!plan||backupInFlight||!currentUser||!cloudReady)return;
+  if(!plan||backupInFlight||!currentUser||!cloudReady||!scheduleWriteAllowed())return;
   const button=document.getElementById("confirmBackupRestore");
   if(button){button.disabled=true;button.textContent="جارٍ إنشاء نسخة الأمان…"}
   backupInFlight=true;
@@ -1548,6 +1551,73 @@ function setSync(state,message){
   box.setAttribute("aria-label",`${message}؛ اضغط لتحديث المواعيد من السحابة`);
 }
 function isDrawerVisible(){return document.getElementById("drawer").classList.contains("show")||Boolean(document.querySelector("#toolBackdrop.show .session-status-form"))}
+function showScheduleConflict(){
+  if(!pendingScheduleConflict)return;
+  const layer=document.getElementById("scheduleConflictLayer");
+  if(layer){layer.hidden=false;layer.querySelector("#scheduleConflictDownload")?.focus({preventScroll:true})}
+  setSync("error","تعارض في تعديلات الجدول");
+}
+function dismissScheduleConflict(){
+  const layer=document.getElementById("scheduleConflictLayer");
+  if(layer)layer.hidden=true;
+  if(pendingScheduleConflict)setSync("error","تعارض محفوظ — اضغط للمراجعة");
+}
+function resetScheduleConflict(){
+  pendingScheduleConflict=null;
+  const layer=document.getElementById("scheduleConflictLayer");
+  if(layer)layer.hidden=true;
+  const button=document.getElementById("scheduleConflictRefresh");
+  if(button)button.disabled=true;
+  const hint=document.getElementById("scheduleConflictHint");
+  if(hint)hint.textContent="احفظ نسخة من تعديلك أولًا، ثم حمّل الجدول الأحدث من السحابة.";
+}
+function scheduleWriteAllowed(){
+  if(pendingScheduleConflict){showScheduleConflict();return false}
+  if(saveInFlight){alert("هناك عملية حفظ جارية. انتظر اكتمالها قبل تعديل الجدول مرة أخرى.");return false}
+  return true;
+}
+function downloadScheduleConflictDraft(){
+  const pending=pendingScheduleConflict;
+  if(!pending||pending.userId!==currentUser?.id)return;
+  try{
+    const data={format:"mawaeidi-schedule",version:1,lesson_count:pending.draft.length,
+      exported_at:new Date().toISOString(),lessons:cloneBackupValue(pending.draft)};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});
+    window.MawaeidiBackup.download(blob,fullBackupFilename("mawaeidi-unsaved-schedule").replace(/\.zip$/,".json"));
+    pending.downloaded=true;
+    const button=document.getElementById("scheduleConflictRefresh");
+    if(button)button.disabled=false;
+    const hint=document.getElementById("scheduleConflictHint");
+    if(hint)hint.textContent="تم تنزيل نسخة التعديلات غير المحفوظة. يمكنك الآن تحميل أحدث جدول من السحابة.";
+  }catch(error){
+    console.error("تعذّر تنزيل مسودة الجدول بعد التعارض.",error);
+    alert("تعذّر تنزيل النسخة. لا تحدّث الجدول قبل حفظ التعديلات غير المحفوظة.");
+  }
+}
+async function reloadScheduleAfterConflict(){
+  const pending=pendingScheduleConflict;
+  if(!pending||!pending.downloaded||pending.userId!==currentUser?.id||!cloud||!cloudReady)return;
+  const button=document.getElementById("scheduleConflictRefresh");
+  if(button)button.disabled=true;
+  try{
+    const {data,error}=await cloud.from("mawaeidi_data").select("user_id,lessons,updated_at")
+      .eq("user_id",pending.userId).maybeSingle();
+    if(error)throw error;
+    if(pending!==pendingScheduleConflict||currentUser?.id!==pending.userId)return;
+    if(data&&(data.user_id!==pending.userId||!Array.isArray(data.lessons)))throw new Error("invalid_remote_schedule");
+    const remote=data?.lessons||[];
+    resetScheduleConflict();
+    lessons=normalizeLessons(remote);
+    lastCloudLessons=data?cloneBackupValue(remote):null;
+    lastCloudUpdatedAt=textValue(data?.updated_at)||null;
+    closeDrawer();closeToolDialog();
+    render();setSync("saved","تم تحميل أحدث جدول");
+  }catch(error){
+    console.error("تعذّر تحميل الجدول بعد التعارض.",error);
+    setSync("error","تعذّر تحميل أحدث جدول");
+    alert("تعذّر التحديث. لا تزال التعديلات غير المحفوظة متاحة من نافذة التعارض.");
+  }finally{if(button&&pendingScheduleConflict===pending)button.disabled=false}
+}
 function remoteRowIsNewer(row){
   const remote=textValue(row?.updated_at);
   if(!remote)return !lastCloudUpdatedAt;
@@ -1557,15 +1627,16 @@ function remoteRowIsNewer(row){
   return remote!==lastCloudUpdatedAt;
 }
 function applyRemoteRow(row,message="تم تحديث المواعيد"){
-  if(!row||!currentUser||row.user_id!==currentUser.id||!Array.isArray(row.lessons)||!remoteRowIsNewer(row))return false;
+  if(pendingScheduleConflict||!row||!currentUser||row.user_id!==currentUser.id||!Array.isArray(row.lessons)||!remoteRowIsNewer(row))return false;
   lessons=normalizeLessons(row.lessons);
+  lastCloudLessons=cloneBackupValue(row.lessons);
   lastCloudUpdatedAt=textValue(row.updated_at)||lastCloudUpdatedAt;
   render();
   setSync("saved",message);
   return true;
 }
 function handleRemoteRow(row){
-  if(!row||!currentUser||row.user_id!==currentUser.id||saveInFlight||!remoteRowIsNewer(row))return;
+  if(pendingScheduleConflict||!row||!currentUser||row.user_id!==currentUser.id||saveInFlight||!remoteRowIsNewer(row))return;
   if(isDrawerVisible()){
     pendingRemoteRow=row;
     setSync("saving","تحديث جديد ينتظر");
@@ -1612,6 +1683,7 @@ function startRealtime(user){
     });
 }
 async function refreshFromCloud(silent=false){
+  if(pendingScheduleConflict){if(!silent)showScheduleConflict();return false}
   if(currentSection==="world"&&currentUser&&cloudReady)return refreshWorldClockFromCloud();
   if(currentSection==="students"&&currentUser&&cloudReady)return studentsWorkspace.refresh();
   if(!cloud||!currentUser||!cloudReady){
@@ -1750,7 +1822,9 @@ async function activateSession(user){
   if(loadingUserId===user.id)return;
   if(currentUser?.id===user.id&&cloudReady){if(!realtimeChannel)startRealtime(user);hideAuth();refreshNotificationMenuStatus();if(!worldClockSettings)initializeWorldClockForUser(user,sessionSequence).catch(error=>console.warn("Clock sync retry failed.",error));if(currentSection==="students")studentsWorkspace.activate(user);return}
   stopRealtime();
+  resetScheduleConflict();
   lastCloudUpdatedAt=null;
+  lastCloudLessons=null;
   loadingUserId=user.id;
   const sequence=++sessionSequence;
   resetStudentWorkspace();
@@ -1766,7 +1840,9 @@ async function activateSession(user){
       .maybeSingle();
     if(error)throw error;
     if(sequence!==sessionSequence)return;
+    if(data&&!Array.isArray(data.lessons))throw new Error("invalid_remote_schedule");
     lessons=normalizeLessons(data?.lessons||[]);
+    lastCloudLessons=data?cloneBackupValue(data.lessons):null;
     lastCloudUpdatedAt=textValue(data?.updated_at)||null;
     let needsInitialSave=!data;
 
@@ -1781,14 +1857,15 @@ async function activateSession(user){
     cloudReady=true;
     if(needsInitialSave){
       const saved=await persist(true);
-      if(!saved)throw new Error("initial cloud save failed");
+      if(!saved&&!pendingScheduleConflict)throw new Error("initial cloud save failed");
     }
     try{await initializeWorldClockForUser(user,sequence)}
     catch(error){console.warn("World clock settings could not be loaded.",error)}
     if(sequence!==sessionSequence||currentUser?.id!==user.id)return;
     render();
     hideAuth();
-    setSync("saved","محفوظ سحابيًا");
+    if(pendingScheduleConflict)showScheduleConflict();
+    else setSync("saved","محفوظ سحابيًا");
     startRealtime(user);
     refreshNotificationMenuStatus();
     if(currentSection==="students")await studentsWorkspace.activate(user);
@@ -1805,15 +1882,18 @@ async function activateSession(user){
 }
 async function logout(){
   if(!cloud)return;
+  if(saveInFlight){alert("انتظر انتهاء حفظ الجدول قبل تسجيل الخروج.");return}
+  if(pendingScheduleConflict&&!pendingScheduleConflict.downloaded){showScheduleConflict();return}
   closeDataMenu();
   await disableNotifications(true);
   const {error}=await cloud.auth.signOut();
   if(error){alert("تعذّر تسجيل الخروج. حاول مرة أخرى.");return}
   stopRealtime();
+  resetScheduleConflict();
   sessionSequence++;
   resetStudentWorkspace();
   resetWorldClockSync();
-  loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;lastCloudUpdatedAt=null;
+  loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;lastCloudUpdatedAt=null;lastCloudLessons=null;
   closeDrawer();closeToolDialog();render();showAuth();
   setAuthMessage("تم تسجيل الخروج.");
 }
@@ -1822,27 +1902,39 @@ async function persist(silent=false){
     if(!silent)alert("لم يكتمل الاتصال بحسابك بعد.");
     return false;
   }
+  if(pendingScheduleConflict){showScheduleConflict();return false}
+  if(saveInFlight){
+    if(!silent)alert("هناك عملية حفظ جارية. انتظر اكتمالها قبل أي تعديل آخر.");
+    return false;
+  }
+  const ownerId=currentUser.id,sequence=sessionSequence;
+  const draft=cloneBackupValue(lessons);
+  const expected=lastCloudLessons===null?null:cloneBackupValue(lastCloudLessons);
   saveInFlight=true;
   setSync("saving","جارٍ الحفظ");
   try{
-    const updatedAt=new Date().toISOString();
-    const {data,error}=await cloud.from("mawaeidi_data").upsert({
-      user_id:currentUser.id,
-      lessons,
-      updated_at:updatedAt
-    },{onConflict:"user_id"}).select("updated_at").single();
-    if(error)throw error;
-    lastCloudUpdatedAt=textValue(data?.updated_at)||updatedAt;
-    setSync("saved","تم الحفظ");
+    if(!window.MawaeidiScheduleSync)throw new Error("schedule_guard_unavailable");
+    const result=await window.MawaeidiScheduleSync.save(cloud,expected,draft);
+    if(sequence!==sessionSequence||currentUser?.id!==ownerId)return false;
+    if(result.status==="conflict"){
+      pendingScheduleConflict={userId:ownerId,draft,downloaded:false};
+      showScheduleConflict();
+      return false;
+    }
+    lastCloudLessons=cloneBackupValue(draft);
+    lastCloudUpdatedAt=result.updatedAt;
+    setSync("saved","تم الحفظ دون تعارض");
     return true;
   }catch(error){
-    console.error("تعذّر حفظ بيانات مواعيدي.",error);
-    setSync("error","لم يُحفظ");
-    if(!silent)alert("تعذّر حفظ البيانات سحابيًا. تحقق من اتصال الإنترنت وحاول مرة أخرى.");
+    console.error("تعذّر الحفظ المحمي لمواعيدي.",error);
+    const missing=/schedule_guard_unavailable|PGRST202|42883|function .* does not exist/i.test(
+      String(error?.code||"")+" "+String(error?.message||""));
+    setSync("error",missing?"حماية التعارض غير مفعّلة":"لم يُحفظ");
+    if(!silent)alert(missing?
+      "لم تُفعّل حماية التعارض بعد في قاعدة مواعيدي. لم يُحفظ التعديل.":
+      "تعذّر حفظ البيانات سحابيًا. لم نكتب فوق أي تعديل آخر. حاول مرة أخرى.");
     return false;
-  }finally{
-    saveInFlight=false;
-  }
+  }finally{saveInFlight=false}
 }
 function getOccurrences(list=lessons){
   return list.flatMap(l=>(Array.isArray(l.schedules)?l.schedules:[])
@@ -2188,6 +2280,7 @@ function lessonWithSessionStatus(lesson,context,status,newDate="",newTime="",not
   return normalizeLesson({...lesson,sessionRecords:records});
 }
 async function saveSessionStatus(button){
+  if(!scheduleWriteAllowed())return;
   const context=activeSessionContext,status=document.querySelector('input[name="sessionStatusChoice"]:checked')?.value;
   if(!context||!["automatic","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"].includes(status))return;
   let newDate="",newTime="",note=document.getElementById("sessionNote")?.value||"";
@@ -2705,6 +2798,7 @@ function openQuickAdd(day,time){
   openToolDialog("إضافة سريعة",`${safeDay} · ${fmt(safeTime)}`,content);setTimeout(()=>{document.getElementById("quickName")?.focus();updateQuickAddConflict()},0);
 }
 async function saveQuickAdd(button){
+  if(!scheduleWriteAllowed())return;
   const name=document.getElementById("quickName")?.value.trim()||"",candidate=quickAddCandidate();
   if(!name){alert("اكتب اسم الطالب أو عنوان الحصة.");document.getElementById("quickName")?.focus();return}
   if(!Number.isFinite(candidate.duration)||candidate.duration<15||candidate.duration>720){alert("اختر مدة صحيحة.");return}
@@ -2755,6 +2849,7 @@ function openWeekMoveDialog(context,presetDay,presetTime){
   openToolDialog("نقل الموعد",`${lesson.name||"بدون اسم"} · ${formatSessionDate(context.date)} · ${fmt(context.time)}`,content);activeWeekMoveContext={...context};setTimeout(updateWeekMoveConflict,0);
 }
 async function saveWeekMove(button){
+  if(!scheduleWriteAllowed())return;
   const context=activeWeekMoveContext;if(!context)return;
   const targetDay=document.getElementById("weekMoveDay")?.value,targetTime=document.getElementById("weekMoveTime")?.value,scope=document.querySelector('input[name="weekMoveScope"]:checked')?.value||"single",conflict=weekMoveConflict(context,targetDay,targetTime,scope);
   if(conflict){updateWeekMoveConflict();return}
@@ -2820,7 +2915,7 @@ function conflicts(candidate){
 }
 
 async function saveLesson(){
-  if(lessonSaveInFlight)return;
+  if(lessonSaveInFlight||!scheduleWriteAllowed())return;
   const st=document.getElementById("studentType").value;
   const src=document.getElementById("lessonSource").value;
   const existingLesson=editingId?lessons.find(item=>item.id===editingId):null;
@@ -2889,6 +2984,7 @@ function copyLessonById(id){
 }
 function copyLesson(){if(editingId)copyLessonById(editingId)}
 async function deleteLesson(){
+ if(!scheduleWriteAllowed())return;
  if(!editingId||!confirm("نقل هذه الحصة وكل مواعيدها إلى سلة المحذوفات لمدة 30 يومًا؟ يمكنك استعادتها لاحقًا."))return;
  const old=lessons;lessons=lessons.filter(l=>l.id!==editingId);
  if(!await persist()){lessons=old;return}
@@ -2910,7 +3006,24 @@ function keepToolDialogKeyboardFocus(event){
     event.preventDefault();first.focus({preventScroll:true});
   }
 }
+window.addEventListener("beforeunload",event=>{if(pendingScheduleConflict&&!pendingScheduleConflict.downloaded){event.preventDefault();event.returnValue="";}});
 document.addEventListener("keydown",e=>{
+  const conflictLayer=document.getElementById("scheduleConflictLayer");
+  if(conflictLayer&&!conflictLayer.hidden){
+    if(e.key==="Escape"){e.preventDefault();dismissScheduleConflict();return}
+    if(e.key==="Tab"){
+      const buttons=[...conflictLayer.querySelectorAll("button:not([disabled])")];
+      const first=buttons[0],last=buttons[buttons.length-1];
+      if(!first){e.preventDefault();return}
+      if(e.shiftKey&&(document.activeElement===first||!conflictLayer.contains(document.activeElement))){
+        e.preventDefault();last.focus();return;
+      }
+      if(!e.shiftKey&&(document.activeElement===last||!conflictLayer.contains(document.activeElement))){
+        e.preventDefault();first.focus();return;
+      }
+      return;
+    }
+  }
   if(e.key==="Tab")keepToolDialogKeyboardFocus(e);
   if(e.key==="Escape"){
     if(document.getElementById("toolBackdrop").classList.contains("show")){closeToolDialog();return}
@@ -2952,10 +3065,11 @@ async function initApp(){
     }else if(event==="SIGNED_OUT"){
       setTimeout(()=>{
         stopRealtime();
+        resetScheduleConflict();
         resetStudentWorkspace();
         resetWorldClockSync();
         sessionSequence++;loadingUserId=null;currentUser=null;cloudReady=false;lessons=[];editingId=null;
-        recoveryUser=null;lastCloudUpdatedAt=null;setAuthMode("signin");closeDrawer();closeToolDialog();updateNotificationMenuStatus(false);render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
+        recoveryUser=null;lastCloudUpdatedAt=null;lastCloudLessons=null;setAuthMode("signin");closeDrawer();closeToolDialog();updateNotificationMenuStatus(false);render();showAuth();setAuthMessage("سجّل الدخول للوصول إلى جدولك.");
       },0);
     }else if(event==="SIGNED_IN"&&session?.user&&authMode!=="update"){
       if(recoveryLinkDetected){enterPasswordUpdate(session.user);return}

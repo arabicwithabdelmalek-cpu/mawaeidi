@@ -153,6 +153,126 @@ public class MawaeidiMobilePlugin extends Plugin {
         });
     }
 
+    // Stream bounded chunks directly to the document selected by the user.
+    // No plaintext staging file and no passphrase are passed to native code.
+    private static final int BACKUP_CHUNK_BYTES = 256 * 1024;
+    private static final int MAX_BACKUP_BYTES = 256 * 1024 * 1024 + 53;
+    private final java.util.concurrent.atomic.AtomicBoolean backupPicking = new java.util.concurrent.atomic.AtomicBoolean();
+    private OutputStream backupOutput;
+    private String backupToken;
+    private int backupExpected;
+    private int backupWritten;
+
+    private void clearBackupOutput() {
+        if (backupOutput != null) {
+            try { backupOutput.close(); } catch (Exception ignored) {}
+        }
+        backupOutput = null;
+        backupToken = null;
+        backupExpected = 0;
+        backupWritten = 0;
+        backupPicking.set(false);
+    }
+
+    @PluginMethod
+    public void beginBackupSave(PluginCall call) {
+        String filename = call.getString("filename", "");
+        Integer size = call.getInt("size", 0);
+        if (!filename.matches("mawaeidi-(full-backup|before-restore)-[0-9T-]{1,40}\\.(mwb|zip)")
+            || size == null || size < 22 || size > MAX_BACKUP_BYTES
+            || (filename.endsWith(".mwb") && size < 75)) {
+            call.reject("invalid_backup_file"); return;
+        }
+        if (!backupPicking.compareAndSet(false, true)) { call.reject("backup_save_in_progress"); return; }
+        try {
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT)
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setType(filename.endsWith(".mwb") ? "application/octet-stream" : "application/zip")
+                .putExtra(Intent.EXTRA_TITLE, filename);
+            startActivityForResult(call, intent, "backupDocumentCreated");
+        } catch (Exception error) {
+            backupPicking.set(false);
+            call.reject("backup_picker_unavailable");
+        }
+    }
+
+    @ActivityCallback
+    private void backupDocumentCreated(PluginCall call, ActivityResult result) {
+        if (call == null) { backupPicking.set(false); return; }
+        Intent data = result.getData();
+        if (result.getResultCode() != Activity.RESULT_OK || data == null || data.getData() == null) {
+            backupPicking.set(false);
+            JSObject response = new JSObject();
+            response.put("saved", false);
+            call.resolve(response);
+            return;
+        }
+        Uri uri = data.getData();
+        worker.execute(() -> {
+            try {
+                backupOutput = getContext().getContentResolver().openOutputStream(uri, "wt");
+                if (backupOutput == null) throw new IllegalStateException("output_unavailable");
+                backupExpected = call.getInt("size", 0);
+                backupWritten = 0;
+                backupToken = java.util.UUID.randomUUID().toString();
+                JSObject response = new JSObject();
+                response.put("token", backupToken);
+                call.resolve(response);
+            } catch (Exception error) { clearBackupOutput(); call.reject("backup_document_open_failed"); }
+        });
+    }
+
+    private boolean matchesBackupToken(PluginCall call) {
+        return backupOutput != null && backupToken != null && backupToken.equals(call.getString("token", ""));
+    }
+
+    @PluginMethod
+    public void writeBackupChunk(PluginCall call) {
+        worker.execute(() -> {
+            if (!matchesBackupToken(call)) { call.reject("invalid_backup_token"); return; }
+            try {
+                String data = call.getString("data", "");
+                Integer offset = call.getInt("offset", -1);
+                if (offset == null || offset != backupWritten || data.isEmpty()
+                    || data.length() > ((BACKUP_CHUNK_BYTES + 2) / 3) * 4)
+                    throw new IllegalArgumentException("invalid_backup_chunk");
+                byte[] bytes = Base64.decode(data, Base64.NO_WRAP);
+                if (bytes.length == 0 || bytes.length > BACKUP_CHUNK_BYTES
+                    || bytes.length > backupExpected - backupWritten)
+                    throw new IllegalArgumentException("invalid_backup_chunk_size");
+                backupOutput.write(bytes);
+                backupWritten += bytes.length;
+                Arrays.fill(bytes, (byte) 0);
+                call.resolve();
+            } catch (Exception error) { clearBackupOutput(); call.reject("backup_write_failed"); }
+        });
+    }
+
+    @PluginMethod
+    public void finishBackupSave(PluginCall call) {
+        worker.execute(() -> {
+            if (!matchesBackupToken(call)) { call.reject("invalid_backup_token"); return; }
+            try {
+                if (backupWritten != backupExpected) throw new IllegalStateException("incomplete_backup");
+                backupOutput.flush();
+                backupOutput.close();
+                backupOutput = null;
+                clearBackupOutput();
+                JSObject response = new JSObject();
+                response.put("saved", true);
+                call.resolve(response);
+            } catch (Exception error) { clearBackupOutput(); call.reject("backup_finish_failed"); }
+        });
+    }
+
+    @PluginMethod
+    public void abortBackupSave(PluginCall call) {
+        worker.execute(() -> {
+            if (matchesBackupToken(call)) clearBackupOutput();
+            call.resolve();
+        });
+    }
+
     private boolean trustedInitial(URL url) {
         return "https".equals(url.getProtocol()) && "github.com".equalsIgnoreCase(url.getHost())
             && url.getUserInfo() == null && (url.getPort() == -1 || url.getPort() == 443)

@@ -49,10 +49,7 @@ function makeId(){
   return `lesson-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 function textValue(value){return typeof value==="string"?value:""}
-function validTimeZone(value){
-  const zone=textValue(value).trim();if(!zone)return false;
-  try{new Intl.DateTimeFormat("en",{timeZone:zone}).format(new Date());return true}catch{return false}
-}
+function validTimeZone(...args){return window.MawaeidiScheduleTime.validTimeZone(...args)}
 function normalizeNotificationLeads(value,fallback=DEFAULT_NOTIFICATION_LEADS){
   const values=Array.isArray(value)?value:[value];
   const normalized=[...new Set(values.map(Number).filter(item=>NOTIFICATION_LEAD_OPTIONS.includes(item)))].sort((a,b)=>b-a).slice(0,MAX_NOTIFICATION_LEADS);
@@ -124,11 +121,7 @@ function normalizeLessons(list){
     return lesson;
   });
 }
-function validDateKey(value){
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(textValue(value)))return false;
-  const date=new Date(`${value}T00:00:00Z`);
-  return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value;
-}
+function validDateKey(...args){return window.MawaeidiScheduleTime.validDateKey(...args)}
 function loadLocalLessons(){
   try{
     const raw=localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -2003,13 +1996,8 @@ function sourceColorFromLabel(label){
 }
 function sourceColor(lesson){return sourceColorFromLabel(sourceLabel(lesson))}
 function esc(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]))}
-function fmt(t){
-  const value=TIME_RE.test(String(t))?String(t):"00:00";
-  const[h,m]=value.split(":").map(Number),p=h>=12?"م":"ص";
-  let hh=h%12;if(!hh)hh=12;
-  return `${hh}:${String(m).padStart(2,"0")} ${p}`;
-}
-function mins(t){const value=TIME_RE.test(String(t))?String(t):"00:00";const[h,m]=value.split(":").map(Number);return h*60+m}
+function fmt(...args){return window.MawaeidiScheduleTime.fmt(...args)}
+function mins(...args){return window.MawaeidiScheduleTime.mins(...args)}
 function normalizeZoneSearch(value){
   return String(value||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[إأآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/[_/().,-]+/g," ").replace(/\s+/g," ").trim();
 }
@@ -2067,28 +2055,13 @@ function resolvedZoneFromInput(input){
   if(result.entry){input.dataset.zone=result.entry.zone;input.dataset.zoneLabel=result.entry.label;input.value=result.entry.label}
   return result;
 }
-function zonedParts(date,zone){
-  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(date).filter(part=>part.type!=="literal").map(part=>[part.type,part.value]));
-  return {year:Number(parts.year),month:Number(parts.month),day:Number(parts.day),hour:Number(parts.hour),minute:Number(parts.minute),second:Number(parts.second)};
-}
-function zoneOffsetMinutes(date,zone){
-  const p=zonedParts(date,zone),rounded=Math.floor(date.getTime()/1000)*1000;
-  return Math.round((Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-rounded)/60000);
-}
-function wallTimeToInstant(dateKey,time,zone=SCHEDULE_TIMEZONE){
-  if(!validDateKey(dateKey)||!TIME_RE.test(String(time))||!validTimeZone(zone))return null;
-  const [year,month,day]=dateKey.split("-").map(Number),[hour,minute]=String(time).split(":").map(Number),target=Date.UTC(year,month-1,day,hour,minute,0);
-  let stamp=target;
-  for(let i=0;i<5;i++){
-    const next=target-zoneOffsetMinutes(new Date(stamp),zone)*60000;
-    if(Math.abs(next-stamp)<1000){stamp=next;break}stamp=next;
-  }
-  const date=new Date(stamp);return Number.isFinite(date.getTime())?date:null;
-}
-function dateKeyInZone(date,zone){const p=zonedParts(date,zone);return `${p.year}-${String(p.month).padStart(2,"0")}-${String(p.day).padStart(2,"0")}`}
-function timeKeyInZone(date,zone){const p=zonedParts(date,zone);return `${String(p.hour).padStart(2,"0")}:${String(p.minute).padStart(2,"0")}`}
-function formattedTimeInZone(date,zone){return fmt(timeKeyInZone(date,zone))}
-function dayShiftLabel(sourceDate,targetDate){return targetDate===sourceDate?"":targetDate>sourceDate?" · اليوم التالي":" · اليوم السابق"}
+function zonedParts(...args){return window.MawaeidiScheduleTime.zonedParts(...args)}
+function zoneOffsetMinutes(...args){return window.MawaeidiScheduleTime.zoneOffsetMinutes(...args)}
+function wallTimeToInstant(...args){return window.MawaeidiScheduleTime.wallTimeToInstant(...args)}
+function dateKeyInZone(...args){return window.MawaeidiScheduleTime.dateKeyInZone(...args)}
+function timeKeyInZone(...args){return window.MawaeidiScheduleTime.timeKeyInZone(...args)}
+function formattedTimeInZone(...args){return window.MawaeidiScheduleTime.formattedTimeInZone(...args)}
+function dayShiftLabel(...args){return window.MawaeidiScheduleTime.dayShiftLabel(...args)}
 function studentTimeInfo(occurrence){
   const zone=occurrence?.lesson?.studentTimeZone;if(!zone||!validTimeZone(zone)||!validDateKey(occurrence?.date)||!TIME_RE.test(occurrence?.time))return null;
   const instant=wallTimeToInstant(occurrence.date,occurrence.time,SCHEDULE_TIMEZONE);if(!instant)return null;
@@ -2135,22 +2108,9 @@ function worldMiniClockMarkup(date,zone,label=""){
   return `<div class="world-mini-clock" style="--mini-hour:${hour*30}deg;--mini-minute:${minute*6}deg" role="img" aria-label="ساعة ${esc(label||timeZoneShortLabel(zone)||zone)}">${numbers}<i class="world-mini-center"></i></div>`;
 }
 function todayName(){return dayNameForDateKey(currentDateKey())}
-function currentDateKey(date=new Date()){
-  try{
-    const parts=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:SCHEDULE_TIMEZONE,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(date).filter(part=>part.type!=="literal").map(part=>[part.type,part.value]));
-    return `${parts.year}-${parts.month}-${parts.day}`;
-  }catch{return new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,10)}
-}
-function currentTimeKey(date=new Date()){
-  try{
-    const parts=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:SCHEDULE_TIMEZONE,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(date).filter(part=>part.type!=="literal").map(part=>[part.type,part.value]));
-    return `${parts.hour}:${parts.minute}`;
-  }catch{return `${String(date.getHours()).padStart(2,"0")}:${String(date.getMinutes()).padStart(2,"0")}`}
-}
-function addDaysToDateKey(value,daysToAdd){
-  if(!validDateKey(value))return currentDateKey();
-  const date=new Date(`${value}T12:00:00Z`);date.setUTCDate(date.getUTCDate()+Number(daysToAdd||0));return date.toISOString().slice(0,10);
-}
+function currentDateKey(...args){return window.MawaeidiScheduleTime.currentDateKey(...args)}
+function currentTimeKey(...args){return window.MawaeidiScheduleTime.currentTimeKey(...args)}
+function addDaysToDateKey(...args){return window.MawaeidiScheduleTime.addDaysToDateKey(...args)}
 function monthBounds(period){
   if(!validMonthKey(period))period=currentDateKey().slice(0,7);
   const [year,month]=period.split("-").map(Number);
@@ -2162,10 +2122,7 @@ function monthLabel(period){
   const {start}=monthBounds(period);
   return new Date(`${start}T12:00:00Z`).toLocaleDateString("ar-EG",{month:"long",year:"numeric",timeZone:"UTC"});
 }
-function dayNameForDateKey(value){
-  if(!validDateKey(value))return "";
-  return ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"][new Date(`${value}T12:00:00Z`).getUTCDay()];
-}
+function dayNameForDateKey(...args){return window.MawaeidiScheduleTime.dayNameForDateKey(...args)}
 function selectedWeekAnchor(){return addDaysToDateKey(currentDateKey(),selectedWeekOffset*7)}
 function weekDateForDay(day,anchor=selectedWeekAnchor()){
   const target=days.indexOf(day),current=days.indexOf(dayNameForDateKey(anchor));
@@ -2191,16 +2148,8 @@ function baseSessionRecord(lesson,date,time){
 function replacementSessionRecord(lesson,id){
   return (lesson?.sessionRecords||[]).find(item=>item.kind==="replacement"&&item.id===id)||null;
 }
-function occurrenceHasEnded(occurrence,nowDate=currentDateKey(),nowTime=currentTimeKey()){
-  if(occurrence.date<nowDate)return true;
-  if(occurrence.date>nowDate)return false;
-  return mins(occurrence.time)+Number(occurrence.lesson?.duration||60)<=mins(nowTime);
-}
-function occurrenceHasStarted(occurrence,nowDate=currentDateKey(),nowTime=currentTimeKey()){
-  if(occurrence.date<nowDate)return true;
-  if(occurrence.date>nowDate)return false;
-  return mins(occurrence.time)<=mins(nowTime);
-}
+function occurrenceHasEnded(...args){return window.MawaeidiScheduleTime.occurrenceHasEnded(...args)}
+function occurrenceHasStarted(...args){return window.MawaeidiScheduleTime.occurrenceHasStarted(...args)}
 function occurrenceRawStatus(occurrence){return occurrence.record?.status||"default"}
 function occurrenceStatus(occurrence){
   const explicit=occurrenceRawStatus(occurrence);

@@ -42,7 +42,7 @@ async function main(){
   const worker=fs.readFileSync(path.join(root,"sw.js"),"utf8");
   assert.match(html,/تنزيل نسخة احتياطية كاملة/);
   assert.match(html,/دمج البيانات دون حذف الموجود/);
-  assert.match(html,/backup-manager\.js\?v=1/);
+  assert.match(html,/backup-manager\.js\?v=2/);
   assert.match(html,/student-registry\.js\?v=16/);
   assert.doesNotMatch(html,/id="backupStudents"/);
   assert.match(students,/createBackupSnapshot/);
@@ -50,7 +50,7 @@ async function main(){
   assert.match(students,/restoreBackupSnapshot/);
   assert.doesNotMatch(students,/exportStudentsBackup/);
   assert.match(worker,/const CACHE_NAME="mawaeidi-shell-v[1-9]\d*";/);
-  assert.match(worker,/backup-manager\.js\?v=1/);
+  assert.match(worker,/backup-manager\.js\?v=2/);
 
   console.log("Full backup and restore checks passed.");
 }

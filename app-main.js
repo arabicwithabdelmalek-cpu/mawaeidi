@@ -12,7 +12,7 @@ const SOURCE_COLORS=["#4F7693","#4F7B75","#6A7D89","#9A7749","#776D86","#718064"
 const PRIVATE_SOURCE_COLOR="#9B7449";
 const BACKUP_FORMAT="mawaeidi-backup";
 const BACKUP_VERSION=3;
-const MAX_BACKUP_BYTES=window.MawaeidiBackup?.limits.maxArchiveBytes||256*1024*1024;
+const MAX_BACKUP_BYTES=window.MawaeidiBackup?.limits.maxEncryptedBytes||256*1024*1024+53;
 const MAX_BACKUP_LESSONS=2000;
 const MAX_SESSION_RECORDS=5000;
 const MAX_SESSION_NOTE_LENGTH=1000;
@@ -1306,21 +1306,53 @@ async function createFullBackupPackage(){
     warnings:studentSnapshot.warnings
   };
 }
-async function createAndDownloadFullBackup(prefix){
+async function createAndDownloadFullBackup(prefix,password=null){
+  const owner=currentUser?.id,sequence=sessionSequence;
   const result=await createFullBackupPackage();
-  window.MawaeidiBackup.download(result.blob,fullBackupFilename(prefix));
+  const blob=password===null?result.blob:await window.MawaeidiBackup.encryptBackup(result.blob,password);
+  if(!owner||currentUser?.id!==owner||sessionSequence!==sequence||!cloudReady)throw new Error("backup_account_changed");
+  const filename=password===null?fullBackupFilename(prefix):fullBackupFilename(prefix).replace(/\.zip$/,".mwb");
+  window.MawaeidiBackup.download(blob,filename);
   return result;
 }
-async function exportBackup(){
+function requestBackupPassword(creating,title){
+  const dialog=document.getElementById("backupPasswordDialog");
+  const form=document.getElementById("backupPasswordForm");
+  const password=document.getElementById("backupPassphrase"),repeat=document.getElementById("backupPassphraseRepeat");
+  const error=document.getElementById("backupPassphraseError");
+  if(!dialog||typeof dialog.showModal!=="function"||dialog.open)return Promise.reject(new Error("backup_password_dialog_unavailable"));
+  form.reset();error.textContent="";dialog.returnValue="";
+  document.getElementById("backupPasswordTitle").textContent=title;
+  document.getElementById("backupPasswordHint").textContent=creating?"اختر عبارة مرور مستقلة وطويلة (12 حرفًا على الأقل). احفظها في مكان آمن؛ لا يمكن استردادها عند نسيانها.":"أدخل عبارة المرور التي استخدمتها عند إنشاء هذه النسخة. لن نرسلها إلى الخادم.";
+  document.getElementById("backupRepeatRow").hidden=!creating;
+  repeat.required=creating;
+  return new Promise((resolve,reject)=>{
+    let accepted=null;
+    const submit=event=>{
+      event.preventDefault();error.textContent="";
+      if(!password.value||password.value.length>1024||(creating&&password.value.length<12)){error.textContent=creating?"استخدم 12 حرفًا على الأقل.":"أدخل عبارة المرور.";return}
+      if(creating&&password.value!==repeat.value){error.textContent="عبارتا المرور غير متطابقتين.";return}
+      accepted=password.value;dialog.close();
+    };
+    const close=()=>{form.removeEventListener("submit",submit);form.reset();error.textContent="";resolve(accepted)};
+    form.addEventListener("submit",submit);dialog.addEventListener("close",close,{once:true});
+    try{dialog.showModal();password.focus()}catch(error){form.removeEventListener("submit",submit);dialog.removeEventListener("close",close);form.reset();reject(error)}
+  });
+}
+async function exportBackup(encrypted=false){
   closeDataMenu();
   if(!cloudReady||!currentUser){alert("انتظر حتى يكتمل تحميل حسابك ثم حاول مرة أخرى.");return}
   if(backupInFlight)return;
-  if(!confirm("النسخة الاحتياطية الكاملة ملف ZIP غير مشفّر وقد تتضمن بيانات خاصة وكلمات سر الطلاب. احفظها في مكان آمن ولا تشاركها مع أي شخص غير موثوق. هل تريد تنزيلها؟"))return;
+  if(!encrypted&&!confirm("النسخة الاحتياطية الكاملة ملف ZIP غير مشفّر وقد تتضمن بيانات خاصة وكلمات سر الطلاب. احفظها في مكان آمن ولا تشاركها مع أي شخص غير موثوق. هل تريد تنزيلها؟"))return;
   backupInFlight=true;
-  setSync("saving","جارٍ تجهيز النسخة الكاملة");
-  showBackupStatus("جارٍ تجهيز نسختك الاحتياطية الكاملة…",{persistent:true});
+  const owner=currentUser.id,sequence=sessionSequence;
+  let password=null;
   try{
-    const result=await createAndDownloadFullBackup("mawaeidi-full-backup");
+    if(encrypted){password=await requestBackupPassword(true,"تشفير النسخة الاحتياطية");if(password===null)return}
+    if(currentUser?.id!==owner||sessionSequence!==sequence||!cloudReady)throw new Error("backup_account_changed");
+    setSync("saving","جارٍ تجهيز النسخة الكاملة");
+  showBackupStatus("جارٍ تجهيز نسختك الاحتياطية الكاملة…",{persistent:true});
+    const result=await createAndDownloadFullBackup("mawaeidi-full-backup",password);
     setSync("saved",result.warnings.length?"تم تنزيل النسخة مع تنبيه صور":"تم تنزيل النسخة الكاملة");
     showBackupStatus(result.warnings.length?"بدأ تنزيل النسخة، مع تنبيه بشأن بعض الصور.":"بدأ تنزيل النسخة الكاملة. احتفظ بها في مكان آمن.");
     if(result.warnings.length)alert(`تم تنزيل البيانات كاملة، لكن تعذّر تضمين ${result.warnings.length} صورة. لم تُحذف أي بيانات من الموقع.`);
@@ -1328,8 +1360,8 @@ async function exportBackup(){
     console.error("تعذّر إنشاء النسخة الاحتياطية الكاملة.",error);
     setSync("error","تعذّر إنشاء النسخة");
     showBackupStatus("تعذّر تجهيز النسخة الاحتياطية. تحقق من اتصال الإنترنت.",{error:true});
-    alert("تعذّر تنزيل النسخة الاحتياطية الكاملة. تحقق من الإنترنت وحاول مرة أخرى.");
-  }finally{backupInFlight=false}
+    alert(error?.code==="crypto_unavailable"?"التشفير غير متاح في هذا المتصفح. لم تُنزّل نسخة غير مشفّرة بدلًا منها.":"تعذّر تنزيل النسخة الاحتياطية الكاملة. تحقق من الإنترنت وحاول مرة أخرى.");
+  }finally{password=null;backupInFlight=false}
 }
 function chooseBackupFile(){
   closeDataMenu();
@@ -1375,8 +1407,14 @@ async function mergeTrashBackupRows(items){
 
 async function parseFullBackupFile(file){
   if(!file||file.size>MAX_BACKUP_BYTES)throw new Error("backup_too_large");
-  const signature=new Uint8Array(await file.slice(0,4).arrayBuffer());
-  const isZip=signature.length===4&&signature[0]===0x50&&signature[1]===0x4b;
+  const signature=new Uint8Array(await file.slice(0,8).arrayBuffer());
+  if(window.MawaeidiBackup.isEncryptedBackup(signature)){
+    let password=await requestBackupPassword(false,"فتح النسخة المشفّرة");
+    if(password===null)throw new Error("backup_cancelled");
+    try{file=await window.MawaeidiBackup.decryptBackup(file,password)}finally{password=null}
+  }
+  const zipSignature=new Uint8Array(await file.slice(0,4).arrayBuffer());
+  const isZip=zipSignature.length===4&&zipSignature[0]===0x50&&zipSignature[1]===0x4b;
   if(!isZip){
     if(file.size>5*1024*1024)throw new Error("legacy_backup_too_large");
     return {
@@ -1434,7 +1472,7 @@ function backupRestorePreviewMarkup(plan){
       <h3>محتويات النسخة</h3>
       ${rows.join("")}
       <p>سيتم الدمج مع بيانات حسابك الحالي: المتطابق يُحدّث والجديد يُضاف، ولن تُحذف البيانات الموجودة.</p>
-      <p class="install-help">قبل بدء الدمج سننزّل تلقائيًا نسخة أمان كاملة من حالتك الحالية.</p>
+      <p class="install-help">قبل بدء الدمج اختر عبارة مرور لنسخة أمان مشفّرة من حالتك الحالية، ثم تأكد من حفظ الملف.</p>
       <div class="tool-actions">
         <button type="button" class="tool-primary" id="confirmBackupRestore" onclick="confirmBackupRestore()">استعادة ودمج البيانات</button>
         <button type="button" class="tool-secondary" onclick="cancelBackupRestore()">إلغاء</button>
@@ -1453,17 +1491,20 @@ async function importBackup(event){
   if(file.size>MAX_BACKUP_BYTES){input.value="";alert("ملف النسخة الاحتياطية أكبر من الحد المسموح.");return}
   if(backupInFlight)return;
   backupInFlight=true;
+  const owner=currentUser?.id,sequence=sessionSequence;
   setSync("saving","جارٍ فحص النسخة");
   try{
     const plan=await parseFullBackupFile(file);
-    pendingBackupRestorePlan=plan;
+    if(!owner||currentUser?.id!==owner||sessionSequence!==sequence||!cloudReady)throw new Error("backup_account_changed");
+    pendingBackupRestorePlan={...plan,owner,sequence};
     openToolDialog("استعادة نسخة احتياطية","راجع المحتويات قبل دمجها في حسابك.",backupRestorePreviewMarkup(plan));
     setSync("saved","النسخة جاهزة للاستعادة");
   }catch(error){
     pendingBackupRestorePlan=null;
+    if(error?.message==="backup_cancelled"){setSync("saved","تم إلغاء الاستعادة");return}
     console.error("تعذّر فحص النسخة الاحتياطية.",error);
     setSync("error","النسخة غير صالحة");
-    alert("ملف النسخة الاحتياطية غير صالح أو تالف، ولم تتغير أي بيانات.");
+    alert(error?.code==="backup_authentication_failed"?"عبارة المرور غير صحيحة أو الملف تالف. لم تتغير أي بيانات.":error?.code==="crypto_unavailable"?"التشفير غير متاح في هذا المتصفح. لم تتغير أي بيانات.":"ملف النسخة الاحتياطية غير صالح أو تالف، ولم تتغير أي بيانات.");
   }finally{
     backupInFlight=false;
     input.value="";
@@ -1471,7 +1512,7 @@ async function importBackup(event){
 }
 async function confirmBackupRestore(){
   const plan=pendingBackupRestorePlan;
-  if(!plan||backupInFlight||!currentUser||!cloudReady||!scheduleWriteAllowed())return;
+  if(!plan||backupInFlight||!currentUser||!cloudReady||plan.owner!==currentUser.id||plan.sequence!==sessionSequence||!scheduleWriteAllowed())return;
   const button=document.getElementById("confirmBackupRestore");
   if(button){button.disabled=true;button.textContent="جارٍ إنشاء نسخة الأمان…"}
   backupInFlight=true;
@@ -1481,8 +1522,15 @@ async function confirmBackupRestore(){
   let scheduleResult=null;
   let settingsApplied=false;
   let trashAdded=0;
+  let password=null;
   try{
-    await createAndDownloadFullBackup("mawaeidi-before-restore");
+    password=await requestBackupPassword(true,"تشفير نسخة الأمان قبل الاستعادة");
+    if(password===null){setSync("saved","تم إلغاء الاستعادة");if(button){button.disabled=false;button.textContent="استعادة ودمج البيانات"}return}
+    if(plan.owner!==currentUser?.id||plan.sequence!==sessionSequence||!cloudReady||pendingBackupRestorePlan!==plan)throw new Error("backup_account_changed");
+    await createAndDownloadFullBackup("mawaeidi-before-restore",password);
+    password=null;
+    if(!confirm("تأكد من أن نسخة الأمان المشفّرة حُفظت على جهازك وأنك تعرف عبارة مرورها. هل تريد متابعة دمج البيانات؟")){setSync("saved","تم إلغاء الاستعادة");if(button){button.disabled=false;button.textContent="استعادة ودمج البيانات"}return}
+    if(plan.owner!==currentUser?.id||plan.sequence!==sessionSequence||pendingBackupRestorePlan!==plan||!cloudReady)throw new Error("backup_account_changed");
     safetyDownloaded=true;
     if(button)button.textContent="جارٍ دمج البيانات…";
     setSync("saving","جارٍ دمج النسخة");
@@ -1529,7 +1577,7 @@ async function confirmBackupRestore(){
     alert(safetyDownloaded
       ?(partial?"تعذّر إكمال بعض أجزاء الاستعادة. نُزّلت نسخة أمان قبل البدء، ولم تُحذف السجلات الحالية.":"تعذّرت الاستعادة، لكن نُزّلت نسخة الأمان ولم تتغير البيانات.")
       :"تعذّر إنشاء نسخة الأمان، لذلك أوقفنا الاستعادة ولم تتغير البيانات.");
-  }finally{backupInFlight=false}
+  }finally{password=null;backupInFlight=false}
 }
 function hasRecoveryMarker(){
   try{
@@ -1884,6 +1932,7 @@ async function activateSession(user){
 }
 async function logout(){
   if(!cloud)return;
+  if(backupInFlight){alert("انتظر انتهاء عملية النسخ الاحتياطي أو الاستعادة قبل تسجيل الخروج.");return}
   if(saveInFlight){alert("انتظر انتهاء حفظ الجدول قبل تسجيل الخروج.");return}
   if(pendingScheduleConflict&&!pendingScheduleConflict.downloaded){showScheduleConflict();return}
   closeDataMenu();
@@ -3010,6 +3059,7 @@ function keepToolDialogKeyboardFocus(event){
 }
 window.addEventListener("beforeunload",event=>{if(pendingScheduleConflict&&!pendingScheduleConflict.downloaded){event.preventDefault();event.returnValue="";}});
 document.addEventListener("keydown",e=>{
+  if(document.getElementById("backupPasswordDialog")?.open)return;
   const conflictLayer=document.getElementById("scheduleConflictLayer");
   if(conflictLayer&&!conflictLayer.hidden){
     if(e.key==="Escape"){e.preventDefault();dismissScheduleConflict();return}

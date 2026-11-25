@@ -223,6 +223,52 @@ function readJson(entries,name,maxBytes=MAX_ENTRY_BYTES){
     fail("invalid_json");
   }
 }
+// Versioned encrypted container: magic(8), version(1), salt(16), IV(12), AES-GCM ciphertext+tag.
+const ENCRYPTED_MAGIC=encoder.encode("MAWAEIDI");
+const ENCRYPTED_HEADER_BYTES=37;
+const ENCRYPTED_OVERHEAD=ENCRYPTED_HEADER_BYTES+16;
+const KDF_ITERATIONS=600000;
+function isEncryptedBackup(bytes){
+  return bytes instanceof Uint8Array&&bytes.length>=8&&ENCRYPTED_MAGIC.every((b,i)=>bytes[i]===b);
+}
+function cryptoProvider(){
+  const api=globalThis.crypto;
+  if(!api?.subtle||!api.getRandomValues)fail("crypto_unavailable");
+  return api;
+}
+async function backupKey(password,salt){
+  if(typeof password!=="string"||password.length<1||password.length>1024)fail("invalid_backup_password");
+  const api=cryptoProvider(),raw=encoder.encode(password);
+  try{
+    const material=await api.subtle.importKey("raw",raw,"PBKDF2",false,["deriveKey"]);
+    return await api.subtle.deriveKey({name:"PBKDF2",salt,iterations:KDF_ITERATIONS,hash:"SHA-256"},material,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+  }finally{raw.fill(0)}
+}
+async function encryptBackup(input,password){
+  if(typeof password!=="string"||password.length<12||password.length>1024)fail("weak_backup_password");
+  if(input instanceof Blob&&input.size>MAX_ARCHIVE_BYTES)fail("archive_too_large");
+  const bytes=await toBytes(input);
+  if(bytes.length<22||bytes.length>MAX_ARCHIVE_BYTES)fail("invalid_backup_size");
+  const api=cryptoProvider(),header=new Uint8Array(ENCRYPTED_HEADER_BYTES);
+  header.set(ENCRYPTED_MAGIC);header[8]=1;
+  api.getRandomValues(header.subarray(9,25));
+  api.getRandomValues(header.subarray(25,37));
+  const key=await backupKey(password,header.subarray(9,25));
+  const ciphertext=await api.subtle.encrypt({name:"AES-GCM",iv:header.subarray(25,37),additionalData:header,tagLength:128},key,bytes);
+  return new Blob([header,ciphertext],{type:"application/octet-stream"});
+}
+async function decryptBackup(input,password){
+  if(input instanceof Blob&&input.size>MAX_ARCHIVE_BYTES+ENCRYPTED_OVERHEAD)fail("archive_too_large");
+  const bytes=await toBytes(input);
+  if(!isEncryptedBackup(bytes)||bytes.length<ENCRYPTED_OVERHEAD+22||bytes.length>MAX_ARCHIVE_BYTES+ENCRYPTED_OVERHEAD)fail("invalid_encrypted_backup");
+  if(bytes[8]!==1)fail("unsupported_backup_version");
+  const api=cryptoProvider(),header=bytes.subarray(0,ENCRYPTED_HEADER_BYTES);
+  const key=await backupKey(password,header.subarray(9,25));
+  let plaintext;
+  try{plaintext=await api.subtle.decrypt({name:"AES-GCM",iv:header.subarray(25,37),additionalData:header,tagLength:128},key,bytes.subarray(ENCRYPTED_HEADER_BYTES))}
+  catch{fail("backup_authentication_failed")}
+  return new Blob([plaintext],{type:"application/zip"});
+}
 function download(blob,filename){
   if(!(blob instanceof Blob)||typeof filename!=="string"||!filename)fail("invalid_download");
   const url=URL.createObjectURL(blob);
@@ -237,11 +283,14 @@ function download(blob,filename){
 window.MawaeidiBackup=Object.freeze({
   createZip,
   readZip,
+  encryptBackup,
+  decryptBackup,
+  isEncryptedBackup,
   readText,
   readJson,
   download,
   crc32,
   safeEntryName,
-  limits:Object.freeze({maxArchiveBytes:MAX_ARCHIVE_BYTES,maxEntryBytes:MAX_ENTRY_BYTES,maxFiles:MAX_FILES})
+  limits:Object.freeze({maxArchiveBytes:MAX_ARCHIVE_BYTES,maxEncryptedBytes:MAX_ARCHIVE_BYTES+ENCRYPTED_OVERHEAD,maxEntryBytes:MAX_ENTRY_BYTES,maxFiles:MAX_FILES})
 });
 })();

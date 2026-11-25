@@ -2118,6 +2118,10 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
               <small>استعادة الطلاب والحصص والمدن المحذوفة خلال 30 يومًا</small>
             </button>
             <div class="data-separator" aria-hidden="true"></div>
+            <button type="button" class="data-action" onclick="exportBackup(true)">
+              <strong>تنزيل نسخة احتياطية مشفّرة</strong>
+              <small>الخيار الموصى به: جميع البيانات والصور محمية بعبارة مرور</small>
+            </button>
             <button type="button" class="data-action" onclick="exportBackup()">
               <strong>تنزيل نسخة احتياطية كاملة</strong>
               <small>المواعيد والطلاب والصور والإعدادات؛ ملف ZIP غير مشفّر وقد يتضمن كلمات سر الطلاب</small>
@@ -2130,7 +2134,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
             <button type="button" class="data-action logout" onclick="logout()"><strong>تسجيل الخروج</strong></button>
           </div>
         </details>
-        <input id="backupFile" type="file" accept=".zip,application/zip,.json,application/json" onchange="importBackup(event)" hidden>
+        <input id="backupFile" type="file" accept=".mwb,.zip,application/zip,.json,application/json" onchange="importBackup(event)" hidden>
         <button type="button" class="add-btn" id="primaryActionButton" onclick="handlePrimaryAction()">＋ إضافة حصة</button>
       </div>
     </header>
@@ -2565,6 +2569,22 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 </div>
 
 
+<dialog id="backupPasswordDialog" aria-labelledby="backupPasswordTitle" dir="rtl" style="width:min(420px,calc(100% - 32px));max-height:85vh;border:1px solid #cbd5e1;border-radius:16px;padding:20px;background:Canvas;color:CanvasText;font:inherit">
+  <form id="backupPasswordForm" autocomplete="off" style="display:grid;gap:12px">
+    <h2 id="backupPasswordTitle" style="margin:0;font-size:1.2rem">تشفير النسخة الاحتياطية</h2>
+    <p id="backupPasswordHint" style="margin:0;line-height:1.65"></p>
+    <label for="backupPassphrase">عبارة المرور</label>
+    <input id="backupPassphrase" type="password" autocomplete="new-password" maxlength="1024" required style="font:inherit;padding:10px;width:100%;box-sizing:border-box">
+    <label id="backupRepeatRow" for="backupPassphraseRepeat">تأكيد عبارة المرور
+      <input id="backupPassphraseRepeat" type="password" autocomplete="new-password" maxlength="1024" style="font:inherit;padding:10px;width:100%;box-sizing:border-box">
+    </label>
+    <p id="backupPassphraseError" role="alert" style="margin:0;color:#b91c1c"></p>
+    <div class="tool-actions">
+      <button type="submit" class="tool-primary">متابعة</button>
+      <button type="button" class="tool-secondary" onclick="document.getElementById('backupPasswordDialog').close()">إلغاء</button>
+    </div>
+  </form>
+</dialog>
 <div id="scheduleConflictLayer" hidden>
   <section class="schedule-conflict-panel" role="alertdialog" aria-modal="true"
     aria-labelledby="scheduleConflictTitle" aria-describedby="scheduleConflictMessage">
@@ -2580,13 +2600,13 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js" defer></script>
-<script src="./backup-manager.js?v=1" defer></script>
+<script src="./backup-manager.js?v=2" defer></script>
 <script src="./students/student-workspace-upgrade.js?v=1" defer></script>
 <script src="./students/student-registry.js?v=18" defer></script>
 <script src="./ipad-pwa.js?v=1" defer></script>
 <script src="./iphone-pwa.js?v=1" defer></script>
 <script src="./schedule-concurrency.js?v=1" defer></script>
-<script src="./app-main.js?v=11" defer></script>
+<script src="./app-main.js?v=12" defer></script>
 <script src="./account.js?v=3" defer></script>
 <script src="./account-page.js?v=6" defer></script>
 <script src="./day-order.js?v=3" defer></script>

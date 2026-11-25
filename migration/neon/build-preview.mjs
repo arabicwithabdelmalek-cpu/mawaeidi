@@ -1,0 +1,40 @@
+import {readFile,writeFile,mkdir,copyFile,cp} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+const out=resolve(process.argv[2]||'neon-preview');
+await mkdir(out,{recursive:true});
+await mkdir(out+'/students',{recursive:true});
+for(const f of ['backup-manager.js','account.js','account-page.js','day-order.js','ipad-pwa.js','iphone-pwa.js','ipad-pwa.css','iphone-pwa.css','header-refinement.css']) await copyFile(f,out+'/'+f);
+for(const f of ['student-workspace-upgrade.js','student-registry.js','student-workspace-upgrade.css','student-registry.css']) await copyFile('students/'+f,out+'/students/'+f);
+await cp('icons',out+'/icons',{recursive:true});
+let html=await readFile('index.html','utf8');
+assert.match(html,/<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js[^"]*" defer><\/script>/);
+html=html.replace(/<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js[^"]*" defer><\/script>/,'<script src="./neon-bridge.js" defer></script>');
+html=html.replace(/<link rel="manifest"[^>]*>/,'').replace(/<script src="\.\/activity-tracker\.js[^"]*" defer><\/script>/,'');
+html=html.replace(/<body([^>]*)>/i,'<body$1><div style="position:fixed;bottom:0;inset-inline:0;background:#8c531c;color:white;text-align:center;font:600 13px Cairo,sans-serif;z-index:99999;padding:5px;pointer-events:none">نسخة اختبار Neon · بيانات وهمية فقط · الصور والإدارة والتنبيهات غير مفعّلة</div>');
+await writeFile(out+'/index.html',html);
+let js=await readFile('app-main.js','utf8');
+const replace=(before,after)=>{assert.ok(js.includes(before),'missing original: '+before.slice(0,80));js=js.replace(before,after)};
+replace('const SUPABASE_URL="https://nvefdkkjkyalpsrgoffj.supabase.co";','const SUPABASE_URL="https://disabled.invalid";');
+js=js.replace(/const SUPABASE_PUBLISHABLE_KEY="[^"]*";/,'const SUPABASE_PUBLISHABLE_KEY="";');
+// Do not import any legacy device schedule into a synthetic account.
+replace('const localLessons=loadLocalLessons();','const localLessons=null;');
+replace('async function registerAppWorker(){','async function registerAppWorker(){return null;');
+const start=js.indexOf('function stopRealtime(){'),end=js.indexOf('async function refreshFromCloud(',start);
+assert.ok(start>=0&&end>start);
+js=js.slice(0,start)+`function stopRealtime(){if(realtimeChannel)clearInterval(realtimeChannel);realtimeChannel=null;pendingRemoteRow=null}
+function startRealtime(user){stopRealtime();if(!cloud||!user)return;
+realtimeChannel=setInterval(async()=>{if(document.hidden||!cloudReady||currentUser?.id!==user.id||saveInFlight||refreshInFlight||backupInFlight)return;
+try{const {data,error}=await cloud.from("mawaeidi_data").select("user_id,lessons,updated_at").eq("user_id",user.id).maybeSingle();if(error)throw error;if(currentUser?.id===user.id&&data)handleRemoteRow(data);
+if(currentUser?.id===user.id&&!worldClockBusy&&currentSection==="world"&&!isDrawerVisible())await refreshWorldClockFromCloud();}catch(e){console.warn("Preview refresh failed",e);}},30000);
+}
+`+js.slice(end);
+await writeFile(out+'/app-main.js',js);
+let students=await readFile(out+'/students/student-registry.js','utf8');
+students=students.replace(/const SUPABASE_URL="[^"]*";/,'const SUPABASE_URL="https://disabled.invalid";').replace(/const SUPABASE_PUBLISHABLE_KEY="[^"]*";/,'const SUPABASE_PUBLISHABLE_KEY="";');
+await writeFile(out+'/students/student-registry.js',students);
+await build({entryPoints:['migration/neon/preview-bridge.mjs'],bundle:true,format:'iife',platform:'browser',outfile:out+'/neon-bridge.js'});
+assert.ok(!html.includes('@supabase/supabase-js')&&!js.includes('nvefdkkjkyalpsrgoffj'));
+await writeFile(out+'/README.txt','Isolated preview of existing UI. Serve over a dedicated localhost origin; do not deploy to production or enter real credentials. Uses integration-test Neon branch. Sign-up is closed. Storage, push, admin, password reset and mobile app integration are not supported in this build. Polling is provisional, not realtime.\n');
+console.log('Original interface preview built; legacy import, service worker and production endpoint disabled.');

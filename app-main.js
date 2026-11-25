@@ -15,6 +15,7 @@ const BACKUP_VERSION=3;
 const MAX_BACKUP_BYTES=window.MawaeidiBackup?.limits.maxEncryptedBytes||256*1024*1024+53;
 const MAX_BACKUP_LESSONS=2000;
 const MAX_SESSION_RECORDS=5000;
+const MAX_SESSION_NOTE_LENGTH=1000;
 const AUTO_REFRESH_THROTTLE_MS=15000;
 const HISTORY_TABLE="mawaeidi_history";
 const PUSH_SUBSCRIPTIONS_TABLE="mawaeidi_push_subscriptions";
@@ -53,75 +54,10 @@ function makeId(){
 }
 function textValue(value){return typeof value==="string"?value:""}
 function validTimeZone(...args){return window.MawaeidiScheduleTime.validTimeZone(...args)}
-function normalizeNotificationLeads(value,fallback=DEFAULT_NOTIFICATION_LEADS){
-  const values=Array.isArray(value)?value:[value];
-  const normalized=[...new Set(values.map(Number).filter(item=>NOTIFICATION_LEAD_OPTIONS.includes(item)))].sort((a,b)=>b-a).slice(0,MAX_NOTIFICATION_LEADS);
-  if(normalized.length)return normalized;
-  const safeFallback=Array.isArray(fallback)?fallback:[fallback];
-  return [...new Set(safeFallback.map(Number).filter(item=>NOTIFICATION_LEAD_OPTIONS.includes(item)))].sort((a,b)=>b-a).slice(0,MAX_NOTIFICATION_LEADS);
-}
-function normalizeSessionRecords(value){
-  const records=[],ids=new Set(),baseKeys=new Set();
-  for(const item of (Array.isArray(value)?value:[]).slice(0,MAX_SESSION_RECORDS)){
-    if(!item||typeof item!=="object")continue;
-    const kind=item.kind==="replacement"?"replacement":"base",date=textValue(item.date),time=textValue(item.time);
-    if(!validDateKey(date)||!TIME_RE.test(time))continue;
-    let status=SESSION_RECORD_STATUSES.includes(item.status)?item.status:"default";
-    if(kind==="base"&&status==="default")continue;
-    if(kind==="replacement"&&status==="rescheduled")status="default";
-    const sourceDate=textValue(item.sourceDate),sourceTime=textValue(item.sourceTime);
-    if(kind==="replacement"&&(!validDateKey(sourceDate)||!TIME_RE.test(sourceTime)))continue;
-    const baseKey=`${date}|${time}`;
-    if(kind==="base"&&baseKeys.has(baseKey))continue;
-    let id=textValue(item.id);
-    if(!/^[A-Za-z0-9_-]{1,120}$/.test(id))id=kind==="base"?`base-${date}-${time.replace(":","")}`:makeId();
-    while(ids.has(id))id=makeId();
-    ids.add(id);
-    if(kind==="base")baseKeys.add(baseKey);
-    const record={id,kind,date,time,status,updatedAt:textValue(item.updatedAt)||new Date().toISOString()};
-    if(kind==="base"&&status==="rescheduled"&&/^[A-Za-z0-9_-]{1,120}$/.test(textValue(item.replacementId)))record.replacementId=textValue(item.replacementId);
-    if(kind==="replacement"){record.sourceDate=sourceDate;record.sourceTime=sourceTime}
-    records.push(record);
-  }
-  const replacementIds=new Set(records.filter(item=>item.kind==="replacement").map(item=>item.id));
-  const linkedReplacementIds=new Set(records.filter(item=>item.kind==="base"&&item.status==="rescheduled"&&replacementIds.has(item.replacementId)).map(item=>item.replacementId));
-  return records.filter(item=>item.kind==="base"?(item.status!=="rescheduled"||linkedReplacementIds.has(item.replacementId)):linkedReplacementIds.has(item.id));
-}
-function normalizeLesson(item){
-  const duration=Number(item.duration);
-  const id=textValue(item.id);
-  const reminderMode=item.reminderMode==="off"||item.reminderMode==="custom"?item.reminderMode:"default";
-  return {
-    id:/^[A-Za-z0-9_-]{1,120}$/.test(id)?id:makeId(),
-    type:item.type==="learn"?"learn":"teach",
-    studentType:item.studentType==="group"?"group":"individual",
-    lessonSource:item.lessonSource==="center"?"center":"private",
-    name:textValue(item.name),
-    groupStudents:Array.isArray(item.groupStudents)?item.groupStudents.filter(x=>typeof x==="string"&&x.trim()).map(x=>x.trim()):[],
-    studentTimeZone:validTimeZone(item.studentTimeZone)?textValue(item.studentTimeZone).trim():"",
-    centerName:textValue(item.centerName),
-    subject:textValue(item.subject),
-    duration:Number.isFinite(duration)&&duration>=15&&duration<=720?duration:60,
-    platform:textValue(item.platform),
-    repeat:"أسبوعيًا",
-    reminderMode,
-    reminderLeads:normalizeNotificationLeads(item.reminderLeads,[DEFAULT_NOTIFICATION_LEAD]),
-    notes:textValue(item.notes),
-    sessionRecords:normalizeSessionRecords(item.sessionRecords),
-    schedules:Array.isArray(item.schedules)?item.schedules
-      .filter(s=>s&&days.includes(s.day)&&TIME_RE.test(textValue(s.time)))
-      .map(s=>({day:s.day,time:s.time})):[]
-  };
-}
-function normalizeLessons(list){
-  const seen=new Set();
-  return (Array.isArray(list)?list:[]).filter(item=>item&&typeof item==="object").map(item=>{
-    const lesson=normalizeLesson(item);
-    while(seen.has(lesson.id))lesson.id=makeId();
-    seen.add(lesson.id);
-    return lesson;
-  });
-}
+function normalizeNotificationLeads(...args){return window.MawaeidiLessonModel.normalizeNotificationLeads(...args)}
+function normalizeSessionRecords(...args){return window.MawaeidiLessonModel.normalizeSessionRecords(...args)}
+function normalizeLesson(...args){return window.MawaeidiLessonModel.normalizeLesson(...args)}
+function normalizeLessons(...args){return window.MawaeidiLessonModel.normalizeLessons(...args)}
 function validDateKey(...args){return window.MawaeidiScheduleTime.validDateKey(...args)}
 function loadLocalLessons(){
   try{
@@ -198,10 +134,7 @@ function closeDataMenu(restoreFocus=false){
 function isStandalone(){return window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone===true}
 function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||"")}
 function vapidKeyIsConfigured(){return VAPID_PUBLIC_KEY&&!VAPID_PUBLIC_KEY.startsWith("__")}
-function validNotificationLead(value){
-  const lead=Number(value);
-  return NOTIFICATION_LEAD_OPTIONS.includes(lead)?lead:DEFAULT_NOTIFICATION_LEAD;
-}
+function validNotificationLead(...args){return window.MawaeidiLessonModel.validNotificationLead(...args)}
 function savedNotificationLeads(){
   try{
     const stored=localStorage.getItem(NOTIFICATION_LEADS_KEY);
@@ -1327,41 +1260,14 @@ async function applyBackupSettings(settings){
   renderWeek();
   if(currentSection==="world")openWorldClock();
 }
-function parseScheduleBackupObject(obj){
-  let source;
-  if(Array.isArray(obj))source=obj;
-  else if(obj&&obj.format===BACKUP_FORMAT&&[1,2,BACKUP_VERSION].includes(obj.version)&&Array.isArray(obj.lessons))source=obj.lessons;
-  else if(obj&&obj.format==="mawaeidi-schedule"&&obj.version===1&&Array.isArray(obj.lessons))source=obj.lessons;
-  else throw new Error("invalid_schedule_backup");
-  if(source.length>MAX_BACKUP_LESSONS)throw new Error("too_many_lessons");
-  if(source.some(item=>!item||typeof item!=="object"||Array.isArray(item)))throw new Error("invalid_lesson");
-  const normalized=normalizeLessons(source);
-  if(normalized.some(item=>!item.schedules.length))throw new Error("invalid_schedule");
-  return normalized;
-}
+function parseScheduleBackupObject(...args){return window.MawaeidiLessonModel.parseScheduleBackupObject(...args)}
 function parseBackupText(rawText){
   const clean=textValue(rawText).replace(/^\uFEFF/,"");
   let obj;
   try{obj=JSON.parse(clean)}catch{throw new Error("invalid_json")}
   return parseScheduleBackupObject(obj);
 }
-function mergeBackupLessons(current,incoming){
-  const merged=normalizeLessons(current);
-  const positions=new Map(merged.map((lesson,index)=>[lesson.id,index]));
-  let added=0;
-  let updated=0;
-  for(const lesson of incoming||[]){
-    if(positions.has(lesson.id)){
-      merged[positions.get(lesson.id)]=cloneBackupValue(lesson);
-      updated++;
-    }else{
-      positions.set(lesson.id,merged.length);
-      merged.push(cloneBackupValue(lesson));
-      added++;
-    }
-  }
-  return {lessons:normalizeLessons(merged),added,updated};
-}
+function mergeBackupLessons(...args){return window.MawaeidiLessonModel.mergeBackupLessons(...args)}
 function fullBackupFilename(prefix="mawaeidi-full-backup"){
   const stamp=new Date().toISOString().replace(/[:.]/g,"-").slice(0,19);
   return `${prefix}-${stamp}.zip`;
@@ -2358,7 +2264,8 @@ function currentWeekOccurrences(list=filtered()){
 function sessionStatusButtonMarkup(occurrence){
   const info=sessionStatusInfo(occurrenceStatus(occurrence));
   const prefix=occurrence.kind==="replacement"?"بديل · ":"";
-  return `<button type="button" class="session-status-chip ${info.className}" title="${esc(info.full)}" aria-label="تغيير حالة حصة ${esc(occurrence.lesson.name||"بدون اسم")}: ${esc(info.full)}" onclick="event.stopPropagation();openSessionStatus('${occurrence.lesson.id}','${occurrence.date}','${occurrence.time}','${occurrence.kind}','${occurrence.recordId||""}')">${prefix}${esc(info.short)}</button>`;
+  const note=textValue(occurrence.record?.note).trim(),noteHint=note?` — ملاحظة: ${note}`:"";
+  return `<button type="button" class="session-status-chip ${info.className}${note?" has-note":""}" title="${esc(info.full+noteHint)}" aria-label="تغيير حالة حصة ${esc(occurrence.lesson.name||"بدون اسم")}: ${esc(info.full+noteHint)}" onclick="event.stopPropagation();openSessionStatus('${occurrence.lesson.id}','${occurrence.date}','${occurrence.time}','${occurrence.kind}','${occurrence.recordId||""}')">${prefix}${esc(info.short)}${note?'<span class="session-note-mark" aria-hidden="true">✎</span>':""}</button>`;
 }
 function findSessionOccurrence(lessonId,date,time,kind="base",recordId=""){
   const lesson=lessons.find(item=>item.id===lessonId);
@@ -2396,6 +2303,11 @@ function openSessionStatus(lessonId,date,time,kind="base",recordId=""){
       <div class="field"><label for="sessionNewDate">التاريخ الجديد</label><input id="sessionNewDate" type="date" value="${suggestedDate}"></div>
       <div class="field"><label for="sessionNewTime">الوقت الجديد</label><input id="sessionNewTime" type="time" value="${suggestedTime}"></div>
     </div>
+    <div class="field session-note-field">
+      <label for="sessionNote">ملاحظة الحصة <small>اختيارية</small></label>
+      <textarea id="sessionNote" maxlength="${MAX_SESSION_NOTE_LENGTH}" rows="3" placeholder="مثلاً: راجعنا الوحدة الثالثة، أو سبب الغياب…">${esc(occurrence.record?.note||"")}</textarea>
+      <small>تخص هذه الحصة فقط وتظهر على أجهزتك الأخرى.</small>
+    </div>
     <div class="session-status-note">التغيير يخص هذه الحصة بتاريخها فقط، وسيظهر في سجل التعديلات وعلى أجهزتك الأخرى.</div>
     <div class="session-status-actions"><button type="button" class="save" onclick="saveSessionStatus(this)">حفظ الحالة</button><button type="button" class="cancel" onclick="closeToolDialog()">إلغاء</button></div>
   </div>`;
@@ -2417,31 +2329,35 @@ function rescheduleConflict(context,newDate,newTime){
     return start<otherEnd&&end>otherStart;
   })||null;
 }
-function lessonWithSessionStatus(lesson,context,status,newDate="",newTime=""){
+function lessonWithSessionStatus(lesson,context,status,newDate="",newTime="",note=""){
   let records=(lesson.sessionRecords||[]).map(item=>({...item})),now=new Date().toISOString();
+  const cleanNote=textValue(note).trim().slice(0,MAX_SESSION_NOTE_LENGTH);
   if(context.kind==="replacement"){
     const index=records.findIndex(item=>item.kind==="replacement"&&item.id===context.recordId);
     if(index<0)throw new Error("Replacement session not found");
-    if(status==="rescheduled")records[index]={...records[index],date:newDate,time:newTime,status:"default",updatedAt:now};
-    else records[index]={...records[index],status:status==="automatic"?"default":status,updatedAt:now};
+    if(status==="rescheduled")records[index]={...records[index],date:newDate,time:newTime,status:"default",note:cleanNote,updatedAt:now};
+    else records[index]={...records[index],status:status==="automatic"?"default":status,note:cleanNote,updatedAt:now};
     return normalizeLesson({...lesson,sessionRecords:records});
   }
   const oldBase=records.find(item=>item.kind==="base"&&item.date===context.date&&item.time===context.time)||null;
   const oldReplacement=oldBase?.replacementId?records.find(item=>item.kind==="replacement"&&item.id===oldBase.replacementId):null;
   records=records.filter(item=>!(item.kind==="base"&&item.date===context.date&&item.time===context.time)&&item.id!==oldBase?.replacementId);
-  if(status==="automatic")return normalizeLesson({...lesson,sessionRecords:records});
+  if(status==="automatic"){
+    if(cleanNote)records.push({id:`base-${context.date}-${context.time.replace(":","")}`,kind:"base",date:context.date,time:context.time,status:"default",note:cleanNote,updatedAt:now});
+    return normalizeLesson({...lesson,sessionRecords:records});
+  }
   if(status==="rescheduled"){
     const replacementId=oldReplacement?.id||makeId();
-    records.push({id:`base-${context.date}-${context.time.replace(":","")}`,kind:"base",date:context.date,time:context.time,status:"rescheduled",replacementId,updatedAt:now});
-    records.push({id:replacementId,kind:"replacement",date:newDate,time:newTime,status:"default",sourceDate:context.date,sourceTime:context.time,updatedAt:now});
-  }else records.push({id:`base-${context.date}-${context.time.replace(":","")}`,kind:"base",date:context.date,time:context.time,status,updatedAt:now});
+    records.push({id:`base-${context.date}-${context.time.replace(":","")}`,kind:"base",date:context.date,time:context.time,status:"rescheduled",replacementId,note:cleanNote,updatedAt:now});
+    records.push({id:replacementId,kind:"replacement",date:newDate,time:newTime,status:"default",sourceDate:context.date,sourceTime:context.time,note:textValue(oldReplacement?.note),updatedAt:now});
+  }else records.push({id:`base-${context.date}-${context.time.replace(":","")}`,kind:"base",date:context.date,time:context.time,status,note:cleanNote,updatedAt:now});
   return normalizeLesson({...lesson,sessionRecords:records});
 }
 async function saveSessionStatus(button){
   if(!scheduleWriteAllowed())return;
   const context=activeSessionContext,status=document.querySelector('input[name="sessionStatusChoice"]:checked')?.value;
   if(!context||!["automatic","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"].includes(status))return;
-  let newDate="",newTime="";
+  let newDate="",newTime="",note=document.getElementById("sessionNote")?.value||"";
   if(status==="rescheduled"){
     newDate=document.getElementById("sessionNewDate")?.value||"";newTime=document.getElementById("sessionNewTime")?.value||"";
     if(!validDateKey(newDate)||!TIME_RE.test(newTime)){alert("اختر تاريخًا ووقتًا صحيحين.");return}
@@ -2452,7 +2368,7 @@ async function saveSessionStatus(button){
   const index=lessons.findIndex(item=>item.id===context.lessonId);if(index<0)return;
   const previous=lessons;
   try{
-    const updated=lessonWithSessionStatus(lessons[index],context,status,newDate,newTime);
+    const updated=lessonWithSessionStatus(lessons[index],context,status,newDate,newTime,note);
     lessons=lessons.map((item,itemIndex)=>itemIndex===index?updated:item);
   }catch(error){console.error("تعذّر تحديث حالة الحصة.",error);alert("تعذّر تحديث هذه الحصة. حدّث الصفحة وحاول مرة أخرى.");return}
   if(button)button.disabled=true;

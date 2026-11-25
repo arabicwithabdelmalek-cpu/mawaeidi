@@ -25,7 +25,8 @@
     "session-state.js",
     "tests/session-state.test.cjs",
     "world-clock-model.js",
-    "tests/world-clock-model.test.cjs"
+    "tests/world-clock-model.test.cjs",
+    "tests/world-clock-render.test.cjs"
   ],
   "platformSpecific": [
     "app-main.js",

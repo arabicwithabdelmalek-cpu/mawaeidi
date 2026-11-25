@@ -1,0 +1,24 @@
+name: Build Neon UI preview
+on:
+  push:
+    branches: ['migration/neon-pilot']
+    paths: ['migration/neon/build-preview.mjs','migration/neon/preview-bridge.mjs','.github/workflows/neon-preview.yml']
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock --ignore-scripts @neon/neon-js esbuild
+      - run: node migration/neon/build-preview.mjs
+      - run: node --check neon-preview/app-main.js
+      - run: node --check neon-preview/students/student-registry.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mawaeidi-neon-ui-preview
+          path: neon-preview/
+          retention-days: 7

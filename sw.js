@@ -6,7 +6,7 @@ const APP_SHELL=[
   "./students/index.html",
   "./students/student-registry.css?v=14",
   "./students/student-workspace-upgrade.css?v=1",
-  "./backup-manager.js?v=2",
+  "./backup-manager.js?v=3",
   "./schedule-concurrency.js?v=1",
   "./schedule-time.js?v=1",
   "./lesson-model.js?v=1",

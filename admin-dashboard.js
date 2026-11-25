@@ -20,6 +20,7 @@
   let selectedUserId = null;
   let detailReturnFocus = null;
   let pending = false;
+  let reportGeneration = 0;
   let current = null;
   let adminAvatarOwner = null;
   let avatarCache = new Map();
@@ -531,6 +532,7 @@
     renderFeed();
   }
   function fail(message, accessDenied = false) {
+    reportGeneration++;
     avatarCache.clear();
     adminAvatarOwner = null;
     avatarLoadedAt = 0;
@@ -556,7 +558,7 @@
     });
     avatarRequest = request;
     request.then(({data: pictured, error: avatarError}) => {
-      if (adminAvatarOwner !== ownerId || !current) return;
+      if (avatarRequest !== request || adminAvatarOwner !== ownerId || !current) return;
       if (avatarError || !Array.isArray(pictured?.users)) {
         avatarRetryAfter = Date.now() + 60000;
         return;
@@ -575,7 +577,7 @@
       renderDetails(false);
       renderFeed();
     }).catch(() => {
-      if (adminAvatarOwner === ownerId)
+      if (avatarRequest === request && adminAvatarOwner === ownerId)
         avatarRetryAfter = Date.now() + 60000;
     }).finally(() => {
       if (avatarRequest === request) avatarRequest = null;
@@ -586,16 +588,19 @@
     if (pending) return;
     if (!client) { fail("تعذّر الاتصال بخدمة الحساب. تحقق من اتصال الإنترنت."); return; }
     pending = true;
+    const generation = reportGeneration;
     $("refreshBtn").disabled = true;
     $("refreshBtn").textContent = "جارٍ التحديث…";
     if (!current) { $("loading").hidden = false; $("errorBox").hidden = true; }
     try {
       const { data: auth, error: authError } = await client.auth.getUser();
+      if (generation !== reportGeneration) return;
       if (authError || !auth?.user) {
         fail("سجّل الدخول بحسابك الإداري إلى مواعيدي أولًا، ثم افتح هذه الصفحة.");
         return;
       }
       const { data, error } = await client.rpc("mawaeidi_admin_usage", { p_days: 90 });
+      if (generation !== reportGeneration) return;
       if (error) {
         if (error.code === "42501" || /admin_only/i.test(error.message || "")) {
           fail("هذا الحساب لا يملك صلاحية قراءة بيانات لوحة الإدارة.", true);
@@ -626,6 +631,7 @@
       // The manual refresh button always requests updated photos.
       refreshAvatarLinks(auth.user.id, forceAvatarRefresh);
     } catch (error) {
+      if (generation !== reportGeneration) return;
       console.error("Mawaeidi admin report:", error);
       fail("حدث خطأ في الاتصال. حاول تحديث البيانات مرة أخرى.");
     } finally {

@@ -17,7 +17,11 @@
     "icons/icon-192.png",
     "icons/icon-512.png",
     "icons/icon.svg",
-    "icons/kufi-quote.png"
+    "icons/kufi-quote.png",
+    "schedule-time.js",
+    "tests/schedule-time.test.cjs",
+    "lesson-model.js",
+    "tests/lesson-model.test.cjs"
   ],
   "platformSpecific": [
     "app-main.js",

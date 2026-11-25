@@ -16,6 +16,7 @@ const rootFiles = [
   "mobile-app.css",
   "native-bridge.js",
   "schedule-concurrency.js",
+  "schedule-time.js",
   "sw.js"
 ];
 

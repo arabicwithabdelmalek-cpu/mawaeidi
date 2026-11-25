@@ -123,6 +123,7 @@ let worldClockInterval=null;
 const worldTimelineRenderKeys=new WeakMap();
 let worldClockSettings=null;
 let worldClockBusy=false;
+let worldClockRefreshRequest=null;
 let worldClockLoadSequence=0;
 
 
@@ -338,13 +339,23 @@ function setWorldClockServerRow(row,userId){
 }
 function resetWorldClockSync(){worldClockLoadSequence++;worldClockSettings=null;worldClockBusy=false}
 async function refreshWorldClockFromCloud(){
- if(!currentUser||!cloudReady||worldClockBusy)return false;
+ if(!cloud||!currentUser||!cloudReady||worldClockBusy)return false;
  const userId=currentUser.id,seq=worldClockLoadSequence;
- const {data,error}=await cloud.from(WORLD_CLOCK_SETTINGS_TABLE)
-  .select("user_id,base_zone,zones,version").eq("user_id",userId).maybeSingle();
- if(error){console.warn("World clock refresh failed.",error);return false}
- if(seq!==worldClockLoadSequence||currentUser?.id!==userId||!data)return false;
- return setWorldClockServerRow(data,userId);
+ if(worldClockRefreshRequest?.userId===userId&&worldClockRefreshRequest.seq===seq)return worldClockRefreshRequest.promise;
+ const request={userId,seq,promise:null};
+ worldClockRefreshRequest=request;
+ request.promise=Promise.resolve().then(async()=>{
+  try{
+   if(worldClockRefreshRequest!==request||seq!==worldClockLoadSequence||currentUser?.id!==userId||!cloudReady||worldClockBusy)return false;
+   const {data,error}=await cloud.from(WORLD_CLOCK_SETTINGS_TABLE)
+    .select("user_id,base_zone,zones,version").eq("user_id",userId).maybeSingle();
+   if(error)throw error;
+   if(worldClockRefreshRequest!==request||seq!==worldClockLoadSequence||currentUser?.id!==userId||!cloudReady||worldClockBusy||!data)return false;
+   return setWorldClockServerRow(data,userId);
+  }catch(error){console.warn("World clock refresh failed.",error);return false}
+  finally{if(worldClockRefreshRequest===request)worldClockRefreshRequest=null}
+ });
+ return request.promise;
 }
 async function initializeWorldClockForUser(user,sequence){
  const userId=user.id,load=++worldClockLoadSequence;
@@ -385,6 +396,7 @@ async function mutateWorldClock(action,zone=null,extra={}){
  if(worldClockBusy){alert("جارٍ حفظ تعديل للساعة. أعد المحاولة بعد اكتماله.");return false}
  if(!navigator.onLine){alert("يجب الاتصال بالإنترنت لتعديل الساعة العالمية وحفظها في الحساب.");return false}
  const userId=currentUser.id;
+ worldClockRefreshRequest=null;
  worldClockBusy=true;
  try{
   const args={p_action:action,...extra};if(zone!==null)args.p_zone=zone;
@@ -1854,12 +1866,16 @@ async function refreshFromCloud(silent=false){
   }
 }
 function requestAutoRefresh(){
-  if(document.visibilityState!=="visible"||backupInFlight)return;
+  if(document.visibilityState!=="visible"||backupInFlight||!currentUser||!cloudReady||!navigator.onLine)return;
   const now=Date.now();
   if(now-lastAutoRefreshAt<AUTO_REFRESH_THROTTLE_MS)return;
   lastAutoRefreshAt=now;
-  refreshFromCloud(true);
-  refreshWorldClockFromCloud();
+  if(currentSection==="world"){
+    refreshWorldClockFromCloud();
+  }else{
+    refreshFromCloud(true);
+    refreshWorldClockFromCloud();
+  }
 }
 function finishAuthBootstrap(){document.body.classList.remove("auth-pending")}
 function showAuth(){

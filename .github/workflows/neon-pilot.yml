@@ -1,0 +1,24 @@
+name: Neon pilot checks
+on:
+  push:
+    branches: ['migration/neon-pilot']
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unit checks
+        run: node --test migration/neon/pilot.test.mjs
+      - name: Compile isolated browser client
+        working-directory: migration/neon
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts @neon/neon-js esbuild
+          npm ls @neon/neon-js esbuild --depth=0
+          npx --no-install esbuild pilot-client.mjs --bundle --format=esm --platform=browser --outfile=/tmp/neon-pilot.mjs
+      - name: Verify anonymous requests cannot read the database
+        run: node --test migration/neon/anonymous-api.test.mjs

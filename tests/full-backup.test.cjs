@@ -43,7 +43,7 @@ async function main(){
   assert.match(html,/تنزيل نسخة احتياطية كاملة/);
   assert.match(html,/دمج البيانات دون حذف الموجود/);
   assert.match(html,/backup-manager\.js\?v=1/);
-  assert.match(html,/student-registry\.js\?v=15/);
+  assert.match(html,/student-registry\.js\?v=16/);
   assert.doesNotMatch(html,/id="backupStudents"/);
   assert.match(students,/createBackupSnapshot/);
   assert.match(students,/inspectBackupSnapshot/);

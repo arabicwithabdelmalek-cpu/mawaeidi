@@ -36,6 +36,8 @@ assert.ok(!csv.includes(secret),"CSV export leaked the stored student password")
 // preserve the current saved password of an existing matching student.
 assert.match(source,/const missing=CSV_EXPORT_HEADERS\.filter\(header=>!headers\.includes\(header\)\)/);
 assert.match(source,/includesLoginPassword:headers\.includes\(/);
+assert.match(source,/if\(field\.key==="login_password"&&!importPlan\.includesLoginPassword\)continue/);
+assert.match(source,/upsert\(cloudPayload,\{onConflict:"id",defaultToNull:false\}\)/);
 assert.match(source,/importPlan\.includesLoginPassword\?item\.login_password:\(existing\?\.login_password\|\|""\)/);
 
 // The history UI may be fed existing rows from before server-side redaction.
@@ -51,7 +53,7 @@ assert.match(redaction,/DRAFT FOR REVIEW ONLY/);
 assert.match(redaction,/prior := to_jsonb\(old\) - array\[[^\]]*'login_password'/);
 assert.match(redaction,/after_value := to_jsonb\(new\) - array\[[^\]]*'login_password'/);
 assert.match(redaction,/credential_updated/);
-assert.match(redaction,/set changes = changes - 'login_password'/);
+assert.match(redaction,/set changes = \(changes - 'login_password'\)/);
 assert.match(source,/if\(key==="credential_updated"\)return/);
 
 // Full backup behavior is deliberately unchanged: it can retain student passwords.

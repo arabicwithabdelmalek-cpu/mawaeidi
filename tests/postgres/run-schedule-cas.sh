@@ -128,3 +128,10 @@ docker exec "$PG_CONTAINER" psql -X -Atq -v ON_ERROR_STOP=1 \
 echo "Real PostgreSQL concurrent existing-schedule edits passed (one saved, one conflict)."
 
 run_sql_file tests/postgres/schedule-finance.test.sql
+
+# Exercise the real student audit trigger with synthetic credentials before and after redaction.
+run_sql_file tests/postgres/student-history-fixture.sql
+run_sql_file supabase/migrations/20261028042000_student_trash_and_history.sql
+run_sql_file tests/postgres/student-history-legacy.test.sql
+run_sql_file docs/reviews/sql/student-history-redaction-proposal.sql
+run_sql_file tests/postgres/student-history-redaction.test.sql

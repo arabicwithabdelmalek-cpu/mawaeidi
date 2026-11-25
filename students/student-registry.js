@@ -1617,10 +1617,13 @@ async function confirmCsvImport(){
     });
       const cloudPayload=payload.map(item=>{
         const data={user_id:currentUser.id,id:item.id};
-        for(const field of STUDENT_FIELDS)data[field.key]=(field.key==="joined_on"||field.key==="username")?(item[field.key]||null):item[field.key];
+        for(const field of STUDENT_FIELDS){
+          if(field.key==="login_password"&&!importPlan.includesLoginPassword)continue;
+          data[field.key]=(field.key==="joined_on"||field.key==="username")?(item[field.key]||null):item[field.key];
+        }
         return data;
       });
-      const {data,error}=await cloud.from(STUDENTS_TABLE).upsert(cloudPayload,{onConflict:"id"}).select("*");
+      const {data,error}=await cloud.from(STUDENTS_TABLE).upsert(cloudPayload,{onConflict:"id",defaultToNull:false}).select("*");
       if(error)throw error;
       if(operationAccountSequence!==accountSequence||currentUser?.id!==operationUserId)return;
       students=(data||[]).map(normalizeStudent);

@@ -87,7 +87,8 @@ revoke all on function private.audit_mawaeidi_student_changes()
 -- Do not delete student history or modify student account passwords.
 -- This removes ONLY secret-bearing legacy fields from per-row audit diffs.
 update public.mawaeidi_student_history
-   set changes = changes - 'login_password'
+   set changes = (changes - 'login_password') || pg_catalog.jsonb_build_object(
+     'credential_updated', pg_catalog.jsonb_build_object('changed', true))
  where changes ? 'login_password';
 
 commit;

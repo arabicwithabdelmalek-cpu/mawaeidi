@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - feature/schedule-safe-sync-20261125
+      - feature/student-data-security-20261125
 permissions:
   contents: read
 jobs:

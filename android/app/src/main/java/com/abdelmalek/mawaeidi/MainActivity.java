@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(MawaeidiAlarmPlugin.class);
+        registerPlugin(MawaeidiMobilePlugin.class);
         super.onCreate(savedInstanceState);
         getWindow().setStatusBarColor(Color.parseColor("#F8FAFB"));
         getWindow().setNavigationBarColor(Color.parseColor("#F8FAFB"));

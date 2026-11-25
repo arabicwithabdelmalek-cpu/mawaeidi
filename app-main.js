@@ -1640,6 +1640,10 @@ function setAuthMessage(message,isError=false){
 }
 function setSync(state,message){
   const box=document.getElementById("syncStatus");
+  if(pendingScheduleConflict&&state==="saved"){
+    state="error";
+    message=pendingScheduleConflict.reason?"الحفظ غير مؤكّد — اضغط للمراجعة":"تعارض محفوظ — اضغط للمراجعة";
+  }
   box.className=`sync-status ${state||""}`.trim();
   document.getElementById("syncStatusText").textContent=message;
   box.disabled=state==="saving";
@@ -1650,12 +1654,16 @@ function showScheduleConflict(){
   if(!pendingScheduleConflict)return;
   const layer=document.getElementById("scheduleConflictLayer");
   if(layer){layer.hidden=false;layer.querySelector("#scheduleConflictDownload")?.focus({preventScroll:true})}
-  setSync("error","تعارض في تعديلات الجدول");
+  const failure=pendingScheduleConflict.reason;
+  const title=document.getElementById("scheduleConflictTitle"),message=document.getElementById("scheduleConflictMessage");
+  if(title)title.textContent=failure?"تعذّر تأكيد حفظ الجدول":"تعديلات جديدة على الجدول من جهاز آخر";
+  if(message)message.textContent=failure?"قد يكون الاتصال انقطع قبل تأكيد النتيجة. تعديلاتك متاحة في هذه النافذة؛ نزّل نسخة منها، ثم حمّل أحدث جدول للتحقق مما حُفظ. لن نعيد إرسال الجدول تلقائيًا.":"لم نحفظ التعديل الحالي حتى لا نكتب فوق مواعيد أخرى. يمكنك تنزيل نسخة من تعديلات هذا الجهاز أولًا، ثم تحميل الجدول الأحدث ومراجعة الفرق.";
+  setSync("error",failure==="guard_unavailable"?"حماية التعارض غير مفعّلة":failure?"الحفظ غير مؤكّد — اضغط للمراجعة":"تعارض في تعديلات الجدول");
 }
 function dismissScheduleConflict(){
   const layer=document.getElementById("scheduleConflictLayer");
   if(layer)layer.hidden=true;
-  if(pendingScheduleConflict)setSync("error","تعارض محفوظ — اضغط للمراجعة");
+  if(pendingScheduleConflict)setSync("error",pendingScheduleConflict.reason?"الحفظ غير مؤكّد — اضغط للمراجعة":"تعارض محفوظ — اضغط للمراجعة");
 }
 function resetScheduleConflict(){
   pendingScheduleConflict=null;
@@ -1709,9 +1717,10 @@ async function reloadScheduleAfterConflict(){
     if(pending!==pendingScheduleConflict||currentUser?.id!==pending.userId)return;
     if(data&&(data.user_id!==pending.userId||!Array.isArray(data.lessons)))throw new Error("invalid_remote_schedule");
     const remote=data?.lessons||[];
+    const normalized=normalizeLessons(remote);
     resetScheduleConflict();
     pendingRemoteRow=null;
-    lessons=normalizeLessons(remote);
+    lessons=normalized;
     lastCloudLessons=data?cloneBackupValue(remote):null;
     lastCloudUpdatedAt=textValue(data?.updated_at)||null;
     closeDrawer();closeToolDialog();
@@ -1783,7 +1792,7 @@ function startRealtime(user){
       }
     })
     .subscribe(status=>{
-      if(status==="SUBSCRIBED"&&cloudReady&&!saveInFlight&&!refreshInFlight&&!pendingRemoteRow)setSync("saved","متزامن سحابيًا");
+      if(status==="SUBSCRIBED"&&cloudReady&&!saveInFlight&&!refreshInFlight&&!pendingRemoteRow&&!pendingScheduleConflict)setSync("saved","متزامن سحابيًا");
       if((status==="CHANNEL_ERROR"||status==="TIMED_OUT")&&currentUser?.id===user.id)setSync("error","اضغط للتحديث");
     });
 }
@@ -2040,10 +2049,9 @@ async function persist(silent=false){
     console.error("تعذّر الحفظ المحمي لمواعيدي.",error);
     const missing=/schedule_guard_unavailable|PGRST202|42883|function .* does not exist/i.test(
       String(error?.code||"")+" "+String(error?.message||""));
-    setSync("error",missing?"حماية التعارض غير مفعّلة":"لم يُحفظ");
-    if(!silent)alert(missing?
-      "لم تُفعّل حماية التعارض بعد في قاعدة مواعيدي. لم يُحفظ التعديل.":
-      "تعذّر حفظ البيانات سحابيًا. لم نكتب فوق أي تعديل آخر. حاول مرة أخرى.");
+    if(sequence!==sessionSequence||currentUser?.id!==ownerId)return false;
+    pendingScheduleConflict={userId:ownerId,draft,downloaded:false,reason:missing?"guard_unavailable":"unconfirmed"};
+    showScheduleConflict();
     return false;
   }finally{saveInFlight=false}
 }
@@ -3146,7 +3154,7 @@ function keepToolDialogKeyboardFocus(event){
     event.preventDefault();first.focus({preventScroll:true});
   }
 }
-window.addEventListener("beforeunload",event=>{if(pendingScheduleConflict&&!pendingScheduleConflict.downloaded){event.preventDefault();event.returnValue="";}});
+window.addEventListener("beforeunload",event=>{if(saveInFlight||(pendingScheduleConflict&&!pendingScheduleConflict.downloaded)){event.preventDefault();event.returnValue="";}});
 document.addEventListener("keydown",e=>{
   if(document.getElementById("backupPasswordDialog")?.open)return;
   const conflictLayer=document.getElementById("scheduleConflictLayer");

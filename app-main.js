@@ -34,7 +34,7 @@ const WORLD_CLOCK_SETTINGS_TABLE="mawaeidi_world_clock_settings";
 const WORLD_CLOCK_LEGACY_OWNER_KEY="mawaeidi-world-clock-v1-owner";
 const SCHEDULE_TIMEZONE="Africa/Cairo";
 const SESSION_RECORD_STATUSES=["default","completed","cancelled_unpaid","cancelled_counted","free","rescheduled"];
-const TIMEZONE_COUNTRY_MAP={"Europe/Andorra":"AD","Asia/Dubai":"AE","Asia/Kabul":"AF","America/Antigua":"AG","America/Anguilla":"AI","Europe/Tirane":"AL","Asia/Yerevan":"AM","Africa/Luanda":"AO","Antarctica/McMurdo":"AQ","Antarctica/Casey":"AQ","Antarctica/Davis":"AQ","Antarctica/DumontDUrville":"AQ","Antarctica/Mawson":"AQ","Antarctica/Palmer":"AQ","Antarctica/Rothera":"AQ","Antarctica/Syowa":"AQ","Antarctica/Troll":"AQ","Antarctica/Vostok":"AQ","America/Argentina/Buenos_Aires":"AR","America/Argentina/Cordoba":"AR","America/Argentina/Salta":"AR","America/Argentina/Jujuy":"AR","America/Argentina/Tucuman":"AR","America/Argentina/Catamarca":"AR","America/Argentina/La_Rioja":"AR","America/Argentina/San_Juan":"AR","America/Argentina/Mendoza":"AR","America/Argentina/San_Luis":"AR","America/Argentina/Rio_Gallegos":"AR","America/Argentina/Ushuaia":"AR","Pacific/Pago_Pago":"AS","Europe/Vienna":"AT","Australia/Lord_Howe":"AU","Antarctica/Macquarie":"AU","Australia/Hobart":"AU","Australia/Melbourne":"AU","Australia/Sydney":"AU","Australia/Broken_Hill":"AU","Australia/Brisbane":"AU","Australia/Lindeman":"AU","Australia/Adelaide":"AU","Australia/Darwin":"AU","Australia/Perth":"AU","Australia/Eucla":"AU","America/Aruba":"AW","Europe/Mariehamn":"AX","Asia/Baku":"AZ","Europe/Sarajevo":"BA","America/Barbados":"BB","Asia/Dhaka":"BD","Europe/Brussels":"BE","Africa/Ouagadougou":"BF","Europe/Sofia":"BG","Asia/Bahrain":"BH","Africa/Bujumbura":"BI","Africa/Porto-Novo":"BJ","America/St_Barthelemy":"BL","Atlantic/Bermuda":"BM","Asia/Brunei":"BN","America/La_Paz":"BO","America/Kralendijk":"BQ","America/Noronha":"BR","America/Belem":"BR","America/Fortaleza":"BR","America/Recife":"BR","America/Araguaina":"BR","America/Maceio":"BR","America/Bahia":"BR","America/Sao_Paulo":"BR","America/Campo_Grande":"BR","America/Cuiaba":"BR","America/Santarem":"BR","America/Porto_Velho":"BR","America/Boa_Vista":"BR","America/Manaus":"BR","America/Eirunepe":"BR","America/Rio_Branco":"BR","America/Nassau":"BS","Asia/Thimphu":"BT","Africa/Gaborone":"BW","Europe/Minsk":"BY","America/Belize":"BZ","America/St_Johns":"CA","America/Halifax":"CA","America/Glace_Bay":"CA","America/Moncton":"CA","America/Goose_Bay":"CA","America/Blanc-Sablon":"CA","America/Toronto":"CA","America/Iqaluit":"CA","America/Atikokan":"CA","America/Winnipeg":"CA","America/Resolute":"CA","America/Rankin_Inlet":"CA","America/Regina":"CA","America/Swift_Current":"CA","America/Edmonton":"CA","America/Cambridge_Bay":"CA","America/Inuvik":"CA","America/Vancouver":"CA","America/Creston":"CA","America/Dawson_Creek":"CA","America/Fort_Nelson":"CA","America/Whitehorse":"CA","America/Dawson":"CA","Indian/Cocos":"CC","Africa/Kinshasa":"CD","Africa/Lubumbashi":"CD","Africa/Bangui":"CF","Africa/Brazzaville":"CG","Europe/Zurich":"CH","Africa/Abidjan":"CI","Pacific/Rarotonga":"CK","America/Santiago":"CL","America/Coyhaique":"CL","America/Punta_Arenas":"CL","Pacific/Easter":"CL","Africa/Douala":"CM","Asia/Shanghai":"CN","Asia/Urumqi":"CN","America/Bogota":"CO","America/Costa_Rica":"CR","America/Havana":"CU","Atlantic/Cape_Verde":"CV","America/Curacao":"CW","Indian/Christmas":"CX","Asia/Nicosia":"CY","Asia/Famagusta":"CY","Europe/Prague":"CZ","Europe/Berlin":"DE","Europe/Busingen":"DE","Africa/Djibouti":"DJ","Europe/Copenhagen":"DK","America/Dominica":"DM","America/Santo_Domingo":"DO","Africa/Algiers":"DZ","America/Guayaquil":"EC","Pacific/Galapagos":"EC","Europe/Tallinn":"EE","Africa/Cairo":"EG","Africa/El_Aaiun":"EH","Africa/Asmara":"ER","Europe/Madrid":"ES","Africa/Ceuta":"ES","Atlantic/Canary":"ES","Africa/Addis_Ababa":"ET","Europe/Helsinki":"FI","Pacific/Fiji":"FJ","Atlantic/Stanley":"FK","Pacific/Chuuk":"FM","Pacific/Pohnpei":"FM","Pacific/Kosrae":"FM","Atlantic/Faroe":"FO","Europe/Paris":"FR","Africa/Libreville":"GA","Europe/London":"GB","America/Grenada":"GD","Asia/Tbilisi":"GE","America/Cayenne":"GF","Europe/Guernsey":"GG","Africa/Accra":"GH","Europe/Gibraltar":"GI","America/Nuuk":"GL","America/Danmarkshavn":"GL","America/Scoresbysund":"GL","America/Thule":"GL","Africa/Banjul":"GM","Africa/Conakry":"GN","America/Guadeloupe":"GP","Africa/Malabo":"GQ","Europe/Athens":"GR","Atlantic/South_Georgia":"GS","America/Guatemala":"GT","Pacific/Guam":"GU","Africa/Bissau":"GW","America/Guyana":"GY","Asia/Hong_Kong":"HK","America/Tegucigalpa":"HN","Europe/Zagreb":"HR","America/Port-au-Prince":"HT","Europe/Budapest":"HU","Asia/Jakarta":"ID","Asia/Pontianak":"ID","Asia/Makassar":"ID","Asia/Jayapura":"ID","Europe/Dublin":"IE","Asia/Jerusalem":"IL","Europe/Isle_of_Man":"IM","Asia/Kolkata":"IN","Indian/Chagos":"IO","Asia/Baghdad":"IQ","Asia/Tehran":"IR","Atlantic/Reykjavik":"IS","Europe/Rome":"IT","Europe/Jersey":"JE","America/Jamaica":"JM","Asia/Amman":"JO","Asia/Tokyo":"JP","Africa/Nairobi":"KE","Asia/Bishkek":"KG","Asia/Phnom_Penh":"KH","Pacific/Tarawa":"KI","Pacific/Kanton":"KI","Pacific/Kiritimati":"KI","Indian/Comoro":"KM","America/St_Kitts":"KN","Asia/Pyongyang":"KP","Asia/Seoul":"KR","Asia/Kuwait":"KW","America/Cayman":"KY","Asia/Almaty":"KZ","Asia/Qyzylorda":"KZ","Asia/Qostanay":"KZ","Asia/Aqtobe":"KZ","Asia/Aqtau":"KZ","Asia/Atyrau":"KZ","Asia/Oral":"KZ","Asia/Vientiane":"LA","Asia/Beirut":"LB","America/St_Lucia":"LC","Europe/Vaduz":"LI","Asia/Colombo":"LK","Africa/Monrovia":"LR","Africa/Maseru":"LS","Europe/Vilnius":"LT","Europe/Luxembourg":"LU","Europe/Riga":"LV","Africa/Tripoli":"LY","Africa/Casablanca":"MA","Europe/Monaco":"MC","Europe/Chisinau":"MD","Europe/Podgorica":"ME","America/Marigot":"MF","Indian/Antananarivo":"MG","Pacific/Majuro":"MH","Pacific/Kwajalein":"MH","Europe/Skopje":"MK","Africa/Bamako":"ML","Asia/Yangon":"MM","Asia/Ulaanbaatar":"MN","Asia/Hovd":"MN","Asia/Macau":"MO","Pacific/Saipan":"MP","America/Martinique":"MQ","Africa/Nouakchott":"MR","America/Montserrat":"MS","Europe/Malta":"MT","Indian/Mauritius":"MU","Indian/Maldives":"MV","Africa/Blantyre":"MW","America/Mexico_City":"MX","America/Cancun":"MX","America/Merida":"MX","America/Monterrey":"MX","America/Matamoros":"MX","America/Chihuahua":"MX","America/Ciudad_Juarez":"MX","America/Ojinaga":"MX","America/Mazatlan":"MX","America/Bahia_Banderas":"MX","America/Hermosillo":"MX","America/Tijuana":"MX","Asia/Kuala_Lumpur":"MY","Asia/Kuching":"MY","Africa/Maputo":"MZ","Africa/Windhoek":"NA","Pacific/Noumea":"NC","Africa/Niamey":"NE","Pacific/Norfolk":"NF","Africa/Lagos":"NG","America/Managua":"NI","Europe/Amsterdam":"NL","Europe/Oslo":"NO","Asia/Kathmandu":"NP","Pacific/Nauru":"NR","Pacific/Niue":"NU","Pacific/Auckland":"NZ","Pacific/Chatham":"NZ","Asia/Muscat":"OM","America/Panama":"PA","America/Lima":"PE","Pacific/Tahiti":"PF","Pacific/Marquesas":"PF","Pacific/Gambier":"PF","Pacific/Port_Moresby":"PG","Pacific/Bougainville":"PG","Asia/Manila":"PH","Asia/Karachi":"PK","Europe/Warsaw":"PL","America/Miquelon":"PM","Pacific/Pitcairn":"PN","America/Puerto_Rico":"PR","Asia/Gaza":"PS","Asia/Hebron":"PS","Europe/Lisbon":"PT","Atlantic/Madeira":"PT","Atlantic/Azores":"PT","Pacific/Palau":"PW","America/Asuncion":"PY","Asia/Qatar":"QA","Indian/Reunion":"RE","Europe/Bucharest":"RO","Europe/Belgrade":"RS","Europe/Kaliningrad":"RU","Europe/Moscow":"RU","Europe/Simferopol":"UA","Europe/Kirov":"RU","Europe/Volgograd":"RU","Europe/Astrakhan":"RU","Europe/Saratov":"RU","Europe/Ulyanovsk":"RU","Europe/Samara":"RU","Asia/Yekaterinburg":"RU","Asia/Omsk":"RU","Asia/Novosibirsk":"RU","Asia/Barnaul":"RU","Asia/Tomsk":"RU","Asia/Novokuznetsk":"RU","Asia/Krasnoyarsk":"RU","Asia/Irkutsk":"RU","Asia/Chita":"RU","Asia/Yakutsk":"RU","Asia/Khandyga":"RU","Asia/Vladivostok":"RU","Asia/Ust-Nera":"RU","Asia/Magadan":"RU","Asia/Sakhalin":"RU","Asia/Srednekolymsk":"RU","Asia/Kamchatka":"RU","Asia/Anadyr":"RU","Africa/Kigali":"RW","Asia/Riyadh":"SA","Pacific/Guadalcanal":"SB","Indian/Mahe":"SC","Africa/Khartoum":"SD","Europe/Stockholm":"SE","Asia/Singapore":"SG","Atlantic/St_Helena":"SH","Europe/Ljubljana":"SI","Arctic/Longyearbyen":"SJ","Europe/Bratislava":"SK","Africa/Freetown":"SL","Europe/San_Marino":"SM","Africa/Dakar":"SN","Africa/Mogadishu":"SO","America/Paramaribo":"SR","Africa/Juba":"SS","Africa/Sao_Tome":"ST","America/El_Salvador":"SV","America/Lower_Princes":"SX","Asia/Damascus":"SY","Africa/Mbabane":"SZ","America/Grand_Turk":"TC","Africa/Ndjamena":"TD","Indian/Kerguelen":"TF","Africa/Lome":"TG","Asia/Bangkok":"TH","Asia/Dushanbe":"TJ","Pacific/Fakaofo":"TK","Asia/Dili":"TL","Asia/Ashgabat":"TM","Africa/Tunis":"TN","Pacific/Tongatapu":"TO","Europe/Istanbul":"TR","America/Port_of_Spain":"TT","Pacific/Funafuti":"TV","Asia/Taipei":"TW","Africa/Dar_es_Salaam":"TZ","Europe/Kyiv":"UA","Africa/Kampala":"UG","Pacific/Midway":"UM","Pacific/Wake":"UM","America/New_York":"US","America/Detroit":"US","America/Kentucky/Louisville":"US","America/Kentucky/Monticello":"US","America/Indiana/Indianapolis":"US","America/Indiana/Vincennes":"US","America/Indiana/Winamac":"US","America/Indiana/Marengo":"US","America/Indiana/Petersburg":"US","America/Indiana/Vevay":"US","America/Chicago":"US","America/Indiana/Tell_City":"US","America/Indiana/Knox":"US","America/Menominee":"US","America/North_Dakota/Center":"US","America/North_Dakota/New_Salem":"US","America/North_Dakota/Beulah":"US","America/Denver":"US","America/Boise":"US","America/Phoenix":"US","America/Los_Angeles":"US","America/Anchorage":"US","America/Juneau":"US","America/Sitka":"US","America/Metlakatla":"US","America/Yakutat":"US","America/Nome":"US","America/Adak":"US","Pacific/Honolulu":"US","America/Montevideo":"UY","Asia/Samarkand":"UZ","Asia/Tashkent":"UZ","Europe/Vatican":"VA","America/St_Vincent":"VC","America/Caracas":"VE","America/Tortola":"VG","America/St_Thomas":"VI","Asia/Ho_Chi_Minh":"VN","Pacific/Efate":"VU","Pacific/Wallis":"WF","Pacific/Apia":"WS","Asia/Aden":"YE","Indian/Mayotte":"YT","Africa/Johannesburg":"ZA","Africa/Lusaka":"ZM","Africa/Harare":"ZW"};
+
 const cloud=window.supabase?.createClient
   ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
   :null;
@@ -116,7 +116,7 @@ let worldClockInterval=null;
 let worldClockSettings=null;
 let worldClockBusy=false;
 let worldClockLoadSequence=0;
-let timeZoneCatalogCache=null;
+
 
 function closeDataMenu(restoreFocus=false){
   const menu=document.getElementById("dataMenu");
@@ -337,15 +337,8 @@ async function mutateWorldClock(action,zone=null,extra={}){
   if(currentUser?.id===userId)refreshWorldClockFromCloud();
  }
 }
-function worldClockState(hour){
-  if(hour>=8&&hour<18)return {label:"وقت عمل",className:"work"};
-  if(hour>=18&&hour<23)return {label:"مساء",className:"evening"};
-  return {label:"ليل / مبكر",className:"night"};
-}
-function utcOffsetText(date,zone){
-  const offset=zoneOffsetMinutes(date,zone),sign=offset>=0?"+":"−",abs=Math.abs(offset),hours=Math.floor(abs/60),minutes=abs%60;
-  return `UTC${sign}${hours}${minutes?":"+String(minutes).padStart(2,"0"):""}`;
-}
+function worldClockState(...args){return window.MawaeidiWorldClockModel.worldClockState(...args)}
+function utcOffsetText(...args){return window.MawaeidiWorldClockModel.utcOffsetText(...args)}
 function worldTimelineReferenceInstant(){
   const date=document.getElementById("worldConvertDate")?.value,time=document.getElementById("worldConvertTime")?.value,from=resolvedZoneFromInput(document.getElementById("worldFromZone"));
   if(validDateKey(date)&&TIME_RE.test(String(time))&&from.entry){const instant=wallTimeToInstant(date,time,from.entry.zone);if(instant)return instant}
@@ -1901,47 +1894,13 @@ function sourceColor(lesson){return sourceColorFromLabel(sourceLabel(lesson))}
 function esc(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]))}
 function fmt(...args){return window.MawaeidiScheduleTime.fmt(...args)}
 function mins(...args){return window.MawaeidiScheduleTime.mins(...args)}
-function normalizeZoneSearch(value){
-  return String(value||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[إأآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/[_/().,-]+/g," ").replace(/\s+/g," ").trim();
-}
-function countryNameForZone(zone){
-  const code=TIMEZONE_COUNTRY_MAP[zone];if(!code)return "";
-  try{return new Intl.DisplayNames(["ar-EG"],{type:"region"}).of(code)||code}catch{return code}
-}
-function genericNameForZone(zone,date=new Date()){
-  try{return new Intl.DateTimeFormat("ar-EG",{timeZone:zone,timeZoneName:"longGeneric"}).formatToParts(date).find(part=>part.type==="timeZoneName")?.value||zone}catch{return zone}
-}
-function timeZoneCatalog(){
-  if(timeZoneCatalogCache)return timeZoneCatalogCache;
-  let zones=[];
-  try{zones=typeof Intl.supportedValuesOf==="function"?Intl.supportedValuesOf("timeZone"):Object.keys(TIMEZONE_COUNTRY_MAP)}catch{zones=Object.keys(TIMEZONE_COUNTRY_MAP)}
-  if(!zones.includes(SCHEDULE_TIMEZONE))zones.push(SCHEDULE_TIMEZONE);
-  const countryCounts={};zones.forEach(zone=>{const code=TIMEZONE_COUNTRY_MAP[zone];if(code)countryCounts[code]=(countryCounts[code]||0)+1});
-  timeZoneCatalogCache=[...new Set(zones)].filter(validTimeZone).map(zone=>{
-    const code=TIMEZONE_COUNTRY_MAP[zone]||"",country=countryNameForZone(zone),zoneName=genericNameForZone(zone),city=(zone.split("/").at(-1)||zone).replace(/_/g," ");
-    const multi=code&&countryCounts[code]>1;
-    const label=country?(multi?`${country} — ${zoneName} · ${city}`:`${country} — ${zoneName}`):`${zoneName} — ${city}`;
-    return {zone,code,country,zoneName,city,label,search:normalizeZoneSearch(`${country} ${zoneName} ${city} ${zone}`)};
-  }).sort((a,b)=>a.label.localeCompare(b.label,"ar"));
-  return timeZoneCatalogCache;
-}
-function timeZoneEntry(zone){return timeZoneCatalog().find(item=>item.zone===zone)||null}
-function timeZoneShortLabel(zone){
-  const entry=timeZoneEntry(zone);if(!entry)return zone||"";
-  if(!entry.country)return entry.zoneName;
-  const count=timeZoneCatalog().filter(item=>item.code&&item.code===entry.code).length;
-  return count>1?`${entry.country} · ${entry.zoneName.replace(/^توقيت\s*/,"")}`:entry.country;
-}
-function resolveTimeZoneText(value){
-  const raw=String(value||"").trim();if(!raw)return {entry:null,ambiguous:false,matches:[]};
-  const catalog=timeZoneCatalog(),exactZone=catalog.find(item=>item.zone.toLowerCase()===raw.toLowerCase()),exactLabel=catalog.find(item=>item.label===raw);
-  if(exactZone||exactLabel)return {entry:exactZone||exactLabel,ambiguous:false,matches:[exactZone||exactLabel]};
-  const query=normalizeZoneSearch(raw),countryExact=catalog.filter(item=>normalizeZoneSearch(item.country)===query);
-  if(countryExact.length===1)return {entry:countryExact[0],ambiguous:false,matches:countryExact};
-  if(countryExact.length>1)return {entry:null,ambiguous:true,matches:countryExact.slice(0,12)};
-  const matches=catalog.filter(item=>item.search.includes(query)).slice(0,12);
-  return {entry:matches.length===1?matches[0]:null,ambiguous:matches.length>1,matches};
-}
+function normalizeZoneSearch(...args){return window.MawaeidiWorldClockModel.normalizeZoneSearch(...args)}
+function countryNameForZone(...args){return window.MawaeidiWorldClockModel.countryNameForZone(...args)}
+function genericNameForZone(...args){return window.MawaeidiWorldClockModel.genericNameForZone(...args)}
+function timeZoneCatalog(...args){return window.MawaeidiWorldClockModel.timeZoneCatalog(...args)}
+function timeZoneEntry(...args){return window.MawaeidiWorldClockModel.timeZoneEntry(...args)}
+function timeZoneShortLabel(...args){return window.MawaeidiWorldClockModel.timeZoneShortLabel(...args)}
+function resolveTimeZoneText(...args){return window.MawaeidiWorldClockModel.resolveTimeZoneText(...args)}
 function populateTimeZoneDatalist(id){
   const list=document.getElementById(id);if(!list)return;
   list.innerHTML="";const fragment=document.createDocumentFragment();
@@ -1972,36 +1931,18 @@ function studentTimeInfo(occurrence){
   return {zone,label:timeZoneShortLabel(zone),time:fmt(targetTime),date:targetDate,shift:dayShiftLabel(occurrence.date,targetDate),odd:hour<6||hour>=23};
 }
 function studentTimeInline(occurrence){const info=studentTimeInfo(occurrence);return info?`🌍 ${info.time} · ${info.label}${info.shift}`:""}
-function worldOffsetText(date,zone,baseZone=savedWorldClockBase()){
-  const diff=zoneOffsetMinutes(date,zone)-zoneOffsetMinutes(date,baseZone),baseLabel=timeZoneShortLabel(baseZone)||"التوقيت الأساسي";
-  if(!diff)return `نفس توقيت ${baseLabel}`;
-  const sign=diff>0?"+":"−",abs=Math.abs(diff),hours=Math.floor(abs/60),minutes=abs%60;
-  return `${sign}${hours}${minutes?`:${String(minutes).padStart(2,"0")}`:""} عن ${baseLabel}`;
-}
-function worldDifferenceText(date,fromZone,toZone){
-  const diff=zoneOffsetMinutes(date,toZone)-zoneOffsetMinutes(date,fromZone);if(!diff)return "نفس التوقيت";
-  const abs=Math.abs(diff),hours=Math.floor(abs/60),minutes=abs%60,amount=`${hours}${minutes?`:${String(minutes).padStart(2,"0")}`:""}`;
-  return diff>0?`التوقيت الثاني أمام بـ ${amount}`:`التوقيت الثاني متأخر بـ ${amount}`;
-}
-function worldHour12Label(hour){const value=((Number(hour)%24)+24)%24,h=value%12||12;return `${h} ${value<12?"ص":"م"}`}
-const WORLD_CITY_ARABIC={
-  "Cairo":"القاهرة","Baku":"باكو","Bishkek":"بيشكك","Tashkent":"طشقند","Moscow":"موسكو","Istanbul":"إسطنبول","Riyadh":"الرياض","Dubai":"دبي","Doha":"الدوحة","Kuwait":"الكويت","Amman":"عمّان","Beirut":"بيروت","Damascus":"دمشق","Baghdad":"بغداد","Jerusalem":"القدس","Gaza":"غزة","London":"لندن","Paris":"باريس","Berlin":"برلين","Rome":"روما","Madrid":"مدريد","New York":"نيويورك","Los Angeles":"لوس أنجلوس","Toronto":"تورونتو","Vancouver":"فانكوفر","Almaty":"ألماتي","Astana":"أستانا","Dushanbe":"دوشنبه","Ashgabat":"عشق آباد","Kabul":"كابل","Karachi":"كراتشي","Dhaka":"دكا","Jakarta":"جاكرتا","Tokyo":"طوكيو","Seoul":"سيول","Beijing":"بكين","Shanghai":"شنغهاي","Kuala Lumpur":"كوالالمبور","Singapore":"سنغافورة","Sydney":"سيدني","Melbourne":"ملبورن"
-};
-function worldCityArabicName(city,zone=""){
-  const raw=String(city||"").trim(),fallback=(String(zone||"").split("/").at(-1)||"").replace(/_/g," ");
-  return WORLD_CITY_ARABIC[raw]||WORLD_CITY_ARABIC[fallback]||raw||fallback;
-}
+function worldOffsetText(date,zone,baseZone=savedWorldClockBase()){return window.MawaeidiWorldClockModel.worldOffsetText(date,zone,baseZone)}
+function worldDifferenceText(...args){return window.MawaeidiWorldClockModel.worldDifferenceText(...args)}
+function worldHour12Label(...args){return window.MawaeidiWorldClockModel.worldHour12Label(...args)}
+
+function worldCityArabicName(...args){return window.MawaeidiWorldClockModel.worldCityArabicName(...args)}
 function worldFlagMarkup(code,country=""){
   const value=String(code||"").toUpperCase();
   if(!/^[A-Z]{2}$/.test(value))return '<span class="world-flag-fallback">🌐</span>';
   const lower=value.toLowerCase(),label=country?`علم ${country}`:"علم الدولة";
   return `<img class="world-country-flag-img" src="https://flagcdn.com/32x24/${lower}.png" srcset="https://flagcdn.com/64x48/${lower}.png 2x" width="24" height="18" alt="${esc(label)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="world-flag-fallback" hidden>🌐</span>`;
 }
-function worldFlagEmoji(code){
-  const value=String(code||"").toUpperCase();
-  if(!/^[A-Z]{2}$/.test(value))return "🌐";
-  return String.fromCodePoint(...[...value].map(char=>127397+char.charCodeAt(0)));
-}
+function worldFlagEmoji(...args){return window.MawaeidiWorldClockModel.worldFlagEmoji(...args)}
 function worldMiniClockMarkup(date,zone,label=""){
   const parts=zonedParts(date,zone),minute=parts.minute+parts.second/60,hour=(parts.hour%12)+minute/60;
   const numbers=Array.from({length:12},(_,index)=>{

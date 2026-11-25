@@ -145,6 +145,10 @@
     isNative:native,
     platform,
     authStorage,
+    async saveScheduleDraft({filename,json}){
+      if(!native||platform!=="android")throw new Error("native_save_unavailable");
+      return mobilePlugin().saveScheduleDraft({filename,json});
+    },
     async getAlarmState(){
       if(!native)return {available:false,enabled:false,pendingCount:0};
       try{return {available:true,...await invoke("getState")}}

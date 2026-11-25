@@ -1,5 +1,6 @@
 package com.abdelmalek.mawaeidi;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,11 +14,14 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import androidx.core.content.FileProvider;
+import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.ActivityCallback;
+import java.io.OutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -105,6 +109,48 @@ public class MawaeidiMobilePlugin extends Plugin {
             if (!authStore().edit().remove(storageKey(call)).commit()) throw new IllegalStateException();
             call.resolve();
         } catch (Exception error) { call.reject("secure_auth_remove_failed"); }
+    }
+
+
+    @PluginMethod
+    public void saveScheduleDraft(PluginCall call) {
+        String filename = call.getString("filename", "");
+        String json = call.getString("json", "");
+        if (!filename.matches("mawaeidi-unsaved-schedule-[0-9T-]{1,40}\\.json")
+            || json.isEmpty() || json.getBytes(StandardCharsets.UTF_8).length > 10 * 1024 * 1024) {
+            call.reject("invalid_schedule_draft"); return;
+        }
+        try {
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT)
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setType("application/json")
+                .putExtra(Intent.EXTRA_TITLE, filename);
+            startActivityForResult(call, intent, "scheduleDraftCreated");
+        } catch (Exception error) { call.reject("schedule_draft_picker_unavailable"); }
+    }
+
+    @ActivityCallback
+    private void scheduleDraftCreated(PluginCall call, ActivityResult result) {
+        if (call == null) return;
+        Intent data = result.getData();
+        if (result.getResultCode() != Activity.RESULT_OK || data == null || data.getData() == null) {
+            JSObject response = new JSObject();
+            response.put("saved", false);
+            call.resolve(response);
+            return;
+        }
+        Uri uri = data.getData();
+        String json = call.getString("json", "");
+        worker.execute(() -> {
+            try (OutputStream output = getContext().getContentResolver().openOutputStream(uri, "w")) {
+                if (output == null) throw new IllegalStateException("output_unavailable");
+                output.write(json.getBytes(StandardCharsets.UTF_8));
+                output.flush();
+            } catch (Exception error) { call.reject("schedule_draft_write_failed"); return; }
+            JSObject response = new JSObject();
+            response.put("saved", true);
+            call.resolve(response);
+        });
     }
 
     private boolean trustedInitial(URL url) {

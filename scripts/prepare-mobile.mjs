@@ -15,6 +15,7 @@ const rootFiles = [
   "manifest.webmanifest",
   "mobile-app.css",
   "native-bridge.js",
+  "schedule-concurrency.js",
   "sw.js"
 ];
 

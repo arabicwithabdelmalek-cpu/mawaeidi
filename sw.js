@@ -1,10 +1,10 @@
-const CACHE_NAME="mawaeidi-shell-v84";
+const CACHE_NAME="mawaeidi-shell-v85";
 const APP_SHELL=[
   "./",
   "./index.html",
   "./students/index.html",
   "./students/student-registry.css?v=13",
-  "./backup-manager.js?v=2",
+  "./backup-manager.js?v=3",
   "./schedule-time.js?v=1",
   "./lesson-model.js?v=1",
   "./session-state.js?v=1",

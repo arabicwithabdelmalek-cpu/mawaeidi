@@ -18,7 +18,7 @@ function utcOffsetText(date,zone){
   return `UTC${sign}${hours}${minutes?":"+String(minutes).padStart(2,"0"):""}`;
 }
 function normalizeZoneSearch(value){
-  return String(value||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[إأآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/[_/().,-]+/g," ").replace(/\s+/g," ").trim();
+  return String(value||"").toLowerCase().normalize("NFKD").replace(/\p{M}/gu,"").replace(/[إأآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/[_/().,-]+/g," ").replace(/\s+/g," ").trim();
 }
 function countryNameForZone(zone){
   const code=TIMEZONE_COUNTRY_MAP[zone];if(!code)return "";

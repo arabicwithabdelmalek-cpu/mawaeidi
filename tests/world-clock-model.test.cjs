@@ -14,6 +14,9 @@ assert.equal(w.worldHour12Label(0),"12 ص");assert.equal(w.worldHour12Label(12),
 assert.equal(w.worldClockState(8).className,"work");assert.equal(w.worldClockState(18).className,"evening");assert.equal(w.worldClockState(23).className,"night");
 assert.equal(w.worldCityArabicName("Cairo"),"القاهرة");assert.equal(w.worldCityArabicName("","Asia/Baku"),"باكو");
 assert.equal(w.normalizeZoneSearch("إِسطنبول"),"اسطنبول");
+assert.equal(w.normalizeZoneSearch("أُذْرَبَيْجَان"),"اذربيجان");
+assert.equal(w.normalizeZoneSearch("آسيا"),"اسيا");
+assert.equal(w.normalizeZoneSearch("São Paulo"),"sao paulo");
 assert.equal(w.resolveTimeZoneText("Africa/Cairo").entry.zone,"Africa/Cairo");
 assert.equal(w.resolveTimeZoneText("asia/baku").entry.zone,"Asia/Baku");
 assert.equal(w.resolveTimeZoneText("zzzzzzzz-no-matching-zone").entry,null);

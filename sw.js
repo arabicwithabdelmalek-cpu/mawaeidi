@@ -1,5 +1,5 @@
 const CACHE_PREFIX="mawaeidi-shell-";
-const CACHE_NAME=CACHE_PREFIX+"v94";
+const CACHE_NAME=CACHE_PREFIX+"v95";
 const APP_SHELL=[
   "./",
   "./index.html",
@@ -82,9 +82,18 @@ self.addEventListener("fetch",event=>{
   }
 
   if(APP_SHELL.some(path=>new URL(path,self.registration.scope).href===url.href)){
-    // Network-first for versioned assets avoids flashing an older application
-    // build on the first load after publishing an update.
+    // Only explicitly versioned assets in the current release cache are
+    // eligible for cache-first. Navigation and unversioned files remain
+    // network-first; an asset miss always fetches the exact requested URL.
+    const versioned=url.searchParams.has("v")&&/^\d+$/.test(url.searchParams.get("v"));
     event.respondWith((async()=>{
+      if(versioned){
+        try{
+          const cache=await caches.open(CACHE_NAME);
+          const cached=await cache.match(request);
+          if(cached?.ok)return cached;
+        }catch{/* A cache failure must not block network loading. */}
+      }
       try{
         const response=await fetch(request,{cache:"no-cache"});
         if(response.ok){

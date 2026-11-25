@@ -149,6 +149,30 @@
       if(!native||platform!=="android")throw new Error("native_save_unavailable");
       return mobilePlugin().saveScheduleDraft({filename,json});
     },
+    async saveBackupFile({filename,blob}){
+      if(!native||platform!=="android"||!(blob instanceof Blob))throw new Error("native_backup_save_unavailable");
+      const target=mobilePlugin();
+      if(!target||typeof target.beginBackupSave!=="function")throw new Error("native_backup_save_unavailable");
+      const result=await target.beginBackupSave({filename,size:blob.size});
+      if(result?.saved===false)return {saved:false};
+      if(typeof result?.token!=="string")throw new Error("native_backup_save_unavailable");
+      const token=result.token;
+      try{
+        const chunkSize=256*1024;
+        for(let offset=0;offset<blob.size;offset+=chunkSize){
+          const bytes=new Uint8Array(await blob.slice(offset,offset+chunkSize).arrayBuffer());
+          let binary="";
+          for(let start=0;start<bytes.length;start+=8192)binary+=String.fromCharCode(...bytes.subarray(start,start+8192));
+          await target.writeBackupChunk({token,offset,data:btoa(binary)});
+        }
+        const saved=await target.finishBackupSave({token});
+        if(saved?.saved!==true)throw new Error("native_backup_write_failed");
+        return saved;
+      }catch(error){
+        try{await target.abortBackupSave({token})}catch{}
+        throw error;
+      }
+    },
     async getAlarmState(){
       if(!native)return {available:false,enabled:false,pendingCount:0};
       try{return {available:true,...await invoke("getState")}}

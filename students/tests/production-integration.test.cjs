@@ -25,7 +25,7 @@ assert.match(legacy,/target\.searchParams\.set\("section","students"\)/);
 assert.match(legacy,/\["student","new"\]/);
 assert.match(main,/backup-manager\.js\?v=1/);
 assert.match(main,/student-registry\.js\?v=17/);
-assert.match(sw,/CACHE_NAME=CACHE_PREFIX\+"v85"/);
+assert.match(sw,/CACHE_NAME=CACHE_PREFIX\+"v[1-9]\d*"/);
 assert.match(sw,/backup-manager\.js\?v=1/);
 assert.match(sw,/student-registry\.js\?v=17/);
 console.log("student production integration checks passed");

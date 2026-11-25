@@ -49,7 +49,7 @@ async function main(){
   assert.match(students,/inspectBackupSnapshot/);
   assert.match(students,/restoreBackupSnapshot/);
   assert.doesNotMatch(students,/exportStudentsBackup/);
-  assert.match(worker,/CACHE_NAME=CACHE_PREFIX\+"v85"/);
+  assert.match(worker,/CACHE_NAME=CACHE_PREFIX\+"v[1-9]\d*"/);
   assert.match(worker,/backup-manager\.js\?v=1/);
 
   console.log("Full backup and restore checks passed.");

@@ -21,7 +21,9 @@
     "schedule-time.js",
     "tests/schedule-time.test.cjs",
     "lesson-model.js",
-    "tests/lesson-model.test.cjs"
+    "tests/lesson-model.test.cjs",
+    "session-state.js",
+    "tests/session-state.test.cjs"
   ],
   "platformSpecific": [
     "app-main.js",

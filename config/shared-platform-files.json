@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "canonical": "main",
+  "counterpart": "android-app",
+  "shared": [
+    "account-page.js",
+    "backup-manager.js",
+    "schedule-concurrency.js",
+    "students/index.html",
+    "students/tests/student-csv-security.test.cjs",
+    "tests/encrypted-backup.test.cjs",
+    "students/tests/workspace.test.cjs",
+    "manifest.webmanifest",
+    "icons/apple-touch-icon.png",
+    "icons/favicon-32.png",
+    "icons/huruf-background.png",
+    "icons/icon-192.png",
+    "icons/icon-512.png",
+    "icons/icon.svg",
+    "icons/kufi-quote.png"
+  ],
+  "platformSpecific": [
+    "app-main.js",
+    "index.html",
+    "sw.js",
+    "account.js",
+    "activity-tracker.js",
+    "day-order.js",
+    "students/student-registry.js",
+    "students/student-registry.css",
+    "package.json",
+    "capacitor.config.json"
+  ]
+}

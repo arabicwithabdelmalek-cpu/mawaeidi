@@ -1,0 +1,45 @@
+{
+  "source": {
+    "format": "PostgreSQL text COPY",
+    "backupDate": "2026-11-24",
+    "compressedBytes": 2569551,
+    "copyBlocks": 66
+  },
+  "expectedCounts": {
+    "auth.users": 8,
+    "auth.identities": 8,
+    "public.mawaeidi_admin_support_audit": 54,
+    "public.mawaeidi_admin_vault_config": 0,
+    "public.mawaeidi_admin_vault_entries": 0,
+    "public.mawaeidi_data": 8,
+    "public.mawaeidi_history": 73,
+    "public.mawaeidi_notification_log": 115,
+    "public.mawaeidi_password_change_events": 0,
+    "public.mawaeidi_push_subscriptions": 1,
+    "public.mawaeidi_student_history": 29,
+    "public.mawaeidi_student_photo_cleanup": 0,
+    "public.mawaeidi_students": 8,
+    "public.mawaeidi_trash": 3,
+    "public.mawaeidi_usage_admins": 1,
+    "public.mawaeidi_usage_sessions": 138,
+    "public.mawaeidi_world_clock_settings": 8,
+    "storage.buckets": 2,
+    "storage.objects": 2
+  },
+  "storage": {
+    "compressedBytes": 65800,
+    "files": 2,
+    "uncompressedBytes": 65891
+  },
+  "gates": [
+    "Inspect actual COPY column lists and validate counts locally; never execute original dump wholesale.",
+    "Create destination auth accounts by supported admin operations, establish bijective UUID mapping and validate foreign keys before importing application data. Do not migrate password hashes, tokens or sessions.",
+    "Inspect and preserve app data, timestamps and JSON values; remap owner references and storage paths consistently.",
+    "Preserve existing historical audit records without generating duplicate migration-trigger events; test import on isolated recovery branch first.",
+    "Keep push delivery disabled; require re-subscription if old credentials or VAPID compatibility are unavailable. Preserve notification history separately where needed.",
+    "Do not carry over privileged role grants without checking original verified owner mapping.",
+    "Validate photo file integrity and private ownership; no public buckets or personal files in GitHub.",
+    "Do not publish until counts, account access and rollback are verified."
+  ],
+  "status": "Inventory only; no user data restored."
+}

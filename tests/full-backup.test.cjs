@@ -41,9 +41,11 @@ async function main(){
   const students=fs.readFileSync(path.join(root,"students/student-registry.js"),"utf8");
   const worker=fs.readFileSync(path.join(root,"sw.js"),"utf8");
   assert.match(html,/تنزيل نسخة احتياطية كاملة/);
+  assert.match(html,/ملف ZIP غير مشفّر/);
+  assert.match(fs.readFileSync(path.join(root,"app-main.js"),"utf8"),/قد تحتوي النسخة على كلمات سر الطلاب المحفوظة/);
   assert.match(html,/دمج البيانات دون حذف الموجود/);
   assert.match(html,/backup-manager\.js\?v=1/);
-  assert.match(html,/student-registry\.js\?v=17/);
+  assert.match(html,/student-registry\.js\?v=18/);
   assert.doesNotMatch(html,/id="backupStudents"/);
   assert.match(students,/createBackupSnapshot/);
   assert.match(students,/inspectBackupSnapshot/);

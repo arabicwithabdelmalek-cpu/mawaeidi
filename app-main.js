@@ -1618,6 +1618,10 @@ function applyRemoteRow(row,message="تم تحديث المواعيد"){
 function handleRemoteRow(row){
   if(pendingScheduleConflict||!row||!currentUser||row.user_id!==currentUser.id||saveInFlight||!remoteRowIsNewer(row))return;
   if(isDrawerVisible()){
+    if(pendingRemoteRow&&pendingRemoteRow.user_id===row.user_id){
+      const incoming=Date.parse(textValue(row.updated_at)),queued=Date.parse(textValue(pendingRemoteRow.updated_at));
+      if(Number.isFinite(incoming)&&Number.isFinite(queued)&&incoming<queued)return;
+    }
     pendingRemoteRow=row;
     setSync("saving","تحديث جديد ينتظر");
     return;
@@ -1680,18 +1684,25 @@ async function refreshFromCloud(silent=false){
     if(!silent)alert("لا يوجد اتصال بالإنترنت حاليًا.");
     return false;
   }
+  const ownerId=currentUser.id,sequence=sessionSequence;
   refreshInFlight=true;
   setSync("saving","جارٍ التحديث");
   try{
     const {data,error}=await cloud.from("mawaeidi_data")
       .select("user_id,lessons,updated_at")
-      .eq("user_id",currentUser.id)
+      .eq("user_id",ownerId)
       .maybeSingle();
+    if(sequence!==sessionSequence||currentUser?.id!==ownerId||!cloudReady||saveInFlight||backupInFlight||pendingScheduleConflict)return false;
     if(error)throw error;
+    if(data&&isDrawerVisible()&&data.user_id===ownerId&&Array.isArray(data.lessons)&&remoteRowIsNewer(data)){
+      handleRemoteRow(data);
+      return true;
+    }
     if(data&&applyRemoteRow(data,"تم تحديث المواعيد"))return true;
     setSync("saved","البيانات محدّثة");
     return true;
   }catch(error){
+    if(sequence!==sessionSequence||currentUser?.id!==ownerId||!cloudReady||saveInFlight||backupInFlight||pendingScheduleConflict)return false;
     console.error("تعذّر تحديث مواعيدي من السحابة.",error);
     setSync("error","تعذّر التحديث");
     if(!silent)alert("تعذّر تحديث المواعيد. تحقق من الإنترنت وحاول مرة أخرى.");

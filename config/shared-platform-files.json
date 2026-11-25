@@ -23,7 +23,9 @@
     "lesson-model.js",
     "tests/lesson-model.test.cjs",
     "session-state.js",
-    "tests/session-state.test.cjs"
+    "tests/session-state.test.cjs",
+    "world-clock-model.js",
+    "tests/world-clock-model.test.cjs"
   ],
   "platformSpecific": [
     "app-main.js",

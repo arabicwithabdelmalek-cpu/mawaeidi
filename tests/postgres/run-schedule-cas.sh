@@ -126,3 +126,5 @@ docker exec "$PG_CONTAINER" psql -X -Atq -v ON_ERROR_STOP=1 \
    end
    \$test\$;"
 echo "Real PostgreSQL concurrent existing-schedule edits passed (one saved, one conflict)."
+
+run_sql_file tests/postgres/schedule-finance.test.sql

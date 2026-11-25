@@ -6,7 +6,7 @@ on:
       - review/foundation-security-ci-20261118
   push:
     branches:
-      - review/schedule-concurrency-20261118
+      - feature/schedule-safe-sync-20261125
 permissions:
   contents: read
 jobs:

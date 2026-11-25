@@ -23,7 +23,8 @@ create table public.mawaeidi_data (
   user_id uuid primary key references auth.users(id) on delete cascade,
   lessons jsonb not null default '[]'::jsonb
     check (jsonb_typeof(lessons)='array' and octet_length(lessons::text)<=5242880),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  finance jsonb not null default '{"cycles":[],"version":1,"payments":[],"agreements":[],"monthCounts":[]}'::jsonb check(jsonb_typeof(finance)='object')
 );
 alter table public.mawaeidi_data enable row level security;
 revoke all on public.mawaeidi_data from public,anon,authenticated;

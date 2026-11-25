@@ -18,6 +18,7 @@ const rootFiles = [
   "schedule-concurrency.js",
   "schedule-time.js",
   "lesson-model.js",
+  "session-state.js",
   "sw.js"
 ];
 

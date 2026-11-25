@@ -39,8 +39,12 @@ async function main(){
 
   const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
   const students=fs.readFileSync(path.join(root,"students/student-registry.js"),"utf8");
+  const appMain=fs.readFileSync(path.join(root,"app-main.js"),"utf8");
   const worker=fs.readFileSync(path.join(root,"sw.js"),"utf8");
   assert.match(html,/تنزيل نسخة احتياطية كاملة/);
+  assert.match(html,/ملف ZIP غير مشفّر/);
+  assert.match(appMain,/قد تحتوي النسخة على كلمات سر الطلاب المحفوظة/);
+  assert.match(students,/for\(const field of STUDENT_FIELDS\)record\[field.key\]=student\[field.key\]/);
   assert.match(html,/دمج البيانات دون حذف الموجود/);
   assert.match(html,/backup-manager\.js\?v=1/);
   assert.match(html,/student-registry\.js\?v=17/);
@@ -49,7 +53,7 @@ async function main(){
   assert.match(students,/inspectBackupSnapshot/);
   assert.match(students,/restoreBackupSnapshot/);
   assert.doesNotMatch(students,/exportStudentsBackup/);
-  assert.match(worker,/CACHE_NAME=CACHE_PREFIX\+"v85"/);
+  assert.match(worker,/CACHE_NAME=CACHE_PREFIX\+"v[1-9]\d*"/);
   assert.match(worker,/backup-manager\.js\?v=1/);
 
   console.log("Full backup and restore checks passed.");

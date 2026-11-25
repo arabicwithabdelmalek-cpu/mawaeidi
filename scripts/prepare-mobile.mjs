@@ -19,6 +19,7 @@ const rootFiles = [
   "schedule-time.js",
   "lesson-model.js",
   "session-state.js",
+  "world-clock-model.js",
   "sw.js"
 ];
 

@@ -81,9 +81,11 @@ async function main(){
   assert.match(html,/id="scheduleConflictDownload"/);
   assert.match(html,/id="scheduleConflictRefresh" disabled/);
   assert.match(html,/schedule-concurrency\.js\?v=1/);
-  assert.ok(html.indexOf("schedule-concurrency.js?v=1")<html.indexOf("app-main.js?v=10"));
+  const core=html.match(/src="(\.\/app-main\.js\?v=\d+)"/)?.[1];
+  assert.ok(core,"Versioned core script must exist");
+  assert.ok(html.indexOf("schedule-concurrency.js?v=1")<html.indexOf(core),"Guard must load before the core script");
   assert.match(worker,/schedule-concurrency\.js\?v=1/);
-  assert.match(worker,/app-main\.js\?v=10/);
+  assert.ok(worker.includes(JSON.stringify(core)),"Service worker must cache the same core version");
   console.log("Schedule compare-and-swap conflict and draft recovery checks passed");
 }
 main().catch(e=>{console.error(e);process.exitCode=1});

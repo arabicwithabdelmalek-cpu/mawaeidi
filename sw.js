@@ -1,5 +1,5 @@
 const CACHE_PREFIX="mawaeidi-shell-";
-const CACHE_NAME=CACHE_PREFIX+"v106";
+const CACHE_NAME=CACHE_PREFIX+"v107";
 const APP_SHELL=[
   "./",
   "./index.html",

@@ -44,7 +44,7 @@ async function noOverflow(page){
   const problems=await page.evaluate(()=>{
     const width=document.documentElement.clientWidth,errors=[];
     if(document.documentElement.scrollWidth>width+2)errors.push("document horizontal overflow");
-    for(const el of document.querySelectorAll("#todayView .daily-overview,#todayView .daily-metric,#todayView .timeline-row,#todayView .lesson,#todayView .daily-lesson-title,#todayView .daily-lesson-actions,#nextCard,#nextCard button")){
+    for(const el of document.querySelectorAll("#todayView .daily-overview,#todayView .daily-metric,#todayView .timeline-row,#todayView .lesson,#todayView .daily-lesson-title,#todayView .daily-lesson-actions,#nextCard,#nextCard button,#scheduleWorkspace .hero-copy,#scheduleWorkspace .kufi-quote")){
       if(!el.getClientRects().length)continue;
       const r=el.getBoundingClientRect();
       if(r.left< -2||r.right>width+2)errors.push(el.className+" outside viewport: "+r.left+" / "+r.right);
@@ -77,6 +77,11 @@ async function noOverflow(page){
       assert.equal(await page.locator("#todayView .timeline-row").count(),4);
       assert.equal(await page.locator("#todayView .is-ongoing").count(),1);
       await noOverflow(page);
+      const hero=await page.locator("#scheduleWorkspace .hero-copy").boundingBox(),nextCard=await page.locator("#nextCard").boundingBox();
+      assert.ok(hero&&nextCard);
+      if(width>900){assert.ok(Math.abs(hero.height-nextCard.height)<2,"Hero cards must be the same height");assert.ok(hero.height<=265,"Hero should be compact: "+hero.height)}
+      else{assert.ok(hero.height<=135,"Mobile calligraphy banner should be compact: "+hero.height)}
+      console.log("Compact hero "+width+"px: "+hero.height.toFixed(1)+" / "+nextCard.height.toFixed(1)+"px");
       await page.locator("#nextCard .next-edit").click();
       await visible(page,"#drawerTitle");assert.equal(await page.locator("#drawerTitle").textContent(),"تعديل الحصة");
       await page.evaluate(()=>closeDrawer());

@@ -1,0 +1,20 @@
+"use strict";
+const assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path");
+const root=path.join(__dirname,".."),app=fs.readFileSync(path.join(root,"app-main.js"),"utf8"),html=fs.readFileSync(path.join(root,"index.html"),"utf8");
+function extract(n){const i=app.indexOf("function "+n+"(");assert.ok(i>=0,n);return app.slice(i,app.indexOf("\n}",i)+2)}
+const label=new Function("mins","fmt",extract("dailyLessonEndLabel")+"\nreturn dailyLessonEndLabel")(t=>{const[h,m]=t.split(":").map(Number);return h*60+m},t=>t);
+assert.equal(label({time:"09:30",lesson:{duration:45}}),"10:15");
+assert.equal(label({time:"23:30",lesson:{duration:60}}),"00:30 (+1 يوم)");
+const timeline=extract("renderTimeline");
+assert.match(timeline,/daily-lesson-title/);
+assert.match(timeline,/sessionStatusButtonMarkup\(o\)/);
+assert.match(timeline,/dailyLessonEndLabel\(o\)/);
+assert.match(timeline,/studentTime=studentTimeInline\(o\)/);
+assert.equal((timeline.match(/studentTimeInline\(o\)/g)||[]).length,1);
+assert.match(timeline,/copyLessonById\(l.id\)/);
+assert.match(timeline,/openQuickAddForToday\(\)/);
+assert.doesNotMatch(timeline,/role="button"/);
+assert.match(html,/#todayView \.daily-lesson-title/);
+assert.match(html,/@media\(prefers-reduced-motion:reduce\)\{#todayView/);
+assert.match(app,/timeline\.contains\(document.activeElement\)/);
+console.log("Daily agenda end time, midnight label, accessible buttons, scoped responsive styling and reduced-motion wiring passed.");

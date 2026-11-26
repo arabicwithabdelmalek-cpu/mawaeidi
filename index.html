@@ -2065,6 +2065,57 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 @media(max-width:760px){#todayView .daily-overview{padding:14px 12px}#todayView .daily-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#todayView .daily-metric{padding:11px 10px}#todayView .daily-overview-head h2{font-size:17px}#todayView .daily-metric strong{font-size:21px}#todayView .daily-overview-kicker{display:none}}
 @media(max-width:350px){#todayView .daily-metric small{font-size:12px}#todayView .daily-metric strong{font-size:18px}}
 </style>
+<style id="mawaeidi-daily-agenda-v1">
+/* Today agenda refinement — no changes to weekly cards or other sections. */
+#todayView .timeline{padding:14px 18px 20px}
+#todayView .timeline-row{grid-template-columns:minmax(94px,114px) minmax(0,1fr);gap:12px;padding:8px 0;align-items:start}
+#todayView .timeline-row::before{content:"";position:absolute;inset-block:0;inset-inline-start:55px;width:1px;background:var(--line);pointer-events:none;z-index:-1}
+#todayView .timeline-row:first-child::before{inset-block-start:20px}
+#todayView .timeline-row:last-child::before{inset-block-end:20px}
+#todayView .t-time{display:grid;gap:5px;align-content:center;justify-items:center;line-height:1.45;min-height:64px;margin-top:0;padding:8px 5px;background:var(--surface);border-color:var(--line)}
+#todayView .t-time strong{font-size:15px;font-weight:800;white-space:nowrap}
+#todayView .t-time small{color:var(--muted);font-size:11px;white-space:normal;text-align:center}
+#todayView .lesson{min-width:0;padding:13px 14px;gap:10px;align-items:flex-start;cursor:pointer;border-inline-start-width:4px}
+#todayView .daily-lesson-main{min-width:0;flex:1}
+#todayView .daily-lesson-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#todayView .daily-lesson-title{display:block;max-width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:17px;line-height:1.5;font-weight:800;text-align:start;padding:0;overflow-wrap:anywhere;cursor:pointer}
+#todayView .daily-lesson-title:hover{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+#todayView .daily-lesson-title:focus-visible,#todayView .daily-lesson-actions button:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+#todayView .daily-lesson-status{flex:0 1 auto;max-width:100%}
+#todayView .daily-lesson-status button{white-space:normal}
+#todayView .lesson-meta{font-size:14px;color:var(--muted);margin:3px 0 0;overflow-wrap:anywhere}
+#todayView .pills{align-items:center;gap:5px;margin-top:9px}
+#todayView .pill{font-size:12px;padding:3px 7px;max-width:100%;overflow-wrap:anywhere}
+#todayView .daily-lesson-duration{font-size:12px;font-weight:700;color:var(--muted)}
+#todayView .daily-lesson-student-time{font-size:12px;font-weight:700;color:var(--primary);margin-top:8px;overflow-wrap:anywhere}
+#todayView .daily-lesson-actions{display:flex;flex-direction:column;gap:6px}
+#todayView .daily-lesson-actions .icon-btn{width:34px;height:34px;min-width:34px;font-size:16px}
+#todayView .timeline-row.is-ongoing .t-time{border-color:var(--info-border);background:var(--info-bg)}
+#todayView .timeline-row.is-ongoing .lesson{box-shadow:0 0 0 1px var(--info-border),var(--shadow-soft)}
+#todayView .timeline-row.is-finished .t-time{color:var(--muted)}
+#todayView .lesson.session-inactive{opacity:1;filter:none;background:var(--surface-muted)}
+#todayView .lesson.session-inactive .daily-lesson-title{color:var(--muted)}
+#todayView .daily-empty{padding:28px 12px;text-align:center;color:var(--muted)}
+#todayView .daily-empty strong{color:var(--ink);font-size:16px}
+#todayView .daily-empty p{margin:8px 0 16px;font-size:13px}
+#todayView .daily-empty button{min-height:40px}
+#todayView .daily-metric{transition:background .18s ease,border-color .18s ease}
+#todayView .daily-progress progress::-webkit-progress-value{transition:width .25s ease}
+@media(max-width:760px){
+ #todayView .timeline{padding:10px 10px 15px}
+ #todayView .timeline-row{grid-template-columns:minmax(70px,83px) minmax(0,1fr);gap:7px;padding:7px 0}
+ #todayView .timeline-row::before{inset-inline-start:40px}
+ #todayView .t-time{min-height:56px;padding:6px 4px}
+ #todayView .t-time strong{font-size:13px}
+ #todayView .t-time small{font-size:10px}
+ #todayView .lesson{display:grid;grid-template-columns:minmax(0,1fr);padding:11px 10px;gap:8px}
+ #todayView .daily-lesson-title{font-size:16px}
+ #todayView .lesson-meta{font-size:13px}
+ #todayView .daily-lesson-actions{flex-direction:row;justify-content:flex-end;border-top:1px solid var(--line);padding-top:6px}
+ #todayView .daily-lesson-actions .icon-btn{width:40px;height:40px;min-width:40px}
+}
+@media(prefers-reduced-motion:reduce){#todayView .timeline-row,#todayView .daily-metric,#todayView .daily-progress progress::-webkit-progress-value{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body class="auth-pending">
 
@@ -2651,7 +2702,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 <script src="./lesson-model.js?v=1" defer></script>
 <script src="./session-state.js?v=1" defer></script>
 <script src="./world-clock-model.js?v=1" defer></script>
-<script src="./app-main.js?v=23" defer></script>
+<script src="./app-main.js?v=24" defer></script>
 <script src="./account.js?v=3" defer></script>
 <script src="./account-page.js?v=6" defer></script>
 <script src="./day-order.js?v=3" defer></script>

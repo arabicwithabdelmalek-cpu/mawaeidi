@@ -2312,6 +2312,7 @@ function renderDailyDashboard(model){
 function render(){
   updateSectionChrome();
   const nowDate=new Date(),today=currentDateKey(nowDate),list=filtered(),items=datedOccurrencesForDate(today,list);
+  dailyOverviewDate=today;dailyOverviewMinute=currentTimeKey(nowDate);
   const model=dailyOverviewModel(items,mins(currentTimeKey(nowDate)));
   const week=days.flatMap(day=>datedOccurrencesForDate(weekDateForDay(day,today),list)).filter(item=>!occurrenceIsInactive(item));
   renderHeader(model,today,nowDate);
@@ -2362,42 +2363,60 @@ function renderHeader(model,today,d){
   }
 }
 
+function dailyLessonEndLabel(occurrence){
+  const end=mins(occurrence.time)+Math.max(0,Number(occurrence.lesson.duration||60)||0);
+  const minute=end%1440;
+  const label=fmt(String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0"));
+  return end>=1440?label+" (+1 يوم)":label;
+}
 function renderTimeline(items=datedOccurrencesForDate(currentDateKey(),filtered())){
   const box=document.getElementById("timeline");
+  box.dataset.statusKey=items.map(item=>occurrenceStatus(item)).join("|");
   if(!items.length){
-    box.innerHTML='<div class="empty">لا توجد حصص اليوم.</div>';
+    box.innerHTML='<div class="daily-empty"><strong>لا توجد حصص في هذا اليوم</strong><p>يمكنك إضافة موعد جديد أو تغيير التصفية.</p><button type="button" class="small-btn add-time" onclick="openQuickAddForToday()">＋ إضافة حصة</button></div>';
     return;
   }
-  box.innerHTML="";
+  box.replaceChildren();
+  const fragment=document.createDocumentFragment();
   items.forEach((o,i)=>{
-    const l=o.lesson;
-    const src=l.lessonSource==="center"?(l.centerName?`مركز: ${esc(l.centerName)}`:"مركز"):"خاص";
-    const srcColor=sourceColor(l);
-    const people=l.studentType==="group"?`مجموعة${l.groupStudents?.length?` · ${l.groupStudents.length} طلاب`:""}`:"فردي";
+    const l=o.lesson,status=occurrenceStatus(o),inactive=occurrenceIsInactive(o);
+    const src=sourceLabel(l),srcColor=sourceColor(l),studentTime=studentTimeInline(o);
+    const people=l.studentType==="group"?("مجموعة"+(l.groupStudents?.length?" · "+l.groupStudents.length+" طلاب":"")):"فردي";
+    const title=l.name||"بدون اسم";
+    const details=[l.subject,l.platform].filter(Boolean).map(esc).join(" · ");
     const row=document.createElement("div");
-    row.className="timeline-row";
-    row.style.animationDelay=`${i*.05}s`;
+    row.className="timeline-row"+(status==="ongoing"?" is-ongoing":"")+(status==="completed"||status==="free"?" is-finished":"");
+    row.style.animationDelay=Math.min(i,5)*.035+"s";
     row.innerHTML=`
-      <div class="t-time">${fmt(o.time)}</div>
-      <div class="lesson ${l.type}${occurrenceIsInactive(o)?" session-inactive":""}" style="--source-color:${srcColor}" role="button" tabindex="0" aria-label="فتح وتعديل الحصة: ${esc(l.name||"بدون اسم")}" onclick="openEdit('${l.id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openEdit('${l.id}')}">
-        <div>
-          <div class="lesson-name">${esc(l.name||"بدون اسم")}</div>
-          <div class="lesson-meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة</div>
+      <div class="t-time"><strong>${esc(fmt(o.time))}</strong><small>إلى ${esc(dailyLessonEndLabel(o))}</small></div>
+      <article class="lesson ${l.type}${inactive?" session-inactive":""}" style="--source-color:${srcColor}">
+        <div class="daily-lesson-main">
+          <div class="daily-lesson-top">
+            <button type="button" class="lesson-name daily-lesson-title" aria-label="فتح وتعديل الحصة: ${esc(title)}">${esc(title)}</button>
+            <div class="daily-lesson-status">${sessionStatusButtonMarkup(o)}</div>
+          </div>
+          ${details?`<div class="lesson-meta">${details}</div>`:""}
           <div class="pills">
             <span class="pill ${l.type}">${l.type==="teach"?"أُدرِّس":"أدرس"}</span>
-            <span class="pill">${people}</span>
-            <span class="pill">${src}</span>
-            ${studentTimeInline(o)?`<span class="pill student-time-pill">${esc(studentTimeInline(o))}</span>`:""}
-            ${sessionStatusButtonMarkup(o)}
+            <span class="pill">${esc(people)}</span>
+            <span class="pill">${esc(src)}</span>
+            <span class="daily-lesson-duration">${esc(String(l.duration||60))} دقيقة</span>
           </div>
+          ${studentTime?`<div class="daily-lesson-student-time">${esc(studentTime)}</div>`:""}
         </div>
-        <div class="actions">
-          <button type="button" class="icon-btn" title="نسخ" aria-label="نسخ الحصة" onclick="event.stopPropagation();copyLessonById('${l.id}')">⧉</button>
-          <button type="button" class="icon-btn" title="تعديل" aria-label="تعديل الحصة" onclick="event.stopPropagation();openEdit('${l.id}')">✎</button>
+        <div class="actions daily-lesson-actions">
+          <button type="button" class="icon-btn daily-copy" title="نسخ الحصة" aria-label="نسخ الحصة">⧉</button>
+          <button type="button" class="icon-btn daily-edit" title="تعديل الحصة" aria-label="تعديل الحصة">✎</button>
         </div>
-      </div>`;
-    box.appendChild(row);
+      </article>`;
+    const card=row.querySelector(".lesson");
+    card.addEventListener("click",event=>{if(!event.target.closest("button"))openEdit(l.id)});
+    row.querySelector(".daily-lesson-title").addEventListener("click",()=>openEdit(l.id));
+    row.querySelector(".daily-copy").addEventListener("click",()=>copyLessonById(l.id));
+    row.querySelector(".daily-edit").addEventListener("click",()=>openEdit(l.id));
+    fragment.append(row);
   });
+  box.append(fragment);
 }
 
 function renderSummary(all,today){
@@ -2959,6 +2978,12 @@ function refreshDailyOverviewClock(){
   if(changedDay){render();return}
   const model=dailyOverviewModel(datedOccurrencesForDate(today,filtered()),mins(minute));
   renderHeader(model,today,now);renderDailyDashboard(model);
+  const timeline=document.getElementById("timeline");
+  const items=datedOccurrencesForDate(today,filtered());
+  if(timeline&&!timeline.contains(document.activeElement)){
+    const statusKey=items.map(item=>occurrenceStatus(item)).join("|");
+    if(timeline.dataset.statusKey!==statusKey)renderTimeline(items);
+  }
 }
 setInterval(refreshDailyOverviewClock,30000);
 window.addEventListener("online",requestAutoRefresh);

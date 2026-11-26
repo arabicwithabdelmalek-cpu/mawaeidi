@@ -10,7 +10,7 @@ const denied=()=>Promise.resolve({data:null,error:{code:"42501",message:"demo_re
 window.__demoSignOut=()=>{authorized=false;callbacks.forEach(cb=>cb("SIGNED_OUT",null))};
 window.supabase={createClient:()=>({
 auth:{getUser:()=>ok({user:authorized?users[0]:null}),onAuthStateChange:cb=>{callbacks.push(cb);return {data:{subscription:{unsubscribe(){}}}}}},
-rpc:(name,args)=>!authorized?denied():name==="mawaeidi_admin_usage"?ok({users,sessions}):name==="mawaeidi_admin_credentials"&&args?.p_action==="list"?ok([]):name==="mawaeidi_admin_support_history"?ok([]):denied(),
+rpc:(name,args)=>!authorized?denied():name==="mawaeidi_admin_usage"?ok({users,sessions}):name==="mawaeidi_admin_usage_versions"?ok(sessions.map(s=>({...s,app_version:s.client_type==="android"?"2.0.0-beta.18":null}))):name==="mawaeidi_admin_credentials"&&args?.p_action==="list"?ok([]):name==="mawaeidi_admin_support_history"?ok([]):denied(),
 functions:{invoke:(_name,opts)=>authorized&&opts?.body?.action==="list"?ok({users}):denied()},
 from:()=>({select:()=>ok([])})
 })};

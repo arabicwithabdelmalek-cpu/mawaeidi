@@ -523,6 +523,48 @@
     });
   }
 
+  let deviceVersions=null, deviceLatest=null, deviceRequest=0;
+  const deviceStatus={web:"موقع الويب",unknown:"إصدار غير معروف",unverified:"لم تتم المقارنة",outdated:"بحاجة إلى تحديث",current:"أحدث إصدار معروف",newer:"أحدث من الإصدار المرجعي"};
+  function renderDevices(){
+    if (!current) return;
+    const model=window.MawaeidiDeviceReport;
+    if (!model) return;
+    const rows=model.rows(users,sessions,deviceVersions,deviceLatest);
+    for(const [platform,id] of [["web","deviceWebCount"],["android","deviceAndroidCount"],["ios","deviceIosCount"]]) $(id).textContent=number(rows.filter(row=>row.platform===platform).length);
+    $("deviceOutdatedCount").textContent=deviceLatest?number(rows.filter(row=>row.status==="outdated").length):"—";
+    $("deviceDataNote").textContent=deviceVersions===null?"بيانات المنصات من سجل الزيارات الحالي؛ قد تكون جزئية. أرقام الإصدارات غير متاحة حتى تفعيل التحديث.":"البيانات من آخر نشاط مسجّل خلال ٩٠ يومًا.";
+    const filter=$("deviceFilter").value, query=$("deviceSearch").value.trim().toLowerCase(), list=$("deviceRows");
+    list.replaceChildren();
+    const filtered=rows.filter(row=>(filter==="all"||row.platform===filter||row.status===filter)&&((row.person.name||"")+" "+(row.person.email||"")).toLowerCase().includes(query));
+    for(const row of filtered){
+      const el=makeEl("article","device-row"), person=makeEl("div"),platform=makeEl("div"),version=makeEl("div"),status=makeEl("div");
+      person.append(makeEl("strong","",row.person.name||"مستخدم"),makeEl("small","",row.person.email||""));
+      platform.append(makeEl("strong","",clientLabel(row.platform)),makeEl("small","",displayDate(row.at)));
+      version.append(makeEl("small","","الإصدار المسجّل"),makeEl("strong","",row.version||"—"));
+      status.append(makeEl("span","device-status "+row.status,deviceStatus[row.status]));
+      el.append(person,platform,version,status);list.append(el);
+    }
+    if(!filtered.length)list.append(makeEl("p","empty-state","لا توجد نتائج مطابقة."));
+  }
+  async function loadDeviceVersions(generation){
+    const request=++deviceRequest;deviceVersions=null;renderDevices();
+    try{const {data,error}=await client.rpc("mawaeidi_admin_usage_versions");if(generation!==reportGeneration||request!==deviceRequest||!current)return;if(!error&&Array.isArray(data)){deviceVersions=data;renderDevices()}}catch{/* Legacy deployments retain platform reporting. */}
+  }
+  async function checkDeviceRelease(){
+    if(!current)return;
+    const btn=$("deviceCheckRelease");btn.disabled=true;
+    $("deviceVersionNote").textContent="جارٍ التحقق…";
+    try{
+      const response=await fetch("https://api.github.com/repos/arabicwithabdelmalek-cpu/mawaeidi/releases?per_page=30",{credentials:"omit",referrerPolicy:"no-referrer",signal:AbortSignal.timeout(10000)});
+      if(!response.ok)throw Error("release unavailable");
+      const latest=window.MawaeidiDeviceReport.latestRelease(await response.json());
+      if(!latest)throw Error("release unavailable");
+      if(!current)return;
+      deviceLatest=latest;$("deviceLatestVersion").textContent=latest;$("deviceVersionNote").textContent="تم التحقق من إصدارات GitHub المنشورة، بما فيها التجريبية.";
+    }catch{$("deviceVersionNote").textContent="تعذّر التحقق من أحدث إصدار. لا يمكن الجزم بحالة التحديث.";deviceLatest=null;$("deviceLatestVersion").textContent="—"}
+    finally{btn.disabled=false;renderDevices()}
+  }
+
   function renderAll() {
     if (!current) return;
     paintSummary();
@@ -530,6 +572,7 @@
     renderUsers();
     renderDetails(false);
     renderFeed();
+    renderDevices();
   }
   function fail(message, accessDenied = false) {
     reportGeneration++;
@@ -539,6 +582,7 @@
     avatarRetryAfter = 0;
     avatarRequest = null;
     users = []; sessions = []; current = null; selectedUserId = null; detailReturnFocus = null;
+    deviceVersions=null;deviceRequest++;$("deviceRows").replaceChildren();
     $("loading").hidden = true;
     $("dashboard").hidden = true;
     $("errorBox").hidden = false;
@@ -626,6 +670,7 @@
       $("dashboard").hidden = false; $("exportBtn").disabled = false;
       $("updatedAt").textContent = "آخر تحديث: " + cairoDateFormat.format(new Date());
       renderAll();
+      loadDeviceVersions(generation);
       // Signed photo links are private and expire after 30 minutes. Reuse them
       // for 20 minutes instead of asking Edge Function on every 2-minute poll.
       // The manual refresh button always requests updated photos.
@@ -667,6 +712,9 @@
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
+  $("deviceSearch").addEventListener("input",renderDevices);
+  $("deviceFilter").addEventListener("change",renderDevices);
+  $("deviceCheckRelease").addEventListener("click",checkDeviceRelease);
   $("refreshBtn").addEventListener("click", () => loadReport(true));
   $("exportBtn").addEventListener("click", exportCsv);
   $("period").addEventListener("change", () => {

@@ -2323,44 +2323,63 @@ function render(){
   renderWeek();
 }
 
+function nextLessonCardState(next,now){
+  if(!next)return null;
+  const ongoing=next.start<=now&&next.end>now;
+  const duration=Math.max(1,next.end-next.start);
+  return {ongoing,remaining:Math.max(0,ongoing?next.end-now:next.start-now),elapsed:ongoing?Math.min(duration,Math.max(0,now-next.start)):0,duration};
+}
 function renderHeader(model,today,d){
   const tn=dayNameForDateKey(today),cairoDate=new Date(`${today}T12:00:00Z`);
   document.getElementById("dateLabel").textContent=cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"short",timeZone:"UTC"});
   document.getElementById("todayHeading").textContent=`${tn} — ${cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"long",timeZone:"UTC"})}`;
   document.getElementById("todayCount").textContent=`${model.total} حصة`;
-
-  const now=mins(currentTimeKey(d));
-  const next=model.next?.item;
-  const card=document.getElementById("nextCard");
-  if(next){
-    const l=next.lesson,studentTime=studentTimeInline(next),ongoing=model.next.start<=now,caption=ongoing?"الحصة الجارية":"الحصة القادمة";
-    const relative=ongoing?"تنتهي بعد "+dailyDurationText(model.next.end-now):"بعد "+dailyDurationText(model.next.start-now);
-    card.innerHTML=`
-      <div class="dot"></div>
-      <div class="label">${caption}</div><span class="next-relative">${esc(relative)}</span>
-      <div class="time">${fmt(next.time)}</div>
-      <div class="name">${esc(l.name||"بدون اسم")}</div>
-      <div class="meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة${studentTime?" · "+esc(studentTime):""}</div>
-`;
-    card.onclick=()=>openEdit(l.id);
-    card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit(l.id)}};
-    card.setAttribute("role","button");
-    card.setAttribute("tabindex","0");
-    card.setAttribute("aria-label",`فتح ${caption}: ${l.name||"بدون اسم"}`);
-  }else{
-    card.onclick=null;
-    card.onkeydown=null;
-    card.removeAttribute("role");
-    card.removeAttribute("tabindex");
-    card.removeAttribute("aria-label");
-    card.innerHTML=`
-      <div class="dot"></div>
-      <div class="label">الحصة القادمة</div>
-      <div class="time">—</div>
-      <div class="name">لا توجد حصة قادمة اليوم</div>
-      <div class="meta">يمكنك الانتقال إلى الأسبوع أو إضافة موعد جديد.</div>
-`;
+  renderNextLessonCard(model,mins(currentTimeKey(d)));
+}
+function renderNextLessonCard(model,now){
+  const card=document.getElementById("nextCard"),next=model.next?.item,state=nextLessonCardState(model.next,now);
+  if(!card)return;
+  const hadFocus=card.contains(document.activeElement);
+  card.classList.toggle("is-ongoing",Boolean(state?.ongoing));
+  card.classList.toggle("is-empty",!next);
+  if(!next){
+    const hasLessons=model.total>0;
+    const key="empty:"+hasLessons;
+    if(card.dataset.cardKey!==key){
+      card.innerHTML=`
+        <div class="next-card-top"><div class="label">مواعيد اليوم</div><span class="next-card-context">بتوقيت مصر</span></div>
+        <div class="next-empty-symbol" aria-hidden="true">✓</div>
+        <div class="name">${hasLessons?"لا توجد حصص أخرى اليوم":"يوم بلا مواعيد"}</div>
+        <div class="meta">${hasLessons?"يمكنك مراجعة جدول الأسبوع أو إضافة موعد جديد.":"أضف حصة أو راجع بقية الأسبوع."}</div>
+        <div class="next-card-footer"><button type="button" class="next-card-action next-add">＋ إضافة حصة</button><button type="button" class="next-card-link next-week">عرض الأسبوع</button></div>`;
+      card.querySelector(".next-add").onclick=()=>openQuickAddForToday();
+      card.querySelector(".next-week").onclick=()=>{const tab=document.querySelector('.tab[aria-controls="weekView"]');if(tab)setView("week",tab)};
+      card.dataset.cardKey=key;
+      if(hadFocus)card.querySelector(".next-add").focus({preventScroll:true});
+    }
+    return;
   }
+  const l=next.lesson,title=l.name||"بدون اسم",studentTime=studentTimeInline(next);
+  const caption=state.ongoing?"الحصة الجارية":"الحصة القادمة",kind=l.type==="teach"?"أُدرِّس":"أدرس";
+  const endLabel=dailyLessonEndLabel(next),details=[l.subject,l.platform].filter(Boolean).join(" · ");
+  const key=JSON.stringify([next.date,next.time,l.id,title,l.type,l.duration,details,studentTime,endLabel,state.ongoing]);
+  if(card.dataset.cardKey!==key){
+    card.innerHTML=`
+      <div class="next-card-top"><div class="label"><span class="next-status-dot" aria-hidden="true"></span>${caption}</div><span class="next-card-context">بتوقيت مصر</span></div>
+      <div class="next-card-times"><div class="time">${esc(fmt(next.time))}</div><span class="next-end-time">إلى ${esc(endLabel)}</span></div>
+      <div class="name">${esc(title)}</div>
+      ${details?`<div class="meta">${esc(details)}</div>`:""}
+      <div class="next-card-details"><span class="next-kind ${l.type==="teach"?"teach":"learn"}">${kind}</span><span>${esc(dailyDurationText(state.duration))}</span>${studentTime?`<span class="next-student-time">${esc(studentTime)}</span>`:""}</div>
+      <div class="next-card-footer"><div class="next-countdown"><small>${state.ongoing?"الوقت المتبقي بحسب الجدول":"تبدأ بعد"}</small><strong id="nextRemainingTime">—</strong></div><button type="button" class="next-card-action next-edit">تفاصيل الحصة</button></div>
+      ${state.ongoing?`<progress class="next-class-progress" aria-label="الوقت المنقضي من الحصة حسب الجدول" max="${state.duration}" value="${state.elapsed}"></progress>`:""}`;
+    card.querySelector(".next-edit").onclick=()=>openEdit(l.id);
+    card.dataset.cardKey=key;
+    if(hadFocus)card.querySelector(".next-edit").focus({preventScroll:true});
+  }
+  const remaining=card.querySelector("#nextRemainingTime");
+  if(remaining)remaining.textContent=dailyDurationText(state.remaining);
+  const progress=card.querySelector(".next-class-progress");
+  if(progress)progress.value=state.elapsed;
 }
 
 function dailyLessonEndLabel(occurrence){

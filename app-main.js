@@ -2313,7 +2313,7 @@ function render(){
   updateSectionChrome();
   const nowDate=new Date(),today=currentDateKey(nowDate),list=filtered(),items=datedOccurrencesForDate(today,list);
   dailyOverviewDate=today;dailyOverviewMinute=currentTimeKey(nowDate);
-  const model=dailyOverviewModel(items,mins(currentTimeKey(nowDate)));
+  const model=dailyOverviewModel(items,mins(dailyOverviewMinute));
   const week=days.flatMap(day=>datedOccurrencesForDate(weekDateForDay(day,today),list)).filter(item=>!occurrenceIsInactive(item));
   renderHeader(model,today,nowDate);
   renderDailyDashboard(model);
@@ -2380,7 +2380,7 @@ function renderTimeline(items=datedOccurrencesForDate(currentDateKey(),filtered(
   const fragment=document.createDocumentFragment();
   items.forEach((o,i)=>{
     const l=o.lesson,status=occurrenceStatus(o),inactive=occurrenceIsInactive(o);
-    const src=sourceLabel(l),srcColor=sourceColor(l),studentTime=studentTimeInline(o);
+    const src=l.lessonSource==="center"?(l.centerName?"مركز: "+l.centerName:"مركز"):"خاص",srcColor=sourceColor(l),studentTime=studentTimeInline(o);
     const people=l.studentType==="group"?("مجموعة"+(l.groupStudents?.length?" · "+l.groupStudents.length+" طلاب":"")):"فردي";
     const title=l.name||"بدون اسم";
     const details=[l.subject,l.platform].filter(Boolean).map(esc).join(" · ");
@@ -2976,10 +2976,9 @@ function refreshDailyOverviewClock(){
   const changedDay=Boolean(dailyOverviewDate&&dailyOverviewDate!==today);
   dailyOverviewDate=today;dailyOverviewMinute=minute;
   if(changedDay){render();return}
-  const model=dailyOverviewModel(datedOccurrencesForDate(today,filtered()),mins(minute));
+  const items=datedOccurrencesForDate(today,filtered()),model=dailyOverviewModel(items,mins(minute));
   renderHeader(model,today,now);renderDailyDashboard(model);
   const timeline=document.getElementById("timeline");
-  const items=datedOccurrencesForDate(today,filtered());
   if(timeline&&!timeline.contains(document.activeElement)){
     const statusKey=items.map(item=>occurrenceStatus(item)).join("|");
     if(timeline.dataset.statusKey!==statusKey)renderTimeline(items);

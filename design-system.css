@@ -108,3 +108,19 @@
 }
 @media(max-width:350px){#todayView .daily-metric strong{font-size:18px}#scheduleWorkspace .home-hero-story{padding:10px}#scheduleWorkspace .home-hero-description{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.app>.workspace-switch button,.app>.workspace-switch button::after,#scheduleWorkspace .filter,#scheduleWorkspace .tab{transition:none}}
+
+/* V2: custom editorial photograph, integrated into the brand hero. */
+#scheduleWorkspace .home-hero-story{grid-template-columns:minmax(0,1fr) minmax(0,1.14fr);gap:12px;padding:23px 18px 23px 24px;background:radial-gradient(ellipse at 20% 55%,#365E64 0,transparent 62%),linear-gradient(115deg,#173A4C,#28566B)}
+#scheduleWorkspace .home-hero-art{max-height:250px;width:100%;height:auto;object-fit:contain;object-position:center;filter:drop-shadow(0 9px 10px rgba(8,28,34,.20));transform:translateY(4px)}
+#scheduleWorkspace .home-hero-content .kufi-quote{height:115px}
+#scheduleWorkspace .home-hero-description{max-width:29ch}
+@media(max-width:900px){
+ #scheduleWorkspace .home-hero-story{grid-template-columns:minmax(0,1fr) minmax(0,.86fr);padding:16px 18px;gap:10px}
+ #scheduleWorkspace .home-hero-art{max-height:184px}
+ #scheduleWorkspace .home-hero-content .kufi-quote{height:90px}
+}
+@media(max-width:520px){
+ #scheduleWorkspace .home-hero-story{grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr);min-height:160px;padding:12px 10px;gap:5px}
+ #scheduleWorkspace .home-hero-art{max-height:132px;transform:translateY(2px)}
+ #scheduleWorkspace .home-hero-content .kufi-quote{height:65px}
+}

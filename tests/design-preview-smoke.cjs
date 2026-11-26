@@ -1,6 +1,6 @@
 "use strict";
 const {chromium}=require("playwright"),assert=require("node:assert/strict"),http=require("node:http"),fs=require("node:fs/promises"),path=require("node:path");
-const root=path.resolve(__dirname,"../preview-dist"),types={".html":"text/html",".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".png":"image/png"};
+const root=path.resolve(__dirname,"../preview-dist"),types={".html":"text/html",".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".png":"image/png",".webp":"image/webp"};
 const server=http.createServer(async(req,res)=>{try{const p=new URL(req.url,"http://localhost").pathname;const f=path.resolve(root,"."+(p==="/"?"/index.html":p));if(!f.startsWith(root+path.sep))throw Error("path");res.setHeader("Content-Type",(types[path.extname(f)]||"application/octet-stream"));res.end(await fs.readFile(f))}catch{res.writeHead(404).end()}});
 (async()=>{await new Promise(r=>server.listen(0,"127.0.0.1",r));const origin="http://127.0.0.1:"+server.address().port,browser=await chromium.launch();
 try{for(const width of [320,390,768,1440]){
@@ -10,7 +10,7 @@ try{for(const width of [320,390,768,1440]){
  await page.goto(origin+"/");await page.locator(".design-preview-notice").waitFor({state:"visible"});
  assert.equal(await page.locator("#dailyTotal").textContent(),"5");
  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue("--primary").trim()),"#28566B");
- assert.ok(await page.locator(".home-hero-art").evaluate(async img=>{await img.decode();return img.naturalWidth>0}));
+ assert.ok(await page.locator(".home-hero-art").evaluate(async img=>{await img.decode();return img.naturalWidth===820&&img.currentSrc.includes("home-planner.webp")}));
  const overflow=()=>page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth+2);
  assert.equal(await overflow(),false);
  await page.locator("#studentsSectionButton").click();await page.locator("#studentsView").waitFor({state:"visible"});

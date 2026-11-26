@@ -2519,110 +2519,193 @@ function setView(v,btn){
   render();
 }
 
+function dailyOverviewModel(items,now){
+  const active=[],busy=[];
+  let completed=0,teachCount=0,learnCount=0,teachMinutes=0,learnMinutes=0;
+  for(const item of items){
+    const raw=occurrenceRawStatus(item);
+    if(["cancelled_unpaid","cancelled_counted","rescheduled"].includes(raw))continue;
+    const start=mins(item.time),duration=Math.max(0,Number(item.lesson.duration||60)||0),end=start+duration;
+    const finished=raw==="completed"||raw==="free"||(raw==="default"&&end<=now);
+    active.push({item,start,end,finished});
+    if(finished)completed++;
+    else if(end>now)busy.push({start,end});
+    if(item.lesson.type==="teach"){teachCount++;teachMinutes+=duration}
+    else if(item.lesson.type==="learn"){learnCount++;learnMinutes+=duration}
+  }
+  busy.sort((a,b)=>a.start-b.start||a.end-b.end);
+  let gap=null,occupiedUntil=null;
+  for(const block of busy){
+    if(occupiedUntil!==null&&block.start>occupiedUntil){
+      gap={start:occupiedUntil,end:block.start,minutes:block.start-occupiedUntil};break;
+    }
+    occupiedUntil=Math.max(occupiedUntil??now,block.end);
+  }
+  const next=active.filter(x=>!x.finished&&x.end>now).sort((a,b)=>a.start-b.start)[0]||null;
+  return {total:active.length,completed,remaining:active.length-completed,teachCount,learnCount,teachMinutes,learnMinutes,gap,next};
+}
+function dailyDurationText(value){
+  const minutes=Math.max(0,Math.round(value)),hours=Math.floor(minutes/60),rest=minutes%60;
+  return hours?hours+" س"+(rest?" "+rest+" د":""):rest+" د";
+}
+function dailyMinuteLabel(value){
+  const minute=Math.max(0,Math.min(1439,value));
+  return fmt(String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0"));
+}
+function renderDailyDashboard(model){
+  const put=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value};
+  put("dailyTotal",model.total);
+  put("dailyRemaining",model.remaining+" حصة متبقية");
+  put("dailyTeach",dailyDurationText(model.teachMinutes));put("dailyTeachCount",model.teachCount+" حصة تدريس");
+  put("dailyLearn",dailyDurationText(model.learnMinutes));put("dailyLearnCount",model.learnCount+" حصة دراسة");
+  put("dailyGap",model.gap?dailyDurationText(model.gap.minutes):"—");
+  put("dailyGapRange",model.gap?dailyMinuteLabel(model.gap.start)+" – "+dailyMinuteLabel(model.gap.end):"لا يوجد فراغ بين الحصص المتبقية");
+  put("dailyProgressText",model.total?model.completed+" من "+model.total+" حصة منتهية حسب الجدول":"لا توجد حصص في هذا التصنيف");
+  const progress=document.getElementById("dailyProgress");if(progress){progress.max=Math.max(1,model.total);progress.value=model.completed}
+}
 function render(){
   updateSectionChrome();
-  renderHeader();
-  renderTimeline();
-  renderSummary();
-  renderWeekBars();
+  const nowDate=new Date(),today=currentDateKey(nowDate),list=filtered(),items=datedOccurrencesForDate(today,list);
+  dailyOverviewDate=today;dailyOverviewMinute=currentTimeKey(nowDate);
+  const model=dailyOverviewModel(items,mins(dailyOverviewMinute));
+  const week=days.flatMap(day=>datedOccurrencesForDate(weekDateForDay(day,today),list)).filter(item=>!occurrenceIsInactive(item));
+  renderHeader(model,today,nowDate);
+  renderDailyDashboard(model);
+  renderTimeline(items);
+  renderSummary(week,today);
+  renderWeekBars(week,today);
   renderWeek();
 }
 
-function renderHeader(){
-  const d=new Date(),tn=todayName(),today=currentDateKey();
-  const cairoDate=new Date(`${today}T12:00:00Z`);
-  const items=datedOccurrencesForDate(today,filtered());
-  const activeItems=items.filter(item=>!occurrenceIsInactive(item));
+function nextLessonCardState(next,now){
+  if(!next)return null;
+  const ongoing=next.start<=now&&next.end>now;
+  const duration=Math.max(1,next.end-next.start);
+  return {ongoing,remaining:Math.max(0,ongoing?next.end-now:next.start-now),elapsed:ongoing?Math.min(duration,Math.max(0,now-next.start)):0,duration};
+}
+function renderHeader(model,today,d){
+  const tn=dayNameForDateKey(today),cairoDate=new Date(`${today}T12:00:00Z`);
   document.getElementById("dateLabel").textContent=cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"short",timeZone:"UTC"});
   document.getElementById("todayHeading").textContent=`${tn} — ${cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"long",timeZone:"UTC"})}`;
-  document.getElementById("todayCount").textContent=`${activeItems.length} حصة`;
-
-  const now=mins(currentTimeKey(d));
-  const next=activeItems.find(o=>occurrenceRawStatus(o)!=="completed"&&mins(o.time)+Number(o.lesson.duration||60)>=now);
-  const card=document.getElementById("nextCard");
-  if(next){
-    const l=next.lesson;
-    card.innerHTML=`
-      <div class="dot"></div>
-      <div class="label">الحصة القادمة</div>
-      <div class="time">${fmt(next.time)}</div>
-      <div class="name">${esc(l.name||"بدون اسم")}</div>
-      <div class="meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة${studentTimeInline(next)?" · "+esc(studentTimeInline(next)):""}</div>
-`;
-    card.onclick=()=>openEdit(l.id);
-    card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit(l.id)}};
-    card.setAttribute("role","button");
-    card.setAttribute("tabindex","0");
-    card.setAttribute("aria-label",`فتح الحصة القادمة: ${l.name||"بدون اسم"}`);
-  }else{
-    card.onclick=null;
-    card.onkeydown=null;
-    card.removeAttribute("role");
-    card.removeAttribute("tabindex");
-    card.removeAttribute("aria-label");
-    card.innerHTML=`
-      <div class="dot"></div>
-      <div class="label">الحصة القادمة</div>
-      <div class="time">—</div>
-      <div class="name">لا توجد حصة قادمة اليوم</div>
-      <div class="meta">يمكنك الانتقال إلى الأسبوع أو إضافة موعد جديد.</div>
-`;
-  }
+  document.getElementById("todayCount").textContent=`${model.total} حصة`;
+  renderNextLessonCard(model,mins(currentTimeKey(d)));
 }
-
-function renderTimeline(){
-  const items=datedOccurrencesForDate(currentDateKey(),filtered());
-  const box=document.getElementById("timeline");
-  if(!items.length){
-    box.innerHTML='<div class="empty">لا توجد حصص اليوم.</div>';
+function renderNextLessonCard(model,now){
+  const card=document.getElementById("nextCard"),next=model.next?.item,state=nextLessonCardState(model.next,now);
+  if(!card)return;
+  const hadFocus=card.contains(document.activeElement);
+  card.classList.toggle("is-ongoing",Boolean(state?.ongoing));
+  card.classList.toggle("is-empty",!next);
+  if(!next){
+    const hasLessons=model.total>0;
+    const key="empty:"+hasLessons;
+    if(card.dataset.cardKey!==key){
+      card.innerHTML=`
+        <div class="next-card-top"><div class="label">مواعيد اليوم</div><span class="next-card-context">بتوقيت مصر</span></div>
+        <div class="next-empty-symbol" aria-hidden="true">✓</div>
+        <div class="name">${hasLessons?"لا توجد حصص أخرى اليوم":"يوم بلا مواعيد"}</div>
+        <div class="meta">${hasLessons?"يمكنك مراجعة جدول الأسبوع أو إضافة موعد جديد.":"أضف حصة أو راجع بقية الأسبوع."}</div>
+        <div class="next-card-footer"><button type="button" class="next-card-action next-add">＋ إضافة حصة</button><button type="button" class="next-card-link next-week">عرض الأسبوع</button></div>`;
+      card.querySelector(".next-add").onclick=()=>openQuickAddForToday();
+      card.querySelector(".next-week").onclick=()=>{const tab=document.querySelector('.tab[aria-controls="weekView"]');if(tab)setView("week",tab)};
+      card.dataset.cardKey=key;
+      if(hadFocus)card.querySelector(".next-add").focus({preventScroll:true});
+    }
     return;
   }
-  box.innerHTML="";
-  items.forEach((o,i)=>{
-    const l=o.lesson;
-    const src=l.lessonSource==="center"?(l.centerName?`مركز: ${esc(l.centerName)}`:"مركز"):"خاص";
-    const srcColor=sourceColor(l);
-    const people=l.studentType==="group"?`مجموعة${l.groupStudents?.length?` · ${l.groupStudents.length} طلاب`:""}`:"فردي";
-    const row=document.createElement("div");
-    row.className="timeline-row";
-    row.style.animationDelay=`${i*.05}s`;
-    row.innerHTML=`
-      <div class="t-time">${fmt(o.time)}</div>
-      <div class="lesson ${l.type}${occurrenceIsInactive(o)?" session-inactive":""}" style="--source-color:${srcColor}" role="button" tabindex="0" aria-label="فتح وتعديل الحصة: ${esc(l.name||"بدون اسم")}" onclick="openEdit('${l.id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openEdit('${l.id}')}">
-        <div>
-          <div class="lesson-name">${esc(l.name||"بدون اسم")}</div>
-          <div class="lesson-meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة</div>
-          <div class="pills">
-            <span class="pill ${l.type}">${l.type==="teach"?"أُدرِّس":"أدرس"}</span>
-            <span class="pill">${people}</span>
-            <span class="pill">${src}</span>
-            ${studentTimeInline(o)?`<span class="pill student-time-pill">${esc(studentTimeInline(o))}</span>`:""}
-            ${sessionStatusButtonMarkup(o)}
-          </div>
-        </div>
-        <div class="actions">
-          <button type="button" class="icon-btn" title="نسخ" aria-label="نسخ الحصة" onclick="event.stopPropagation();copyLessonById('${l.id}')">⧉</button>
-          <button type="button" class="icon-btn" title="تعديل" aria-label="تعديل الحصة" onclick="event.stopPropagation();openEdit('${l.id}')">✎</button>
-        </div>
-      </div>`;
-    box.appendChild(row);
-  });
+  const l=next.lesson,title=l.name||"بدون اسم",studentTime=studentTimeInline(next);
+  const caption=state.ongoing?"الحصة الجارية":"الحصة القادمة",kind=l.type==="teach"?"أُدرِّس":"أدرس";
+  const endLabel=dailyLessonEndLabel(next),details=[l.subject,l.platform].filter(Boolean).join(" · ");
+  const key=JSON.stringify([next.date,next.time,l.id,title,l.type,l.duration,details,studentTime,endLabel,state.ongoing]);
+  if(card.dataset.cardKey!==key){
+    card.innerHTML=`
+      <div class="next-card-top"><div class="label"><span class="next-status-dot" aria-hidden="true"></span>${caption}</div><span class="next-card-context">بتوقيت مصر</span></div>
+      <div class="next-card-times"><div class="time">${esc(fmt(next.time))}</div><span class="next-end-time">إلى ${esc(endLabel)}</span></div>
+      <div class="name">${esc(title)}</div>
+      ${details?`<div class="meta">${esc(details)}</div>`:""}
+      <div class="next-card-details"><span class="next-kind ${l.type==="teach"?"teach":"learn"}">${kind}</span><span>${esc(dailyDurationText(state.duration))}</span>${studentTime?`<span class="next-student-time">${esc(studentTime)}</span>`:""}</div>
+      <div class="next-card-footer"><div class="next-countdown"><small>${state.ongoing?"الوقت المتبقي بحسب الجدول":"تبدأ بعد"}</small><strong id="nextRemainingTime">—</strong></div><button type="button" class="next-card-action next-edit">تفاصيل الحصة</button></div>
+      ${state.ongoing?`<progress class="next-class-progress" aria-label="الوقت المنقضي من الحصة حسب الجدول" max="${state.duration}" value="${state.elapsed}"></progress>`:""}`;
+    card.querySelector(".next-edit").onclick=()=>openEdit(l.id);
+    card.dataset.cardKey=key;
+    if(hadFocus)card.querySelector(".next-edit").focus({preventScroll:true});
+  }
+  const remaining=card.querySelector("#nextRemainingTime");
+  if(remaining)remaining.textContent=dailyDurationText(state.remaining);
+  const progress=card.querySelector(".next-class-progress");
+  if(progress)progress.value=state.elapsed;
 }
 
-function renderSummary(){
-  const all=getOccurrences(lessons), tn=todayName();
+function dailyLessonEndLabel(occurrence){
+  const end=mins(occurrence.time)+Math.max(0,Number(occurrence.lesson.duration||60)||0);
+  const minute=end%1440;
+  const label=fmt(String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0"));
+  return end>=1440?label+" (+1 يوم)":label;
+}
+function renderTimeline(items=datedOccurrencesForDate(currentDateKey(),filtered())){
+  const box=document.getElementById("timeline");
+  box.dataset.statusKey=items.map(item=>occurrenceStatus(item)).join("|");
+  if(!items.length){
+    box.innerHTML='<div class="daily-empty"><strong>لا توجد حصص في هذا اليوم</strong><p>يمكنك إضافة موعد جديد أو تغيير التصفية.</p><button type="button" class="small-btn add-time" onclick="openQuickAddForToday()">＋ إضافة حصة</button></div>';
+    return;
+  }
+  box.replaceChildren();
+  const fragment=document.createDocumentFragment();
+  items.forEach((o,i)=>{
+    const l=o.lesson,status=occurrenceStatus(o),inactive=occurrenceIsInactive(o);
+    const src=l.lessonSource==="center"?(l.centerName?"مركز: "+l.centerName:"مركز"):"خاص",srcColor=sourceColor(l),studentTime=studentTimeInline(o);
+    const people=l.studentType==="group"?("مجموعة"+(l.groupStudents?.length?" · "+l.groupStudents.length+" طلاب":"")):"فردي";
+    const title=l.name||"بدون اسم";
+    const details=[l.subject,l.platform].filter(Boolean).map(esc).join(" · ");
+    const row=document.createElement("div");
+    row.className="timeline-row"+(status==="ongoing"?" is-ongoing":"")+(status==="completed"||status==="free"?" is-finished":"");
+    row.style.animationDelay=Math.min(i,5)*.035+"s";
+    row.innerHTML=`
+      <div class="t-time"><strong>${esc(fmt(o.time))}</strong><small>إلى ${esc(dailyLessonEndLabel(o))}</small></div>
+      <article class="lesson ${l.type}${inactive?" session-inactive":""}" style="--source-color:${srcColor}">
+        <div class="daily-lesson-main">
+          <div class="daily-lesson-top">
+            <button type="button" class="lesson-name daily-lesson-title" aria-label="فتح وتعديل الحصة: ${esc(title)}">${esc(title)}</button>
+            <div class="daily-lesson-status">${sessionStatusButtonMarkup(o)}</div>
+          </div>
+          ${details?`<div class="lesson-meta">${details}</div>`:""}
+          <div class="pills">
+            <span class="pill ${l.type}">${l.type==="teach"?"أُدرِّس":"أدرس"}</span>
+            <span class="pill">${esc(people)}</span>
+            <span class="pill">${esc(src)}</span>
+            <span class="daily-lesson-duration">${esc(String(l.duration||60))} دقيقة</span>
+          </div>
+          ${studentTime?`<div class="daily-lesson-student-time">${esc(studentTime)}</div>`:""}
+        </div>
+        <div class="actions daily-lesson-actions">
+          <button type="button" class="icon-btn daily-copy" title="نسخ الحصة" aria-label="نسخ الحصة">⧉</button>
+          <button type="button" class="icon-btn daily-edit" title="تعديل الحصة" aria-label="تعديل الحصة">✎</button>
+        </div>
+      </article>`;
+    const card=row.querySelector(".lesson");
+    card.addEventListener("click",event=>{if(!event.target.closest("button"))openEdit(l.id)});
+    row.querySelector(".daily-lesson-title").addEventListener("click",()=>openEdit(l.id));
+    row.querySelector(".daily-copy").addEventListener("click",()=>copyLessonById(l.id));
+    row.querySelector(".daily-edit").addEventListener("click",()=>openEdit(l.id));
+    fragment.append(row);
+  });
+  box.append(fragment);
+}
+
+function renderSummary(all,today){
+  const tn=dayNameForDateKey(today);
   document.getElementById("totalCount").textContent=all.length;
   document.getElementById("teachCount").textContent=all.filter(o=>o.lesson.type==="teach").length;
   document.getElementById("learnCount").textContent=all.filter(o=>o.lesson.type==="learn").length;
   document.getElementById("todayMini").textContent=all.filter(o=>o.day===tn).length;
 }
 
-function renderWeekBars(){
-  const box=document.getElementById("weekBars"),occ=getOccurrences(lessons);
+function renderWeekBars(occ,today){
+  const box=document.getElementById("weekBars"),tn=dayNameForDateKey(today);
   const data=days.map(day=>({day,count:occ.filter(o=>o.day===day).length}));
   const max=Math.max(1,...data.map(x=>x.count));
   box.innerHTML=data.map(x=>`
-    <div class="bar-row">
+    <div class="bar-row${x.day===tn?" is-today":""}">
       <b>${x.day}</b>
       <div class="track"><div class="fill" style="width:${x.count/max*100}%"></div></div>
       <span>${x.count}</span>
@@ -3256,6 +3339,24 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("visibilitychange",()=>{syncWorldClockTimer(true);requestAutoRefresh()});
 window.addEventListener("focus",requestAutoRefresh);
+let dailyOverviewDate="",dailyOverviewMinute="";
+function refreshDailyOverviewClock(){
+  if(document.visibilityState!=="visible"||currentSection!=="schedule"||currentView!=="today"||!currentUser||!cloudReady)return;
+  const now=new Date(),today=currentDateKey(now),minute=currentTimeKey(now);
+  if(today===dailyOverviewDate&&minute===dailyOverviewMinute)return;
+  const changedDay=Boolean(dailyOverviewDate&&dailyOverviewDate!==today);
+  dailyOverviewDate=today;dailyOverviewMinute=minute;
+  if(changedDay){render();return}
+  const items=datedOccurrencesForDate(today,filtered()),model=dailyOverviewModel(items,mins(minute));
+  renderHeader(model,today,now);renderDailyDashboard(model);
+  const timeline=document.getElementById("timeline");
+  if(timeline&&!timeline.contains(document.activeElement)){
+    const statusKey=items.map(item=>occurrenceStatus(item)).join("|");
+    if(timeline.dataset.statusKey!==statusKey)renderTimeline(items);
+  }
+}
+setInterval(refreshDailyOverviewClock,30000);
+
 window.addEventListener("mawaeidi-native-resume",async()=>{
   if(window.MawaeidiNative?.isNative)await restoreNativeSession();
   if(!nativeAlarmAvailable()||!currentUser||!cloudReady)return;

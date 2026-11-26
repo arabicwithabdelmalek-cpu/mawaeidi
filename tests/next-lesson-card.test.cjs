@@ -1,0 +1,21 @@
+"use strict";
+const assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path");
+const root=path.join(__dirname,".."),app=fs.readFileSync(path.join(root,"app-main.js"),"utf8"),html=fs.readFileSync(path.join(root,"index.html"),"utf8");
+function extract(n){const i=app.indexOf("function "+n+"(");assert.ok(i>=0,n);return app.slice(i,app.indexOf("\n}",i)+2)}
+const state=new Function(extract("nextLessonCardState")+"\nreturn nextLessonCardState")();
+assert.equal(state(null,540),null);
+assert.deepEqual(state({start:600,end:660},540),{ongoing:false,remaining:60,elapsed:0,duration:60});
+assert.deepEqual(state({start:600,end:660},600),{ongoing:true,remaining:60,elapsed:0,duration:60});
+assert.deepEqual(state({start:600,end:660},630),{ongoing:true,remaining:30,elapsed:30,duration:60});
+const nodes=new Map();let writes=0,edits=0,adds=0,weeks=0;
+const card={dataset:{},classList:{toggle(){}},contains:()=>false,querySelector(sel){if(!nodes.has(sel))nodes.set(sel,{focus(){},onclick:null,textContent:"",value:0});return nodes.get(sel)},set innerHTML(value){writes++;nodes.clear();this.markup=value}};
+const document={getElementById:()=>card,activeElement:null,querySelector:()=>({})};
+const render=new Function("document","openEdit","openQuickAddForToday","setView","studentTimeInline","dailyLessonEndLabel","fmt","esc","dailyDurationText",extract("nextLessonCardState")+"\n"+extract("renderNextLessonCard")+"\nreturn renderNextLessonCard")(document,()=>edits++,()=>adds++,()=>weeks++,()=>"",()=>"11:00",t=>t,s=>String(s),m=>String(m));
+const model={total:1,next:{item:{date:"2026-11-26",time:"10:00",lesson:{id:"a",name:"Student",type:"teach",duration:60}},start:600,end:660}};
+render(model,540);assert.equal(writes,1);assert.equal(card.querySelector("#nextRemainingTime").textContent,"60");
+render(model,541);assert.equal(writes,1);assert.equal(card.querySelector("#nextRemainingTime").textContent,"59");
+card.querySelector(".next-edit").onclick();assert.equal(edits,1);
+render(model,630);assert.equal(writes,2);assert.equal(card.querySelector(".next-class-progress").value,30);
+render({total:1,next:null},660);assert.equal(writes,3);card.querySelector(".next-add").onclick();card.querySelector(".next-week").onclick();assert.equal(adds,1);assert.equal(weeks,1);
+assert.match(html,/mawaeidi-next-lesson-v1/);assert.match(html,/id="nextCard"/);assert.match(html,/class="kufi-quote"/);
+console.log("Next lesson card countdown, ongoing progress, stable DOM and actions passed.");

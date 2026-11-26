@@ -1,0 +1,24 @@
+"use strict";
+const {chromium}=require("playwright"),assert=require("node:assert/strict"),http=require("node:http"),fs=require("node:fs/promises"),path=require("node:path");
+const root=path.resolve(__dirname,"../preview-dist"),types={".html":"text/html",".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".png":"image/png"};
+const server=http.createServer(async(req,res)=>{try{const p=new URL(req.url,"http://localhost").pathname;const f=path.resolve(root,"."+(p==="/"?"/index.html":p));if(!f.startsWith(root+path.sep))throw Error("path");res.setHeader("Content-Type",(types[path.extname(f)]||"application/octet-stream"));res.end(await fs.readFile(f))}catch{res.writeHead(404).end()}});
+(async()=>{await new Promise(r=>server.listen(0,"127.0.0.1",r));const origin="http://127.0.0.1:"+server.address().port,browser=await chromium.launch();
+try{for(const width of [320,390,768,1440]){
+ const page=await browser.newPage({viewport:{width,height:900},reducedMotion:"reduce",serviceWorkers:"block"}),errors=[],external=[];
+ await page.route("**/*",r=>{if(r.request().url().startsWith(origin+"/"))return r.continue();if(!/fonts\.googleapis\.com|fonts\.gstatic\.com/.test(r.request().url()))external.push(r.request().url());return r.abort()});
+ page.on("pageerror",e=>errors.push(e.message));
+ await page.goto(origin+"/");await page.locator(".design-preview-notice").waitFor({state:"visible"});
+ assert.equal(await page.locator("#dailyTotal").textContent(),"5");
+ assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue("--primary").trim()),"#28566B");
+ assert.ok(await page.locator(".home-hero-art").evaluate(async img=>{await img.decode();return img.naturalWidth>0}));
+ const overflow=()=>page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth+2);
+ assert.equal(await overflow(),false);
+ await page.locator("#studentsSectionButton").click();await page.locator("#studentsView").waitFor({state:"visible"});
+ assert.match(await page.locator("#resultsCount").textContent(),/4/);
+ assert.equal(await overflow(),false);
+ await page.locator("#worldClockSectionButton").click();await page.locator("#worldClockCards").waitFor({state:"visible"});
+ assert.equal(await page.locator("#worldClockCards").evaluate(el=>el.children.length),4);
+ await page.locator("#scheduleSectionButton").click();await page.locator("#todayView").waitFor({state:"visible"});
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+ console.log("Isolated preview "+width+"px: homepage, students, world clock, visual tokens and no external API requests.");await page.close();
+}}finally{await browser.close();server.close()}})().catch(e=>{console.error(e);server.close();process.exitCode=1});

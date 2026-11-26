@@ -2,7 +2,7 @@
 const fs=require("node:fs"),path=require("node:path");
 const root=path.resolve(__dirname,".."),out=path.join(root,"preview-dist");
 fs.mkdirSync(out,{recursive:true});
-const files=["index.html","app-main.js","backup-manager.js","schedule-concurrency.js","schedule-time.js","lesson-model.js","session-state.js","world-clock-model.js","day-order.js","header-refinement.css","ipad-pwa.css","iphone-pwa.css","students/student-registry.css","students/student-registry.js","students/student-workspace-upgrade.css","students/student-workspace-upgrade.js","icons/favicon-32.png","icons/apple-touch-icon.png","icons/huruf-background.png","icons/kufi-quote.png","icons/logo-cutout.svg","icons/home-planner.svg","icons/home-empty.svg","icons/icon-192.png","icons/icon-512.png"];
+const files=["index.html","app-main.js","backup-manager.js","schedule-concurrency.js","schedule-time.js","lesson-model.js","session-state.js","world-clock-model.js","day-order.js","header-refinement.css","design-system.css","ipad-pwa.css","iphone-pwa.css","students/student-registry.css","students/student-registry.js","students/student-workspace-upgrade.css","students/student-workspace-upgrade.js","icons/favicon-32.png","icons/apple-touch-icon.png","icons/huruf-background.png","icons/kufi-quote.png","icons/logo-cutout.svg","icons/home-planner.svg","icons/home-empty.svg","icons/icon-192.png","icons/icon-512.png"];
 function once(s,from,to){if(s.split(from).length!==2)throw Error("Unexpected preview source: "+from.slice(0,80));return s.replace(from,to)}
 for(const f of files){const dest=path.join(out,f);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(path.join(root,f),dest)}
 let html=fs.readFileSync(path.join(out,"index.html"),"utf8");

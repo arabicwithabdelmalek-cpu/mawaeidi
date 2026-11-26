@@ -1,0 +1,110 @@
+/* Mawaeidi / design system 01 — Petrol, paper and brass.
+   The existing wordmark, Arabic calligraphy, functional states and RTL remain. */
+:root {
+  --paper:#F2F5F5; --paper-2:#FAFBF9; --surface:#FFFFFF;
+  --surface-soft:#F8FAF9; --surface-muted:#EFF4F3;
+  --ink:#18313E; --muted:#526771;
+  --primary:#28566B; --primary-2:#173A4C; --primary-hover:#1D4355;
+  --primary-soft:#E6EFF1; --primary-soft-2:#D9E8EB;
+  --accent:#A58151; --accent-soft:#F2E9DB;
+  --line:#D9E3E4; --line-strong:#B9CCD0;
+  --today-bg:#E7F0F2; --today-border:#91AFB9;
+  --teach:#286B60; --teach-bg:#E7F2ED; --teach-border:#B9D6CA;
+  --learn:#855A2E; --learn-bg:#F7EFE3; --learn-border:#DFC8A8;
+  --success:var(--teach); --success-bg:var(--teach-bg); --success-border:var(--teach-border);
+  --warning:var(--learn); --warning-bg:var(--learn-bg); --warning-border:var(--learn-border);
+  --danger:#A04749; --danger-bg:#FBEDEE; --danger-border:#E7C3C5;
+  --shadow:0 8px 30px rgba(23,58,76,.07);
+  --shadow-soft:0 3px 12px rgba(23,58,76,.045);
+  --ds-radius-sm:9px; --ds-radius-md:13px; --ds-radius-lg:19px;
+  --ds-space-1:4px; --ds-space-2:8px; --ds-space-3:12px;
+  --ds-space-4:16px; --ds-space-5:24px; --ds-space-6:32px;
+  --ds-motion:180ms cubic-bezier(.2,.75,.25,1);
+  --ds-focus:#408599;
+}
+.shell{background:linear-gradient(180deg,#F7F9F8,var(--paper) 80%)}
+.shell>.hurufiyat>span{opacity:.035}
+.app{width:min(1440px,100%);padding:22px clamp(14px,3.2vw,44px) 48px}
+.app>.header{padding-bottom:17px;border-bottom:1px solid var(--line)}
+.app>.header .brand small{color:var(--muted);font-size:13px;line-height:1.5}
+.app>.header .brand h1{color:var(--primary-2)}
+.app>.header .brand h1::after{background:var(--accent);width:40%;height:2px}
+.app>.header #primaryActionButton{border-radius:var(--ds-radius-sm);box-shadow:none;min-height:44px}
+.app>.header .data-menu>summary,.app>.header .account-menu-trigger{border-color:var(--line);background:var(--surface);border-radius:var(--ds-radius-sm)}
+.app>.header .sync-status{font-size:12px}
+.app>.workspace-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;margin:13px 0 0;padding:0;gap:0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none}
+.app>.workspace-switch button{position:relative;justify-content:center;gap:8px;min-height:54px;padding:10px 7px 14px;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--muted);font-size:15px;font-weight:700;transition:color var(--ds-motion),background var(--ds-motion)}
+.app>.workspace-switch button::after{content:"";position:absolute;inset-inline:22%;bottom:-1px;height:3px;border-radius:4px 4px 0 0;background:transparent;transition:background var(--ds-motion)}
+.app>.workspace-switch button.active{color:var(--primary-2);background:transparent;box-shadow:none;font-weight:800}
+.app>.workspace-switch button.active::after{background:var(--primary)}
+.app>.workspace-switch button:hover{color:var(--primary-2);background:rgba(40,86,107,.035)}
+.app>.workspace-switch .workspace-nav-icon{width:22px;height:22px}
+#scheduleWorkspace .hero{margin-top:20px;gap:18px;grid-template-columns:minmax(0,1.18fr) minmax(0,1fr)}
+#scheduleWorkspace .home-hero-story{border-radius:var(--ds-radius-lg);padding:26px 24px;min-height:266px;background:radial-gradient(ellipse at 14% 54%,#3F6E7B 0,transparent 60%),linear-gradient(115deg,#173A4C,#28566B);box-shadow:var(--shadow);grid-template-columns:minmax(0,1.08fr) minmax(0,1fr)}
+#scheduleWorkspace .home-hero-date{font-size:14px;color:#EFD6AE;display:flex;align-items:center;gap:7px}
+#scheduleWorkspace .home-hero-date::before{content:"";height:6px;width:6px;border-radius:50%;background:#D8B783;flex:none}
+#scheduleWorkspace .home-hero-content{gap:9px}
+#scheduleWorkspace .home-hero-content .kufi-quote{height:112px}
+#scheduleWorkspace .home-hero-description{font-size:14px;line-height:1.85;color:#F0F5F4;max-width:31ch}
+#scheduleWorkspace .home-hero-art{max-height:238px;filter:drop-shadow(0 6px 9px rgba(10,30,40,.10))}
+#scheduleWorkspace #nextCard{border:1px solid var(--line);border-radius:var(--ds-radius-lg);min-height:266px;padding:21px 23px;box-shadow:var(--shadow-soft);background:var(--surface)}
+#scheduleWorkspace #nextCard.is-ongoing{border-color:var(--teach-border);background:linear-gradient(160deg,#fff,var(--teach-bg))}
+#scheduleWorkspace #nextCard .next-card-context{border-color:var(--line);color:var(--muted)}
+#scheduleWorkspace .controls{margin:19px 0 14px}
+#scheduleWorkspace .filters,#scheduleWorkspace .tabs{background:var(--surface);border-color:var(--line);border-radius:var(--ds-radius-md);box-shadow:none}
+#scheduleWorkspace .filter,#scheduleWorkspace .tab{min-height:42px;border-radius:var(--ds-radius-sm);font-size:14px;transition:background var(--ds-motion),color var(--ds-motion)}
+#todayView .daily-overview{border:1px solid var(--line);border-radius:var(--ds-radius-lg);box-shadow:var(--shadow-soft);padding:21px 23px}
+#todayView .daily-overview-head h2{font-size:22px;letter-spacing:0}
+#todayView .daily-overview-head p{font-size:13px;color:var(--muted)}
+#todayView .daily-overview-kicker{font-size:12px}
+#todayView .daily-metrics{gap:12px}
+#todayView .daily-metric{min-height:108px;padding:13px 15px;border-radius:var(--ds-radius-md);border-color:var(--line);background:var(--surface-soft)}
+#todayView .daily-metric.daily-teach{background:var(--teach-bg);border-color:var(--teach-border)}
+#todayView .daily-metric.daily-learn{background:var(--learn-bg);border-color:var(--learn-border)}
+#todayView .daily-metric small{font-size:13px;color:var(--ink)}
+#todayView .daily-metric strong{font-size:clamp(21px,2.2vw,29px);font-variant-numeric:tabular-nums}
+#todayView .daily-metric span{font-size:12px;color:var(--muted)}
+#todayView>.panel,#scheduleWorkspace #weekView,#studentsView .registry-panel,#worldClockView .world-clock-section{border-radius:var(--ds-radius-lg);border-color:var(--line);box-shadow:var(--shadow-soft);background:var(--surface)}
+#todayView .panel-head h2,#scheduleWorkspace .week-panel-title h2{font-size:19px}
+#todayView .lesson,#studentsView .student-row{border-radius:var(--ds-radius-md)}
+#todayView .daily-lesson-title{font-weight:800;font-size:17px;line-height:1.6}
+#todayView .daily-progress progress{accent-color:var(--primary)}
+#worldClockView .world-clock-hero-v2{border-radius:var(--ds-radius-lg);background:linear-gradient(125deg,#173A4C,#28566B 55%,#477A83);box-shadow:var(--shadow-soft)}
+#studentsView .registry-head h2{color:var(--primary-2)}
+#studentsView .btn.primary,#worldClockView .world-zone-add button{background:var(--primary);border-radius:var(--ds-radius-sm)}
+.app button:focus-visible,.app a:focus-visible,.app input:focus-visible,.app select:focus-visible,.app textarea:focus-visible{outline:2px solid var(--ds-focus);outline-offset:3px}
+@media(max-width:900px){
+  #scheduleWorkspace .hero{grid-template-columns:minmax(0,1fr);gap:12px}
+  #scheduleWorkspace .home-hero-story{min-height:188px;padding:17px 20px;grid-template-columns:minmax(0,1fr) minmax(0,.7fr)}
+  #scheduleWorkspace .home-hero-content .kufi-quote{height:85px}
+  #scheduleWorkspace .home-hero-art{max-height:175px}
+  #scheduleWorkspace #nextCard{min-height:0}
+}
+@media(max-width:520px){
+  .app{padding:13px 12px 32px}
+  .app>.header .brand small{display:none}
+  .app>.workspace-switch{margin-top:10px}
+  .app>.workspace-switch button{flex-direction:column;min-height:56px;gap:3px;font-size:12px;padding:7px 3px 9px}
+  .app>.workspace-switch .workspace-nav-icon{width:20px;height:20px}
+  #scheduleWorkspace .hero{margin-top:14px}
+  #scheduleWorkspace .home-hero-story{min-height:153px;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);padding:12px;border-radius:var(--ds-radius-md)}
+  #scheduleWorkspace .home-hero-content{gap:5px}
+  #scheduleWorkspace .home-hero-date{font-size:11px}
+  #scheduleWorkspace .home-hero-content .kufi-quote{height:63px}
+  #scheduleWorkspace .home-hero-description{font-size:12px;line-height:1.6}
+  #scheduleWorkspace .home-hero-art{max-height:130px}
+  #scheduleWorkspace #nextCard{padding:15px;border-radius:var(--ds-radius-md)}
+  #scheduleWorkspace .controls{margin:13px 0 10px;gap:7px}
+  #scheduleWorkspace .tab,#scheduleWorkspace .filter{font-size:12px;min-height:42px;padding:7px 4px}
+  #todayView .daily-overview{padding:14px 12px;border-radius:var(--ds-radius-md)}
+  #todayView .daily-overview-head h2{font-size:18px}
+  #todayView .daily-overview-head p{font-size:11px}
+  #todayView .daily-metrics{gap:8px}
+  #todayView .daily-metric{padding:11px 10px;min-height:96px}
+  #todayView .daily-metric small{font-size:12px}
+  #todayView .daily-metric strong{font-size:20px}
+  #todayView .daily-metric span{font-size:11px}
+  #todayView>.panel,#scheduleWorkspace #weekView,#studentsView .registry-panel,#worldClockView .world-clock-section{border-radius:var(--ds-radius-md)}
+}
+@media(max-width:350px){#todayView .daily-metric strong{font-size:18px}#scheduleWorkspace .home-hero-story{padding:10px}#scheduleWorkspace .home-hero-description{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.app>.workspace-switch button,.app>.workspace-switch button::after,#scheduleWorkspace .filter,#scheduleWorkspace .tab{transition:none}}

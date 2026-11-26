@@ -7,6 +7,14 @@ on:
       - 'app-main.js'
       - 'tests/home-browser-smoke.cjs'
       - '.github/workflows/test-home-browser.yml'
+  push:
+    branches: [design-development]
+    paths:
+      - 'design-system.css'
+      - 'index.html'
+      - 'app-main.js'
+      - 'scripts/build-design-preview.cjs'
+      - 'tests/design-preview-smoke.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,3 +33,6 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Check responsive home and interactions with isolated fixtures
         run: node tests/home-browser-smoke.cjs
+      - name: Check the actual isolated preview
+        if: github.ref == 'refs/heads/design-development'
+        run: node scripts/build-design-preview.cjs && node tests/design-preview-smoke.cjs

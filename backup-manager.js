@@ -61,16 +61,24 @@ async function createZip(files){
   if(!Array.isArray(files)||!files.length||files.length>MAX_FILES)fail("invalid_file_count");
   const seen=new Set();
   const prepared=[];
-  let totalData=0;
+  let totalData=0,archiveBytes=22;
   for(const file of files){
     const name=safeEntryName(file?.name);
     if(name.endsWith("/")||seen.has(name))fail("duplicate_or_directory");
     seen.add(name);
     const nameBytes=encoder.encode(name);
+    if(nameBytes.length>65535)fail("entry_too_large");
+    const headerBytes=76+2*nameBytes.length;
+    const knownSize=typeof Blob!=="undefined"&&file.data instanceof Blob?file.data.size:file.data instanceof Uint8Array||file.data instanceof ArrayBuffer?file.data.byteLength:null;
+    if(knownSize!==null){
+      if(knownSize>MAX_ENTRY_BYTES)fail("entry_too_large");
+      if(archiveBytes+headerBytes+knownSize>MAX_ARCHIVE_BYTES)fail("archive_too_large");
+    }
     const data=await toBytes(file.data);
-    if(nameBytes.length>65535||data.length>MAX_ENTRY_BYTES)fail("entry_too_large");
+    if(data.length>MAX_ENTRY_BYTES)fail("entry_too_large");
     totalData+=data.length;
-    if(totalData>MAX_ARCHIVE_BYTES)fail("archive_too_large");
+    archiveBytes+=headerBytes+data.length;
+    if(totalData>MAX_ARCHIVE_BYTES||archiveBytes>MAX_ARCHIVE_BYTES)fail("archive_too_large");
     prepared.push({name,nameBytes,data,modifiedAt:file.modifiedAt});
   }
 
@@ -131,9 +139,8 @@ async function createZip(files){
   endView.setUint32(12,centralDirectory.length,true);
   endView.setUint32(16,localOffset,true);
   endView.setUint16(20,0,true);
-  const bytes=concatBytes([...localParts,centralDirectory,endRecord]);
-  if(bytes.length>MAX_ARCHIVE_BYTES)fail("archive_too_large");
-  return new Blob([bytes],{type:"application/zip"});
+  if(localOffset+centralDirectory.length+endRecord.length>MAX_ARCHIVE_BYTES)fail("archive_too_large");
+  return new Blob([...localParts,centralDirectory,endRecord],{type:"application/zip"});
 }
 function findEndRecord(bytes){
   const minimum=Math.max(0,bytes.length-22-65535);
@@ -143,6 +150,7 @@ function findEndRecord(bytes){
   fail("missing_end_record");
 }
 async function readZip(input){
+  if(typeof Blob!=="undefined"&&input instanceof Blob&&input.size>MAX_ARCHIVE_BYTES)fail("archive_too_large");
   const bytes=await toBytes(input);
   if(bytes.length>MAX_ARCHIVE_BYTES)fail("archive_too_large");
   if(bytes.length<22)fail("invalid_zip");
@@ -197,11 +205,10 @@ async function readZip(input){
     let localName;
     try{localName=decoder.decode(bytes.subarray(localOffset+30,localOffset+30+localNameLength))}catch{fail("invalid_filename")}
     if(localName!==name)fail("filename_mismatch");
+    totalData+=uncompressedSize;
+    if(totalData>MAX_ARCHIVE_BYTES)fail("archive_too_large");
     const data=bytes.slice(dataStart,dataEnd);
     if(crc32(data)!==checksum)fail("crc_mismatch");
-
-    totalData+=data.length;
-    if(totalData>MAX_ARCHIVE_BYTES)fail("archive_too_large");
     if(!name.endsWith("/"))entries.set(name,data);
     cursor=centralEntryEnd;
   }

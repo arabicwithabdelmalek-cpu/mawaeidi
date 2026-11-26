@@ -1438,6 +1438,9 @@ async function confirmBackupRestore(){
   backupInFlight=true;
   setSync("saving","جارٍ إنشاء نسخة أمان");
   let safetyDownloaded=false;
+  let mergeStarted=false;
+  const sameAccount=()=>plan.owner===currentUser?.id&&plan.sequence===sessionSequence&&cloudReady;
+  const checkAccount=()=>{if(!sameAccount())throw new Error("backup_account_changed")};
   let studentResult=null;
   let scheduleResult=null;
   let settingsApplied=false;
@@ -1445,9 +1448,11 @@ async function confirmBackupRestore(){
   let password=null;
   try{
     password=await requestBackupPassword(true,"تشفير نسخة الأمان قبل الاستعادة");
+    checkAccount();
     if(password===null){setSync("saved","تم إلغاء الاستعادة");if(button){button.disabled=false;button.textContent="استعادة ودمج البيانات"}return}
     if(plan.owner!==currentUser?.id||plan.sequence!==sessionSequence||!cloudReady||pendingBackupRestorePlan!==plan)throw new Error("backup_account_changed");
     await createAndDownloadFullBackup("mawaeidi-before-restore",password);
+    checkAccount();
     password=null;
     if(!confirm("تأكد من أن نسخة الأمان المشفّرة حُفظت على جهازك وأنك تعرف عبارة مرورها. هل تريد متابعة دمج البيانات؟")){setSync("saved","تم إلغاء الاستعادة");if(button){button.disabled=false;button.textContent="استعادة ودمج البيانات"}return}
     if(plan.owner!==currentUser?.id||plan.sequence!==sessionSequence||pendingBackupRestorePlan!==plan||!cloudReady)throw new Error("backup_account_changed");
@@ -1455,21 +1460,34 @@ async function confirmBackupRestore(){
     if(button)button.textContent="جارٍ دمج البيانات…";
     setSync("saving","جارٍ دمج النسخة");
 
-    if(plan.studentPlan)studentResult=await studentsWorkspace.restoreBackupSnapshot(plan.studentPlan,currentUser);
+    if(plan.studentPlan){
+      mergeStarted=true;
+      studentResult=await studentsWorkspace.restoreBackupSnapshot(plan.studentPlan,currentUser);
+      checkAccount();
+    }
     if(plan.scheduleLessons){
       const previous=lessons;
       scheduleResult=mergeBackupLessons(lessons,plan.scheduleLessons);
       lessons=scheduleResult.lessons;
-      if(!await persist(true)){
+      mergeStarted=true;
+      const saved=await persist(true);
+      checkAccount();
+      if(!saved){
         lessons=previous;
         throw new Error("schedule_restore_failed");
       }
     }
     if(plan.settings){
+      mergeStarted=true;
       await applyBackupSettings(plan.settings);
+      checkAccount();
       settingsApplied=true;
     }
-    if(plan.trashItems)trashAdded=await mergeTrashBackupRows(plan.trashItems);
+    if(plan.trashItems){
+      mergeStarted=true;
+      trashAdded=await mergeTrashBackupRows(plan.trashItems);
+      checkAccount();
+    }
     render();
     pendingBackupRestorePlan=null;
     closeToolDialog();
@@ -1484,18 +1502,19 @@ async function confirmBackupRestore(){
     alert(`تمت الاستعادة والدمج بنجاح.\n${summary.join("\n")}\nتم تنزيل نسخة أمان قبل الاستعادة.${photoWarning}`);
   }catch(error){
     console.error("تعذّر إكمال استعادة النسخة الاحتياطية.",error);
+    if(!sameAccount())return;
     setSync("error","تعذّر إكمال الاستعادة");
-    const partial=Boolean(studentResult||scheduleResult||settingsApplied||trashAdded);
+    const partial=mergeStarted;
     const status=document.querySelector("#toolBody .tool-status");
     if(status){
       status.className="tool-status error";
       status.textContent=partial
-        ?"توقفت العملية بعد استعادة جزء من البيانات. يمكنك مراجعة نسخة الأمان التي نُزّلت ثم المحاولة مرة أخرى."
+        ?"توقفت العملية بعد بدء الدمج؛ ربما حُفظ جزء من البيانات. راجع البيانات ونسخة الأمان قبل المحاولة مرة أخرى."
         :"توقفت العملية قبل تغيير البيانات.";
     }
     if(button){button.disabled=false;button.textContent="إعادة المحاولة"}
     alert(safetyDownloaded
-      ?(partial?"تعذّر إكمال بعض أجزاء الاستعادة. نُزّلت نسخة أمان قبل البدء، ولم تُحذف السجلات الحالية.":"تعذّرت الاستعادة، لكن نُزّلت نسخة الأمان ولم تتغير البيانات.")
+      ?(partial?"تعذّر إكمال الاستعادة، وربما حُفظ جزء من البيانات. راجع البيانات ونسخة الأمان قبل إعادة المحاولة.":"تعذّرت الاستعادة، لكن نُزّلت نسخة الأمان ولم تتغير البيانات.")
       :"تعذّر إنشاء نسخة الأمان، لذلك أوقفنا الاستعادة ولم تتغير البيانات.");
   }finally{password=null;backupInFlight=false}
 }

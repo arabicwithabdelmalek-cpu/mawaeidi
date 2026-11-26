@@ -7,11 +7,11 @@ let calls=[],fail=false,cacheFailure=false;
 const result=label=>({ok:true,label,clone(){return result(label)}});
 const key=request=>new URL(typeof request==="string"?request:request.url,scope).href;
 const cache={async match(r){if(cacheFailure)throw Error("cache error");return stored.get(key(r))},async put(r,v){stored.set(key(r),v)}};
-const sandbox={URL,Response:{error:()=>({ok:false})},caches:{async open(name){assert.equal(name,"mawaeidi-shell-v102");return cache},async match(r){return stored.get(key(r))||oldCache.get(key(r))}},fetch:async(r)=>{calls.push(r.url);if(fail)throw Error("offline");return result("network")},self:{location:{origin:"https://example.test"},registration:{scope},addEventListener(name,fn){handlers[name]=fn}}};
+const sandbox={URL,Response:{error:()=>({ok:false})},caches:{async open(name){assert.equal(name,"mawaeidi-shell-v103");return cache},async match(r){return stored.get(key(r))||oldCache.get(key(r))}},fetch:async(r)=>{calls.push(r.url);if(fail)throw Error("offline");return result("network")},self:{location:{origin:"https://example.test"},registration:{scope},addEventListener(name,fn){handlers[name]=fn}}};
 vm.runInNewContext(source,sandbox);
 const ask=(p,mode="cors",method="GET")=>{let response;handlers.fetch({request:{url:new URL(p,scope).href,mode,method},respondWith(p){response=p}});return response};
 (async()=>{
- const asset="./app-main.js?v=21";
+ const asset="./app-main.js?v=22";
  stored.set(key(asset),result("current cache"));
  assert.equal((await ask(asset)).label,"current cache");assert.equal(calls.length,0);
  stored.delete(key(asset));oldCache.set(key(asset),result("old cache"));

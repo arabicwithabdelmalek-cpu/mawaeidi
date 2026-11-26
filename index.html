@@ -2035,6 +2035,36 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 #scheduleConflictLayer button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media(max-width:600px){#scheduleConflictLayer .schedule-conflict-panel{padding:20px;border-radius:16px}#scheduleConflictLayer h2{font-size:20px}#scheduleConflictLayer .schedule-conflict-actions{flex-direction:column}#scheduleConflictLayer button{width:100%}}
 </style>
+<style id="mawaeidi-daily-dashboard-v1">
+/* Daily dashboard: scoped to the schedule home, using the existing identity. */
+#todayView .daily-overview{grid-column:1/-1;min-width:0;padding:19px 20px 17px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-soft)}
+#todayView .daily-overview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+#todayView .daily-overview-head h2{font-size:19px;margin:0;color:var(--ink);font-weight:800}
+#todayView .daily-overview-head p{font-size:12px;color:var(--muted);margin:3px 0 0}
+#todayView .daily-overview-kicker{font-size:12px;font-weight:700;color:var(--primary);white-space:nowrap}
+#todayView .daily-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#todayView .daily-metric{display:grid;align-content:start;gap:5px;min-width:0;padding:13px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-muted)}
+#todayView .daily-metric small{font-size:13px;font-weight:700;color:var(--muted)}
+#todayView .daily-metric strong{font-size:clamp(19px,2.2vw,28px);line-height:1.35;color:var(--primary);overflow-wrap:anywhere}
+#todayView .daily-metric span{font-size:12px;color:var(--muted);line-height:1.65;overflow-wrap:anywhere}
+#todayView .daily-teach{background:var(--teach-bg);border-color:var(--teach-border)}
+#todayView .daily-teach strong{color:var(--teach)}
+#todayView .daily-learn{background:var(--learn-bg);border-color:var(--learn-border)}
+#todayView .daily-learn strong{color:var(--learn)}
+#todayView .daily-progress{margin-top:15px;display:grid;gap:8px}
+#todayView .daily-progress-copy{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+#todayView .daily-progress-copy span{color:var(--muted);font-size:12px}
+#todayView .daily-progress progress{width:100%;height:8px;border:0;border-radius:8px;overflow:hidden;appearance:none;background:var(--surface-muted);color:var(--success);accent-color:var(--success)}
+#todayView .daily-progress progress::-webkit-progress-bar{background:var(--neutral-bg)}
+#todayView .daily-progress progress::-webkit-progress-value{background:var(--success);border-radius:8px}
+#todayView .daily-progress progress::-moz-progress-bar{background:var(--success);border-radius:8px}
+#todayView .daily-week-title{margin:18px 0 0;font-size:14px;font-weight:800;color:var(--ink)}
+#todayView .bar-row.is-today b{color:var(--primary);font-weight:800}
+#todayView .bar-row.is-today .fill{background:var(--primary)}
+#scheduleWorkspace .next .next-relative{position:relative;display:inline-block;margin-inline-start:9px;color:var(--primary);font-size:13px;font-weight:800}
+@media(max-width:760px){#todayView .daily-overview{padding:14px 12px}#todayView .daily-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#todayView .daily-metric{padding:11px 10px}#todayView .daily-overview-head h2{font-size:17px}#todayView .daily-metric strong{font-size:21px}#todayView .daily-overview-kicker{display:none}}
+@media(max-width:350px){#todayView .daily-metric small{font-size:12px}#todayView .daily-metric strong{font-size:18px}}
+</style>
 </head>
 <body class="auth-pending">
 
@@ -2174,6 +2204,16 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
     </div>
 
     <section id="todayView" class="content">
+      <section class="daily-overview" aria-labelledby="dailyOverviewHeading">
+        <div class="daily-overview-head"><div><h2 id="dailyOverviewHeading">يومك في لمحة</h2><p id="dailyOverviewScope">بتوقيت مصر · حسب التصفية الحالية</p></div><span class="daily-overview-kicker">متابعة اليوم</span></div>
+        <div class="daily-metrics">
+          <div class="daily-metric"><small>حصص اليوم</small><strong id="dailyTotal">—</strong><span id="dailyRemaining">—</span></div>
+          <div class="daily-metric daily-teach"><small>وقت التدريس</small><strong id="dailyTeach">—</strong><span id="dailyTeachCount">—</span></div>
+          <div class="daily-metric daily-learn"><small>وقت الدراسة</small><strong id="dailyLearn">—</strong><span id="dailyLearnCount">—</span></div>
+          <div class="daily-metric"><small>أقرب فراغ بين الحصص</small><strong id="dailyGap">—</strong><span id="dailyGapRange">—</span></div>
+        </div>
+        <div class="daily-progress"><div class="daily-progress-copy"><strong>تقدّم اليوم</strong><span id="dailyProgressText">—</span></div><progress id="dailyProgress" max="1" value="0" aria-label="تقدّم حصص اليوم"></progress></div>
+      </section>
       <div class="panel">
         <div class="panel-head">
           <h2 id="todayHeading">جدول اليوم</h2>
@@ -2184,16 +2224,17 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 
       <aside class="panel side">
         <div class="panel-head" style="padding:0 0 12px;border-bottom:0">
-          <h2>نظرة سريعة</h2>
+          <h2>الأسبوع الحالي</h2>
           <span id="dateLabel"></span>
         </div>
         <div class="summary">
-          <div class="stat"><small>هذا الأسبوع</small><strong id="totalCount">0</strong></div>
+          <div class="stat"><small>حصص الأسبوع</small><strong id="totalCount">0</strong></div>
           <div class="stat"><small>اليوم</small><strong id="todayMini">0</strong></div>
           <div class="stat"><small>أُدرِّس</small><strong id="teachCount">0</strong></div>
           <div class="stat"><small>أدرس</small><strong id="learnCount">0</strong></div>
         </div>
 
+        <h3 class="daily-week-title">توزيع الحصص حسب اليوم</h3>
         <div class="week-bars" id="weekBars"></div>
       </aside>
     </section>
@@ -2610,7 +2651,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 <script src="./lesson-model.js?v=1" defer></script>
 <script src="./session-state.js?v=1" defer></script>
 <script src="./world-clock-model.js?v=1" defer></script>
-<script src="./app-main.js?v=22" defer></script>
+<script src="./app-main.js?v=23" defer></script>
 <script src="./account.js?v=3" defer></script>
 <script src="./account-page.js?v=6" defer></script>
 <script src="./day-order.js?v=3" defer></script>

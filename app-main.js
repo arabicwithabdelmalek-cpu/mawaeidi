@@ -2265,41 +2265,87 @@ function setView(v,btn){
   render();
 }
 
+function dailyOverviewModel(items,now){
+  const active=[],busy=[];
+  let completed=0,teachCount=0,learnCount=0,teachMinutes=0,learnMinutes=0;
+  for(const item of items){
+    const raw=occurrenceRawStatus(item);
+    if(["cancelled_unpaid","cancelled_counted","rescheduled"].includes(raw))continue;
+    const start=mins(item.time),duration=Math.max(0,Number(item.lesson.duration||60)||0),end=start+duration;
+    const finished=raw==="completed"||raw==="free"||(raw==="default"&&end<=now);
+    active.push({item,start,end,finished});
+    if(finished)completed++;
+    else if(end>now)busy.push({start,end});
+    if(item.lesson.type==="teach"){teachCount++;teachMinutes+=duration}
+    else if(item.lesson.type==="learn"){learnCount++;learnMinutes+=duration}
+  }
+  busy.sort((a,b)=>a.start-b.start||a.end-b.end);
+  let gap=null,occupiedUntil=null;
+  for(const block of busy){
+    if(occupiedUntil!==null&&block.start>occupiedUntil){
+      gap={start:occupiedUntil,end:block.start,minutes:block.start-occupiedUntil};break;
+    }
+    occupiedUntil=Math.max(occupiedUntil??now,block.end);
+  }
+  const next=active.filter(x=>!x.finished&&x.end>now).sort((a,b)=>a.start-b.start)[0]||null;
+  return {total:active.length,completed,remaining:active.length-completed,teachCount,learnCount,teachMinutes,learnMinutes,gap,next};
+}
+function dailyDurationText(value){
+  const minutes=Math.max(0,Math.round(value)),hours=Math.floor(minutes/60),rest=minutes%60;
+  return hours?hours+" س"+(rest?" "+rest+" د":""):rest+" د";
+}
+function dailyMinuteLabel(value){
+  const minute=Math.max(0,Math.min(1439,value));
+  return fmt(String(Math.floor(minute/60)).padStart(2,"0")+":"+String(minute%60).padStart(2,"0"));
+}
+function renderDailyDashboard(model){
+  const put=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value};
+  put("dailyTotal",model.total);
+  put("dailyRemaining",model.remaining+" حصة متبقية");
+  put("dailyTeach",dailyDurationText(model.teachMinutes));put("dailyTeachCount",model.teachCount+" حصة تدريس");
+  put("dailyLearn",dailyDurationText(model.learnMinutes));put("dailyLearnCount",model.learnCount+" حصة دراسة");
+  put("dailyGap",model.gap?dailyDurationText(model.gap.minutes):"—");
+  put("dailyGapRange",model.gap?dailyMinuteLabel(model.gap.start)+" – "+dailyMinuteLabel(model.gap.end):"لا يوجد فراغ بين الحصص المتبقية");
+  put("dailyProgressText",model.total?model.completed+" من "+model.total+" حصة منتهية حسب الجدول":"لا توجد حصص في هذا التصنيف");
+  const progress=document.getElementById("dailyProgress");if(progress){progress.max=Math.max(1,model.total);progress.value=model.completed}
+}
 function render(){
   updateSectionChrome();
-  renderHeader();
-  renderTimeline();
-  renderSummary();
-  renderWeekBars();
+  const nowDate=new Date(),today=currentDateKey(nowDate),list=filtered(),items=datedOccurrencesForDate(today,list);
+  const model=dailyOverviewModel(items,mins(currentTimeKey(nowDate)));
+  const week=days.flatMap(day=>datedOccurrencesForDate(weekDateForDay(day,today),list)).filter(item=>!occurrenceIsInactive(item));
+  renderHeader(model,today,nowDate);
+  renderDailyDashboard(model);
+  renderTimeline(items);
+  renderSummary(week,today);
+  renderWeekBars(week,today);
   renderWeek();
 }
 
-function renderHeader(){
-  const d=new Date(),tn=todayName(),today=currentDateKey();
-  const cairoDate=new Date(`${today}T12:00:00Z`);
-  const items=datedOccurrencesForDate(today,filtered());
-  const activeItems=items.filter(item=>!occurrenceIsInactive(item));
+function renderHeader(model,today,d){
+  const tn=dayNameForDateKey(today),cairoDate=new Date(`${today}T12:00:00Z`);
   document.getElementById("dateLabel").textContent=cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"short",timeZone:"UTC"});
   document.getElementById("todayHeading").textContent=`${tn} — ${cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"long",timeZone:"UTC"})}`;
-  document.getElementById("todayCount").textContent=`${activeItems.length} حصة`;
+  document.getElementById("todayCount").textContent=`${model.total} حصة`;
 
   const now=mins(currentTimeKey(d));
-  const next=activeItems.find(o=>occurrenceRawStatus(o)!=="completed"&&mins(o.time)+Number(o.lesson.duration||60)>=now);
+  const next=model.next?.item;
   const card=document.getElementById("nextCard");
   if(next){
-    const l=next.lesson;
+    const l=next.lesson,studentTime=studentTimeInline(next),ongoing=model.next.start<=now,caption=ongoing?"الحصة الجارية":"الحصة القادمة";
+    const relative=ongoing?"تنتهي بعد "+dailyDurationText(model.next.end-now):"بعد "+dailyDurationText(model.next.start-now);
     card.innerHTML=`
       <div class="dot"></div>
-      <div class="label">الحصة القادمة</div>
+      <div class="label">${caption}</div><span class="next-relative">${esc(relative)}</span>
       <div class="time">${fmt(next.time)}</div>
       <div class="name">${esc(l.name||"بدون اسم")}</div>
-      <div class="meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة${studentTimeInline(next)?" · "+esc(studentTimeInline(next)):""}</div>
+      <div class="meta">${esc(l.subject||"")}${l.platform?" · "+esc(l.platform):""} · ${l.duration} دقيقة${studentTime?" · "+esc(studentTime):""}</div>
 `;
     card.onclick=()=>openEdit(l.id);
     card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit(l.id)}};
     card.setAttribute("role","button");
     card.setAttribute("tabindex","0");
-    card.setAttribute("aria-label",`فتح الحصة القادمة: ${l.name||"بدون اسم"}`);
+    card.setAttribute("aria-label",`فتح ${caption}: ${l.name||"بدون اسم"}`);
   }else{
     card.onclick=null;
     card.onkeydown=null;
@@ -2316,8 +2362,7 @@ function renderHeader(){
   }
 }
 
-function renderTimeline(){
-  const items=datedOccurrencesForDate(currentDateKey(),filtered());
+function renderTimeline(items=datedOccurrencesForDate(currentDateKey(),filtered())){
   const box=document.getElementById("timeline");
   if(!items.length){
     box.innerHTML='<div class="empty">لا توجد حصص اليوم.</div>';
@@ -2355,20 +2400,20 @@ function renderTimeline(){
   });
 }
 
-function renderSummary(){
-  const all=getOccurrences(lessons), tn=todayName();
+function renderSummary(all,today){
+  const tn=dayNameForDateKey(today);
   document.getElementById("totalCount").textContent=all.length;
   document.getElementById("teachCount").textContent=all.filter(o=>o.lesson.type==="teach").length;
   document.getElementById("learnCount").textContent=all.filter(o=>o.lesson.type==="learn").length;
   document.getElementById("todayMini").textContent=all.filter(o=>o.day===tn).length;
 }
 
-function renderWeekBars(){
-  const box=document.getElementById("weekBars"),occ=getOccurrences(lessons);
+function renderWeekBars(occ,today){
+  const box=document.getElementById("weekBars"),tn=dayNameForDateKey(today);
   const data=days.map(day=>({day,count:occ.filter(o=>o.day===day).length}));
   const max=Math.max(1,...data.map(x=>x.count));
   box.innerHTML=data.map(x=>`
-    <div class="bar-row">
+    <div class="bar-row${x.day===tn?" is-today":""}">
       <b>${x.day}</b>
       <div class="track"><div class="fill" style="width:${x.count/max*100}%"></div></div>
       <span>${x.count}</span>
@@ -2904,6 +2949,18 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("visibilitychange",()=>{syncWorldClockTimer(true);requestAutoRefresh()});
 window.addEventListener("focus",requestAutoRefresh);
+let dailyOverviewDate="",dailyOverviewMinute="";
+function refreshDailyOverviewClock(){
+  if(document.visibilityState!=="visible"||currentSection!=="schedule"||currentView!=="today"||!currentUser||!cloudReady)return;
+  const now=new Date(),today=currentDateKey(now),minute=currentTimeKey(now);
+  if(today===dailyOverviewDate&&minute===dailyOverviewMinute)return;
+  const changedDay=Boolean(dailyOverviewDate&&dailyOverviewDate!==today);
+  dailyOverviewDate=today;dailyOverviewMinute=minute;
+  if(changedDay){render();return}
+  const model=dailyOverviewModel(datedOccurrencesForDate(today,filtered()),mins(minute));
+  renderHeader(model,today,now);renderDailyDashboard(model);
+}
+setInterval(refreshDailyOverviewClock,30000);
 window.addEventListener("online",requestAutoRefresh);
 window.addEventListener("offline",()=>{if(currentUser)setSync("error","غير متصل بالإنترنت")});
 window.addEventListener("beforeinstallprompt",event=>{

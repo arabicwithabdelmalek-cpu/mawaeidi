@@ -44,7 +44,7 @@ async function noOverflow(page){
   const problems=await page.evaluate(()=>{
     const width=document.documentElement.clientWidth,errors=[];
     if(document.documentElement.scrollWidth>width+2)errors.push("document horizontal overflow");
-    for(const el of document.querySelectorAll("#todayView .daily-overview,#todayView .daily-metric,#todayView .timeline-row,#todayView .lesson,#todayView .daily-lesson-title,#todayView .daily-lesson-actions,#nextCard,#nextCard button")){
+    for(const el of document.querySelectorAll("#todayView .daily-overview,#todayView .daily-metric,#todayView .timeline-row,#todayView .lesson,#todayView .daily-lesson-title,#todayView .daily-lesson-actions, #nextCard,#nextCard button,#scheduleWorkspace .home-hero-story,#scheduleWorkspace .home-hero-art,.workspace-switch,.workspace-switch button")){
       if(!el.getClientRects().length)continue;
       const r=el.getBoundingClientRect();
       if(r.left< -2||r.right>width+2)errors.push(el.className+" outside viewport: "+r.left+" / "+r.right);
@@ -71,6 +71,10 @@ async function noOverflow(page){
       await page.evaluate(()=>document.fonts.ready);
       assert.deepEqual(errors,[],"Unexpected errors during fixture setup");
       await visible(page,"#todayView .daily-overview");await visible(page,"#nextCard .next-edit");
+      await visible(page,".home-hero-art");
+      assert.ok(await page.locator(".home-hero-art").evaluate(img=>img.complete&&img.naturalWidth>0));
+      assert.equal(await page.locator(".workspace-nav-icon").count(),3);
+      assert.match(await page.locator("#homeHeroDate").textContent(),/الخميس/);
       assert.equal(await page.locator("#dailyTotal").textContent(),"3");
       assert.match(await page.locator("#nextCard .label").textContent(),/الجارية/);
       assert.equal(await page.locator("#nextRemainingTime").textContent(),"30 د");
@@ -82,6 +86,8 @@ async function noOverflow(page){
       await page.evaluate(()=>closeDrawer());
       await page.evaluate(()=>window.__homeFixture([]));
       await visible(page,"#nextCard .next-add");await visible(page,"#todayView .daily-empty");
+      await page.locator(".daily-empty-art").evaluate(img=>img.decode());
+      assert.ok(await page.locator(".daily-empty-art").evaluate(img=>img.naturalWidth>0));
       await noOverflow(page);
       await page.locator("#nextCard .next-week").click();
       await visible(page,"#weekView");

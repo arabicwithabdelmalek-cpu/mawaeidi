@@ -9,7 +9,7 @@ const html=read("index.html"),app=read("app-main.js"),css=read("iphone-pwa.css")
 
 assert.match(html,/iphone-pwa\.js\?v=1/);
 assert.match(html,/iphone-pwa\.css\?v=1/);
-assert.ok(html.indexOf("iphone-pwa.js?v=1")<html.indexOf("app-main.js?v=25"));
+assert.ok(html.indexOf("iphone-pwa.js?v=1")<html.indexOf("app-main.js?v=26"));
 assert.match(sw,/CACHE_NAME=CACHE_PREFIX\+"v[1-9]\d*"/);
 assert.match(sw,/iphone-pwa\.css\?v=1/);
 assert.match(sw,/iphone-pwa\.js\?v=1/);

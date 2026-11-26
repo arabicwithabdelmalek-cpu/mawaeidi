@@ -2334,6 +2334,8 @@ function renderHeader(model,today,d){
   document.getElementById("dateLabel").textContent=cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"short",timeZone:"UTC"});
   document.getElementById("todayHeading").textContent=`${tn} — ${cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"long",timeZone:"UTC"})}`;
   document.getElementById("todayCount").textContent=`${model.total} حصة`;
+  const heroDate=document.getElementById("homeHeroDate");
+  if(heroDate)heroDate.textContent=tn+"، "+cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"long",timeZone:"UTC"});
   renderNextLessonCard(model,mins(currentTimeKey(d)));
 }
 function renderNextLessonCard(model,now){
@@ -2348,7 +2350,7 @@ function renderNextLessonCard(model,now){
     if(card.dataset.cardKey!==key){
       card.innerHTML=`
         <div class="next-card-top"><div class="label">مواعيد اليوم</div><span class="next-card-context">بتوقيت مصر</span></div>
-        <div class="next-empty-symbol" aria-hidden="true">✓</div>
+        <img class="next-empty-art" src="./icons/home-empty.svg?v=1" width="200" height="148" alt="" decoding="async">
         <div class="name">${hasLessons?"لا توجد حصص أخرى اليوم":"يوم بلا مواعيد"}</div>
         <div class="meta">${hasLessons?"يمكنك مراجعة جدول الأسبوع أو إضافة موعد جديد.":"أضف حصة أو راجع بقية الأسبوع."}</div>
         <div class="next-card-footer"><button type="button" class="next-card-action next-add">＋ إضافة حصة</button><button type="button" class="next-card-link next-week">عرض الأسبوع</button></div>`;
@@ -2392,7 +2394,7 @@ function renderTimeline(items=datedOccurrencesForDate(currentDateKey(),filtered(
   const box=document.getElementById("timeline");
   box.dataset.statusKey=items.map(item=>occurrenceStatus(item)).join("|");
   if(!items.length){
-    box.innerHTML='<div class="daily-empty"><strong>لا توجد حصص في هذا اليوم</strong><p>يمكنك إضافة موعد جديد أو تغيير التصفية.</p><button type="button" class="small-btn add-time" onclick="openQuickAddForToday()">＋ إضافة حصة</button></div>';
+    box.innerHTML='<div class="daily-empty"><img class="daily-empty-art" src="./icons/home-empty.svg?v=1" width="200" height="148" alt="" decoding="async"><strong>لا توجد حصص في هذا اليوم</strong><p>يمكنك إضافة موعد جديد أو تغيير التصفية.</p><button type="button" class="small-btn add-time" onclick="openQuickAddForToday()">＋ إضافة حصة</button></div>';
     return;
   }
   box.replaceChildren();

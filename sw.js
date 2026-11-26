@@ -1,5 +1,5 @@
 const CACHE_PREFIX="mawaeidi-shell-";
-const CACHE_NAME=CACHE_PREFIX+"v106";
+const CACHE_NAME=CACHE_PREFIX+"v107";
 const APP_SHELL=[
   "./",
   "./index.html",
@@ -12,7 +12,7 @@ const APP_SHELL=[
   "./lesson-model.js?v=1",
   "./session-state.js?v=1",
   "./world-clock-model.js?v=1",
-  "./app-main.js?v=25",
+  "./app-main.js?v=26",
   "./iphone-pwa.js?v=1",
   "./iphone-pwa.css?v=1",
   "./ipad-pwa.js?v=1",
@@ -28,6 +28,8 @@ const APP_SHELL=[
   "./manifest.webmanifest",
   "./icons/huruf-background.png",
   "./icons/kufi-quote.png",
+  "./icons/home-planner.svg?v=1",
+  "./icons/home-empty.svg?v=1",
   "./icons/favicon-32.png?v=2",
   "./icons/icon-192.png?v=2",
   "./icons/icon-512.png?v=2",

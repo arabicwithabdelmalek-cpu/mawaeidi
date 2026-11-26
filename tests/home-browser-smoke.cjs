@@ -26,7 +26,20 @@ const fixtures=[
  lesson("later","13:00",60,"teach","حصة خاصة",{lessonSource:"center",centerName:"مركز تجريبي",studentTimeZone:"Asia/Baku"}),
  lesson("cancelled","12:00",60,"teach","موعد ملغى",{sessionRecords:[{id:"cancelled-record",kind:"base",date:"2026-11-26",time:"12:00",status:"cancelled_unpaid"}]})
 ];
-async function visible(page,selector){assert.ok(await page.locator(selector).isVisible(),selector+" should be visible")}
+async function visible(page,selector){
+  try{await page.locator(selector).waitFor({state:"visible",timeout:4000})}
+  catch(error){
+    const info=await page.evaluate(sel=>{
+      const element=document.querySelector(sel),ancestors=[];
+      for(let el=element;el;el=el.parentElement){
+        const style=getComputedStyle(el),r=el.getBoundingClientRect();
+        ancestors.push({tag:el.tagName,id:el.id,classes:el.className,hidden:el.hidden,display:style.display,visibility:style.visibility,width:r.width,height:r.height});
+      }
+      return {selector:sel,matches:document.querySelectorAll(sel).length,ancestors,body:document.body.className,viewport:innerWidth};
+    },selector);
+    throw new Error("Visibility failure: "+JSON.stringify(info),{cause:error});
+  }
+}
 async function noOverflow(page){
   const problems=await page.evaluate(()=>{
     const width=document.documentElement.clientWidth,errors=[];
@@ -55,6 +68,8 @@ async function noOverflow(page){
       await page.clock.setFixedTime(new Date("2026-11-26T07:30:00Z"));
       await page.goto(origin+"/",{waitUntil:"load"});
       await page.evaluate(rows=>window.__homeFixture(rows),fixtures);
+      await page.evaluate(()=>document.fonts.ready);
+      assert.deepEqual(errors,[],"Unexpected errors during fixture setup");
       await visible(page,"#todayView .daily-overview");await visible(page,"#nextCard .next-edit");
       assert.equal(await page.locator("#dailyTotal").textContent(),"3");
       assert.match(await page.locator("#nextCard .label").textContent(),/الجارية/);

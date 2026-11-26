@@ -1,0 +1,15 @@
+"use strict";
+const assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path");
+const root=path.join(__dirname,".."),app=fs.readFileSync(path.join(root,"app-main.js"),"utf8"),html=fs.readFileSync(path.join(root,"index.html"),"utf8");
+const start=app.indexOf("function dailyOverviewModel("),end=app.indexOf("\n}",start)+2;
+assert.ok(start>=0&&end>start);
+const model=new Function("mins","occurrenceRawStatus",app.slice(start,end)+"\nreturn dailyOverviewModel")(t=>{const [h,m]=t.split(":").map(Number);return h*60+m},x=>x.status||"default");
+const row=(time,duration,type,status)=>({time,lesson:{duration,type},status});
+const items=[row("08:00",60,"teach"),row("10:00",60,"teach"),row("10:30",90,"learn"),row("13:00",45,"teach"),row("12:00",60,"teach","rescheduled"),row("14:00",60,"learn","cancelled_unpaid"),row("15:00",60,"teach","free")];
+const x=model(items,9*60);assert.equal(x.total,5);assert.equal(x.completed,2);assert.equal(x.remaining,3);assert.equal(x.teachMinutes,225);assert.equal(x.learnMinutes,90);assert.deepEqual(x.gap,{start:720,end:780,minutes:60});assert.equal(x.next.item.time,"10:00");
+const y=model(items,11*60);assert.equal(y.next.item.time,"10:30");assert.equal(y.completed,3);
+const z=model([],0);assert.equal(z.total,0);assert.equal(z.gap,null);assert.equal(z.next,null);
+assert.equal(model([row("12:00",60,"teach","completed")],600).next,null);
+for(const id of ["dailyTotal","dailyRemaining","dailyTeach","dailyLearn","dailyGap","dailyProgress","dailyProgressText"])assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1);
+assert.match(app,/weekDateForDay\(day,today\)/);
+console.log("Daily dashboard counts, completed and free sessions, cancelled and moved sessions, overlapping times, gaps and empty day passed.");

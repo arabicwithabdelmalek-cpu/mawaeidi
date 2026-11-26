@@ -1990,6 +1990,128 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 #scheduleConflictLayer button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media(max-width:600px){#scheduleConflictLayer .schedule-conflict-panel{padding:20px;border-radius:16px}#scheduleConflictLayer h2{font-size:20px}#scheduleConflictLayer .schedule-conflict-actions{flex-direction:column}#scheduleConflictLayer button{width:100%}}
 </style>
+<style id="mawaeidi-daily-dashboard-v1">
+/* Daily dashboard: scoped to the schedule home, using the existing identity. */
+#todayView .daily-overview{grid-column:1/-1;min-width:0;padding:19px 20px 17px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-soft)}
+#todayView .daily-overview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+#todayView .daily-overview-head h2{font-size:19px;margin:0;color:var(--ink);font-weight:800}
+#todayView .daily-overview-head p{font-size:12px;color:var(--muted);margin:3px 0 0}
+#todayView .daily-overview-kicker{font-size:12px;font-weight:700;color:var(--primary);white-space:nowrap}
+#todayView .daily-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#todayView .daily-metric{display:grid;align-content:start;gap:5px;min-width:0;padding:13px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-muted)}
+#todayView .daily-metric small{font-size:13px;font-weight:700;color:var(--muted)}
+#todayView .daily-metric strong{font-size:clamp(19px,2.2vw,28px);line-height:1.35;color:var(--primary);overflow-wrap:anywhere}
+#todayView .daily-metric span{font-size:12px;color:var(--muted);line-height:1.65;overflow-wrap:anywhere}
+#todayView .daily-teach{background:var(--teach-bg);border-color:var(--teach-border)}
+#todayView .daily-teach strong{color:var(--teach)}
+#todayView .daily-learn{background:var(--learn-bg);border-color:var(--learn-border)}
+#todayView .daily-learn strong{color:var(--learn)}
+#todayView .daily-progress{margin-top:15px;display:grid;gap:8px}
+#todayView .daily-progress-copy{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+#todayView .daily-progress-copy span{color:var(--muted);font-size:12px}
+#todayView .daily-progress progress{width:100%;height:8px;border:0;border-radius:8px;overflow:hidden;appearance:none;background:var(--surface-muted);color:var(--success);accent-color:var(--success)}
+#todayView .daily-progress progress::-webkit-progress-bar{background:var(--neutral-bg)}
+#todayView .daily-progress progress::-webkit-progress-value{background:var(--success);border-radius:8px}
+#todayView .daily-progress progress::-moz-progress-bar{background:var(--success);border-radius:8px}
+#todayView .daily-week-title{margin:18px 0 0;font-size:14px;font-weight:800;color:var(--ink)}
+#todayView .bar-row.is-today b{color:var(--primary);font-weight:800}
+#todayView .bar-row.is-today .fill{background:var(--primary)}
+#scheduleWorkspace .next .next-relative{position:relative;display:inline-block;margin-inline-start:9px;color:var(--primary);font-size:13px;font-weight:800}
+@media(max-width:760px){#todayView .daily-overview{padding:14px 12px}#todayView .daily-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#todayView .daily-metric{padding:11px 10px}#todayView .daily-overview-head h2{font-size:17px}#todayView .daily-metric strong{font-size:21px}#todayView .daily-overview-kicker{display:none}}
+@media(max-width:350px){#todayView .daily-metric small{font-size:12px}#todayView .daily-metric strong{font-size:18px}}
+</style>
+<style id="mawaeidi-daily-agenda-v1">
+/* Today agenda refinement — no changes to weekly cards or other sections. */
+#todayView .timeline{padding:14px 18px 20px}
+#todayView .timeline-row{grid-template-columns:minmax(94px,114px) minmax(0,1fr);gap:12px;padding:8px 0;align-items:start}
+#todayView .timeline-row::before{content:"";position:absolute;inset-block:0;inset-inline-start:55px;width:1px;background:var(--line);pointer-events:none;z-index:-1}
+#todayView .timeline-row:first-child::before{inset-block-start:20px}
+#todayView .timeline-row:last-child::before{inset-block-end:20px}
+#todayView .t-time{display:grid;gap:5px;align-content:center;justify-items:center;line-height:1.45;min-height:64px;margin-top:0;padding:8px 5px;background:var(--surface);border-color:var(--line)}
+#todayView .t-time strong{font-size:15px;font-weight:800;white-space:nowrap}
+#todayView .t-time small{color:var(--muted);font-size:11px;white-space:normal;text-align:center}
+#todayView .lesson{min-width:0;padding:13px 14px;gap:10px;align-items:flex-start;cursor:pointer;border-inline-start-width:4px}
+#todayView .daily-lesson-main{min-width:0;flex:1}
+#todayView .daily-lesson-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#todayView .daily-lesson-title{display:block;max-width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:17px;line-height:1.5;font-weight:800;text-align:start;padding:0;overflow-wrap:anywhere;cursor:pointer}
+#todayView .daily-lesson-title:hover{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+#todayView .daily-lesson-title:focus-visible,#todayView .daily-lesson-actions button:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+#todayView .daily-lesson-status{flex:0 1 auto;max-width:100%}
+#todayView .daily-lesson-status button{white-space:normal}
+#todayView .lesson-meta{font-size:14px;color:var(--muted);margin:3px 0 0;overflow-wrap:anywhere}
+#todayView .pills{align-items:center;gap:5px;margin-top:9px}
+#todayView .pill{font-size:12px;padding:3px 7px;max-width:100%;overflow-wrap:anywhere}
+#todayView .daily-lesson-duration{font-size:12px;font-weight:700;color:var(--muted)}
+#todayView .daily-lesson-student-time{font-size:12px;font-weight:700;color:var(--primary);margin-top:8px;overflow-wrap:anywhere}
+#todayView .daily-lesson-actions{display:flex;flex-direction:column;gap:6px}
+#todayView .daily-lesson-actions .icon-btn{width:34px;height:34px;min-width:34px;font-size:16px}
+#todayView .timeline-row.is-ongoing .t-time{border-color:var(--info-border);background:var(--info-bg)}
+#todayView .timeline-row.is-ongoing .lesson{box-shadow:0 0 0 1px var(--info-border),var(--shadow-soft)}
+#todayView .timeline-row.is-finished .t-time{color:var(--muted)}
+#todayView .lesson.session-inactive{opacity:1;filter:none;background:var(--surface-muted)}
+#todayView .lesson.session-inactive .daily-lesson-title{color:var(--muted)}
+#todayView .daily-empty{padding:28px 12px;text-align:center;color:var(--muted)}
+#todayView .daily-empty strong{color:var(--ink);font-size:16px}
+#todayView .daily-empty p{margin:8px 0 16px;font-size:13px}
+#todayView .daily-empty button{min-height:40px}
+#todayView .daily-metric{transition:background .18s ease,border-color .18s ease}
+#todayView .daily-progress progress::-webkit-progress-value{transition:width .25s ease}
+@media(max-width:760px){
+ #todayView .timeline{padding:10px 10px 15px}
+ #todayView .timeline-row{grid-template-columns:minmax(70px,83px) minmax(0,1fr);gap:7px;padding:7px 0}
+ #todayView .timeline-row::before{inset-inline-start:40px}
+ #todayView .t-time{min-height:56px;padding:6px 4px}
+ #todayView .t-time strong{font-size:13px}
+ #todayView .t-time small{font-size:10px}
+ #todayView .lesson{display:grid;grid-template-columns:minmax(0,1fr);padding:11px 10px;gap:8px}
+ #todayView .daily-lesson-title{font-size:16px}
+ #todayView .lesson-meta{font-size:13px}
+ #todayView .daily-lesson-actions{flex-direction:row;justify-content:flex-end;border-top:1px solid var(--line);padding-top:6px}
+ #todayView .daily-lesson-actions .icon-btn{width:40px;height:40px;min-width:40px}
+}
+@media(prefers-reduced-motion:reduce){#todayView .timeline-row,#todayView .daily-metric,#todayView .daily-progress progress::-webkit-progress-value{animation:none!important;transition:none!important}}
+</style>
+<style id="mawaeidi-next-lesson-v1">
+/* Home hero: preserve the existing calligraphy and visual identity. */
+#scheduleWorkspace .hero{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:14px}
+#scheduleWorkspace .hero-copy{min-height:238px;align-self:stretch}
+#scheduleWorkspace .next{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:238px;padding:18px 20px;border-radius:12px;border-top:3px solid var(--primary);background:var(--surface);box-shadow:var(--shadow-soft)}
+#scheduleWorkspace .next::before{display:none}
+#scheduleWorkspace .next.is-ongoing{border-top-color:var(--teach)}
+#scheduleWorkspace .next-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#scheduleWorkspace .next .label{display:inline-flex;align-items:center;gap:6px;max-width:100%;font-size:13px;padding:5px 10px;border-radius:7px}
+#scheduleWorkspace .next.is-ongoing .label{background:var(--teach);color:white}
+#scheduleWorkspace .next-status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+#scheduleWorkspace .next-card-context{font-size:12px;color:var(--muted)}
+#scheduleWorkspace .next-card-times{display:flex;flex-wrap:wrap;align-items:baseline;gap:7px 12px}
+#scheduleWorkspace .next .time{margin:0;color:var(--primary);font-size:clamp(30px,3.7vw,42px);line-height:1.3;white-space:nowrap}
+#scheduleWorkspace .next-end-time{font-size:13px;color:var(--muted);font-weight:700}
+#scheduleWorkspace .next .name{margin:0;font-size:21px;line-height:1.45;color:var(--ink);overflow-wrap:anywhere}
+#scheduleWorkspace .next .meta{margin:0;font-size:13px;overflow-wrap:anywhere}
+#scheduleWorkspace .next-card-details{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;min-width:0;font-size:12px;color:var(--muted)}
+#scheduleWorkspace .next-kind{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+#scheduleWorkspace .next-kind.teach{background:var(--teach-bg);color:var(--teach);border-color:var(--teach-border)}
+#scheduleWorkspace .next-kind.learn{background:var(--learn-bg);color:var(--learn);border-color:var(--learn-border)}
+#scheduleWorkspace .next-student-time{font-weight:700;color:var(--primary);overflow-wrap:anywhere;max-width:100%}
+#scheduleWorkspace .next-card-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:auto;border-top:1px solid var(--line);padding-top:11px}
+#scheduleWorkspace .next-countdown{display:grid;gap:2px;min-width:0}
+#scheduleWorkspace .next-countdown small{color:var(--muted);font-size:12px}
+#scheduleWorkspace .next-countdown strong{color:var(--primary);font-size:19px;font-weight:800}
+#scheduleWorkspace .next.is-ongoing .next-countdown strong{color:var(--teach)}
+#scheduleWorkspace .next-card-action,#scheduleWorkspace .next-card-link{font:inherit;font-size:13px;font-weight:800;border-radius:8px;padding:9px 12px;min-height:42px;cursor:pointer;transition:background .16s ease}
+#scheduleWorkspace .next-card-action{background:var(--primary);color:white;border:1px solid var(--primary)}
+#scheduleWorkspace .next-card-action:hover{background:var(--primary-dark)}
+#scheduleWorkspace .next-card-link{background:var(--surface-muted);color:var(--primary);border:1px solid var(--line)}
+#scheduleWorkspace .next-card-action:focus-visible,#scheduleWorkspace .next-card-link:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+#scheduleWorkspace .next-class-progress{appearance:none;width:100%;height:6px;border:0;border-radius:6px;overflow:hidden;background:var(--neutral-bg);accent-color:var(--teach)}
+#scheduleWorkspace .next-class-progress::-webkit-progress-bar{background:var(--neutral-bg)}
+#scheduleWorkspace .next-class-progress::-webkit-progress-value{background:var(--teach);border-radius:6px;transition:width .25s ease}
+#scheduleWorkspace .next-class-progress::-moz-progress-bar{background:var(--teach)}
+#scheduleWorkspace .next-empty-symbol{width:35px;height:35px;display:grid;place-items:center;border-radius:50%;background:var(--teach-bg);color:var(--teach);font-size:20px;font-weight:800}
+@media(max-width:900px){#scheduleWorkspace .hero{grid-template-columns:minmax(0,1fr)}#scheduleWorkspace .hero-copy{min-height:0}}
+@media(max-width:760px){#scheduleWorkspace .hero{gap:10px}#scheduleWorkspace .next{padding:14px;min-height:0;gap:7px}#scheduleWorkspace .next .time{font-size:34px}#scheduleWorkspace .next .name{font-size:18px}#scheduleWorkspace .next-card-action,#scheduleWorkspace .next-card-link{min-height:44px}}
+@media(prefers-reduced-motion:reduce){#scheduleWorkspace .next-card-action,#scheduleWorkspace .next-class-progress::-webkit-progress-value{transition:none!important}}
+</style>
 </head>
 <body class="auth-pending">
 
@@ -2101,13 +2223,10 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
         <div class="kufi-quote" role="img" aria-label="الوقت أمانة"></div>
 </div>
 
-      <div class="next" id="nextCard">
-        <div class="dot"></div>
-        <div class="label">الحصة القادمة</div>
-        <div class="time">—</div>
-        <div class="name">لا توجد حصة قادمة</div>
-        <div class="meta">أضف أول موعد لتبدأ أجندتك.</div>
-</div>
+      <section class="next" id="nextCard" aria-label="الحصة الحالية أو القادمة">
+        <div class="next-card-top"><div class="label">مواعيد اليوم</div><span class="next-card-context">بتوقيت مصر</span></div>
+        <div class="name">—</div>
+      </section>
     </section>
 
     <div class="controls">
@@ -2123,6 +2242,16 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
     </div>
 
     <section id="todayView" class="content">
+      <section class="daily-overview" aria-labelledby="dailyOverviewHeading">
+        <div class="daily-overview-head"><div><h2 id="dailyOverviewHeading">يومك في لمحة</h2><p id="dailyOverviewScope">بتوقيت مصر · حسب التصفية الحالية</p></div><span class="daily-overview-kicker">متابعة اليوم</span></div>
+        <div class="daily-metrics">
+          <div class="daily-metric"><small>حصص اليوم</small><strong id="dailyTotal">—</strong><span id="dailyRemaining">—</span></div>
+          <div class="daily-metric daily-teach"><small>وقت التدريس</small><strong id="dailyTeach">—</strong><span id="dailyTeachCount">—</span></div>
+          <div class="daily-metric daily-learn"><small>وقت الدراسة</small><strong id="dailyLearn">—</strong><span id="dailyLearnCount">—</span></div>
+          <div class="daily-metric"><small>أقرب فراغ بين الحصص</small><strong id="dailyGap">—</strong><span id="dailyGapRange">—</span></div>
+        </div>
+        <div class="daily-progress"><div class="daily-progress-copy"><strong>تقدّم اليوم</strong><span id="dailyProgressText">—</span></div><progress id="dailyProgress" max="1" value="0" aria-label="تقدّم حصص اليوم"></progress></div>
+      </section>
       <div class="panel">
         <div class="panel-head">
           <h2 id="todayHeading">جدول اليوم</h2>
@@ -2133,16 +2262,17 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 
       <aside class="panel side">
         <div class="panel-head" style="padding:0 0 12px;border-bottom:0">
-          <h2>نظرة سريعة</h2>
+          <h2>الأسبوع الحالي</h2>
           <span id="dateLabel"></span>
         </div>
         <div class="summary">
-          <div class="stat"><small>هذا الأسبوع</small><strong id="totalCount">0</strong></div>
+          <div class="stat"><small>حصص الأسبوع</small><strong id="totalCount">0</strong></div>
           <div class="stat"><small>اليوم</small><strong id="todayMini">0</strong></div>
           <div class="stat"><small>أُدرِّس</small><strong id="teachCount">0</strong></div>
           <div class="stat"><small>أدرس</small><strong id="learnCount">0</strong></div>
         </div>
 
+        <h3 class="daily-week-title">توزيع الحصص حسب اليوم</h3>
         <div class="week-bars" id="weekBars"></div>
       </aside>
     </section>
@@ -2575,7 +2705,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 <script src="./lesson-model.js?v=1" defer></script>
 <script src="./session-state.js?v=1" defer></script>
 <script src="./world-clock-model.js?v=1" defer></script>
-<script src="./app-main.js?v=20" defer></script>
+<script src="./app-main.js?v=21" defer></script>
 <script src="./account.js?v=1" defer></script>
 <script src="./account-page.js?v=6" defer></script>
 <script src="./activity-tracker.js?v=1" defer></script>

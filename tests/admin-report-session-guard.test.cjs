@@ -4,7 +4,8 @@ const source=fs.readFileSync(path.join(__dirname,"../admin-dashboard.js"),"utf8"
 function extract(n){const m=source.match(new RegExp("^  (?:async )?function "+n+"\\(","m"));assert.ok(m,n);return source.slice(m.index,source.indexOf("\n  }",m.index)+4)}
 const build=new Function("deps",[
 'const client=deps.client,$=id=>deps.elements[id]||=( {} );',
-'let pending=false,reportGeneration=0,current=null,users=[],sessions=[],selectedUserId=null,detailReturnFocus=null,adminAvatarOwner=null,avatarCache=new Map(),avatarLoadedAt=0,avatarRetryAfter=0,avatarRequest=null;',
+'let pending=false,reportGeneration=0,current=null,users=[],sessions=[],selectedUserId=null,detailReturnFocus=null,adminAvatarOwner=null,avatarCache=new Map(),avatarLoadedAt=0,avatarRetryAfter=0,avatarRequest=null,deviceVersions=null,deviceRequest=0;',
+'deps.elements.deviceRows={replaceChildren(){}};const loadDeviceVersions=()=>{};',
 'const cairoDateFormat={format:()=>"today"},buildSummary=()=>({}),renderAll=()=>{deps.paints++},renderUsers=()=>{deps.paints++},renderDetails=()=>{},renderFeed=()=>{};',
 extract("fail"),extract("refreshAvatarLinks"),extract("loadReport"),
 'return {fail,loadReport,refreshAvatarLinks,state:()=>({current,users,adminAvatarOwner,avatarRetryAfter}),seed:()=>{current={};adminAvatarOwner="owner";users=[{id:"u"}]}};'

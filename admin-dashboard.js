@@ -669,6 +669,7 @@
       $("loading").hidden = true; $("errorBox").hidden = true;
       $("dashboard").hidden = false; $("exportBtn").disabled = false;
       $("updatedAt").textContent = "آخر تحديث: " + cairoDateFormat.format(new Date());
+      deviceVersions=null;
       renderAll();
       loadDeviceVersions(generation);
       // Signed photo links are private and expire after 30 minutes. Reuse them

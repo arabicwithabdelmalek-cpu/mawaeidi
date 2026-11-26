@@ -77,6 +77,14 @@ async function noOverflow(page){
       assert.equal(await page.locator("#todayView .timeline-row").count(),4);
       assert.equal(await page.locator("#todayView .is-ongoing").count(),1);
       await noOverflow(page);
+      const alignment=await page.locator("#todayView .timeline-row").evaluateAll(rows=>rows.map(row=>{
+        const time=row.querySelector(".t-time"),lesson=row.querySelector(".lesson");
+        if(!time||!lesson)return null;
+        const a=time.getBoundingClientRect(),b=lesson.getBoundingClientRect();
+        return Math.abs(a.top+a.height/2-b.top-b.height/2);
+      }));
+      assert.ok(alignment.every(n=>n!==null&&n<=1),"Time boxes must be centered against their own lesson cards: "+JSON.stringify(alignment));
+      console.log("Time box vertical alignment passed at "+width+"px");
       const hero=await page.locator("#scheduleWorkspace .hero-copy").boundingBox(),nextCard=await page.locator("#nextCard").boundingBox();
       assert.ok(hero&&nextCard);
       if(width>900){assert.ok(Math.abs(hero.height-nextCard.height)<2,"Hero cards must be the same height");assert.ok(hero.height<=265,"Hero should be compact: "+hero.height)}

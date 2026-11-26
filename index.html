@@ -2070,9 +2070,9 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 #todayView .timeline{padding:14px 18px 20px}
 #todayView .timeline-row{grid-template-columns:minmax(94px,114px) minmax(0,1fr);gap:12px;padding:8px 0;align-items:start}
 #todayView .timeline-row::before{content:"";position:absolute;inset-block:0;inset-inline-start:55px;width:1px;background:var(--line);pointer-events:none;z-index:-1}
-#todayView .timeline-row:first-child::before{inset-block-start:20px}
-#todayView .timeline-row:last-child::before{inset-block-end:20px}
-#todayView .t-time{display:grid;gap:5px;align-content:center;justify-items:center;line-height:1.45;min-height:64px;margin-top:0;padding:8px 5px;background:var(--surface);border-color:var(--line)}
+#todayView .timeline-row:first-child::before{inset-block-start:50%}
+#todayView .timeline-row:last-child::before{inset-block-end:50%}
+#todayView .t-time{display:grid;gap:5px;align-self:center;align-content:center;justify-items:center;line-height:1.45;min-height:64px;margin-top:0;padding:8px 5px;background:var(--surface);border-color:var(--line)}
 #todayView .t-time strong{font-size:15px;font-weight:800;white-space:nowrap}
 #todayView .t-time small{color:var(--muted);font-size:11px;white-space:normal;text-align:center}
 #todayView .lesson{min-width:0;padding:13px 14px;gap:10px;align-items:flex-start;cursor:pointer;border-inline-start-width:4px}

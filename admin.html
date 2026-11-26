@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./admin-ui.css?v=13">
 <link rel="stylesheet" href="./admin-support-preview.css?v=1">
-<link rel="stylesheet" href="./admin-ux-polish.css?v=5">
+<link rel="stylesheet" href="./admin-ux-polish.css?v=6">
 <link rel="stylesheet" href="./admin-member-profile.css?v=1">
 </head>
 <body>
@@ -56,6 +56,7 @@
       <a href="#usersSection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M22 21v-2a4 4 0 0 0-3-4 M16 3a4 4 0 0 1 0 8"/></svg><span><strong>المستخدمون</strong><small>النشاط وملفات الأعضاء</small></span></a>
       <a href="#accountsSection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z M9 12l2 2 4-4"/></svg><span><strong>إدارة الحسابات</strong><small>إنشاء وإدارة الحسابات</small></span></a>
       <a href="#recentSection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span><strong>آخر الزيارات</strong><small>سجل الجلسات</small></span></a>
+      <a href="#devicesSection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><span><strong>الأجهزة والإصدارات</strong><small>المنصات والتحديثات</small></span></a>
     </nav>
     <div class="admin-global-period"><div class="period-wrap">
         <label for="period">الفترة</label>
@@ -366,6 +367,15 @@
       <div id="recentFeed" class="feed"></div>
     </section>
 
+    <section class="panel admin-view-panel" id="devicesSection" data-admin-view aria-labelledby="devicesTitle">
+      <div class="user-toolbar"><div><h2 id="devicesTitle">الأجهزة وإصدارات التطبيق</h2><p>آخر نشاط مسجّل لكل حساب ومنصة خلال ٩٠ يومًا، وليس عدد الأجهزة الفعلية.</p></div><button type="button" id="deviceCheckRelease" class="btn">التحقق من أحدث إصدار Android</button></div>
+      <div class="device-reference"><span>أحدث إصدار منشور قابل للتحديث</span><strong id="deviceLatestVersion" dir="ltr">—</strong><p id="deviceVersionNote" role="status">اضغط التحقق لمقارنة الإصدارات.</p></div>
+      <div class="device-summary" aria-label="الحسابات حسب المنصة"><article><small>الموقع</small><strong id="deviceWebCount">—</strong></article><article><small>Android</small><strong id="deviceAndroidCount">—</strong></article><article><small>iOS</small><strong id="deviceIosCount">—</strong></article><article><small>بحاجة إلى تحديث Android</small><strong id="deviceOutdatedCount">—</strong></article></div>
+      <div class="table-filters"><input id="deviceSearch" type="search" class="search" aria-label="بحث الحسابات حسب الاسم أو البريد" placeholder="ابحث بالاسم أو البريد…"><select id="deviceFilter" class="choice" aria-label="تصفية المنصة أو الإصدار"><option value="all">كل المنصات</option><option value="web">الموقع</option><option value="android">Android</option><option value="ios">iOS</option><option value="outdated">بحاجة إلى تحديث</option><option value="unknown">إصدار غير معروف</option></select></div>
+      <p id="deviceDataNote" class="account-hint" role="status"></p><div id="deviceRows" class="device-rows"></div>
+      <p class="account-hint">يعرض التقرير آخر نسخة أبلغ عنها التطبيق؛ لا يُثبت أن جميع أجهزة الحساب محدثة. لا يجمع أرقام الهواتف أو بصمات الأجهزة.</p>
+    </section>
+
     <details class="admin-report-notice"><summary>عن الإحصائيات وطريقة احتسابها</summary><p class="notice">
       الإحصائيات تبدأ من تاريخ تفعيل المتابعة، ولا يمكن استرجاع زيارات لم تُسجَّل سابقًا.
       المدة النشطة تقريبية وتعتمد على التفاعل المسجل، وليست مدة بقاء الصفحة مفتوحة.
@@ -488,10 +498,11 @@
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js" defer></script>
-<script src="./admin-dashboard.js?v=6" defer></script>
+<script src="./admin-device-report.js?v=1" defer></script>
+<script src="./admin-dashboard.js?v=7" defer></script>
 <script src="./admin-accounts.js?v=11" defer></script>
 <script src="./admin-support.js?v=2" defer></script>
 <script src="./admin-credentials.js?v=2" defer></script>
-<script src="./admin-ux-polish.js?v=2" defer></script>
+<script src="./admin-ux-polish.js?v=3" defer></script>
 </body>
 </html>

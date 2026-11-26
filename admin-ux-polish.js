@@ -22,7 +22,7 @@
       if (key === id) link.setAttribute("aria-current","location");
       else link.removeAttribute("aria-current");
     }
-    if (period) period.hidden = id === "accountsSection";
+    if (period) period.hidden = id === "accountsSection" || id === "devicesSection";
     if (scroll && changed) window.scrollTo({top:0,behavior:"auto"});
     updatePosition();
   }

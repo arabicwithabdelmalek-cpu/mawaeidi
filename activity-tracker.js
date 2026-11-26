@@ -116,6 +116,22 @@
     return "web";
   }
   const clientType = detectClientType();
+  // Read the installed APK's own version, never a hardware/device identifier.
+  let appVersion = null, versionColumnAvailable = true;
+  async function installedVersion() {
+    if (appVersion) return appVersion;
+    if (clientType !== "android" && clientType !== "ios") return null;
+    const bridge = window.MawaeidiNative;
+    if (typeof bridge?.getAppInfo !== "function") return null;
+    let timer;
+    try {
+      const info = await Promise.race([bridge.getAppInfo(),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2000)})]);
+      const version = info?.versionName;
+      if(typeof version==="string" && version.length<=64 && /^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$/.test(version)) appVersion=version;
+    } catch { /* Version unavailable; still record the visit. */ }
+    finally { if(timer)clearTimeout(timer); }
+    return appVersion;
+  }
 
   async function ping(force = false) {
     if (!userId || busy) return;
@@ -131,10 +147,18 @@
     const owner = userId;
     const key = visitKey;
     try {
-      const { error } = await sb.from("mawaeidi_usage_sessions").upsert({
-        user_id: owner, session_key: key, client_type: clientType
-      }, { onConflict: "user_id,session_key" });
-      if (error) throw error;
+      const version = versionColumnAvailable ? await installedVersion() : null;
+      if(owner!==userId||key!==visitKey)return;
+      const base = {user_id:owner,session_key:key,client_type:clientType};
+      const payload = version ? {...base,app_version:version} : base;
+      let {error}=await sb.from("mawaeidi_usage_sessions").upsert(payload,{onConflict:"user_id,session_key"});
+      // Old schema compatibility: do not stop recording visits while migration is pending.
+      if(version && error && ["PGRST204","42703"].includes(error.code) && /app_version/i.test(error.message||"")){
+        versionColumnAvailable=false;
+        if(owner!==userId||key!==visitKey)return;
+        ({error}=await sb.from("mawaeidi_usage_sessions").upsert(base,{onConflict:"user_id,session_key"}));
+      }
+      if(error)throw error;
       if (owner === userId && key === visitKey) recordVisit();
       warned = false;
     } catch (error) {

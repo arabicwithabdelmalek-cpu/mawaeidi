@@ -14,7 +14,7 @@ const index=read("index.html");
 assert.match(index,/native-bridge\.js/);
 assert.match(index,/mobile-app\.css/);
 
-assert.match(index,/activity-tracker\.js\?v=1/, "Native app must load usage tracker");
+assert.match(index,/activity-tracker\.js\?v=2/, "Native app must load usage tracker");
 const prepareScript=read("scripts/prepare-mobile.mjs");
 assert.match(prepareScript,/"activity-tracker\.js"/, "Native bundle must contain the tracker");
 const tracker=read("activity-tracker.js");

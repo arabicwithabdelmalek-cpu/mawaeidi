@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./admin-ui.css?v=13">
 <link rel="stylesheet" href="./admin-support-preview.css?v=1">
-<link rel="stylesheet" href="./admin-ux-polish.css?v=4">
+<link rel="stylesheet" href="./admin-ux-polish.css?v=5">
 <link rel="stylesheet" href="./admin-member-profile.css?v=1">
 </head>
 <body>
@@ -50,27 +50,26 @@
   </section>
 
   <div id="dashboard" hidden>
-  <nav class="admin-section-links" aria-label="التنقل داخل لوحة الإدارة">
-    <a href="#overview" aria-current="location">نظرة عامة</a>
-    <a href="#usersSection">المستخدمون والنشاط</a>
-    <a href="#accountsSection">إدارة الحسابات</a>
-  </nav>
-    <section class="controls" id="overview" aria-label="نظرة عامة">
-      <div>
-        <div class="eyebrow">لوحة المتابعة</div>
-        <h2>نشاط المستخدمين</h2>
-        <p>تعرف على زيارات كل حساب، ومدى استخدامه للموقع، دون الاطلاع على بياناته الخاصة.</p>
-      </div>
-      <div class="period-wrap">
+  <div class="admin-workspace-bar">
+    <nav class="admin-section-links" aria-label="أقسام لوحة الإدارة">
+      <a href="#overview" aria-current="location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z"/></svg><span><strong>نظرة عامة</strong><small>المؤشرات والتقارير</small></span></a>
+      <a href="#usersSection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M22 21v-2a4 4 0 0 0-3-4 M16 3a4 4 0 0 1 0 8"/></svg><span><strong>المستخدمون</strong><small>النشاط وملفات الأعضاء</small></span></a>
+      <a href="#accountsSection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z M9 12l2 2 4-4"/></svg><span><strong>إدارة الحسابات</strong><small>إنشاء وإدارة الحسابات</small></span></a>
+      <a href="#recentSection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span><strong>آخر الزيارات</strong><small>سجل الجلسات</small></span></a>
+    </nav>
+    <div class="admin-global-period"><div class="period-wrap">
         <label for="period">الفترة</label>
         <select id="period">
           <option value="7">آخر ٧ أيام</option>
           <option value="30" selected>آخر ٣٠ يومًا</option>
           <option value="90">آخر ٩٠ يومًا</option>
         </select>
-      </div>
+      </div></div>
+  </div>
+  <div id="overview" data-admin-view>
+    <section class="controls" aria-label="نظرة عامة">
+      <div><div class="eyebrow">لوحة المتابعة</div><h2>نظرة عامة</h2><p>مؤشرات الاستخدام والزيارات خلال الفترة المختارة.</p></div>
     </section>
-
     <section class="metrics" aria-label="المؤشرات الرئيسية">
       <article class="metric">
         <span class="metric-line" aria-hidden="true"></span>
@@ -146,10 +145,11 @@
       </aside>
     </div>
 
-    <section class="panel" id="usersSection" aria-labelledby="usersTitle">
+  </div>
+    <section class="panel admin-view-panel" id="usersSection" data-admin-view aria-labelledby="usersTitle">
       <div class="user-toolbar">
         <div>
-          <h2 id="usersTitle">المستخدمون</h2>
+          <h2 id="usersTitle">المستخدمون والنشاط</h2>
           <p>افتح تفاصيل أي حساب لمعرفة الزيارات ووقت النشاط المسجل.</p>
         </div>
         <span class="panel-meta" id="usersCount">—</span>
@@ -194,18 +194,18 @@
       <div class="detail" id="userDetail" hidden role="region" aria-label="ملف المستخدم" tabindex="-1"></div>
     </section>
 
-    <section class="panel" id="accountsSection" aria-labelledby="accountsTitle">
+    <section class="panel admin-view-panel" id="accountsSection" data-admin-view aria-labelledby="accountsTitle">
       <div class="user-toolbar">
         <div>
           <h2 id="accountsTitle">إدارة حسابات مواعيدي</h2>
-          <p>البريد وكلمة المرور المحفوظة جنب بعض. <strong>زر «معاينة كمسؤول» أسفل بريد كل عضو</strong> لعرض بيانات حسابه للقراءة فقط.</p>
+          <p>إدارة بيانات الحسابات وإجراءات الوصول. المعاينة الإدارية للقراءة فقط.</p>
         </div>
         <div class="account-actions">
           <span class="panel-meta" id="accountsCount">—</span>
           <button type="button" class="btn primary" id="openCreateAccount">+ إضافة حساب</button>
         </div>
       </div>
-      <p class="account-security-note">كلمات المرور التي تحفظها أنت فقط هي التي تظهر بالعين والنسخ، وبمجرد تسجيل الدخول بحسابك الإداري. تُحفظ بتشفير على الخادم. إذا غيّر المستخدم كلمته بنفسه يظهر وقت التغيير، ولا تُكشف لك كلمته الجديدة.</p>
+      <details class="admin-security-details"><summary>معلومات أمان الحسابات وكلمات المرور</summary><p class="account-security-note">كلمات المرور التي تحفظها أنت فقط هي التي تظهر بالعين والنسخ، وبمجرد تسجيل الدخول بحسابك الإداري. تُحفظ بتشفير على الخادم. إذا غيّر المستخدم كلمته بنفسه يظهر وقت التغيير، ولا تُكشف لك كلمته الجديدة.</p></details>
 
       <form class="account-edit-form" id="credentialsEditForm" hidden autocomplete="off">
         <div class="account-form-top">
@@ -355,7 +355,7 @@
       </div>
     </section>
 
-    <section class="panel" aria-labelledby="recentTitle">
+    <section class="panel admin-view-panel" id="recentSection" data-admin-view aria-labelledby="recentTitle">
       <div class="panel-heading">
         <div>
           <h2 id="recentTitle">آخر الزيارات</h2>
@@ -366,12 +366,12 @@
       <div id="recentFeed" class="feed"></div>
     </section>
 
-    <p class="notice">
+    <details class="admin-report-notice"><summary>عن الإحصائيات وطريقة احتسابها</summary><p class="notice">
       الإحصائيات تبدأ من تاريخ تفعيل المتابعة، ولا يمكن استرجاع زيارات لم تُسجَّل سابقًا.
       المدة النشطة تقريبية وتعتمد على التفاعل المسجل، وليست مدة بقاء الصفحة مفتوحة.
       آخر دخول للمصادقة يختلف عن آخر استخدام مسجل للموقع. لا تُسجَّل عناوين IP أو محتويات الدروس.
       تُحدَّث البيانات تلقائيًا كل دقيقتين أثناء فتح اللوحة.
-    </p>
+    </p></details>
     <p class="notice" id="limitedDataNotice" hidden>تنبيه: تم الوصول إلى الحد الأقصى للزيارات التي يعيدها التقرير، وقد تكون بعض المجاميع جزئية.</p>
   </div>
 </main>
@@ -492,6 +492,6 @@
 <script src="./admin-accounts.js?v=11" defer></script>
 <script src="./admin-support.js?v=2" defer></script>
 <script src="./admin-credentials.js?v=2" defer></script>
-<script src="./admin-ux-polish.js?v=1" defer></script>
+<script src="./admin-ux-polish.js?v=2" defer></script>
 </body>
 </html>

@@ -8,59 +8,45 @@
   const back = $("adminBackToTop");
   if (!dashboard || !nav || !back) return;
 
-  const sections = [
-    {id:"overview", element:$("overview")},
-    {id:"usersSection", element:$("usersSection")},
-    {id:"accountsSection", element:$("accountsSection")}
-  ].filter(entry => !!entry.element);
-
-  const links = new Map(
-    Array.from(nav.querySelectorAll('a[href^="#"]')).map(link => [
-      link.getAttribute("href").slice(1),link
-    ])
-  );
-  function setCurrent(id) {
+  const sections = Array.from(dashboard.querySelectorAll("[data-admin-view]"));
+  const links = new Map(Array.from(nav.querySelectorAll('a[href^="#"]')).map(link => [link.hash.slice(1),link]));
+  const period = document.querySelector(".admin-global-period");
+  const valid = id => links.has(id) && sections.some(section => section.id === id);
+  let active = "";
+  function showSection(id, scroll = false) {
+    if (!valid(id)) id = "overview";
+    const changed = active !== id;
+    active = id;
+    for (const section of sections) section.hidden = section.id !== id;
     for (const [key,link] of links) {
       if (key === id) link.setAttribute("aria-current","location");
       else link.removeAttribute("aria-current");
     }
+    if (period) period.hidden = id === "accountsSection";
+    if (scroll && changed) window.scrollTo({top:0,behavior:"auto"});
+    updatePosition();
   }
-  function updatePosition() {
-    if (dashboard.hidden) {
-      back.hidden = true;
-      return;
-    }
-    const threshold = Math.min(window.innerHeight * .32,230);
-    let visible = sections[0]?.id || "overview";
-    for (const section of sections) {
-      if (section.element.getBoundingClientRect().top <= threshold)
-        visible = section.id;
-    }
-    setCurrent(visible);
-    back.hidden = window.scrollY < 600;
-  }
+  function fromHash() {showSection(location.hash.slice(1),true)}
+  function updatePosition() {back.hidden = dashboard.hidden || window.scrollY < 600}
   let queued = false;
   function schedule() {
     if (queued) return;
     queued = true;
-    window.requestAnimationFrame(() => {
-      queued = false;
-      updatePosition();
-    });
+    requestAnimationFrame(() => {queued=false;updatePosition()});
   }
-
   nav.addEventListener("click",event => {
     const link = event.target.closest('a[href^="#"]');
-    if (!link || !nav.contains(link)) return;
-    const id = link.getAttribute("href").slice(1);
-    if (links.has(id)) setCurrent(id);
+    if (!link || !nav.contains(link) || !valid(link.hash.slice(1)) || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const id = link.hash.slice(1);
+    if (location.hash !== link.hash) history.pushState(null,"",link.hash);
+    showSection(id,true);
   });
   back.addEventListener("click",() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({top:0,behavior:reduce?"auto":"smooth"});
-    setCurrent("overview");
   });
-
+  showSection(location.hash.slice(1));
   // Dispatch the native input event so existing search/filter behavior stays
   // exactly as before; we only provide the clear control.
   const searchPairs = [
@@ -101,7 +87,8 @@
 
   window.addEventListener("scroll",schedule,{passive:true});
   window.addEventListener("resize",schedule,{passive:true});
-  window.addEventListener("hashchange",schedule);
+  window.addEventListener("hashchange",fromHash);
+  window.addEventListener("popstate",fromHash);
   if ("MutationObserver" in window) {
     const watcher = new MutationObserver(schedule);
     watcher.observe(dashboard,{attributes:true,attributeFilter:["hidden"]});

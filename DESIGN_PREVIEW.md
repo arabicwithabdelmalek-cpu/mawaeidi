@@ -1,0 +1,2 @@
+# Design preview
+Run `node scripts/build-design-preview.cjs` to create `preview-dist`. Serve that output only, never the raw repository. Demo-only in-memory schedule, read-only sample students, isolated world clock; no cloud client, production login, telemetry, or service worker. CSP blocks API connections. This build script is for the design-development branch only; do not merge demo build configuration into production.

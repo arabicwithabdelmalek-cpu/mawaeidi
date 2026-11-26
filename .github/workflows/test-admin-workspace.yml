@@ -1,0 +1,27 @@
+name: Admin workspace browser checks
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'admin.html'
+      - 'admin-*.js'
+      - 'admin-*.css'
+      - 'scripts/build-admin-preview.cjs'
+      - 'tests/admin-workspace-browser.cjs'
+      - 'tests/fixtures/admin-demo-fixture.js'
+      - '.github/workflows/test-admin-workspace.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  admin-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/build-admin-preview.cjs && node tests/admin-workspace-browser.cjs

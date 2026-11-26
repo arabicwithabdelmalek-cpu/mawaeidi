@@ -423,3 +423,32 @@ body.support-preview-open .admin-back-top {display:none!important}
   text-align:center;
   line-height:1.5;
 }
+
+/* Organized admin workspace: four independent views; keep all original actions. */
+#dashboard .admin-workspace-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 14px}
+#dashboard .admin-section-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:1;width:auto;margin:0;padding:5px;gap:5px;overflow:visible;box-shadow:none}
+#dashboard .admin-section-links a{display:flex;align-items:center;gap:9px;min-width:0;min-height:56px;padding:9px 11px;white-space:normal;text-align:start;line-height:1.45}
+#dashboard .admin-section-links a svg{width:22px;height:22px;flex:none}
+#dashboard .admin-section-links a span{display:grid;gap:2px;min-width:0}
+#dashboard .admin-section-links a strong{font-size:13px;font-weight:800}
+#dashboard .admin-section-links a small{font-size:10px;font-weight:600;color:var(--muted)}
+#dashboard .admin-section-links a[aria-current="location"]{background:var(--primary);border-color:var(--primary);color:white}
+#dashboard .admin-section-links a[aria-current="location"] small{color:#e0edf4}
+#dashboard .admin-global-period{flex:none}
+#dashboard .admin-global-period .period-wrap{min-height:56px;margin:0}
+#dashboard .admin-view-panel{margin-top:0}
+#dashboard #overview .controls{margin:16px 0 13px}
+#dashboard #overview .metrics{gap:12px}
+#dashboard #overview .metric{min-height:118px;padding:14px 17px}
+#dashboard #overview .metric .metric-title{font-size:13px}
+#dashboard #overview .metric .metric-note{font-size:12px}
+#dashboard #overview .metric .metric-value{font-size:clamp(27px,2.8vw,34px);line-height:1.3}
+#dashboard .admin-view-panel .user-toolbar h2,#dashboard .admin-view-panel .panel-heading h2{font-size:21px}
+#dashboard .admin-security-details,#dashboard .admin-report-notice{border:1px solid var(--line);border-radius:10px;background:#f7fafb;color:var(--muted);padding:10px 14px;margin:14px 0}
+#dashboard .admin-security-details summary,#dashboard .admin-report-notice summary{cursor:pointer;font-size:12px;font-weight:800;color:var(--primary)}
+#dashboard .admin-security-details .account-security-note,#dashboard .admin-report-notice .notice{margin:10px 0 0;padding:0;background:transparent;border:0}
+#dashboard .admin-report-notice{margin-top:18px}
+#dashboard #recentSection .feed-content strong{font-size:14px}
+#dashboard #recentSection .feed-content span,#dashboard #recentSection .feed-time{font-size:12px}
+@media(max-width:1050px){#dashboard .admin-workspace-bar{flex-wrap:wrap}#dashboard .admin-section-links{flex:1 1 100%}#dashboard .admin-global-period{margin-inline-start:auto}}
+@media(max-width:760px){#dashboard .admin-workspace-bar{gap:8px;margin:12px 0}#dashboard .admin-section-links{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}#dashboard .admin-section-links a{flex-direction:column;justify-content:center;gap:4px;text-align:center;padding:7px 3px;min-height:62px}#dashboard .admin-section-links a svg{width:19px;height:19px}#dashboard .admin-section-links a strong{font-size:11px}#dashboard .admin-section-links a small{display:none}#dashboard .admin-global-period{width:100%;margin:0}#dashboard .admin-global-period .period-wrap{min-height:42px;justify-content:space-between}#dashboard #overview .metric{min-height:110px;padding:12px}#dashboard #overview .metric .metric-title{font-size:12px}#dashboard #overview .metric .metric-note{font-size:11px}#dashboard .admin-view-panel .user-toolbar h2,#dashboard .admin-view-panel .panel-heading h2{font-size:18px}}

@@ -30,3 +30,20 @@ fakeNow=new Date("2026-11-26T11:00:00Z");clock();assert.equal(headerCalls,2);
 assert.match(app,/setInterval\(refreshDailyOverviewClock,1000\)/);
 assert.match(app,/window\.addEventListener\("pageshow",refreshDailyOverviewClock\)/);
 console.log("Next lesson card countdown, week view timer, resume, ongoing progress, stable DOM and actions passed.");
+
+const calendar=new Function("occurrenceIsInactive",extract("monthCalendarModel")+"\nreturn monthCalendarModel")(o=>o.cancelled);
+const feb=calendar("2028-02-01","2028-02-03",d=>d.endsWith("-03")?[{lesson:{duration:45}},{lesson:{duration:30},cancelled:true}]:[]);
+assert.equal(feb.cells.filter(Boolean).length,29);
+assert.equal(feb.total,1);assert.equal(feb.minutes,45);assert.equal(feb.freeDays,28);
+assert.equal(feb.cells.find(x=>x?.today).key,"2028-02-03");
+assert.equal(feb.cells.length%7,0);assert.equal(feb.cells[0],null);
+const reminderModel=new Function("addDaysToDateKey","occurrenceIsInactive","occurrenceRawStatus","wallTimeToInstant","SCHEDULE_TIMEZONE","normalizeNotificationLeads","DEFAULT_NOTIFICATION_LEAD",extract("reminderCenterModel")+"\nreturn reminderCenterModel")(
+  (d,n)=>new Date(Date.parse(d+"T00:00:00Z")+n*86400000).toISOString().slice(0,10),
+  o=>o.cancelled,o=>o.status||"default",(d,t)=>new Date(d+"T"+t+":00Z"),"UTC",a=>a,15);
+const sample=(time,name,duration,mode="off",extra={})=>({time,lesson:{name,duration,reminderMode:mode,reminderLeads:[30]},...extra});
+const rm=reminderModel(Date.parse("2026-11-27T09:50:00Z"),"2026-11-27",d=>d==="2026-11-27"?[
+  sample("09:00","Long",180),sample("10:00","B",10,"custom"),sample("10:30","C",15),sample("12:05","D",30),sample("13:00","E",30,"default",{cancelled:true}),sample("14:00","F",30,"default")
+]:[],[60,15]);
+assert.equal(rm.alerts.length,2);assert.equal(rm.tight.length,3);assert.equal(rm.tight[0].gap,-120);assert.equal(rm.tight[1].gap,-90);assert.equal(rm.tight[2].gap,5);
+assert.match(html,/aria-controls="monthView"/);assert.match(html,/month-legend/);assert.match(html,/openReminderCenter\(\)/);
+console.log("Monthly calendar and reminder center: leap year, cancellation, ongoing and nested overlap, reminder modes passed.");

@@ -2183,6 +2183,7 @@ function updateSectionChrome(){
 function setSection(section){
  currentSection=["schedule","world","students"].includes(section)?section:"schedule";
  updateSectionChrome();
+ if(currentSection==="schedule")refreshDailyOverviewClock();
  if(currentSection==="world")openWorldClock();
  if(currentSection==="students"&&currentUser&&cloudReady)studentsWorkspace.activate(currentUser);
 }
@@ -2334,7 +2335,8 @@ function renderHeader(model,today,d){
   document.getElementById("dateLabel").textContent=cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"short",timeZone:"UTC"});
   document.getElementById("todayHeading").textContent=`${tn} — ${cairoDate.toLocaleDateString("ar-EG",{day:"numeric",month:"long",timeZone:"UTC"})}`;
   document.getElementById("todayCount").textContent=`${model.total} حصة`;
-  renderNextLessonCard(model,mins(currentTimeKey(d)));
+  dailyOverviewNext=model.next;
+  renderNextLessonCard(model,mins(currentTimeKey(d))+d.getUTCSeconds()/60);
 }
 function renderNextLessonCard(model,now){
   const card=document.getElementById("nextCard"),next=model.next?.item,state=nextLessonCardState(model.next,now);
@@ -2376,8 +2378,14 @@ function renderNextLessonCard(model,now){
     card.dataset.cardKey=key;
     if(hadFocus)card.querySelector(".next-edit").focus({preventScroll:true});
   }
+  updateNextLessonClock(card,state);
+}
+function updateNextLessonClock(card,state){
+  if(!card||!state)return;
+  const seconds=Math.max(0,Math.round(state.remaining*60));
+  const label=seconds<60?seconds+" ث":dailyDurationText(Math.ceil(seconds/60));
   const remaining=card.querySelector("#nextRemainingTime");
-  if(remaining)remaining.textContent=dailyDurationText(state.remaining);
+  if(remaining&&remaining.textContent!==label)remaining.textContent=label;
   const progress=card.querySelector(".next-class-progress");
   if(progress)progress.value=state.elapsed;
 }
@@ -2985,13 +2993,18 @@ document.addEventListener("click",e=>{
   const menu=document.getElementById("dataMenu");
   if(menu?.open&&!menu.contains(e.target))closeDataMenu();
 });
-document.addEventListener("visibilitychange",()=>{syncWorldClockTimer(true);requestAutoRefresh()});
-window.addEventListener("focus",requestAutoRefresh);
-let dailyOverviewDate="",dailyOverviewMinute="";
+document.addEventListener("visibilitychange",()=>{syncWorldClockTimer(true);refreshDailyOverviewClock();requestAutoRefresh()});
+window.addEventListener("focus",()=>{refreshDailyOverviewClock();requestAutoRefresh()});
+window.addEventListener("pageshow",refreshDailyOverviewClock);
+let dailyOverviewDate="",dailyOverviewMinute="",dailyOverviewNext=null;
 function refreshDailyOverviewClock(){
-  if(document.visibilityState!=="visible"||currentSection!=="schedule"||currentView!=="today"||!currentUser||!cloudReady)return;
+  if(document.visibilityState!=="visible"||currentSection!=="schedule"||!currentUser||!cloudReady)return;
   const now=new Date(),today=currentDateKey(now),minute=currentTimeKey(now);
-  if(today===dailyOverviewDate&&minute===dailyOverviewMinute)return;
+  if(today===dailyOverviewDate&&minute===dailyOverviewMinute){
+    const state=nextLessonCardState(dailyOverviewNext,mins(minute)+now.getUTCSeconds()/60);
+    if(state)updateNextLessonClock(document.getElementById("nextCard"),state);
+    return;
+  }
   const changedDay=Boolean(dailyOverviewDate&&dailyOverviewDate!==today);
   dailyOverviewDate=today;dailyOverviewMinute=minute;
   if(changedDay){render();return}
@@ -3003,7 +3016,7 @@ function refreshDailyOverviewClock(){
     if(timeline.dataset.statusKey!==statusKey)renderTimeline(items);
   }
 }
-setInterval(refreshDailyOverviewClock,30000);
+setInterval(refreshDailyOverviewClock,1000);
 window.addEventListener("online",requestAutoRefresh);
 window.addEventListener("offline",()=>{if(currentUser)setSync("error","غير متصل بالإنترنت")});
 window.addEventListener("beforeinstallprompt",event=>{

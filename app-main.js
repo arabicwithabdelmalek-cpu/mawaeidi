@@ -2579,7 +2579,7 @@ function render(){
   renderWeek();
   if(currentView==="month")renderMonth();
 }
-let monthAnchor="",monthSelected="";
+let monthAnchor="",monthSelected="",reminderCenterSequence=0;
 function monthCalendarModel(anchor,today,getItems){
   const first=anchor.slice(0,7)+"-01",date=new Date(first+"T12:00:00Z");
   const year=date.getUTCFullYear(),month=date.getUTCMonth();
@@ -2605,6 +2605,7 @@ function resetScheduleMonth(){monthAnchor=currentDateKey();monthSelected=monthAn
 function renderMonth(){
   const root=document.getElementById("monthCalendar"),agenda=document.getElementById("monthAgenda");
   if(!root||!agenda||currentView!=="month")return;
+  const focusedDay=root.contains(document.activeElement)?document.activeElement.dataset.day:null;
   const today=currentDateKey(),list=filtered();
   if(!monthAnchor)monthAnchor=today;
   if(!monthSelected)monthSelected=today;
@@ -2612,18 +2613,19 @@ function renderMonth(){
   if(!model.cells.some(c=>c?.key===monthSelected))monthSelected=model.first;
   document.getElementById("monthRangeLabel").textContent=new Date(model.first+"T12:00:00Z").toLocaleDateString("ar-EG",{month:"long",year:"numeric",timeZone:"UTC"});
   document.getElementById("monthSummary").textContent=model.total+" حصة · "+dailyDurationText(model.minutes)+" · "+model.freeDays+" يوم بلا حصص";
-  root.innerHTML=["إث","ثل","أر","خم","جم","سب","أح"].map(x=>'<span class="month-weekday">'+x+'</span>').join("")+model.cells.map(c=>{
+  root.innerHTML=["الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"].map(x=>'<span class="month-weekday" title="'+x+'">'+x.slice(0,3)+'</span>').join("")+model.cells.map(c=>{
     if(!c)return '<span class="month-blank" aria-hidden="true"></span>';
     const level=c.count>=5?"high":c.count>=3?"medium":c.count?"low":"empty";
-    return '<button type="button" class="month-day '+level+(c.today?" is-today":"")+'" data-day="'+c.key+'" aria-pressed="'+(c.key===monthSelected)+'" aria-label="'+c.key+'، '+c.count+' حصة"><strong>'+c.day+'</strong><small>'+(c.count?c.count+" حصة":"—")+'</small></button>';
+    return '<button type="button" class="month-day '+level+(c.today?" is-today":"")+'" data-day="'+c.key+'" aria-pressed="'+(c.key===monthSelected)+'"'+(c.today?' aria-current="date"':"")+' aria-label="'+c.key+'، '+c.count+' حصة"><strong>'+c.day+'</strong><small>'+(c.count?c.count+" حصة":"—")+'</small></button>';
   }).join("");
   const selected=model.cells.find(c=>c?.key===monthSelected);
   document.getElementById("monthSelectedLabel").textContent=formatSessionDate(monthSelected);
   root.querySelectorAll("[data-day]").forEach(btn=>btn.onclick=()=>{monthSelected=btn.dataset.day;renderMonth();root.querySelector('[data-day="'+monthSelected+'"]')?.focus({preventScroll:true})});
+  if(focusedDay)root.querySelector('[data-day="'+focusedDay+'"]')?.focus({preventScroll:true});
   const items=selected?.items||[];
   agenda.innerHTML=items.length?items.map((item,i)=>{
     const status=sessionStatusInfo(occurrenceStatus(item));
-    return '<button type="button" class="month-lesson" data-index="'+i+'"><span><strong>'+esc(item.lesson.name||"حصة")+'</strong><small>'+esc(fmt(item.time))+' · '+esc(dailyDurationText(Number(item.lesson.duration||60)))+'</small></span><span class="month-status">'+esc(status.short)+'</span></button>';
+    return '<button type="button" class="month-lesson" data-index="'+i+'"><span><strong>'+esc(item.lesson.name||"حصة")+'</strong><small>'+esc(fmt(item.time))+' · '+esc(dailyDurationText(Number(item.lesson.duration||60)))+'</small></span><span class="month-status '+esc(status.className)+'">'+esc(status.short)+'</span></button>';
   }).join(""):'<p class="month-empty-message">لا توجد حصص في هذا اليوم حسب التصفية الحالية.</p>';
   agenda.querySelectorAll("[data-index]").forEach(btn=>btn.onclick=()=>{
     const o=items[Number(btn.dataset.index)];if(o)openSessionStatus(o.lesson.id,o.date,o.time,o.kind,o.recordId||"");
@@ -2636,9 +2638,11 @@ function reminderCenterModel(now,start,getItems,defaultLeads){
     for(const o of getItems(date)){
       if(occurrenceIsInactive(o)||["completed","free"].includes(occurrenceRawStatus(o)))continue;
       const at=wallTimeToInstant(date,o.time,SCHEDULE_TIMEZONE)?.getTime();
-      if(!Number.isFinite(at)||at<=now||at>now+7*86400000)continue;
-      const lesson=o.lesson,name=lesson.name||"حصة",duration=Math.max(0,Number(lesson.duration||60)||0);
-      sessions.push({at,end:at+duration*60000,name});
+      if(!Number.isFinite(at)||at>now+7*86400000)continue;
+      const lesson=o.lesson,name=lesson.name||"حصة",duration=Math.max(0,Number(lesson.duration||60)||0),end=at+duration*60000;
+      if(end<=now)continue;
+      sessions.push({at,end,name});
+      if(at<=now)continue;
       const leads=lesson.reminderMode==="off"?[]:lesson.reminderMode==="custom"?normalizeNotificationLeads(lesson.reminderLeads,[DEFAULT_NOTIFICATION_LEAD]):defaultLeads;
       for(const lead of leads){
         const fire=at-lead*60000;if(fire<=now)continue;
@@ -2648,9 +2652,11 @@ function reminderCenterModel(now,start,getItems,defaultLeads){
   }
   alerts.sort((a,b)=>a.fire-b.fire);sessions.sort((a,b)=>a.at-b.at);
   const tight=[];
-  for(let i=1;i<sessions.length;i++){
-    const a=sessions[i-1],b=sessions[i],gap=Math.round((b.at-a.end)/60000);
-    if(gap<=10)tight.push({first:a.name,second:b.name,gap,at:b.at});
+  let last=sessions[0];
+  for(const b of sessions.slice(1)){
+    const gap=Math.round((b.at-last.end)/60000);
+    if(gap<=10&&b.at>now)tight.push({first:last.name,second:b.name,gap,at:b.at});
+    if(b.end>last.end)last=b;
   }
   return {alerts,tight};
 }
@@ -2659,18 +2665,21 @@ function reminderCenterDate(timestamp){
 }
 async function openReminderCenter(){
   if(!currentUser||!cloudReady){alert("انتظر حتى يكتمل تحميل حسابك.");return}
-  const owner=currentUser.id;
+  const owner=currentUser.id,sequence=++reminderCenterSequence,session=sessionSequence;
   openToolDialog("مركز التنبيهات","جاهزية الجهاز ومواعيد التنبيه المتوقعة.",'<div class="tool-status">جارٍ التحقق من حالة الجهاز…</div>');
   const native=Boolean(window.MawaeidiNative?.isNative);
   let state={enabled:false,error:"تعذّرت قراءة الحالة"};
   try{state=native?await window.MawaeidiNative.getAlarmState():await readNotificationState()}catch{}
-  if(currentUser?.id!==owner||!document.getElementById("toolBackdrop").classList.contains("show")||document.getElementById("toolTitle").textContent!=="مركز التنبيهات")return;
+  if(currentUser?.id!==owner||sessionSequence!==session||sequence!==reminderCenterSequence||!document.getElementById("toolBackdrop").classList.contains("show")||document.getElementById("toolTitle").textContent!=="مركز التنبيهات")return;
   const ready=native?Boolean(state.available&&state.enabled&&state.notificationsAllowed&&state.exactAlarmAllowed):Boolean(state.enabled&&state.permission==="granted"&&!state.error);
   const summary=ready?"الجهاز جاهز للتنبيهات":state.enabled?"التنبيهات مفعّلة لكن الجاهزية غير مؤكدة":"التنبيهات غير مفعّلة أو تعذّر التحقق";
+  const diagnostics=native?["إذن الإشعارات: "+(state.notificationsAllowed?"متاح":"غير مؤكد أو غير ممنوح"),"المنبّه الدقيق: "+(state.exactAlarmAllowed?"متاح":"غير مؤكد أو غير ممنوح"),"شاشة القفل: "+(state.fullScreenAllowed?"متاحة":"غير مؤكدة أو غير ممنوحة")]:["إذن المتصفح: "+(state.permission==="granted"?"مسموح":state.permission==="denied"?"محظور":"غير ممنوح أو غير مؤكد"),"الاتصال: "+(navigator.onLine?"متصل":"غير متصل")];
+  if(native&&Number.isFinite(state.pendingCount))diagnostics.push("منبّهات مسجلة على الجهاز: "+state.pendingCount);
+  if(state.error)diagnostics.push("تعذّر التحقق الكامل من الإعدادات.");
   const model=reminderCenterModel(Date.now(),currentDateKey(),date=>datedOccurrencesForDate(date,lessons),normalizeNotificationLeads(state.leads||savedNotificationLeads()));
   const rows=model.alerts.slice(0,12).map(a=>'<div class="reminder-center-row"><span><strong>'+esc(a.name)+'</strong><small>موعد الحصة '+esc(reminderCenterDate(a.at))+'</small></span><span><strong>'+esc(reminderCenterDate(a.fire))+'</strong><small>قبل '+a.lead+' دقيقة</small></span></div>').join("");
   const warnings=model.tight.slice(0,6).map(a=>'<div class="reminder-center-row"><span><strong>'+esc(a.first)+' ← '+esc(a.second)+'</strong><small>'+esc(reminderCenterDate(a.at))+'</small></span><strong>'+ (a.gap<0?"تداخل "+Math.abs(a.gap)+" د":a.gap===0?"بلا فاصل":a.gap+" د")+'</strong></div>').join("");
-  document.getElementById("toolBody").innerHTML='<div class="tool-status '+(ready?"on":"")+'">'+esc(summary)+'</div>'+
+  document.getElementById("toolBody").innerHTML='<div class="tool-status '+(ready?"on":"")+'">'+esc(summary)+'</div><div class="reminder-center-diagnostics">'+diagnostics.map(line=>'<span>'+esc(line)+'</span>').join("")+'</div>'+
     '<div class="tool-actions"><button type="button" class="tool-primary" onclick="openNotificationSettings()">إعدادات التنبيهات واختبارها</button><button type="button" class="tool-secondary" onclick="openReminderCenter()">تحديث الحالة</button></div>'+
     '<div class="tool-card"><h3>التنبيهات المتوقعة · 7 أيام ('+model.alerts.length+')</h3><p>تقدير من جدول حصصك وإعدادات هذا الجهاز، وليس تأكيدًا على تسليم التنبيه أو جدولته في النظام.</p>'+(rows||'<p>لا توجد تنبيهات متوقعة في هذه الفترة.</p>')+(model.alerts.length>12?'<p>تُعرض أقرب 12 تنبيهًا فقط.</p>':'')+'</div>'+
     '<div class="tool-card"><h3>حصص متتالية · 10 دقائق أو أقل</h3>'+(warnings||'<p>لا توجد فواصل قصيرة بين الحصص القادمة خلال أسبوع.</p>')+'</div>'+

@@ -2138,6 +2138,28 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
 #monthView .month-empty-message{font-size:14px;color:var(--muted)}
 .reminder-center-row{margin-top:7px;font-size:13px}
 @media(max-width:600px){#monthView .month-calendar{padding:10px 7px;gap:4px}#monthView .month-day{min-height:53px}#monthView .month-day small{font-size:10px}#monthView .month-day strong{font-size:15px}#monthView .month-head{align-items:stretch}}
+
+#scheduleWorkspace .controls>.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-width:0}
+#scheduleWorkspace .tabs>.tab{min-width:0;min-height:44px;white-space:nowrap;padding-inline:8px}
+#monthView .month-legend{display:flex;flex-wrap:wrap;gap:8px 16px;padding:0 14px 10px;color:var(--muted);font-size:12px}
+#monthView .month-legend span{display:inline-flex;align-items:center;gap:5px}
+#monthView .month-legend i{width:12px;height:12px;border:1px solid var(--line);border-radius:4px}
+#monthView .month-legend .low{background:var(--teach-bg)}
+#monthView .month-legend .medium{background:var(--learn-bg)}
+#monthView .month-legend .high{background:var(--danger-bg)}
+#monthView .month-day{overflow:hidden;min-width:0}
+#monthView .month-day small{white-space:nowrap;max-width:100%;font-variant-numeric:tabular-nums}
+#monthView .month-agenda-list{display:grid;gap:7px}
+#monthView .month-lesson{width:100%;min-height:52px}
+#monthView .month-status{flex:none}
+#monthView .month-status.completed,#monthView .month-status.ongoing{color:var(--teach)}
+#monthView .month-status.cancelled,#monthView .month-status.counted-cancel{color:var(--danger)}
+#monthView .month-status.rescheduled,#monthView .month-status.free{color:var(--learn)}
+.reminder-center-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:10px}
+.reminder-center-row>span:last-child,.reminder-center-row>strong:last-child{text-align:start}
+.reminder-center-row small{line-height:1.6}
+.reminder-center-diagnostics{display:grid;gap:5px;margin:8px 0 12px;padding:10px 12px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px;font-size:13px;overflow-wrap:anywhere}
+@media(max-width:380px){#monthView .month-calendar{gap:3px;padding-inline:6px}#monthView .month-day small{font-size:9px}#monthView .month-legend{gap:5px 10px;font-size:11px}.reminder-center-row{grid-template-columns:1fr;gap:5px}}
 </style>
 
 </head>
@@ -2363,6 +2385,7 @@ input:focus,select:focus,textarea:focus,#studentsView .control:focus{border-colo
     <section id="monthView" class="panel" hidden aria-label="الجدول الشهري">
       <div class="panel-head month-head"><div><h2 id="monthRangeLabel">الشهر</h2><p id="monthSummary"></p></div><nav class="week-navigation" aria-label="التنقل بين الشهور"><button type="button" onclick="changeScheduleMonth(-1)">السابق</button><button type="button" onclick="resetScheduleMonth()">الحالي</button><button type="button" onclick="changeScheduleMonth(1)">التالي</button></nav></div>
       <div id="monthCalendar" class="month-calendar" aria-label="تقويم الشهر"></div>
+      <div class="month-legend" aria-label="كثافة الحصص"><span><i class="low"></i>1–2 حصة</span><span><i class="medium"></i>3–4 حصص</span><span><i class="high"></i>5 حصص فأكثر</span></div>
       <div class="month-agenda"><h3 id="monthSelectedLabel">حصص اليوم المحدد</h3><div id="monthAgenda" class="month-agenda-list"></div></div>
     </section>
     </div>

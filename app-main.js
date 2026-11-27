@@ -2263,6 +2263,7 @@ function setView(v,btn){
   btn.setAttribute("aria-pressed","true");
   document.getElementById("todayView").style.display=v==="today"?"grid":"none";
   document.getElementById("weekView").style.display=v==="week"?"block":"none";
+  document.getElementById("monthView").hidden=v!=="month";
   render();
 }
 
@@ -2322,7 +2323,106 @@ function render(){
   renderSummary(week,today);
   renderWeekBars(week,today);
   renderWeek();
+  if(currentView==="month")renderMonth();
 }
+let monthAnchor="",monthSelected="";
+function monthCalendarModel(anchor,today,getItems){
+  const first=anchor.slice(0,7)+"-01",date=new Date(first+"T12:00:00Z");
+  const year=date.getUTCFullYear(),month=date.getUTCMonth();
+  const count=new Date(Date.UTC(year,month+1,0)).getUTCDate(),offset=(date.getUTCDay()+6)%7;
+  const cells=Array(offset).fill(null);
+  let total=0,minutes=0,busyDays=0;
+  for(let i=1;i<=count;i++){
+    const key=first.slice(0,8)+String(i).padStart(2,"0");
+    const items=getItems(key),active=items.filter(x=>!occurrenceIsInactive(x));
+    const duration=active.reduce((sum,x)=>sum+Math.max(0,Number(x.lesson.duration||60)||0),0);
+    cells.push({key,day:i,count:active.length,minutes:duration,today:key===today,items});
+    total+=active.length;minutes+=duration;if(active.length)busyDays++;
+  }
+  while(cells.length%7)cells.push(null);
+  return {first,cells,total,minutes,busyDays,freeDays:count-busyDays};
+}
+function changeScheduleMonth(delta){
+  const date=new Date((monthAnchor||currentDateKey()).slice(0,7)+"-01T12:00:00Z");
+  date.setUTCMonth(date.getUTCMonth()+delta);
+  monthAnchor=date.toISOString().slice(0,10);monthSelected=monthAnchor;renderMonth();
+}
+function resetScheduleMonth(){monthAnchor=currentDateKey();monthSelected=monthAnchor;renderMonth()}
+function renderMonth(){
+  const root=document.getElementById("monthCalendar"),agenda=document.getElementById("monthAgenda");
+  if(!root||!agenda||currentView!=="month")return;
+  const today=currentDateKey(),list=filtered();
+  if(!monthAnchor)monthAnchor=today;
+  if(!monthSelected)monthSelected=today;
+  const model=monthCalendarModel(monthAnchor,today,key=>datedOccurrencesForDate(key,list));
+  if(!model.cells.some(c=>c?.key===monthSelected))monthSelected=model.first;
+  document.getElementById("monthRangeLabel").textContent=new Date(model.first+"T12:00:00Z").toLocaleDateString("ar-EG",{month:"long",year:"numeric",timeZone:"UTC"});
+  document.getElementById("monthSummary").textContent=model.total+" حصة · "+dailyDurationText(model.minutes)+" · "+model.freeDays+" يوم بلا حصص";
+  root.innerHTML=["إث","ثل","أر","خم","جم","سب","أح"].map(x=>'<span class="month-weekday">'+x+'</span>').join("")+model.cells.map(c=>{
+    if(!c)return '<span class="month-blank" aria-hidden="true"></span>';
+    const level=c.count>=5?"high":c.count>=3?"medium":c.count?"low":"empty";
+    return '<button type="button" class="month-day '+level+(c.today?" is-today":"")+'" data-day="'+c.key+'" aria-pressed="'+(c.key===monthSelected)+'" aria-label="'+c.key+'، '+c.count+' حصة"><strong>'+c.day+'</strong><small>'+(c.count?c.count+" حصة":"—")+'</small></button>';
+  }).join("");
+  const selected=model.cells.find(c=>c?.key===monthSelected);
+  document.getElementById("monthSelectedLabel").textContent=formatSessionDate(monthSelected);
+  root.querySelectorAll("[data-day]").forEach(btn=>btn.onclick=()=>{monthSelected=btn.dataset.day;renderMonth();root.querySelector('[data-day="'+monthSelected+'"]')?.focus({preventScroll:true})});
+  const items=selected?.items||[];
+  agenda.innerHTML=items.length?items.map((item,i)=>{
+    const status=sessionStatusInfo(occurrenceStatus(item));
+    return '<button type="button" class="month-lesson" data-index="'+i+'"><span><strong>'+esc(item.lesson.name||"حصة")+'</strong><small>'+esc(fmt(item.time))+' · '+esc(dailyDurationText(Number(item.lesson.duration||60)))+'</small></span><span class="month-status">'+esc(status.short)+'</span></button>';
+  }).join(""):'<p class="month-empty-message">لا توجد حصص في هذا اليوم حسب التصفية الحالية.</p>';
+  agenda.querySelectorAll("[data-index]").forEach(btn=>btn.onclick=()=>{
+    const o=items[Number(btn.dataset.index)];if(o)openSessionStatus(o.lesson.id,o.date,o.time,o.kind,o.recordId||"");
+  });
+}
+function reminderCenterModel(now,start,getItems,defaultLeads){
+  const alerts=[],sessions=[];
+  for(let day=0;day<=7;day++){
+    const date=addDaysToDateKey(start,day);
+    for(const o of getItems(date)){
+      if(occurrenceIsInactive(o)||["completed","free"].includes(occurrenceRawStatus(o)))continue;
+      const at=wallTimeToInstant(date,o.time,SCHEDULE_TIMEZONE)?.getTime();
+      if(!Number.isFinite(at)||at<=now||at>now+7*86400000)continue;
+      const lesson=o.lesson,name=lesson.name||"حصة",duration=Math.max(0,Number(lesson.duration||60)||0);
+      sessions.push({at,end:at+duration*60000,name});
+      const leads=lesson.reminderMode==="off"?[]:lesson.reminderMode==="custom"?normalizeNotificationLeads(lesson.reminderLeads,[DEFAULT_NOTIFICATION_LEAD]):defaultLeads;
+      for(const lead of leads){
+        const fire=at-lead*60000;if(fire<=now)continue;
+        alerts.push({fire,at,date,time:o.time,name,lead});
+      }
+    }
+  }
+  alerts.sort((a,b)=>a.fire-b.fire);sessions.sort((a,b)=>a.at-b.at);
+  const tight=[];
+  for(let i=1;i<sessions.length;i++){
+    const a=sessions[i-1],b=sessions[i],gap=Math.round((b.at-a.end)/60000);
+    if(gap<=10)tight.push({first:a.name,second:b.name,gap,at:b.at});
+  }
+  return {alerts,tight};
+}
+function reminderCenterDate(timestamp){
+  return new Intl.DateTimeFormat("ar-EG",{timeZone:SCHEDULE_TIMEZONE,weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}).format(new Date(timestamp));
+}
+async function openReminderCenter(){
+  if(!currentUser||!cloudReady){alert("انتظر حتى يكتمل تحميل حسابك.");return}
+  const owner=currentUser.id;
+  openToolDialog("مركز التنبيهات","جاهزية الجهاز ومواعيد التنبيه المتوقعة.",'<div class="tool-status">جارٍ التحقق من حالة الجهاز…</div>');
+  const native=Boolean(window.MawaeidiNative?.isNative);
+  let state={enabled:false,error:"تعذّرت قراءة الحالة"};
+  try{state=native?await window.MawaeidiNative.getAlarmState():await readNotificationState()}catch{}
+  if(currentUser?.id!==owner||!document.getElementById("toolBackdrop").classList.contains("show")||document.getElementById("toolTitle").textContent!=="مركز التنبيهات")return;
+  const ready=native?Boolean(state.available&&state.enabled&&state.notificationsAllowed&&state.exactAlarmAllowed):Boolean(state.enabled&&state.permission==="granted"&&!state.error);
+  const summary=ready?"الجهاز جاهز للتنبيهات":state.enabled?"التنبيهات مفعّلة لكن الجاهزية غير مؤكدة":"التنبيهات غير مفعّلة أو تعذّر التحقق";
+  const model=reminderCenterModel(Date.now(),currentDateKey(),date=>datedOccurrencesForDate(date,lessons),normalizeNotificationLeads(state.leads||savedNotificationLeads()));
+  const rows=model.alerts.slice(0,12).map(a=>'<div class="reminder-center-row"><span><strong>'+esc(a.name)+'</strong><small>موعد الحصة '+esc(reminderCenterDate(a.at))+'</small></span><span><strong>'+esc(reminderCenterDate(a.fire))+'</strong><small>قبل '+a.lead+' دقيقة</small></span></div>').join("");
+  const warnings=model.tight.slice(0,6).map(a=>'<div class="reminder-center-row"><span><strong>'+esc(a.first)+' ← '+esc(a.second)+'</strong><small>'+esc(reminderCenterDate(a.at))+'</small></span><strong>'+ (a.gap<0?"تداخل "+Math.abs(a.gap)+" د":a.gap===0?"بلا فاصل":a.gap+" د")+'</strong></div>').join("");
+  document.getElementById("toolBody").innerHTML='<div class="tool-status '+(ready?"on":"")+'">'+esc(summary)+'</div>'+
+    '<div class="tool-actions"><button type="button" class="tool-primary" onclick="openNotificationSettings()">إعدادات التنبيهات واختبارها</button><button type="button" class="tool-secondary" onclick="openReminderCenter()">تحديث الحالة</button></div>'+
+    '<div class="tool-card"><h3>التنبيهات المتوقعة · 7 أيام ('+model.alerts.length+')</h3><p>تقدير من جدول حصصك وإعدادات هذا الجهاز، وليس تأكيدًا على تسليم التنبيه أو جدولته في النظام.</p>'+(rows||'<p>لا توجد تنبيهات متوقعة في هذه الفترة.</p>')+(model.alerts.length>12?'<p>تُعرض أقرب 12 تنبيهًا فقط.</p>':'')+'</div>'+
+    '<div class="tool-card"><h3>حصص متتالية · 10 دقائق أو أقل</h3>'+(warnings||'<p>لا توجد فواصل قصيرة بين الحصص القادمة خلال أسبوع.</p>')+'</div>'+
+    '<p class="install-help">سجل التسليم الفعلي غير متاح حاليًا. قد تؤثر أذونات النظام والاتصال والبطارية في وصول الإشعار.</p>';
+}
+
 
 function nextLessonCardState(next,now){
   if(!next)return null;
